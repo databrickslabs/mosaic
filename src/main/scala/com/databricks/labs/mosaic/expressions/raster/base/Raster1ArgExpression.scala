@@ -11,13 +11,13 @@ import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, 
 import scala.reflect.ClassTag
 
 /**
-  * Base class for all raster expressions that take two arguments. It provides
+  * Base class for all tile expressions that take two arguments. It provides
   * the boilerplate code needed to create a function builder for a given
   * expression. It minimises amount of code needed to create a new expression.
   *
   * @param rasterExpr
-  *   The raster expression. It can be a path to a raster file or a byte array
-  *   containing the raster file content.
+  *   The tile expression. It can be a path to a tile file or a byte array
+  *   containing the tile file content.
   * @param arg1Expr
   *   The expression for the first argument.
   * @param returnsRaster
@@ -43,10 +43,10 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
 
     /**
       * The function to be overridden by the extending class. It is called when
-      * the expression is evaluated. It provides the raster and the arguments to
+      * the expression is evaluated. It provides the tile and the arguments to
       * the expression. It abstracts spark serialization from the caller.
       * @param raster
-      *   The raster to be used.
+      *   The tile to be used.
       * @param arg1
       *   The first argument.
       * @return
@@ -55,13 +55,13 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
     def rasterTransform(raster: RasterTile, arg1: Any): Any
 
     /**
-      * Evaluation of the expression. It evaluates the raster path and the loads
-      * the raster from the path. It handles the clean up of the raster before
+      * Evaluation of the expression. It evaluates the tile path and the loads
+      * the tile from the path. It handles the clean up of the tile before
       * returning the results.
       *
       * @param input
-      *   The input to the expression. It can be a path to a raster file or a
-      *   byte array containing the raster file content.
+      *   The input to the expression. It can be a path to a tile file or a
+      *   byte array containing the tile file content.
       * @param arg1
       *   The first argument.
       * @return

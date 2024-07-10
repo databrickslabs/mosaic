@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-/** Returns the skew y of the raster. */
+/** Returns the skew y of the tile. */
 case class RST_SkewY(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_SkewY](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -17,7 +17,7 @@ case class RST_SkewY(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = DoubleType
 
-    /** Returns the skew y of the raster, default 0. */
+    /** Returns the skew y of the tile, default 0. */
     override def rasterTransform(tile: RasterTile): Any = {
         tile.raster.withDatasetHydratedOpt() match {
             case Some(dataset) => dataset.GetGeoTransform()(4)
@@ -34,7 +34,7 @@ object RST_SkewY extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns skew Y in the raster tile.
+          |_FUNC_(expr1) - Returns skew Y in the tile tile.
           |""".stripMargin
 
     override def example: String =

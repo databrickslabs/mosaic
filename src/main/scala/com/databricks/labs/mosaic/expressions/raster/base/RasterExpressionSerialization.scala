@@ -6,19 +6,19 @@ import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.types.DataType
 
 /**
-  * Base trait for raster serialization. It is used to serialize the result of
+  * Base trait for tile serialization. It is used to serialize the result of
   * the expression.
   */
 trait RasterExpressionSerialization {
 
     /**
       * Serializes the result of the expression. If the expression returns a
-      * raster, the raster is serialized. If the expression returns a scalar,
+      * tile, the tile is serialized. If the expression returns a scalar,
       * the scalar is returned.
       * @param data
       *   The result of the expression.
       * @param returnsRaster
-      *   Whether the expression returns a raster.
+      *   Whether the expression returns a tile.
       * @param outputDataType
       *   The output data type of the expression.
       * @param exprConfig

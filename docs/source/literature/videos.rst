@@ -67,7 +67,7 @@ by others that are related to the Mosaic project or related to GIS in general. N
         </div>
         <div class="video-description">
             <p>Location: Spatial Data Science Conference, London, May 2023</p>
-            <p>This unification facilitates an easy plugin/plugout capability for all raster and vector layers. Databricks used these principles to design an easy, scalable and extensible Flood Risk for Physical Assets solution using H3 as a unification grid.</p>
+            <p>This unification facilitates an easy plugin/plugout capability for all tile and vector layers. Databricks used these principles to design an easy, scalable and extensible Flood Risk for Physical Assets solution using H3 as a unification grid.</p>
         </div>
         <iframe width="420" height="315" src="https://www.youtube.com/embed/LaYHWYr0NbM" frameborder="0" allowfullscreen></iframe>
         <ul>

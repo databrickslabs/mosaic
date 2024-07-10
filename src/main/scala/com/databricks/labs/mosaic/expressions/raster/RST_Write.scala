@@ -17,11 +17,11 @@ import org.apache.spark.unsafe.types.UTF8String
 import scala.util.Try
 
 /**
-  * Writes raster tiles from the input column to a specified directory.
+  * Writes tile tiles from the input column to a specified directory.
   *   - expects the driver to already have been set on the inputExpr ("tile"
   *     column).
   * @param inputExpr
-  *   The expression for the tile with the raster to write.
+  *   The expression for the tile with the tile to write.
   * @param dirExpr
   *   Write to directory.
   * @param exprConfig
@@ -48,10 +48,10 @@ case class RST_Write(
     }
 
     /**
-      * write a raster to dir.
+      * write a tile to dir.
       *
       * @param tile
-      *   The raster to be used.
+      *   The tile to be used.
       * @param arg1
       *   The dir.
       * @return
@@ -66,27 +66,20 @@ case class RST_Write(
     private def copyToArg1Dir(inTile: RasterTile, arg1: Any): RasterGDAL = {
         require(dirExpr.isInstanceOf[Literal])
 
+        // (1) new [[RasterGDAL]]
+        // - from createInfo of existing
         val inRaster = inTile.raster
-        val inPseudoPath = inRaster.identifyPseudoPathOpt().getOrElse(NO_PATH_STRING)
-        val inDriver = inRaster.getDriverName()
-        val outPath = GDAL.writeRasters(
-                Seq(inRaster),
-                StringType,
-                doDestroy = false, // parent class destroys
-                Option(exprConfig),
-                overrideDirOpt = Option(arg1.asInstanceOf[UTF8String].toString)
-            )
-            .head
-            .toString
-
-        RasterGDAL(
-            Map(
-              RASTER_PATH_KEY -> outPath,
-              RASTER_DRIVER_KEY -> inDriver,
-              RASTER_PARENT_PATH_KEY -> inPseudoPath
-            ),
-            Option(exprConfig)
+        val result = RasterGDAL(
+          createInfoInit = inRaster.getCreateInfo,
+            exprConfigOpt = Option(exprConfig)
         )
+        // (2) just update the FuseDirOpt
+        // - actual write will be during serialize
+        // - aka `raster.finalizeAndDestroy`
+        val toDir = arg1.asInstanceOf[UTF8String].toString
+        result.setFuseDirOpt(Some(toDir))
+
+        result
     }
 
 }
@@ -98,14 +91,14 @@ object RST_Write extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a new raster written to the specified directory.
+          |_FUNC_(expr1) - Returns a new tile written to the specified directory.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
           |      > SELECT _FUNC_(raster_tile, fuse_dir);
-          |        {index_id, raster, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
           |        ...
           |  """.stripMargin
 

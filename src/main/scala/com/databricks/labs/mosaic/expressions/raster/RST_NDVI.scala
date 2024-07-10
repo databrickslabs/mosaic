@@ -35,13 +35,13 @@ case class RST_NDVI(
     /**
       * Computes NDVI index.
       * @param tile
-      *   The raster to be used.
+      *   The tile to be used.
       * @param arg1
       *   The red band index.
       * @param arg2
       *   The nir band index.
       * @return
-      *   The raster contains NDVI index.
+      *   The tile contains NDVI index.
       */
     override def rasterTransform(tile: RasterTile, arg1: Any, arg2: Any): Any = {
         val redInd = arg1.asInstanceOf[Int]
@@ -58,14 +58,14 @@ object RST_NDVI extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2, expr3) - NDVI index computed by raster tile red_index and nir_index bands.
+          |_FUNC_(expr1, expr2, expr3) - NDVI index computed by tile tile red_index and nir_index bands.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
           |      > SELECT _FUNC_(raster_tile, 1, 2);
-          |        {index_id, raster, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
           |        ...
           |  """.stripMargin
 

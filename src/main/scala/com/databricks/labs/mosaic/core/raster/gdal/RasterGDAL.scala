@@ -4,7 +4,6 @@ import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL.DIR_TIME_FORMATTER
 import com.databricks.labs.mosaic.core.raster.io.RasterIO
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
@@ -22,12 +21,12 @@ import org.locationtech.proj4j.CRSFactory
 import java.nio.file.{Files, Paths}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.{Locale, UUID}
+import java.util.Locale
 import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util.Try
 
 /**
- * Internal object for a deserialized raster from [[RasterTile]]. 0.4.3+ only
+ * Internal object for a deserialized tile from [[RasterTile]]. 0.4.3+ only
  * constructs with createInfo and then nothing else happens until the object is
  * used.
  *   - setting a dataset will cause an internal re-hydrate, can set multiple
@@ -39,19 +38,20 @@ import scala.util.Try
  *     used path applies the configured fuse directory, default is checkpoint
  *     dir but may be overridden as well.
  *
- * @param createInfo
- *   - Map[String. String] (immutable), but this is a var so it can be replaced
- *     through the life of the raster: e.g. if `configDataset` is invoked or
- *     one of the `updateCreateInfo*` functions called.
+ * @param createInfoInit
+ *   - Init Map[String. String] (immutable)
  *   - Defaults to empty Map (see `apply` functions)
- *   - The map is all we want serialized
+ *   - Internally, use a var that can be modified
+ *     through the life of the tile: e.g. if one of the `updateCreateInfo*` functions called.
  * @param exprConfigOpt
  *    Option [[ExprConfig]]
  */
 case class RasterGDAL(
-                         var createInfo: Map[String, String],
+                         createInfoInit: Map[String, String],
                          exprConfigOpt: Option[ExprConfig]
                      ) extends RasterIO {
+
+    val DIR_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmm") // yyyyMMddHHmmss
 
     // Factory for creating CRS objects
     protected val crsFactory: CRSFactory = new CRSFactory
@@ -61,6 +61,10 @@ case class RasterGDAL(
 
     // See [[RasterIO]] for public APIs using these
     var fuseDirOpt: Option[String] = None
+
+    // Populated throughout the lifecycle,
+    // - After init, defers in part to [[DatasetGDAL]]
+    private var createInfo = createInfoInit
 
     // Internally work on a option [[RasterGDAL]]
     // This will maintain:
@@ -116,40 +120,58 @@ case class RasterGDAL(
      * @return
      * `this` fluent (for internal use).
      */
-    private def _handleFlags(): RasterGDAL = {
-        try {
-            // !!! avoid cyclic dependencies !!!
-            /*
-             * Call to setup a raster (handle flags):
-             *   (1) initFlag    - if dataset exists, do (2); otherwise do (3).
-             *   (2) datasetNewFlag - need to write to fuse and set path.
-             *   (3) pathNewFlag    - need to load dataset and write to fuse (path then replaced in createInfo).
-             * If empty (not a "real" [[RasterGDAL]] object), don't do anything.
-             */
-            if (this.isDatasetRefreshFlag && !this.isEmptyRasterGDAL) {
-                // conditionally write dataset to fuse
-                // - the flags mean other conditions already handled
-                // - datasetNewFlag means the dataset was just loaded (so don't load here)
-                if (!datasetNewFlag && (initFlag || pathNewFlag)) {
-                    // load from path (aka 1,3)
-                    // - concerned only with a driver set on createInfo (if any),
-                    //   passed as a option; otherwise, file extension is testsed.
+    private def _handleFlags(): RasterGDAL =
+        Try {
+            try {
+                // make sure createinfo in sync
+                // - also [[DatasetGDAL]] and its objects
+                // - this could be only on an `initFlag` test,
+                //   but seems better to always do it
+                this._initCreateInfo
+
+                // !!! avoid cyclic dependencies !!!
+                /*
+                 * Call to setup a tile (handle flags):
+                 *   (1) initFlag    - if dataset exists, do (2); otherwise do (3).
+                 *   (2) datasetNewFlag - need to write to fuse and set path.
+                 *   (3) pathNewFlag    - need to load dataset and write to fuse (path then replaced in createInfo).
+                 * If empty (not a "real" [[RasterGDAL]] object), don't do anything.
+                 */
+                if (!this.isEmptyRasterGDAL) {
+                    if (this.isDatasetRefreshFlag) {
+                        // conditionally write dataset to fuse
+                        // - the flags mean other conditions already handled
+                        // - datasetNewFlag means the dataset was just loaded (so don't load here)
+                        if (!datasetNewFlag && (initFlag || pathNewFlag)) {
+                            // load from path (aka 1,3)
+                            // - concerned only with a driver set on createInfo (if any),
+                            //   passed as a option; otherwise, file extension is testsed.
+
+                            // for either init or path flag
+                            // - update path and driver on dataset
+                            datasetGDAL.updatePath(this.getRawPath)
+                            if (!datasetGDAL.isHydrated) {
+                                datasetGDAL.updateDriverName(this.getDriverName())
+                            }
+                        }
+                    }
+                    // if update path called, and doDestroy was passed then
+                    // this condition will be met
                     if (!datasetGDAL.isHydrated) {
-                        RasterIO.rawPathAsDatasetOpt(this.getRawPath, datasetGDAL.driverNameOpt) match {
+                        RasterIO.rawPathAsDatasetOpt(this.getRawPath, datasetGDAL.driverNameOpt, exprConfigOpt) match {
                             case Some(dataset) =>
                                 this.updateDataset(dataset)
                             case _ =>
                                 this.updateCreateInfoError(s"handleFlags - expected path '$getRawPath' to load to dataset, " +
-                                s"but it did not: hydrated? ${isDatasetHydrated}")
+                                    s"but it did not: hydrated? ${isDatasetHydrated}")
                         }
                     }
                 }
+            } finally {
+                this._resetFlags
             }
-        } finally {
-            this._resetFlags
-        }
-        this
-    }
+            this
+        }.getOrElse(this)
 
     /** @return [[RasterGDAL]] `this` (fluent). */
     private def _resetFlags: RasterGDAL = {
@@ -201,13 +223,13 @@ case class RasterGDAL(
             geometryAPI.geometry(geom1.ExportToWkb(), "WKB")
         }.getOrElse(geometryAPI.geometry(POLYGON_EMPTY_WKT, "WKT"))
 
-    /** @return The diagonal size of a raster. */
+    /** @return The diagonal size of a tile. */
     def diagSize: Double = math.sqrt(xSize * xSize + ySize * ySize)
 
     // noinspection ZeroIndexToHead
     /**
      * @return
-     *   Returns the raster's extent as a Seq(xmin, ymin, xmax, ymax), default
+     *   Returns the tile's extent as a Seq(xmin, ymin, xmax, ymax), default
      *   all 0s.
      */
     def extent: Seq[Double] =
@@ -228,10 +250,10 @@ case class RasterGDAL(
                 .get("COMPRESSION")
         }.getOrElse("None")
 
-    /** @return Returns a tuple with the raster's size. */
+    /** @return Returns a tuple with the tile's size. */
     def getDimensions: (Int, Int) = (xSize, ySize)
 
-    /** @return Returns the raster's geotransform as a Option Seq. */
+    /** @return Returns the tile's geotransform as a Option Seq. */
     def getGeoTransformOpt: Option[Array[Double]] =
         Try {
             this._datasetHydrated.GetGeoTransform()
@@ -256,7 +278,7 @@ case class RasterGDAL(
 
     /**
      * Get spatial reference.
-     *   - may be already set on the raster
+     *   - may be already set on the tile
      *   - if not, load and detect it.
      *   - defaults to [[MosaicGDAL.WSG84]]
      * @return
@@ -267,7 +289,7 @@ case class RasterGDAL(
             this._datasetHydrated.GetSpatialRef
         }.getOrElse(MosaicGDAL.WSG84)
 
-    /** @return Returns a map of raster band(s) valid pixel count, default 0. */
+    /** @return Returns a map of tile band(s) valid pixel count, default 0. */
     def getValidCount: Map[Int, Long] =
         Try {
             (1 to numBands)
@@ -281,8 +303,8 @@ case class RasterGDAL(
 
     /**
      * @return
-     *   True if the raster is empty, false otherwise. May be expensive to
-     *   compute since it requires reading the raster and computing statistics.
+     *   True if the tile is empty, false otherwise. May be expensive to
+     *   compute since it requires reading the tile and computing statistics.
      */
     def isEmpty: Boolean =
         Try {
@@ -308,40 +330,33 @@ case class RasterGDAL(
             }
         }.getOrElse(true)
 
-    /** @return Returns the raster's metadata as a Map, defaults to empty. */
-    def metadata: Map[String, String] = {
-        Option(this._datasetHydrated.GetMetadataDomainList())
-            .map(_.toArray)
-            .map(domain =>
-                domain
-                    .map(domainName =>
-                        Option(this._datasetHydrated.GetMetadata_Dict(domainName.toString))
-                            .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
-                            .getOrElse(Map.empty[String, String])
-                    )
-                    .reduceOption(_ ++ _)
-                    .getOrElse(Map.empty[String, String])
-            )
-            .getOrElse(Map.empty[String, String])
-    }
+    /** @return Returns the tile's metadata as a Map, defaults to empty. */
+    def metadata: Map[String, String] = Try {
+        this.withDatasetHydratedOpt() match {
+            case Some(_) =>
+                datasetGDAL.metadata
+            case _ =>
+                Map.empty[String, String]
+        }
+    }.getOrElse(Map.empty[String, String])
 
-    /** @return Returns the raster's number of bands, defaults to 0. */
+    /** @return Returns the tile's number of bands, defaults to 0. */
     def numBands: Int =
         Try {
             this._datasetHydrated.GetRasterCount()
         }.getOrElse(0)
 
-    /** @return Returns the origin x coordinate, defaults to 0. */
+    /** @return Returns the origin x coordinate, defaults to -1. */
     def originX: Double =
         Try {
             this.getGeoTransformOpt.get(0)
-        }.getOrElse(0)
+        }.getOrElse(-1)
 
-    /** @return Returns the origin y coordinate, defaults to 0. */
+    /** @return Returns the origin y coordinate, defaults to -1. */
     def originY: Double =
         Try {
             this.getGeoTransformOpt.get(3)
-        }.getOrElse(0)
+        }.getOrElse(-1)
 
     /** @return Returns the diagonal size of a pixel, defaults to 0. */
     def pixelDiagSize: Double = math.sqrt(pixelXSize * pixelXSize + pixelYSize * pixelYSize)
@@ -358,7 +373,7 @@ case class RasterGDAL(
             this.getGeoTransformOpt.get(5)
         }.getOrElse(0)
 
-    /** @return Returns the raster's proj4 string, defaults to "". */
+    /** @return Returns the tile's proj4 string, defaults to "". */
     def proj4String: String =
         Try {
             this._datasetHydrated.GetSpatialRef.ExportToProj4
@@ -386,7 +401,7 @@ case class RasterGDAL(
     }
 
     /**
-     * Sets the raster's SRID. This is the EPSG code of the raster's CRS.
+     * Sets the tile's SRID. This is the EPSG code of the tile's CRS.
      *   - this is an in-place op in 0.4.3+.
      * @param dataset
      *   The [[Dataset]] to update the SRID
@@ -449,7 +464,7 @@ case class RasterGDAL(
 
     /**
      * @return
-     *   Returns the raster's SRID. This is the EPSG code of the raster's CRS.
+     *   Returns the tile's SRID. This is the EPSG code of the tile's CRS.
      */
     def SRID: Int = {
         Try(crsFactory.readEpsgFromParameters(proj4String))
@@ -466,7 +481,7 @@ case class RasterGDAL(
     /** @return Returns the max x coordinate. */
     def xMax: Double = originX + xSize * pixelXSize
 
-    /** @return Returns x size of the raster, default 0. */
+    /** @return Returns x size of the tile, default 0. */
     def xSize: Int =
         Try {
             this._datasetHydrated.GetRasterXSize
@@ -478,7 +493,7 @@ case class RasterGDAL(
     /** @return Returns the max y coordinate. */
     def yMax: Double = originY + ySize * pixelYSize
 
-    /** @return Returns y size of the raster, default 0. */
+    /** @return Returns y size of the tile, default 0. */
     def ySize: Int =
         Try {
             this._datasetHydrated.GetRasterYSize
@@ -496,29 +511,24 @@ case class RasterGDAL(
      * @return
      *   Option subdataset name as string.
      */
-    def getCreateInfoSubdatasetNameOpt: Option[String] = this.createInfo.get(RASTER_SUBDATASET_NAME_KEY)
+    def getCreateInfoSubdatasetNameOpt: Option[String] = {
+        if (datasetGDAL.subdatasetNameOpt.isEmpty) {
+            datasetGDAL.subdatasetNameOpt = this.createInfo.get(RASTER_SUBDATASET_NAME_KEY)
+        }
+        datasetGDAL.subdatasetNameOpt
+    }
 
-    /** @return Returns the raster's subdatasets as a Map, default empty. */
+    /** @return Returns the tile's subdatasets as a Map, default empty. */
     def subdatasets: Map[String, String] =
         Try {
-            val dict = Try(this._datasetHydrated.GetMetadata_Dict("SUBDATASETS"))
-                .getOrElse(new java.util.Hashtable[String, String]())
-            val subdatasetsMap = Option(dict)
-                .map(_.asScala.toMap.asInstanceOf[Map[String, String]])
-                .getOrElse(Map.empty[String, String])
-            val keys = subdatasetsMap.keySet
-            val sanitizedParentPath = PathUtils.getCleanPath(getRawParentPath, addVsiZipToken = true)
-            keys.flatMap(key =>
-                if (key.toUpperCase(Locale.ROOT).contains("NAME")) {
-                    val path = subdatasetsMap(key)
-                    val pieces = path.split(":")
-                    Seq(
-                        key -> pieces.last,
-                        s"${pieces.last}_tmp" -> path,
-                        pieces.last -> s"${pieces.head}:$sanitizedParentPath:${pieces.last}"
-                    )
-                } else Seq(key -> subdatasetsMap(key))
-            ).toMap
+            this.withDatasetHydratedOpt() match {
+                case Some(_) =>
+                    // use parent if it exists; otherwise path
+                    if (getParentPathGDAL.isPathSetAndExists) datasetGDAL.subdatasets(getPathGDAL)
+                    else datasetGDAL.subdatasets(getPathGDAL)
+                case _ =>
+                    Map.empty[String, String]
+            }
         }.getOrElse(Map.empty[String, String])
 
     /**
@@ -532,6 +542,7 @@ case class RasterGDAL(
      */
     def updateCreateInfoSubdatasetName(name: String): RasterGDAL = {
         this.createInfo += (RASTER_SUBDATASET_NAME_KEY -> name)
+        datasetGDAL.updateSubdatasetName(name)
         this
     }
 
@@ -543,7 +554,7 @@ case class RasterGDAL(
      * @param bandId
      *   The band index to read.
      * @return
-     *   Returns the raster's band as a [[RasterBandGDAL]] object.
+     *   Returns the tile's band as a [[RasterBandGDAL]] object.
      */
     def getBand(bandId: Int): RasterBandGDAL = {
         // TODO 0.4.3 - Throw exception or return empty ?
@@ -563,17 +574,20 @@ case class RasterGDAL(
      *   Option band number as int.
      */
     def getCreateInfoBandIndexOpt: Option[Int] = {
-        Option(this.createInfo(RASTER_BAND_INDEX_KEY).toInt)
+        if (datasetGDAL.bandIdxOpt.isEmpty) {
+            datasetGDAL.bandIdxOpt = Option(this.createInfo(RASTER_BAND_INDEX_KEY).toInt)
+        }
+        datasetGDAL.bandIdxOpt
     }
 
-    /** @return Returns the raster's bands as a Seq, defaults to empty Seq. */
+    /** @return Returns the tile's bands as a Seq, defaults to empty Seq. */
     def getBands: Seq[RasterBandGDAL] = Try{
         (1 to this.numBands).map(this.getBand)
     }.getOrElse(Seq.empty[RasterBandGDAL])
 
     /**
      * @return
-     *   Returns a map of the raster band(s) statistics, default empty.
+     *   Returns a map of the tile band(s) statistics, default empty.
      */
     def getBandStats: Map[Int, Map[String, Double]] =
         Try {
@@ -598,6 +612,7 @@ case class RasterGDAL(
     /** Update band num, return `this` (fluent). */
     def updateCreateInfoBandIndex(num: Int): RasterGDAL = {
         this.createInfo += (RASTER_BAND_INDEX_KEY -> num.toString)
+        datasetGDAL.updateBandIdx(num)
         this
     }
 
@@ -606,11 +621,11 @@ case class RasterGDAL(
     // ///////////////////////////////////////
 
     /**
-     * Applies a convolution filter to the raster.
+     * Applies a convolution filter to the tile.
      *   - operator applied per band.
      *   - this will not succeed if dataset not hydratable.
      * @param kernel
-     *   [[Array[Double]]] kernel to apply to the raster.
+     *   [[Array[Double]]] kernel to apply to the tile.
      * @return
      *   New [[RasterGDAL]] object with kernel applied.
      */
@@ -621,8 +636,10 @@ case class RasterGDAL(
 
             // (2) write dataset to tmpPath
             // - This will be populated as we operate on the tmpPath
+            // TODO Should this be `datasetOrPathCopy` ???
             val tmpPath = RasterIO.createTmpFileFromDriver(getDriverName(), exprConfigOpt)
-            if (datasetGDAL.datasetCopyToPath(tmpPath, doDestroy = false)) {
+
+            if (datasetGDAL.datasetCopyToPath(tmpPath, doDestroy = false, skipUpdatePath = true)) {
 
                 // (3) perform the op using dataset from the tmpPath
                 val outputDataset = gdal.Open(tmpPath, GF_Write) // open to write
@@ -673,7 +690,7 @@ case class RasterGDAL(
         }
 
     /**
-     * Applies a filter to the raster.
+     * Applies a filter to the tile.
      *   - operator applied per band.
      *   - this will throw an exception if dataset not hydratable.
      *
@@ -691,8 +708,9 @@ case class RasterGDAL(
 
             // (2) write dataset to tmpPath
             // - This will be populated as we operate on the tmpPath
+            // TODO Should this be `datasetOrPathCopy` ???
             val tmpPath = RasterIO.createTmpFileFromDriver(getDriverName(), exprConfigOpt)
-            if (datasetGDAL.datasetCopyToPath(tmpPath, doDestroy = false)) {
+            if (datasetGDAL.datasetCopyToPath(tmpPath, doDestroy = false, skipUpdatePath = true)) {
 
                 // (3) perform the op using dataset from the tmpPath
                 val outputDataset = gdal.Open(tmpPath, GF_Write) // open to write
@@ -743,9 +761,9 @@ case class RasterGDAL(
         }
 
     /**
-     * Applies clipping to get cellid raster.
+     * Applies clipping to get cellid tile.
      * @param cellID
-     *   Clip the raster based on the cell id geometry.
+     *   Clip the tile based on the cell id geometry.
      * @param indexSystem
      *   Default is H3.
      * @param geometryAPI
@@ -768,17 +786,25 @@ case class RasterGDAL(
      */
     def getSubdataset(subsetName: String): RasterGDAL = {
         Try {
-            // (1) [[PathGDAL]] from the subdataset requested
+            // try to get the subdataset requested
             // - allow failure on extracting subdataset,
             // then handle with empty [[RasterGDAL]]
-            val sPathRaw = subdatasets(s"${subsetName}_tmp") // <- may throw exception
-            val dsOpt = RasterIO.rawPathAsDatasetOpt(sPathRaw, this.getDriverNameOpt)
+            this.initAndHydrate()
+            val dsGDAL = datasetGDAL.getSubdatasetObj(getRawParentPath, subsetName, exprConfigOpt)
+
+            // pull out the needed info
+            // - use option on dataset
+            // to trigger exception if null
+            val pathRawSub = dsGDAL.getPath
+            val dsSubOpt = dsGDAL.getDatasetOpt
+
+
             // Avoid costly IO to compute MEM size here
-            // It will be available when the raster is serialized for next operation
+            // It will be available when the tile is serialized for next operation
             // If value is needed then it will be computed when getMemSize is called
             val gdalError = gdal.GetLastErrorMsg ()
             val newCreateInfo = Map(
-                RASTER_PATH_KEY -> sPathRaw,
+                RASTER_PATH_KEY -> pathRawSub,
                 RASTER_PARENT_PATH_KEY -> this.getRawParentPath,
                 RASTER_DRIVER_KEY -> this.getDriverName(),
                 RASTER_SUBDATASET_NAME_KEY -> subsetName,
@@ -787,7 +813,7 @@ case class RasterGDAL(
                     else ""
                 }
             )
-            RasterGDAL(dsOpt.get, exprConfigOpt, newCreateInfo)
+            RasterGDAL(dsSubOpt.get, exprConfigOpt, newCreateInfo)
         }.getOrElse {
             val result = RasterGDAL()
             result.updateCreateInfoError(
@@ -803,7 +829,7 @@ case class RasterGDAL(
     }
 
     /**
-     * Sets the raster's SRID. This is the EPSG code of the raster's CRS.
+     * Sets the tile's SRID. This is the EPSG code of the tile's CRS.
      *   - this is an in-place op in 0.4.3+.
      * @param dataset
      *   The [[Dataset]] to update the SRID
@@ -837,7 +863,7 @@ case class RasterGDAL(
     }
 
     /**
-     * Applies a function to each band of the raster.
+     * Applies a function to each band of the tile.
      * @param f
      *   The function to apply.
      * @return
@@ -851,34 +877,56 @@ case class RasterGDAL(
     // Raster Lifecycle Functions
     // ///////////////////////////////////////
 
-    /** Update the internal map, return `this` (fluent) - skipFlag. */
-    def updateCreateInfo(newMap: Map[String, String], skipFlags: Boolean): RasterGDAL = {
-        // !!! avoid cyclic dependencies !!!
-        if (!skipFlags) {
-            createInfo.get(RASTER_PATH_KEY) match {
-                // only flag if the path has changed
-                case Some(k) if {
-                    newMap.get(RASTER_PATH_KEY).isDefined && k != newMap(RASTER_PATH_KEY)
-                } => pathNewFlag = true
-                case _ => ()
+    //scalastyle:off println
+    /** @inheritdoc */
+    override def finalizeRaster(toFuse: Boolean): RasterGDAL =
+        Try {
+            // (1) call handle flags,
+            // to get everything resolved on the tile as needed
+            this._handleFlags()    // e.g. will write to fuse path
+
+            // (2) write if current path not fuse or not under the expected dir
+            if (
+                (!this.isEmptyRasterGDAL && toFuse) &&
+                (!this.getPathGDAL.isFusePath || !this.isRawPathInFuseDir)
+            ) {
+                val driverSN = this.getDriverName()
+                val ext = GDAL.getExtension(driverSN)
+                val newDir = this.makeNewFuseDir(ext, uuidOpt = None)
+                //println(s"...finalizeRaster - newDir? '$newDir'")
+
+                datasetGDAL.datasetOrPathCopy(newDir, doDestroy = true, skipUpdatePath = true) match {
+                    case Some(newPath) =>
+                        //println(s"...success [pre-update raw path] - finalizeRaster - new path? '$newPath'")
+                        this.updateCreateInfoRawPath(newPath, skipFlag = true)
+                        //println(s"...success - finalizeRaster - path? '${getRawPath}'")
+                    case _ =>
+                        this.updateCreateInfoLastCmd("finalizeRaster")
+                        this.updateCreateInfoError(s"finalizeRaster - fuse write")
+                }
             }
+
+            // (4) return this
+            this
+        }.getOrElse {
+            if (!this.isEmptyRasterGDAL) {
+                this.updateCreateInfoLastCmd("finalizeRaster")
+                this.updateCreateInfoError(s"finalizeRaster - exception - fuse write")
+            }
+            this
         }
-        createInfo = newMap
-
-        // update on datasetGDAL
-        // - also updates its `PathGDAL` with the rawPath
-        datasetGDAL.updatePath(getRawPath)
-        datasetGDAL.updateDriverName(getDriverName())
-
-        this
-    }
+    //scalastyle:on println
 
     /** @inheritdoc */
-    override def finalizeRaster(): RasterGDAL = {
-        this._handleFlags()    // e.g. will write to fuse path
-        this.flushAndDestroy() // release GDAL objects
-        this
-    }
+    override def isRawPathInFuseDir: Boolean =
+        Try {
+            // !!! avoid cyclic dependencies !!!
+            // - wrapped to handle false conditions
+            this.fuseDirOpt match {
+                case Some(dir) => getPathGDAL.asFileSystemPath.startsWith(dir)
+                case _         => getPathGDAL.asFileSystemPath.startsWith(GDAL.getCheckpointDir)
+            }
+        }.getOrElse(false)
 
     /** @inheritdoc */
     override def flushAndDestroy(): RasterGDAL = {
@@ -889,7 +937,7 @@ case class RasterGDAL(
     /** @inheritdoc */
     override def getFuseDirOpt: Option[String] = fuseDirOpt
 
-    /** @return write options for this raster's dataset. */
+    /** @return write options for this tile's dataset. */
     def getWriteOptions: RasterWriteOptions = RasterWriteOptions(this)
 
     /** @return whether `this` has a non-empty error. */
@@ -897,10 +945,42 @@ case class RasterGDAL(
         Try(this.createInfo(RASTER_LAST_ERR_KEY).length > 0).getOrElse(false)
     }
 
+    /** @return new fuse dir underneath the base fuse dir (checkpoint or override) */
+    def makeNewFuseDir(ext: String, uuidOpt: Option[String]): String = {
+        // (1) uuid used in dir
+        // - may be provided (for filename consistency)
+        val uuid = uuidOpt match {
+            case Some(u) => u
+            case _ => RasterIO.genUUID
+        }
+        // (2) new dir under fuse dir (<timePrefix>_<ext>_<uuid>)
+        val rootDir = fuseDirOpt.getOrElse(GDAL.getCheckpointDir)
+        val timePrefix = LocalDateTime.now().format(DIR_TIME_FORMATTER)
+        val newDir = s"${timePrefix}_${ext}_${uuid}"
+        val dir = s"$rootDir/$newDir"
+        Files.createDirectories(Paths.get(dir)) // <- create the directories
+        dir
+    }
+
+    /** @return new fuse path string, defaults to under checkpoint dir (doesn't actually create the file). */
+    def makeNewFusePath(ext: String): String = {
+        // (1) uuid used in dir and filename
+        val uuid = RasterIO.genUUID
+
+        // (2) new dir under fuse dir (<timePrefix>_<uuid>.<ext>)
+        val fuseDir = makeNewFuseDir(ext, Option(uuid))
+
+        // (3) return the new fuse path name
+        val filename = RasterIO.genFilenameUUID(ext, Option(uuid))
+        s"$fuseDir/$filename"
+    }
+
     /** @return `this` [[RasterGDAL]] (fluent). */
     def updateDataset(dataset: Dataset) : RasterGDAL = {
-        datasetNewFlag = true
-        datasetGDAL.updateDataset(dataset, doUpdateDriver = true)
+        val doUpdateDriver = dataset != null
+        if (doUpdateDriver) datasetNewFlag = true          // <- flag for dataset if not null (normal use)
+        else pathNewFlag = true                            // <- flag for path if null
+        datasetGDAL.updateDataset(dataset, doUpdateDriver) // <- only update driver if not null
         this
     }
 
@@ -908,42 +988,97 @@ case class RasterGDAL(
     // Additional Getters + Updaters
     // /////////////////////////////////////////////////
 
-    /** Returns immutable internal map. */
-    def getCreateInfo: Map[String, String] = this.createInfo
+    /** make sure all [[DatasetGDAL]] `createInfo` relevant fields are initialized (ok to do this often). */
+    private def _initCreateInfo: RasterGDAL = {
+        // refresh all relevant datasetGDAL keys if they are empty / not set
+        // - !!! don't call any getters here !!!
+        if (datasetGDAL.pathGDAL.path == NO_PATH_STRING) {
+            datasetGDAL.pathGDAL.updatePath(createInfo.getOrElse(RASTER_PATH_KEY, NO_PATH_STRING))
+        }
+        if (datasetGDAL.parentPathGDAL.path == NO_PATH_STRING) {
+            datasetGDAL.parentPathGDAL.updatePath(createInfo.getOrElse(RASTER_PARENT_PATH_KEY, NO_PATH_STRING))
+        }
+        if (datasetGDAL.driverNameOpt.isEmpty) {
+            datasetGDAL.driverNameOpt = createInfo.get(RASTER_DRIVER_KEY) match {
+                case Some(name) if name != NO_DRIVER => Some(name)
+                case _ => None
+            }
+        }
+        if (datasetGDAL.subdatasetNameOpt.isEmpty){
+            datasetGDAL.subdatasetNameOpt = createInfo.get(RASTER_SUBDATASET_NAME_KEY)
+        }
+        if (datasetGDAL.bandIdxOpt.isEmpty){
+            datasetGDAL.bandIdxOpt = {
+                createInfo.get(RASTER_BAND_INDEX_KEY) match {
+                    // bandIx >= 1 is valid
+                    case Some(bandIdx) if bandIdx.toInt > 0 => Some(bandIdx.toInt)
+                    case _ => None
+                }
+            }
+        }
+        this
+    }
+
+    /** Returns immutable internal map, representing `createInfo` at initialization (not the lastest). */
+    def getCreateInfoFromInit: Map[String, String] = createInfoInit
+
+    /** Returns immutable internal map, representing latest KVs (blends from `datasetGDAL`). */
+    def getCreateInfo: Map[String, String] = {
+        this._initCreateInfo
+        this.createInfo ++= datasetGDAL.asCreateInfo
+        this.createInfo
+    }
 
     /** Return [[datasetGDAL]]. */
     def getDatasetGDAL: DatasetGDAL = datasetGDAL
 
-    /** Return the [[PathGDAL]] (within [[datasetGDAL]]). */
-    def getPathGDAL: PathGDAL = datasetGDAL.pathGDAL
+    /** Return the 'path' [[PathGDAL]] (within [[datasetGDAL]]). */
+    def getPathGDAL: PathGDAL = getDatasetGDAL.pathGDAL
+
+    /** Return the 'parentPath' [[PathGDAL]] (within [[datasetGDAL]]). */
+    def getParentPathGDAL: PathGDAL = getDatasetGDAL.parentPathGDAL
 
     /** @inheritdoc */
-    override def getDatasetOpt: Option[Dataset] = datasetGDAL.getDatasetOpt
-
-    /** @inheritdoc */
-    override def getDriverNameOpt: Option[String] = {
-        if (datasetGDAL.driverNameOpt.isDefined) datasetGDAL.driverNameOpt
-        else createInfo.get(RASTER_DRIVER_KEY)
+    override def getDatasetOpt: Option[Dataset] = {
+        this._initCreateInfo
+        datasetGDAL.getDatasetOpt
     }
+
+    /** @inheritdoc */
+    override def getDriverNameOpt: Option[String] = datasetGDAL.driverNameOpt
 
     /**
      * @return
-     *   The raster's path on disk, or NO_PATH_STRING. Usually this is a parent
+     *   The tile's path on disk, or NO_PATH_STRING. Usually this is a parent
      *   file for the tile.
      */
-    def getRawParentPath: String = createInfo.getOrElse(RASTER_PARENT_PATH_KEY, NO_PATH_STRING)
+    def getRawParentPath: String = {
+        this._initCreateInfo
+        datasetGDAL.parentPathGDAL.path
+    }
 
-    /** @return Returns the raster's path, or NO_PATH_STRING. */
-    def getRawPath: String = createInfo.getOrElse(RASTER_PATH_KEY, NO_PATH_STRING)
+    /** @return Returns the tile's path, or NO_PATH_STRING. */
+    def getRawPath: String = {
+        this._initCreateInfo
+        datasetGDAL.pathGDAL.path
+    }
 
     /** @return memSize (from CreateInfo) */
-    def getMemSize: Long = Try(createInfo(RASTER_MEM_SIZE_KEY).toLong).getOrElse(-1L)
+    def getMemSize: Long = Try(createInfo(RASTER_MEM_SIZE_KEY).toLong).getOrElse(-1)
 
     /** @inheritdoc */
-    override def getPathOpt: Option[String] = createInfo.get(RASTER_PATH_KEY)
+    override def getPathOpt: Option[String] = {
+        val p = getRawPath
+        if (p == NO_PATH_STRING) None
+        else Option(p)
+    }
 
     /** @inheritdoc */
-    override def getParentPathOpt: Option[String] = createInfo.get(RASTER_PARENT_PATH_KEY)
+    override def getParentPathOpt: Option[String] = {
+        val p = getRawParentPath
+        if (p == NO_PATH_STRING) None
+        else Option(p)
+    }
 
     /** @inheritdoc */
     override def isEmptyRasterGDAL: Boolean = emptyRasterGDAL
@@ -960,29 +1095,37 @@ case class RasterGDAL(
         this
     }
 
-    /** Update driver on internal map, return `this` (fluent). */
+    /** Update the internal map, return `this` (fluent) - skipFlag. */
+    def updateCreateInfo(newMap: Map[String, String], skipFlags: Boolean): RasterGDAL = {
+        // !!! avoid cyclic dependencies !!!
+        if (!skipFlags) pathNewFlag = true
+        createInfo = newMap
+        this._initCreateInfo
+        this
+    }
+
+    /** Update driver on internal map + `datasetGDAL`, return `this` (fluent). */
     def updateCreateInfoDriver(driver: String): RasterGDAL = {
         this.createInfo += (RASTER_DRIVER_KEY -> driver)
-        datasetGDAL.updateDriverName(driver)
+        this._initCreateInfo
+        this.datasetGDAL.updateDriverName(driver)
         this
     }
 
-    /** Update path on internal map, return `this` (fluent) - `skipFlag`. */
+    /** Update path on internal map + `datasetGDAL`, return `this` (fluent) - `skipFlag`. */
     def updateCreateInfoRawPath(rawPath: String, skipFlag: Boolean): RasterGDAL = {
-        createInfo.get(RASTER_PATH_KEY) match {
-            // only flag if path has changed
-            case Some(k) if k == rawPath => ()
-            case _                    =>
-                this.createInfo += (RASTER_PATH_KEY -> rawPath)
-                if (!skipFlag) pathNewFlag = true
-        }
-        datasetGDAL.updatePath(rawPath)
+        if (!skipFlag) pathNewFlag = true
+        this.createInfo += (RASTER_PATH_KEY -> rawPath)
+        this._initCreateInfo
+        this.getPathGDAL.updatePath(rawPath)
         this
     }
 
-    /** Update parentPath on internal map, return `this` (fluent). */
-    def updateCreateInfoRawParentPath(parentRawPath: String): RasterGDAL = {
-        this.createInfo += (RASTER_PARENT_PATH_KEY -> parentRawPath)
+    /** Update parentPath on internal map + `datasetGDAL`, return `this` (fluent). */
+    def updateCreateInfoRawParentPath(rawParentPath: String): RasterGDAL = {
+        this.createInfo += (RASTER_PARENT_PATH_KEY -> rawParentPath)
+        this._initCreateInfo
+        this.getParentPathGDAL.updatePath(rawParentPath)
         this
     }
 
@@ -1015,8 +1158,6 @@ case class RasterGDAL(
 /** Singleton / companion object for RasterGDAL. */
 object RasterGDAL {
 
-    val DIR_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmm") // yyyyMMddHHmmss
-
     /**
      * Empty [[RasterGDAL]]
      * + only constructor where `setEmptyRasterGDAL` called.
@@ -1027,7 +1168,7 @@ object RasterGDAL {
         val result = RasterGDAL(Map.empty[String, String], None)
         result.setEmptyRasterGDAL(true)
         result.updateCreateInfoLastCmd("emptyRasterGDAL")
-        result.updateCreateInfoLastCmd("emptyRasterGDAL = true")
+        result.updateCreateInfoError("emptyRasterGDAL = true")
         result
     }
 

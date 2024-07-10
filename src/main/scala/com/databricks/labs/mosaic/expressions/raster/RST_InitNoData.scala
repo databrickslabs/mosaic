@@ -13,7 +13,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.DataType
 
-/** The expression that initializes no data values of a raster. */
+/** The expression that initializes no data values of a tile. */
 case class RST_InitNoData(
                              tileExpr: Expression,
                              exprConfig: ExprConfig
@@ -30,12 +30,12 @@ case class RST_InitNoData(
     }
 
     /**
-      * Initializes no data values of a raster.
+      * Initializes no data values of a tile.
       *
       * @param tile
-      *   The raster to be used.
+      *   The tile to be used.
       * @return
-      *   The raster with initialized no data values.
+      *   The tile with initialized no data values.
       */
     override def rasterTransform(tile: RasterTile): Any = {
         val raster = tile.raster
@@ -66,7 +66,7 @@ object RST_InitNoData extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Initializes the nodata value of the raster bands.
+          |_FUNC_(expr1) - Initializes the nodata value of the tile bands.
           |""".stripMargin
 
     override def example: String =

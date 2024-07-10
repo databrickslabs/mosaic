@@ -11,24 +11,28 @@ trait RST_TessellateBehaviors extends QueryTest {
 
     // noinspection MapGetGet
     def tessellateBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
+
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
 
         val rastersInMemory = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
+        //info(s"rastersInMemory -> ${rastersInMemory.first().toSeq.toString()}")
 
         val gridTiles = rastersInMemory
             .withColumn("tiles", rst_tessellate($"tile", 3))
             .withColumn("bbox", st_aswkt(rst_boundingbox($"tile")))
             .select("bbox", "path", "tiles")
             .withColumn("avg", rst_avg($"tiles"))
-        
+        //info(s"gridTiles -> ${gridTiles.first().toSeq.toString()}")
+
         rastersInMemory
             .createOrReplaceTempView("source")
 
@@ -45,12 +49,16 @@ trait RST_TessellateBehaviors extends QueryTest {
         result.length should be(441)
         info(s"tif example -> ${result.head}")
 
+        // TODO rst_separatebands and rst_setsrid are affecting test
+
         val netcdf = spark.read
             .format("gdal")
             .load("src/test/resources/binary/netcdf-CMIP5/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc")
             .withColumn("tile", rst_separatebands($"tile"))
             .withColumn("tile", rst_setsrid($"tile", lit(4326)))
             .limit(1)
+
+        info(s"netcdf count? ${netcdf.count()}")
 
         val netcdfGridTiles = netcdf
             .select(rst_tessellate($"tile", lit(1)).alias("tile"))

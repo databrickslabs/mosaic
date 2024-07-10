@@ -8,17 +8,17 @@ import com.databricks.labs.mosaic.functions.ExprConfig
 object CombineAVG {
 
     /**
-      * Creates a new raster using average of input rasters. The average is
+      * Creates a new tile using average of input rasters. The average is
       * computed as (sum of all rasters) / (number of rasters). It is applied to
       * all bands of the input rasters. Please note the data type of the output
-      * raster is double.
+      * tile is double.
       *
       * @param rasters
       *   The rasters to compute result for.
       * @param exprConfigOpt
       *   Option [[ExprConfig]]
       * @return
-      *   A new raster with average of input rasters.
+      *   A new tile with average of input rasters.
       */
     def compute(rasters: Seq[RasterGDAL], exprConfigOpt: Option[ExprConfig]): RasterGDAL = {
 

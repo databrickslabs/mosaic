@@ -12,7 +12,7 @@ import org.gdal.osr.SpatialReference
 
 import scala.util.Try
 
-/** Returns the SRID of the raster. */
+/** Returns the SRID of the tile. */
 case class RST_SRID(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_SRID](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -20,7 +20,7 @@ case class RST_SRID(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = IntegerType
 
-    /** Returns the SRID of the raster. */
+    /** Returns the SRID of the tile. */
     override def rasterTransform(tile: RasterTile): Any = {
         tile.raster.withDatasetHydratedOpt() match {
             case Some(dataset) =>
@@ -41,7 +41,7 @@ object RST_SRID extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns SRID of the raster tile.
+          |_FUNC_(expr1) - Returns SRID of the tile tile.
           |""".stripMargin
 
     override def example: String =

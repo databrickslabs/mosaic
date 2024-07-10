@@ -12,7 +12,7 @@ import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
 
-/** Returns the avg value per band of the raster. */
+/** Returns the avg value per band of the tile. */
 case class RST_Avg(tileExpr: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_Avg](tileExpr, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -20,7 +20,7 @@ case class RST_Avg(tileExpr: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = ArrayType(DoubleType)
 
-    /** Returns the avg value per band of the raster. */
+    /** Returns the avg value per band of the tile. */
     override def rasterTransform(tile: RasterTile): Any = {
         import org.json4s._
         import org.json4s.jackson.JsonMethods._

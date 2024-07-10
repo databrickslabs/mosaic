@@ -22,7 +22,7 @@ object OperatorOptions {
 
     /**
       * Add default options to the command. Extract the compression from the
-      * raster and append it to the command. This operation does not change the
+      * tile and append it to the command. This operation does not change the
       * output format. For changing the output format, use RST_ToFormat.
       *
       * @param command

@@ -1,6 +1,5 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
-import com.databricks.labs.mosaic.{NO_PATH_STRING, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.Mosaic
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
@@ -15,13 +14,14 @@ object RasterTessellate {
 
     val tileDataType: DataType = StringType // tessellate always uses checkpoint
 
+    //scalastyle:off println
     /**
-      * Tessellates a raster into tiles. The raster is projected into the index
+      * Tessellates a tile into tiles. The tile is projected into the index
       * system and then split into tiles. Each tile corresponds to a cell in the
       * index system.
       *
       * @param raster
-      *   The raster to tessellate.
+      *   The tile to tessellate.
       * @param resolution
       *   The resolution of the tiles.
       * @param indexSystem
@@ -45,19 +45,25 @@ object RasterTessellate {
         val bbox = raster.bbox(geometryAPI, indexSR)
         val cells = Mosaic.mosaicFill(bbox, resolution, keepCoreGeom = false, indexSystem, geometryAPI)
         val tmpRaster = RasterProject.project(raster, indexSR, exprConfigOpt)
+        //println(s"RasterTessellate - tmpRaster createInfo -> ${tmpRaster.getCreateInfo}")
 
         val chips = cells
             .map(cell => {
                 val cellID = cell.cellIdAsLong(indexSystem)
                 val isValidCell = indexSystem.isValid(cellID)
                 if (!isValidCell) {
+                    //println(s"RasterTessellate - invalid cellID $cellID")
                     (
                         false,
                         RasterTile(cell.index, RasterGDAL(), tileDataType)
                     ) // invalid cellid
                 } else {
-                    val cellRaster = tmpRaster.getRasterForCell(cellID, indexSystem, geometryAPI)
+                    val cellRaster = tmpRaster
+                        .getRasterForCell(cellID, indexSystem, geometryAPI)
+                        .initAndHydrate() // <- required
+                    //println(s"RasterTessellate - cellRaster createInfo -> ${cellRaster.getCreateInfo} (hydrated? ${cellRaster.isDatasetHydrated})")
                     if (!cellRaster.isEmpty) {
+                        //println(s"RasterTessellate - valid tile (cellID $cellID)")
                         (
                             true, // valid result
                             RasterTile(
@@ -67,6 +73,7 @@ object RasterTessellate {
                             )
                         )
                     } else {
+                        //println(s"RasterTessellate - empty tile (cellID $cellID)")
                         (
                             false,
                             RasterTile(cell.index, cellRaster, tileDataType) // empty result
@@ -75,13 +82,17 @@ object RasterTessellate {
                 }
             })
 
+
+
         val (result, invalid) = chips.partition(_._1) // true goes to result
         invalid.flatMap(t => Option(t._2.raster)).foreach(_.flushAndDestroy()) // destroy invalids
+        //println(s"chips # ${chips.length}, results # ${result.length}, invalids # ${invalid.length}")
 
         raster.flushAndDestroy()
         tmpRaster.flushAndDestroy()
 
         result.map(_._2) // return valid tiles
     }
+    //scalastyle:on println
 
 }

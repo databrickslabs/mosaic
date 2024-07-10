@@ -11,11 +11,11 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
 /**
-  * The expression for extracting metadata from a raster band.
+  * The expression for extracting metadata from a tile band.
   * @param raster
-  *   The expression for the raster. If the raster is stored on disk, the path
-  *   to the raster is provided. If the raster is stored in memory, the bytes of
-  *   the raster are provided.
+  *   The expression for the tile. If the tile is stored on disk, the path
+  *   to the tile is provided. If the tile is stored in memory, the bytes of
+  *   the tile are provided.
   * @param band
   *   The band index.
   * @param exprConfig
@@ -34,14 +34,14 @@ case class RST_BandMetaData(raster: Expression, band: Expression, exprConfig: Ex
     override def dataType: DataType = MapType(StringType, StringType)
 
     /**
-      * @param raster
-      *   The raster to be used.
+      * @param tile
+      *   The tile to be used.
       * @param band
       *   The band to be used.
       * @return
       *   The band metadata of the band as a map type result.
       */
-    override def bandTransform(raster: RasterTile, band: RasterBandGDAL): Any = {
+    override def bandTransform(tile: RasterTile, band: RasterBandGDAL): Any = {
         buildMapString(band.metadata)
     }
 }
@@ -51,7 +51,7 @@ object RST_BandMetaData extends WithExpressionInfo {
 
     override def name: String = "rst_bandmetadata"
 
-    override def usage: String = "_FUNC_(expr1, expr2) - Extracts metadata from a raster tile band."
+    override def usage: String = "_FUNC_(expr1, expr2) - Extracts metadata from a tile tile band."
 
     override def example: String =
         """

@@ -22,8 +22,8 @@ import org.apache.spark.unsafe.types.UTF8String
 import java.nio.file.{Files, Paths, StandardCopyOption}
 
 /**
-  * The raster for construction of a raster tile. This should be the first
-  * expression in the expression tree for a raster tile.
+  * The tile for construction of a tile tile. This should be the first
+  * expression in the expression tree for a tile tile.
   */
 case class RST_FromFile(
                            rasterPathExpr: Expression,
@@ -55,7 +55,7 @@ case class RST_FromFile(
     override def elementSchema: StructType = StructType(Array(StructField("tile", dataType)))
 
     /**
-      * Loads a raster from a file and subdivides it into tiles of the specified
+      * Loads a tile from a file and subdivides it into tiles of the specified
       * size (in MB).
       * @param input
       *   The input file path.
@@ -65,23 +65,23 @@ case class RST_FromFile(
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(exprConfig)
         val resultType = RasterTile.getRasterType(dataType)
+        val toFuse = resultType == StringType
         val path = rasterPathExpr.eval(input).asInstanceOf[UTF8String].toString
-        val cleanPath = PathUtils.asFileSystemPath(path) // removes fuse tokens
-        val driverShortName = identifyDriverNameFromRawPath(path)
+        val uriGdalOpt = PathUtils.parseGdalUriOpt(path, uriDeepCheck = exprConfig.isUriDeepCheck)
+        val fsPath = PathUtils.asFileSystemPath(path, uriGdalOpt) // removes fuse tokens
+        val driverShortName = identifyDriverNameFromRawPath(path, uriGdalOpt)
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
-        val currentSize = Files.size(Paths.get(cleanPath))
+        val currentSize = Files.size(Paths.get(fsPath))
+
+        val createInfo = Map(
+            RASTER_PATH_KEY -> path,
+            RASTER_DRIVER_KEY -> driverShortName
+        )
 
         if (targetSize <= 0 && currentSize <= Integer.MAX_VALUE) {
             // since this will be serialized want it initialized
-            var raster = RasterGDAL(
-                Map(
-                    RASTER_PATH_KEY -> path,
-                    RASTER_PARENT_PATH_KEY -> path,
-                    RASTER_DRIVER_KEY -> driverShortName
-                ),
-                Option(exprConfig)
-            )
-            raster.finalizeRaster() // this will also destroy
+            var raster = RasterGDAL(createInfo, Option(exprConfig))
+            raster.finalizeRaster(toFuse) // <- this will also destroy
             var result = RasterTile(null, raster, resultType).formatCellId(indexSystem)
             val row = result.serialize(resultType, doDestroy = true, Option(exprConfig))
 
@@ -94,11 +94,15 @@ case class RST_FromFile(
             // If target size is <0 and we are here that means the file is too big to fit in memory
             // We split to tiles of size 64MB
             val tmpPath = createTmpFileFromDriver(driverShortName, Option(exprConfig))
-            Files.copy(Paths.get(cleanPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
+            Files.copy(Paths.get(fsPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
             val size = if (targetSize <= 0) 64 else targetSize
 
-            var results = ReTileOnRead.localSubdivide(tmpPath, path, size, exprConfig).map(_.formatCellId(indexSystem))
-            val rows = results.map(_.finalizeTile().serialize(resultType, doDestroy = true, Option(exprConfig)))
+            var results = ReTileOnRead.localSubdivide(
+                createInfo + (RASTER_PATH_KEY -> tmpPath),
+                size,
+                Option(exprConfig)
+            ).map(_.formatCellId(indexSystem))
+            val rows = results.map(_.finalizeTile(toFuse).serialize(resultType, doDestroy = true, Option(exprConfig)))
 
             results = null
 
@@ -121,14 +125,14 @@ object RST_FromFile extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a set of new raster tiles within threshold in MBs.
+          |_FUNC_(expr1) - Returns a set of new tile tiles within threshold in MBs.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
           |      > SELECT _FUNC_(raster_path);
-          |        {index_id, raster, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
           |        ...
           |  """.stripMargin
 

@@ -9,21 +9,21 @@ import org.gdal.osr.SpatialReference
 
 /**
   * RasterClipByVector is an object that defines the interface for clipping a
-  * raster by a vector geometry.
+  * tile by a vector geometry.
   */
 object RasterClipByVector {
 
     /**
-      * Clips a raster by a vector geometry. The method handles all the
+      * Clips a tile by a vector geometry. The method handles all the
       * abstractions over GDAL Warp. By default it uses CUTLINE_ALL_TOUCHED=TRUE to ensure
       * that all pixels that touch the geometry are included. This will avoid
       * the issue of having a pixel that is half in and half out of the
       * geometry, important for tessellation. The method also uses the geometry
-      * API to generate a shapefile that is used to clip the raster. The
+      * API to generate a shapefile that is used to clip the tile. The
       * shapefile is deleted after the clip is complete.
       *
       * @param raster
-      *   The raster to clip.
+      *   The tile to clip.
       * @param geometry
       *   The geometry to clip by.
       * @param geomCRS
@@ -36,7 +36,7 @@ object RasterClipByVector {
       *   Whether pixels touching cutline included (true)
       *   or only half-in (false), default: true.
       * @return
-      *   A clipped raster.
+      *   A clipped tile.
       */
     def clip(
                 raster: RasterGDAL, geometry: MosaicGeometry, geomCRS: SpatialReference,
@@ -49,7 +49,7 @@ object RasterClipByVector {
 
         // Reference https://gdal.org/programs/gdalwarp.html for cmd line usage
         // For more on -wo consult https://gdal.org/doxygen/structGDALWarpOptions.html
-        // SOURCE_EXTRA=3 can also be used to ensure that when the raster is clipped, the
+        // SOURCE_EXTRA=3 can also be used to ensure that when the tile is clipped, the
         // pixels that touch the geometry are included. The default is 1 for this, 3 might be a good empirical value.
         val cutlineToken: String = if (cutlineAllTouched) {
             " -wo CUTLINE_ALL_TOUCHED=TRUE"

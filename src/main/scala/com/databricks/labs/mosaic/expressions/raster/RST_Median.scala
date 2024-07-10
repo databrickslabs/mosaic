@@ -14,7 +14,7 @@ import org.apache.spark.sql.types._
 
 import scala.util.Try
 
-/** Returns the median value per band of the raster. */
+/** Returns the median value per band of the tile. */
 case class RST_Median(rasterExpr: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_Median](rasterExpr, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -22,7 +22,7 @@ case class RST_Median(rasterExpr: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = ArrayType(DoubleType)
 
-    /** Returns the median value per band of the raster. */
+    /** Returns the median value per band of the tile. */
     override def rasterTransform(tile: RasterTile): Any = Try {
         val raster = tile.raster
         val width = raster.xSize * raster.pixelXSize
@@ -36,7 +36,7 @@ case class RST_Median(rasterExpr: Expression, exprConfig: ExprConfig)
             Option(exprConfig)
         )
 
-        // Max pixel is a hack since we get a 1x1 raster back
+        // Max pixel is a hack since we get a 1x1 tile back
         val nBands = raster.withDatasetHydratedOpt().get.GetRasterCount()
         val maxValues = (1 to nBands).map(medRaster.getBand(_).maxPixelValue)
         ArrayData.toArrayData(maxValues.toArray)

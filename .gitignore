@@ -193,3 +193,4 @@ docker/.m2/
 /scripts/docker/m2/pl/
 /scripts/docker/m2/xml-apis/
 /scripts/docker/m2/xmlpull/
+/checkpoint_table_knn/

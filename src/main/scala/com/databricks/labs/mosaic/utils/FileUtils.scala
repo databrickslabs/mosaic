@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.utils
 
 import com.databricks.labs.mosaic.MOSAIC_RASTER_TMP_PREFIX_DEFAULT
 
-import java.io.{BufferedInputStream, File, FileInputStream, FilenameFilter, IOException}
+import java.io.{BufferedInputStream, File, FileInputStream, IOException}
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor}
 import scala.util.Try
@@ -11,10 +11,17 @@ object FileUtils {
 
     val MINUTE_IN_MILLIS = 60 * 1000
 
-    def readBytes(path: String): Array[Byte] = {
+    /**
+     * Read bytes from path.
+     * @param path
+     * @param uriDeepCheck
+     * @return
+     */
+    def readBytes(path: String, uriDeepCheck: Boolean): Array[Byte] = {
         val bufferSize = 1024 * 1024 // 1MB
-        val cleanPath = PathUtils.asFileSystemPath(path)
-        val inputStream = new BufferedInputStream(new FileInputStream(cleanPath))
+        val uriGdalOpt = PathUtils.parseGdalUriOpt(path, uriDeepCheck)
+        val fsPath = PathUtils.asFileSystemPath(path, uriGdalOpt)
+        val inputStream = new BufferedInputStream(new FileInputStream(fsPath))
         val buffer = new Array[Byte](bufferSize)
 
         var bytesRead = 0
@@ -29,12 +36,17 @@ object FileUtils {
         bytes
     }
 
+    /**
+     * Create a temp dir using prefix for root dir, e.g. '/tmp'
+     * @param prefix
+     * @return
+     */
     def createMosaicTmpDir(prefix: String = MOSAIC_RASTER_TMP_PREFIX_DEFAULT): String = {
         val tempRoot = Paths.get(s"$prefix/mosaic_tmp/")
         if (!Files.exists(tempRoot)) {
             Files.createDirectories(tempRoot)
         }
-        val tempDir = Files.createTempDirectory(tempRoot, "mosaic")
+        val tempDir = Files.createTempDirectory(tempRoot, "mosaic_")
         tempDir.toFile.getAbsolutePath
     }
 
@@ -91,10 +103,23 @@ object FileUtils {
 
             Files.walkFileTree(root, new SimpleFileVisitor[Path] {
                 override def visitFile(file: Path, attributes: BasicFileAttributes): FileVisitResult = {
+
                     if (isPathModTimeGTMillis(file, ageMillis)) {
+                        // file or dir that is older than age
                         Try(Files.delete(file))
+                        FileVisitResult.CONTINUE
+                    } else if (Files.isDirectory(file) && !Files.isSameFile(root, file)) {
+                        //scalastyle:off println
+                        //println(s"DELETE -> skipping subtree under dir '${file.toString}'")
+                        //scalastyle:on println
+
+                        // dir that is newer than age
+                        FileVisitResult.SKIP_SUBTREE
+                    } else {
+                        // file that is newer than age
+                        FileVisitResult.CONTINUE
                     }
-                    FileVisitResult.CONTINUE
+
                 }
 
                 override def postVisitDirectory(dir: Path, exception: IOException): FileVisitResult = {

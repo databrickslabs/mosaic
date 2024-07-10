@@ -7,7 +7,7 @@
 # - for IDE driven or Jupyter notebook testing
 # [3] if you want to run tests within the container shell
 # - [a] `unset JAVA_TOOL_OPTIONS` is needed to execute JVM tests
-# - [b] then can test e.g. `mvn -X test -DskipTests=false -Dsuites=com.databricks.labs.mosaic.core.raster.TestRasterGDAL`
+# - [b] then can test e.g. `mvn -X test -DskipTests=false -Dsuites=com.databricks.labs.mosaic.core.tile.TestRasterGDAL`
 #       and `python3 -m unittest mosaic test/test_fuse_install.py` from ./python dir
 # - [c] you may need to run `mvn clean` occasionally, especially around initial setup as intellij is JDK 11
 #       and docker is JDK 8.

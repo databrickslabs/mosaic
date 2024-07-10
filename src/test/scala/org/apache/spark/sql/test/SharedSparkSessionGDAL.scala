@@ -1,12 +1,11 @@
 package org.apache.spark.sql.test
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
 import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
-import com.databricks.labs.mosaic.{MOSAIC_GDAL_NATIVE, MOSAIC_MANUAL_CLEANUP_MODE, MOSAIC_RASTER_CHECKPOINT,
-    MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_RASTER_TMP_PREFIX, MOSAIC_RASTER_TMP_PREFIX_DEFAULT,
-    MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
+import com.databricks.labs.mosaic.{MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_GDAL_NATIVE, MOSAIC_MANUAL_CLEANUP_MODE, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_TMP_PREFIX, MOSAIC_RASTER_TMP_PREFIX_DEFAULT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.gdal.gdal.gdal
@@ -17,6 +16,8 @@ import scala.util.Try
 trait SharedSparkSessionGDAL extends SharedSparkSession {
 
     private var mosaicCheckpointRootDir: String = _
+
+    private var exprConfigOpt: Option[ExprConfig] = None
 
     override def sparkConf: SparkConf = {
         //note: calling super.sparkConf constructs a new object
@@ -44,7 +45,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         sc.conf.set(MOSAIC_GDAL_NATIVE, "true")
         sc.conf.set(MOSAIC_TEST_MODE, "true")
         sc.conf.set(MOSAIC_MANUAL_CLEANUP_MODE, "false")
-        sc.conf.set(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, "30")
+        sc.conf.set(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, "30") // manual is -1 (default is 30)
         sc.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT)
         sc.conf.set(MOSAIC_RASTER_CHECKPOINT, mosaicCheckpointRootDir)
         sc.conf.set(MOSAIC_RASTER_TMP_PREFIX, MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
@@ -53,11 +54,15 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         Try(MosaicGDAL.enableGDAL(sc))
         Try(gdal.AllRegister())
 
+        exprConfigOpt = Option(ExprConfig(sc))
+
         // clean-up sidecar files in modis, if any
         // - 'target-class' dir as well as project 'resources' dir
         PathUtils.cleanUpPAMFiles(
-            Paths.get(filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")).getParent.toString)
-        PathUtils.cleanUpPAMFiles("src/test/resources/modis/")
+            Paths.get(filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")).getParent.toString,
+            uriGdalOpt = None
+        )
+        PathUtils.cleanUpPAMFiles("src/test/resources/modis/", uriGdalOpt = None)
     }
 
     override def afterEach(): Unit = {
@@ -87,6 +92,8 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
     }
 
     protected def getCheckpointRootDir: String = "/dbfs/checkpoint"
+
+    protected def getExprConfigOpt: Option[ExprConfig] = exprConfigOpt
 
     protected def getMosaicCheckpointRootDir: String = mosaicCheckpointRootDir
 

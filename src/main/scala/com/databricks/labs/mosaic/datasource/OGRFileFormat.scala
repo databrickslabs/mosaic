@@ -363,11 +363,15 @@ object OGRFileFormat extends Serializable {
       *   the name of the OGR driver
       * @param path
       *   the path to the file
+      * @param uriDeepCheck
+      *   Whether to test common uris or all.
       * @return
       *   the data source
       */
-    def getDataSource(driverName: String, path: String): org.gdal.ogr.DataSource = {
-        val cleanPath = PathUtils.asFileSystemPath(path)
+    def getDataSource(driverName: String, path: String, uriDeepCheck: Boolean): org.gdal.ogr.DataSource = {
+        val uriGdalOpt = PathUtils.parseGdalUriOpt(path, uriDeepCheck)
+        val cleanPath = PathUtils.getCleanPath(path, addVsiZipToken = true, uriGdalOpt) // need for zips
+
         // 0 is for no update driver
         if (driverName.nonEmpty) {
             val driver = ogr.GetDriverByName(driverName)
@@ -404,8 +408,15 @@ object OGRFileFormat extends Serializable {
         val layerName = options.getOrElse("layerName", "")
         val inferenceLimit = options.getOrElse("inferenceLimit", "200").toInt
         val asWKB = options.getOrElse("asWKB", "false").toBoolean
+        val uriDeepCheck = options.getOrElse("uriDeepCheck", "false").toBoolean
 
-        val dataset = getDataSource(driverName, path)
+        val dataset = getDataSource(driverName, path, uriDeepCheck)
+
+        //scalastyle:off println
+        //println(s"layer count? ${dataset.GetLayerCount()}")
+        //println(s"layer 0? ${dataset.GetLayer(0).GetName()}")
+        //scalastyle:on println
+
         val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
         val layer = dataset.GetLayer(resolvedLayerName)
         layer.ResetReading()
@@ -459,8 +470,9 @@ object OGRFileFormat extends Serializable {
             val layerN = options.getOrElse("layerNumber", "0").toInt
             val layerName = options.getOrElse("layerName", "")
             val asWKB = options.getOrElse("asWKB", "false").toBoolean
+            val uriDeepCheck = options.getOrElse("uriDeepCheck", "false").toBoolean
             val path = file.filePath
-            val dataset = getDataSource(driverName, path.toString())
+            val dataset = getDataSource(driverName, path.toString(), uriDeepCheck)
             val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
             val layer = dataset.GetLayerByName(resolvedLayerName)
             layer.ResetReading()

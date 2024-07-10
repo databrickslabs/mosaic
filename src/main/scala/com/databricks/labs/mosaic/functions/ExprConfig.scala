@@ -18,27 +18,16 @@ import scala.util.Try
   */
 case class ExprConfig(configs: Map[String, String]) {
 
-    def updateSparkConf(): Unit = {
+    /** fluent. */
+    def updateSparkConf(): ExprConfig = {
         // populate initial set configs
         val spark = SparkSession.builder().getOrCreate()
-        updateSparkConf(spark)
+        updateSparkConf(spark) // <- returns `this`
     }
 
-    def updateSparkConf(spark: SparkSession): Unit = {
-        val sparkConf = spark.sparkContext.getConf
-        configs.foreach { case (k, v) => sparkConf.set(k, v) }
-
-        // update defaults as well
-        this
-            .setGeometryAPI(spark.conf.get(MOSAIC_GEOMETRY_API, JTS.name))
-            .setIndexSystem(spark.conf.get(MOSAIC_INDEX_SYSTEM, H3.name))
-            .setRasterCheckpoint(spark.conf.get(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT))
-            .setRasterUseCheckpoint(spark.conf.get(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT))
-            .setTmpPrefix(spark.conf.get(MOSAIC_RASTER_TMP_PREFIX, MOSAIC_RASTER_TMP_PREFIX_DEFAULT))
-            .setGDALConf(spark.conf)
-            .setTestMode(spark.conf.get(MOSAIC_TEST_MODE, "false"))
-            .setManualCleanupMode(spark.conf.get(MOSAIC_MANUAL_CLEANUP_MODE, "false"))
-            .setCleanUpAgeLimitMinutes(spark.conf.get(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT))
+    /** fluent. */
+    def updateSparkConf(spark: SparkSession): ExprConfig = {
+        ExprConfig.updateConfig(this, spark) // <- returns `this`
     }
 
     def getTestMode: String = {
@@ -51,6 +40,10 @@ case class ExprConfig(configs: Map[String, String]) {
 
     def isTestMode: Boolean = {
         Try(getTestMode == "true").getOrElse(false)
+    }
+
+    def isUriDeepCheck: Boolean = {
+        Try(getUriDeepCheck).getOrElse(false)
     }
 
     def getManualCleanupMode: String = {
@@ -89,6 +82,9 @@ case class ExprConfig(configs: Map[String, String]) {
 
     def getCleanUpAgeLimitMinutes: Int = configs.getOrElse(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT).toInt
 
+    def getUriDeepCheck: Boolean = configs.getOrElse(MOSAIC_URI_DEEP_CHECK, MOSAIC_URI_DEEP_CHECK_DEFAULT).toBoolean
+
+
     def setGDALConf(conf: RuntimeConfig): ExprConfig = {
         val toAdd = conf.getAll.filter(_._1.startsWith(MOSAIC_GDAL_PREFIX))
         ExprConfig(configs ++ toAdd)
@@ -126,6 +122,14 @@ case class ExprConfig(configs: Map[String, String]) {
         setCleanUpAgeLimitMinutes(limit.toString)
     }
 
+    def setUriDeepCheck(deep: String): ExprConfig = {
+        ExprConfig(configs + (MOSAIC_URI_DEEP_CHECK -> deep))
+    }
+
+    def setUriDeepCheck(deep: Boolean): ExprConfig = {
+        setUriDeepCheck(deep.toString)
+    }
+
     def setConfig(key: String, value: String): ExprConfig = {
         ExprConfig(configs + (key -> value))
     }
@@ -140,6 +144,18 @@ object ExprConfig {
 
     def apply(spark: SparkSession): ExprConfig = {
         val exprConfig = new ExprConfig(Map.empty[String, String])
+        this.updateConfig(exprConfig, spark)
+    }
+
+    def updateConfig(exprConfig: ExprConfig, spark: SparkSession): ExprConfig = {
+
+        // - make sure spark is in sync with any already set expr configs
+        val sparkConf = spark.sparkContext.getConf
+        exprConfig.configs.foreach { case (k, v) => sparkConf.set(k, v) }
+
+        // - update any missing expr configs
+        // - update the expr values with defaults if missing
+        // - this does not set spark configs for expr defaults (when missing)
         exprConfig
             .setGeometryAPI(spark.conf.get(MOSAIC_GEOMETRY_API, JTS.name))
             .setIndexSystem(spark.conf.get(MOSAIC_INDEX_SYSTEM, H3.name))
@@ -150,6 +166,6 @@ object ExprConfig {
             .setTestMode(spark.conf.get(MOSAIC_TEST_MODE, "false"))
             .setManualCleanupMode(spark.conf.get(MOSAIC_MANUAL_CLEANUP_MODE, "false"))
             .setCleanUpAgeLimitMinutes(spark.conf.get(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT))
+            .setUriDeepCheck(spark.conf.get(MOSAIC_URI_DEEP_CHECK, MOSAIC_URI_DEEP_CHECK_DEFAULT))
     }
-
 }

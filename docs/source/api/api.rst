@@ -5,12 +5,12 @@ API Documentation
    :maxdepth: 2
 
    vector-format-readers
-   raster-format-readers
+   tile-format-readers
    geometry-constructors
    geometry-accessors
    spatial-functions
    spatial-indexing
    spatial-predicates
    spatial-aggregations
-   raster-functions
+   tile-functions
    rasterio-gdal-udfs

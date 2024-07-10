@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.DoubleType
 
-/** Returns the maximum value of the raster in the grid cell. */
+/** Returns the maximum value of the tile in the grid cell. */
 case class RST_RasterToGridMax(
                                   raster: Expression,
                                   resolution: Expression,
@@ -22,7 +22,7 @@ case class RST_RasterToGridMax(
       with NullIntolerant
       with CodegenFallback {
 
-    /** Returns the maximum value of the raster in the grid cell. */
+    /** Returns the maximum value of the tile in the grid cell. */
     override def valuesCombiner(values: Seq[Double]): Double = values.max
 
 }
@@ -34,7 +34,7 @@ object RST_RasterToGridMax extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2) - Returns a collection of grid index cells with the max pixel value per cell for each band of the raster tile.
+          |_FUNC_(expr1, expr2) - Returns a collection of grid index cells with the max pixel value per cell for each band of the tile tile.
           |                       The output type is array<array<struct<index: long, measure: double>>>.
           |                       Raster mask is taken into account and only valid pixels are used for the calculation.
           |""".stripMargin

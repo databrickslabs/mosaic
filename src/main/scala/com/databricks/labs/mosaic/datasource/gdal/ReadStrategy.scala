@@ -40,11 +40,11 @@ trait ReadStrategy extends Serializable {
       * @param requiredSchema
       *   Required schema.
       * @param options
-      * Options passed to the reader.
+      *   Options passed to the reader.
       * @param indexSystem
-      * Index system.
-      * @param exprConfig
-      * [[ExprConfig]]
+      *   Index system.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]].
       * @return
       *   Iterator of internal rows.
       */
@@ -54,7 +54,7 @@ trait ReadStrategy extends Serializable {
                 requiredSchema: StructType,
                 options: Map[String, String],
                 indexSystem: IndexSystem,
-                exprConfig: ExprConfig
+                exprConfigOpt: Option[ExprConfig]
     ): Iterator[InternalRow]
 
 }
@@ -71,7 +71,7 @@ object ReadStrategy {
       *   Read strategy.
       */
     def getReader(options: Map[String, String]): ReadStrategy = {
-        val readStrategy = options.getOrElse(MOSAIC_RASTER_READ_STRATEGY, MOSAIC_RASTER_READ_IN_MEMORY)
+        val readStrategy = options.getOrElse(MOSAIC_RASTER_READ_STRATEGY, MOSAIC_RASTER_READ_AS_PATH)
 
         readStrategy match {
             case MOSAIC_RASTER_READ_IN_MEMORY  => ReadInMemory

@@ -123,9 +123,9 @@ rst_combineavg_agg
 
 .. function:: rst_combineavg_agg(tile)
 
-    Aggregates raster tiles by averaging pixel values.
+    Aggregates tile tiles by averaging pixel values.
 
-    :param tile: A grouped column containing raster tiles.
+    :param tile: A grouped column containing tile tiles.
     :type tile: Column (RasterTileType)
     :rtype: Column: RasterTileType
 
@@ -133,7 +133,7 @@ rst_combineavg_agg
 
   Notes
     - Each :code:`tile` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
-    - The output raster will have the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input tiles.
+    - The output tile will have the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input tiles.
 
     Also, see :ref:`rst_combineavg_agg` function.
 ..
@@ -147,7 +147,7 @@ rst_combineavg_agg
      +----------------------------------------------------------------------------------------------------------------+
      | rst_combineavg_agg(tile)                                                                                        |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -157,7 +157,7 @@ rst_combineavg_agg
      +----------------------------------------------------------------------------------------------------------------+
      | rst_combineavg_agg(tile)                                                                                        |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -168,7 +168,7 @@ rst_combineavg_agg
      +----------------------------------------------------------------------------------------------------------------+
      | rst_combineavg_agg(tile)                                                                                        |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
 
@@ -177,9 +177,9 @@ rst_derivedband_agg
 
 .. function:: rst_derivedband_agg(tile, python_func, func_name)
 
-    Combines a group by statement over aggregated raster tiles by using the provided python function.
+    Combines a group by statement over aggregated tile tiles by using the provided python function.
 
-    :param tile: A grouped column containing raster tile(s).
+    :param tile: A grouped column containing tile tile(s).
     :type tile: Column (RasterTileType)
     :param python_func: A function to evaluate in python.
     :type python_func: Column (StringType)
@@ -189,8 +189,8 @@ rst_derivedband_agg
 
 .. note::
   Notes
-    - Input raster tiles in :code:`tile` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
-    - The output raster will have the same the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input raster tiles.
+    - Input tile tiles in :code:`tile` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
+    - The output tile will have the same the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input tile tiles.
 ..
 
     :example:
@@ -215,7 +215,7 @@ rst_derivedband_agg
      +----------------------------------------------------------------------------------------------------------------+
      | rst_derivedband_agg(tile,py_func1,func1_name)                                                                   |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -236,7 +236,7 @@ rst_derivedband_agg
      +----------------------------------------------------------------------------------------------------------------+
      | rst_derivedband_agg(tile,py_func1,func1_name)                                                                   |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -259,7 +259,7 @@ rst_derivedband_agg
      +----------------------------------------------------------------------------------------------------------------+
      | rst_derivedband_agg(tile,py_func1,func1_name)                                                                   |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
 
@@ -268,9 +268,9 @@ rst_merge_agg
 
 .. function:: rst_merge_agg(tile)
 
-    Aggregates raster tiles into a single raster.
+    Aggregates tile tiles into a single tile.
 
-    :param tile: A column containing raster tiles.
+    :param tile: A column containing tile tiles.
     :type tile: Column (RasterTileType)
     :rtype: Column: RasterTileType
 
@@ -282,12 +282,12 @@ rst_merge_agg
     - must have the same coordinate reference system.
     - must have the same pixel data type.
     - will be combined using the :code:`gdalwarp` command.
-    - require a :code:`noData` value to have been initialised (if this is not the case, the non valid pixels may introduce artifacts in the output raster).
+    - require a :code:`noData` value to have been initialised (if this is not the case, the non valid pixels may introduce artifacts in the output tile).
     - will be stacked in the order they are provided.
       - This order is randomized since this is an aggregation function.
       - If the order of rasters is important please first collect rasters and sort them by metadata information and then use rst_merge function.
 
-  The resulting output raster will have:
+  The resulting output tile will have:
     - an extent that covers all of the input tiles;
     - the same number of bands as the input tiles;
     - the same pixel type as the input tiles;
@@ -307,7 +307,7 @@ rst_merge_agg
      +----------------------------------------------------------------------------------------------------------------+
      | rst_merge_agg(tile)                                                                                             |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -317,7 +317,7 @@ rst_merge_agg
      +----------------------------------------------------------------------------------------------------------------+
      | rst_merge_agg(tile)                                                                                             |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -328,7 +328,7 @@ rst_merge_agg
      +----------------------------------------------------------------------------------------------------------------+
      | rst_merge_agg(tile)                                                                                             |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
 

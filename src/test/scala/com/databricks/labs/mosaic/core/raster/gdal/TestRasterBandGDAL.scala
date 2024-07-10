@@ -1,8 +1,7 @@
-package com.databricks.labs.mosaic.core.raster
+package com.databricks.labs.mosaic.core.raster.gdal
 
-import com.databricks.labs.mosaic.{RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
-import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
+import com.databricks.labs.mosaic.{RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.matchers.should.Matchers._
 
@@ -15,7 +14,7 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
           RASTER_PATH_KEY -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
           RASTER_PARENT_PATH_KEY -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
         )
-        val testRaster = RasterGDAL(createInfo)
+        val testRaster = RasterGDAL(createInfo, getExprConfigOpt)
         val testBand = testRaster.getBand(1)
         testBand.getBand
         testBand.index shouldBe 1
@@ -42,7 +41,7 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
             RASTER_PATH_KEY -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb"),
             RASTER_PARENT_PATH_KEY -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb")
         )
-        val testRaster = RasterGDAL(createInfo)
+        val testRaster = RasterGDAL(createInfo, getExprConfigOpt)
         val testBand = testRaster.getBand(1)
         testBand.description shouldBe "1[-] HYBL=\"Hybrid level\""
         testBand.dataType shouldBe 7
@@ -62,13 +61,13 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
             RASTER_PATH_KEY -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc"),
             RASTER_PARENT_PATH_KEY -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc")
         )
-        val superRaster = RasterGDAL(createInfo)
+        val superRaster = RasterGDAL(createInfo, getExprConfigOpt)
         val subdatasetPath = superRaster.subdatasets("bleaching_alert_area")
         val sdCreate  = Map(
             RASTER_PATH_KEY -> subdatasetPath,
             RASTER_PARENT_PATH_KEY -> subdatasetPath
         )
-        val testRaster = RasterGDAL(sdCreate)
+        val testRaster = RasterGDAL(sdCreate, getExprConfigOpt)
 
         val testBand = testRaster.getBand(1)
         testBand.dataType shouldBe 1

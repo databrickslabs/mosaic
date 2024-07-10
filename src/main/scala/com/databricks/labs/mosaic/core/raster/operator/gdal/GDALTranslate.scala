@@ -16,7 +16,7 @@ object GDALTranslate {
       * @param outputPath
       *   The output path of the translated file.
       * @param raster
-      *   The raster to translate.
+      *   The tile to translate.
       * @param command
       *   The GDAL Translate command.
       * @writeOptions

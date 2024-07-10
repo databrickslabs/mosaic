@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-/** Returns the width of the raster. */
+/** Returns the width of the tile. */
 case class RST_Width(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_Width](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -17,7 +17,7 @@ case class RST_Width(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = IntegerType
 
-    /** Returns the width of the raster. */
+    /** Returns the width of the tile. */
     override def rasterTransform(tile: RasterTile): Any = tile.raster.xSize
 
 }
@@ -27,7 +27,7 @@ object RST_Width extends WithExpressionInfo {
 
     override def name: String = "rst_width"
 
-    override def usage: String = "_FUNC_(expr1) - Returns width of the raster tile."
+    override def usage: String = "_FUNC_(expr1) - Returns width of the tile tile."
 
     override def example: String =
         """

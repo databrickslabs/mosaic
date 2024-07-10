@@ -48,15 +48,15 @@ object RST_CombineAvg extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Combine an array of raster tiles using average of pixels.
+          |_FUNC_(expr1) - Combine an array of tile tiles using average of pixels.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
           |      > SELECT _FUNC_(array(raster_tile_1, raster_tile_2, raster_tile_3));
-          |        {index_id, raster, parent_path, driver}
-          |        {index_id, raster, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
           |        ...
           |  """.stripMargin
 

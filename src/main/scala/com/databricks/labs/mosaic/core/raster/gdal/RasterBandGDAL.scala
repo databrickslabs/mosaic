@@ -20,19 +20,19 @@ case class RasterBandGDAL(band: Band, id: Int) {
 
     /**
       * @return
-      *   The band's description.
+      *   The band's description, defaults to an empty string.
       */
     def description: String = coerceNull(Try(band.GetDescription))
 
     /**
       * @return
-      *   Returns the pixels of the raster as a 1D array.
+      *   Returns the pixels of the tile as a 1D array.
       */
     def values: Array[Double] = values(0, 0, xSize, ySize)
 
     /**
       * @return
-      *   Returns the pixels of the raster as a 1D array.
+      *   Returns the pixels of the tile as a 1D array.
       */
     def maskValues: Array[Double] = maskValues(0, 0, xSize, ySize)
 
@@ -40,7 +40,7 @@ case class RasterBandGDAL(band: Band, id: Int) {
       * Get the band's metadata as a Map.
       *
       * @return
-      *   A Map of the band's metadata.
+      *   A Map of the band's metadata, defaults to an empty Map.
       */
     def metadata: Map[String, String] =
         Option(band.GetMetadata_Dict)
@@ -49,7 +49,7 @@ case class RasterBandGDAL(band: Band, id: Int) {
 
     /**
       * @return
-      *   Returns band's unity type.
+      *   Returns band's unit type, defaults to "".
       */
     def units: String = coerceNull(Try(band.GetUnitType))
 
@@ -58,27 +58,27 @@ case class RasterBandGDAL(band: Band, id: Int) {
       * @param tryVal
       *   The Try value to coerce.
       * @return
-      *   The value of the Try or an empty string.
+      *   The value as the result of Try or an empty string.
       */
     def coerceNull(tryVal: Try[String]): String = tryVal.filter(_ != null).getOrElse("")
 
     /**
       * @return
-      *   Returns the band's data type.
+      *   Returns the band's data type, defaults to -1.
       */
-    def dataType: Int = Try(band.getDataType).getOrElse(0)
+    def dataType: Int = Try(band.getDataType).getOrElse(-1)
 
     /**
       * @return
-      *   Returns the band's x size.
+      *   Returns the band's x size, defaults to -1.
       */
-    def xSize: Int = Try(band.GetXSize).getOrElse(0)
+    def xSize: Int = Try(band.GetXSize).getOrElse(-1)
 
     /**
       * @return
-      *   Returns the band's y size.
+      *   Returns the band's y size, defaults to -1.
       */
-    def ySize: Int = Try(band.GetYSize).getOrElse(0)
+    def ySize: Int = Try(band.GetYSize).getOrElse(-1)
 
     /**
       * @return
@@ -94,7 +94,7 @@ case class RasterBandGDAL(band: Band, id: Int) {
 
     /**
       * @return
-      *   Returns the band's min and max pixel values.
+      *   Returns the band's min and max pixel values, defaults to Seq(Double.NaN, Double.NaN).
       */
     def computeMinMax: Seq[Double] = {
         val minMaxVals = Array.fill[Double](2)(0)
@@ -125,17 +125,18 @@ case class RasterBandGDAL(band: Band, id: Int) {
       * @param ySize
       *   The number of pixels to read in the y direction.
       * @return
-      *   A 2D array of pixels from the band.
+      *   A 2D array of pixels from the band, defaults to empty array.
       */
-    def values(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] = {
-        val flatArray = Array.ofDim[Double](xSize * ySize)
-        (xSize, ySize) match {
-            case (0, 0) => Array.empty[Double]
-            case _      =>
-                band.ReadRaster(xOffset, yOffset, xSize, ySize, xSize, ySize, gdalconstConstants.GDT_Float64, flatArray, 0, 0)
-                flatArray
-        }
-    }
+    def values(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] =
+        Try {
+            val flatArray = Array.ofDim[Double](xSize * ySize)
+            (xSize, ySize) match {
+                case (0, 0) => Array.empty[Double]
+                case _      =>
+                    band.ReadRaster(xOffset, yOffset, xSize, ySize, xSize, ySize, gdalconstConstants.GDT_Float64, flatArray, 0, 0)
+                    flatArray
+            }
+        }.getOrElse(Array.empty[Double])
 
     /**
       * Get the band's pixels as a 1D array.
@@ -149,22 +150,23 @@ case class RasterBandGDAL(band: Band, id: Int) {
       * @param ySize
       *   The number of pixels to read in the y direction.
       * @return
-      *   A 2D array of pixels from the band.
+      *   A 2D array of pixels from the band, defaults to empty array.
       */
-    def maskValues(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] = {
-        val flatArray = Array.ofDim[Double](xSize * ySize)
-        val maskBand = band.GetMaskBand
-        (xSize, ySize) match {
-            case (0, 0) => Array.empty[Double]
-            case _      =>
-                maskBand.ReadRaster(xOffset, yOffset, xSize, ySize, xSize, ySize, gdalconstConstants.GDT_Float64, flatArray, 0, 0)
-                flatArray
-        }
-    }
+    def maskValues(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] =
+        Try {
+            val flatArray = Array.ofDim[Double](xSize * ySize)
+            val maskBand = band.GetMaskBand
+            (xSize, ySize) match {
+                case (0, 0) => Array.empty[Double]
+                case _      =>
+                    maskBand.ReadRaster(xOffset, yOffset, xSize, ySize, xSize, ySize, gdalconstConstants.GDT_Float64, flatArray, 0, 0)
+                    flatArray
+            }
+        }.getOrElse(Array.empty[Double])
 
     /**
       * @return
-      *   Returns the band's pixel value with scale and offset applied.
+      *   Returns the band's pixel value with scale and offset applied, defaults to 0.0.
       */
     def pixelValueToUnitValue(pixelValue: Double): Double = (pixelValue * pixelValueScale) + pixelValueOffset
 
@@ -177,7 +179,7 @@ case class RasterBandGDAL(band: Band, id: Int) {
 
     /**
       * @return
-      *   Returns the band's pixel value scale.
+      *   Returns the band's pixel value scale, defaults to 0.0.
       */
     def pixelValueOffset: Double = {
         val offset = Array.fill[java.lang.Double](1)(0)

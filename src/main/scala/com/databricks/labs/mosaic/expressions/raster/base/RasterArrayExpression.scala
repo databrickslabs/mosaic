@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, Un
 import scala.reflect.ClassTag
 
 /**
-  * Base class for all raster expressions that take two arguments. It provides
+  * Base class for all tile expressions that take two arguments. It provides
   * the boilerplate code needed to create a function builder for a given
   * expression. It minimises amount of code needed to create a new expression.
   *
@@ -17,7 +17,7 @@ import scala.reflect.ClassTag
   *   The rasters expression. It is an array column containing rasters as either
   *   paths or as content byte arrays.
   * @param returnsRaster
-  *   Whether raster is returned.
+  *   Whether tile is returned.
   * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
@@ -46,12 +46,12 @@ abstract class RasterArrayExpression[T <: Expression: ClassTag](
     def rasterTransform(rasters: Seq[RasterTile]): Any
 
     /**
-      * Evaluation of the expression. It evaluates the raster path and the loads
-      * the raster from the path. It handles the clean up of the raster before
+      * Evaluation of the expression. It evaluates the tile path and the loads
+      * the tile from the path. It handles the clean up of the tile before
       * returning the results.
       * @param input
       *   The InternalRow of the expression. It contains an array containing
-      *   raster tiles. It may be used for other argument expressions so it is
+      *   tile tiles. It may be used for other argument expressions so it is
       *   passed to rasterTransform.
       *
       * @return

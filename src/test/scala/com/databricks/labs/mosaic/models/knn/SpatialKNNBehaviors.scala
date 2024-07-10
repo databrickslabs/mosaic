@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.models.knn
 
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, CustomIndexSystem, H3IndexSystem}
-import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.functions.{ExprConfig, MosaicContext}
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
@@ -13,10 +13,14 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 trait SpatialKNNBehaviors { this: AnyFlatSpec =>
 
     def noApproximation(mosaicContext: MosaicContext, spark: SparkSession): Unit = {
-        val mc = mosaicContext
-        mc.register()
         val sc = spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
+
+        // init
+        val mc = mosaicContext
+        mc.register(sc)
+        import mc.functions._
 
         // could use spark checkpoint (slower for this)
         // sc.sparkContext.setCheckpointDir("/tmp/mosaic_tmp/spark_checkpoints")
@@ -30,7 +34,8 @@ trait SpatialKNNBehaviors { this: AnyFlatSpec =>
 
         val boroughs: DataFrame = getBoroughs(mc)
 
-        val tempLocation = MosaicContext.tmpDir(null)
+        val exprConfigOpt = Option(ExprConfig(sc))
+        val tempLocation = MosaicContext.createTmpContextDir(exprConfigOpt)
         spark.sparkContext.setCheckpointDir(tempLocation)
         spark.sparkContext.setLogLevel("ERROR")
 
@@ -93,10 +98,15 @@ trait SpatialKNNBehaviors { this: AnyFlatSpec =>
     }
 
     def behaviorApproximate(mosaicContext: MosaicContext, spark: SparkSession): Unit = {
-        val mc = mosaicContext
-        mc.register()
         val sc = spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
+
+        // init
+        val mc = mosaicContext
+        mc.register(sc)
+        import mc.functions._
+
 
         val (resolution, distanceThreshold) = mc.getIndexSystem match {
             case H3IndexSystem  => (3, 100.0)
@@ -111,8 +121,8 @@ trait SpatialKNNBehaviors { this: AnyFlatSpec =>
         }
 
         val boroughs: DataFrame = getBoroughs(mc)
-
-        val tempLocation = MosaicContext.tmpDir(null)
+        val exprConfigOpt = Option(ExprConfig(sc))
+        val tempLocation = MosaicContext.createTmpContextDir(exprConfigOpt)
         spark.sparkContext.setCheckpointDir(tempLocation)
         spark.sparkContext.setLogLevel("ERROR")
 

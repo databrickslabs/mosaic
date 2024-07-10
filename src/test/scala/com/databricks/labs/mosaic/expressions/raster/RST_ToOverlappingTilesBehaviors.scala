@@ -11,21 +11,27 @@ trait RST_ToOverlappingTilesBehaviors extends QueryTest {
 
     // noinspection MapGetGet
     def behaviors(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
+
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
 
         val rastersInMemory = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
+        //info(s"load -> ${rastersInMemory.first().toSeq.toString()}")
+
         val gridTiles = rastersInMemory
             .withColumn("tile", rst_tooverlappingtiles($"tile", lit(500), lit(500), lit(10)))
             .select("tile")
+
+        info(s"load -> ${gridTiles.first().toSeq.toString()}")
 
         rastersInMemory
             .createOrReplaceTempView("source")

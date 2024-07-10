@@ -33,7 +33,7 @@ object GDALWarp {
         val warpOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
         val warpOptions = new WarpOptions(warpOptionsVec)
         val warpResult = gdal.Warp(outputPath, rasters.map(_.withDatasetHydratedOpt().get).toArray, warpOptions)
-        // Format will always be the same as the first raster
+        // Format will always be the same as the first tile
         val errorMsg = gdal.GetLastErrorMsg
 
 //        if (errorMsg.nonEmpty) {

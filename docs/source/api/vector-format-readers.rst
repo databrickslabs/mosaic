@@ -13,7 +13,7 @@ Here are some common useful file formats:
       `TopoJSON  <https://gdal.org/drivers/vector/topojson.html>`__)
     * `FileGDB <https://gdal.org/drivers/vector/filegdb.html>`__ (ESRI File Geodatabase) and `OpenFileGDB <https://gdal.org/drivers/vector/openfilegdb.html>`__ (ESRI File Geodatabase vector) - Mosaic implements named reader :ref:`spark.read.format("geo_db")` (described in this doc).
     * `ESRI Shapefile <https://gdal.org/drivers/vector/shapefile.html>`__ (ESRI Shapefile / DBF) - Mosaic implements named reader :ref:`spark.read.format("shapefile")` (described in this doc).
-    * `netCDF <https://gdal.org/drivers/raster/netcdf.html>`__ (Network Common Data Form) - Mosaic supports GDAL netCDF raster reader also.
+    * `netCDF <https://gdal.org/drivers/tile/netcdf.html>`__ (Network Common Data Form) - Mosaic supports GDAL netCDF tile reader also.
     * `XLSX <https://gdal.org/drivers/vector/xlsx.html>`__, `XLS <https://gdal.org/drivers/vector/xls.html>`__, `ODS <https://gdal.org/drivers/vector/ods.html>`__ spreadsheets
     * `TIGER <https://gdal.org/drivers/vector/tiger.html>`__ (U.S. Census TIGER/Line)
     * `PGDump <https://gdal.org/drivers/vector/pgdump.html>`__ (PostgreSQL Dump)

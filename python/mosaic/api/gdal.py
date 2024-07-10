@@ -75,8 +75,8 @@ def enable_gdal(spark: SparkSession, with_checkpoint_dir: str = None) -> None:
     """
     try:
         if with_checkpoint_dir is not None:
-            spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "true")
-            spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", with_checkpoint_dir)
+            spark.conf.set("spark.databricks.labs.mosaic.tile.use.checkpoint", "true")
+            spark.conf.set("spark.databricks.labs.mosaic.tile.checkpoint", with_checkpoint_dir)
             refresh_context()
             config.mosaic_context.jEnableGDAL(spark, with_checkpoint_dir=with_checkpoint_dir)
         else:
@@ -106,7 +106,7 @@ def update_checkpoint_dir(spark: SparkSession, dir: str):
     :param spark: session to use.
     :param dir: new directory.
     """
-    spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", dir)
+    spark.conf.set("spark.databricks.labs.mosaic.tile.checkpoint", dir)
     refresh_context()
     config.mosaic_context.jUpdateCheckpointDir(spark, dir)
 
@@ -116,7 +116,7 @@ def set_checkpoint_off(spark: SparkSession):
     Turn off checkpointing.
     :param spark: session to use.
     """
-    spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "false")
+    spark.conf.set("spark.databricks.labs.mosaic.tile.use.checkpoint", "false")
     refresh_context()
     config.mosaic_context.jSetCheckpointOff(spark)
 
@@ -126,7 +126,7 @@ def set_checkpoint_on(spark: SparkSession):
     Turn on checkpointing, will use the configured path.
     :param spark: session to use.
     """
-    spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "true")
+    spark.conf.set("spark.databricks.labs.mosaic.tile.use.checkpoint", "true")
     refresh_context()
     config.mosaic_context.jSetCheckpointOn(spark)
 
@@ -138,8 +138,8 @@ def reset_checkpoint(spark: SparkSession):
     - spark conf unset for checkpoint path
     :param spark: session to use.
     """
-    spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "false")
-    spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", get_checkpoint_dir_default())
+    spark.conf.set("spark.databricks.labs.mosaic.tile.use.checkpoint", "false")
+    spark.conf.set("spark.databricks.labs.mosaic.tile.checkpoint", get_checkpoint_dir_default())
     refresh_context()
     config.mosaic_context.jResetCheckpoint(spark)
 
@@ -204,7 +204,7 @@ def is_manual_mode() -> bool:
 def get_local_raster_dir() -> str:
     """
     This is run on the driver, assumes enable.py already invoked.
-    :return: configured local raster directory.
+    :return: configured local tile directory.
     """
     return config.mosaic_context.get_local_raster_dir()
 

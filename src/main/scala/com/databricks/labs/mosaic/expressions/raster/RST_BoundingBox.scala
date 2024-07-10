@@ -14,7 +14,7 @@ import org.apache.spark.sql.types._
 
 import scala.util.Try
 
-/** The expression for extracting the bounding box of a raster. */
+/** The expression for extracting the bounding box of a tile. */
 case class RST_BoundingBox(
                               raster: Expression,
                               exprConfig: ExprConfig
@@ -25,13 +25,13 @@ case class RST_BoundingBox(
     override def dataType: DataType = BinaryType
 
     /**
-      * Computes the bounding box of the raster. The bbox is returned as a WKB
+      * Computes the bounding box of the tile. The bbox is returned as a WKB
       * polygon.
       *
       * @param tile
-      *   The raster tile to be used.
+      *   The tile tile to be used.
       * @return
-      *   The bounding box of the raster as a WKB polygon.
+      *   The bounding box of the tile as a WKB polygon.
       */
     override def rasterTransform(tile: RasterTile): Any = Try {
         val raster = tile.raster
@@ -62,7 +62,7 @@ object RST_BoundingBox extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns the bounding box of the raster tile.
+          |_FUNC_(expr1) - Returns the bounding box of the tile tile.
           |""".stripMargin
 
     override def example: String =

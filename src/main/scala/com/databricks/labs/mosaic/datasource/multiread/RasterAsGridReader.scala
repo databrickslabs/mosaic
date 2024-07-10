@@ -6,10 +6,10 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
 /*
- * A Mosaic DataFrame Reader that provides a unified interface to read GDAL raster data
- * formats. It uses the binaryFile reader to list the raster files. It then resolves the
- * subdatasets if configured to read subdatasets. It then retiles the raster if configured
- * to retile the raster. It converts the raster to a grid using the configured
+ * A Mosaic DataFrame Reader that provides a unified interface to read GDAL tile data
+ * formats. It uses the binaryFile reader to list the tile files. It then resolves the
+ * subdatasets if configured to read subdatasets. It then retiles the tile if configured
+ * to retile the tile. It converts the tile to a grid using the configured
  * combiner. The grid is then returned as a DataFrame. Finally, the grid is interpolated
  * using the configured interpolation k ring size.
  * @param sparkSession
@@ -37,12 +37,14 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         val resolution = config("resolution").toInt
 
         //println(
-        //    s"raster_to_grid - nPartitions? $nPartitions | isRetile? ${config("retile").toBoolean} (tileSize? ${config("tileSize")}) ..."
+            s"raster_to_grid - nPartitions? $nPartitions | isRetile? ${config("retile").toBoolean} (tileSize? ${config("tileSize")}) ..."
         //)
+        //println(config)
 
         // (1) gdal reader load
         val pathsDf = sparkSession.read
             .format("gdal")
+            .option("driverName", config("driverName")) // <- e.g. zip files might need this
             .option("extensions", config("extensions"))
             .option(MOSAIC_RASTER_READ_STRATEGY, "as_path")
             .option("vsizip", config("vsizip"))
@@ -100,7 +102,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     }
 
     /**
-      * Retile the raster if configured to do so. Retiling requires "retile" to
+      * Retile the tile if configured to do so. Retiling requires "retile" to
       * be set to true in the configuration map. It also requires "tileSize" to
       * be set to the desired tile size.
       * @param rasterDf
@@ -108,7 +110,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
       * @param config
       *   The configuration map.
       * @return
-      *   The raster to grid function.
+      *   The tile to grid function.
       */
     private def retileRaster(rasterDf: DataFrame, config: Map[String, String]) = {
         val isRetile = config.getOrElse("retile", "false").toBoolean
@@ -182,11 +184,11 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     }
 
     /**
-      * Get the raster to grid function based on the combiner.
+      * Get the tile to grid function based on the combiner.
       * @param combiner
       *   The combiner to use.
       * @return
-      *   The raster to grid function.
+      *   The tile to grid function.
       */
     private def getRasterToGridFunc(combiner: String): Column => Column = {
         combiner match {
@@ -216,7 +218,9 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             "nPartitions" -> this.extraOptions.getOrElse("nPartitions", sparkSession.conf.get("spark.sql.shuffle.partitions")),
             "retile" -> this.extraOptions.getOrElse("retile", "true"),
             "tileSize" -> this.extraOptions.getOrElse("tileSize", "256"),
-            "subdatasetName" -> this.extraOptions.getOrElse("subdatasetName", "")
+            "subdatasetName" -> this.extraOptions.getOrElse("subdatasetName", ""),
+            "driverName" -> this.extraOptions.getOrElse("driverName", ""),
+            "uriDeepCheck" -> this.extraOptions.getOrElse("uriDeepCheck", "false")
         )
     }
 

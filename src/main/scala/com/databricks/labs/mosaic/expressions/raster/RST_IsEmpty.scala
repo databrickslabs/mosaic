@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-/** Returns true if the raster is empty. */
+/** Returns true if the tile is empty. */
 case class RST_IsEmpty(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_IsEmpty](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -17,7 +17,7 @@ case class RST_IsEmpty(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = BooleanType
 
-    /** Returns true if the raster is empty. */
+    /** Returns true if the tile is empty. */
     override def rasterTransform(tile: RasterTile): Any = {
         val raster = tile.raster
         (raster.ySize == 0 && raster.xSize == 0) || raster.isEmpty
@@ -30,7 +30,7 @@ object RST_IsEmpty extends WithExpressionInfo {
 
     override def name: String = "rst_isempty"
 
-    override def usage: String = "_FUNC_(expr1) - Returns true if the raster tile is empty."
+    override def usage: String = "_FUNC_(expr1) - Returns true if the tile tile is empty."
 
     override def example: String =
         """

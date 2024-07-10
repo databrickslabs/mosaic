@@ -1,10 +1,10 @@
 generate_singleband_raster_df <- function() {
   spark_read_source(
     sc,
-    name = "raster",
+    name = "tile",
     source = "gdal",
     rawPath = "data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF",
-    options = list("raster.read.strategy" = "in_memory")
+    options = list("tile.read.strategy" = "in_memory")
   )
 }
 
@@ -23,7 +23,7 @@ test_that("mosaic can read single-band GeoTiff", {
 })
 
 
-test_that("scalar raster functions behave as intended", {
+test_that("scalar tile functions behave as intended", {
   sdf <- generate_singleband_raster_df() %>%
     mutate(rst_bandmetadata = rst_bandmetadata(tile, 1L)) %>%
     mutate(rst_boundingbox = rst_boundingbox(tile)) %>%
@@ -73,7 +73,7 @@ test_that("scalar raster functions behave as intended", {
   expect_no_error(spark_write_source(sdf, "noop", mode = "overwrite"))
 })
 
-test_that("raster flatmap functions behave as intended", {
+test_that("tile flatmap functions behave as intended", {
   retiled_sdf <- generate_singleband_raster_df() %>%
     mutate(rst_retile = rst_retile(tile, 1200L, 1200L))
 
@@ -100,7 +100,7 @@ test_that("raster flatmap functions behave as intended", {
 
 })
 
-test_that("raster aggregation functions behave as intended", {
+test_that("tile aggregation functions behave as intended", {
   collection_sdf <- generate_singleband_raster_df() %>%
     mutate(extent = st_astext(rst_boundingbox(tile))) %>%
     mutate(tile = rst_tooverlappingtiles(tile, 200L, 200L, 10L))
@@ -157,12 +157,12 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
       name = "raster_raw",
       source = "gdal",
       rawPath = "data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc",
-      options = list("raster.read.strategy" = "in_memory")
+      options = list("tile.read.strategy" = "in_memory")
     ) %>%
       mutate(tile = rst_separatebands(tile)) %>%
-      sdf_register("raster")
+      sdf_register("tile")
 
-  indexed_raster_sdf <- sdf_sql(sc, "SELECT tile, element_at(rst_metadata(tile), 'NC_GLOBAL#GDAL_MOSAIC_BAND_INDEX') as timestep FROM raster") %>%
+  indexed_raster_sdf <- sdf_sql(sc, "SELECT tile, element_at(rst_metadata(tile), 'NC_GLOBAL#GDAL_MOSAIC_BAND_INDEX') as timestep FROM tile") %>%
     filter(timestep == 21L) %>%
     mutate(tile = rst_setsrid(tile, 4326L)) %>%
     mutate(tile = rst_tooverlappingtiles(tile, 20L, 20L, 10L)) %>%

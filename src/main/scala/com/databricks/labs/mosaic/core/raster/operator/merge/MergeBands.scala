@@ -6,13 +6,13 @@ import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.types.{BinaryType, DataType}
 
-/** MergeBands is a helper object for merging raster bands. */
-object MergeBands extends {
+/** MergeBands is a helper object for merging tile bands. */
+object MergeBands {
 
     val tileDataType: DataType = BinaryType
 
     /**
-      * Merges the raster bands into a single raster.
+      * Merges the tile bands into a single tile.
       *
       * @param rasters
       *   The rasters to merge.
@@ -50,7 +50,7 @@ object MergeBands extends {
     }
 
     /**
-      * Merges the raster bands into a single raster. This method allows for
+      * Merges the tile bands into a single tile. This method allows for
       * custom pixel sizes.
       *
       * @param rasters

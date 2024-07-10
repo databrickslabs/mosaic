@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.datasource.gdal
 
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.functions.ExprConfig
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.google.common.io.{ByteStreams, Closeables}
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 import org.apache.hadoop.mapreduce.Job
@@ -25,7 +25,7 @@ class GDALFileFormat extends BinaryFileFormat {
     import GDALFileFormat._
 
     /**
-      * Infer schema for the raster file.
+      * Infer schema for the tile file.
       * @param sparkSession
       *   Spark session.
       * @param options
@@ -117,13 +117,11 @@ class GDALFileFormat extends BinaryFileFormat {
         options: Map[String, String],
         hadoopConf: org.apache.hadoop.conf.Configuration
     ): PartitionedFile => Iterator[org.apache.spark.sql.catalyst.InternalRow] = {
+        // sets latest [[MosaicGDAL.exprConfigOpt]]
         GDAL.enable(sparkSession)
 
         val indexSystem = IndexSystemFactory.getIndexSystem(sparkSession)
-        val exprConfig = ExprConfig(sparkSession)
-
         val supportedExtensions = options.getOrElse("extensions", "*").split(";").map(_.trim.toLowerCase(Locale.ROOT))
-
         val broadcastedHadoopConf = sparkSession.sparkContext.broadcast(new SerializableConfiguration(hadoopConf))
         val filterFuncs = filters.flatMap(createFilterFunction)
 
@@ -132,10 +130,12 @@ class GDALFileFormat extends BinaryFileFormat {
         val reader = ReadStrategy.getReader(options)
 
         file: PartitionedFile => {
-            GDAL.enable(exprConfig)
+            val exprConfig = MosaicGDAL.exprConfigOpt
             val path = new Path(new URI(file.filePath.toString()))
             val fs = path.getFileSystem(broadcastedHadoopConf.value.value)
             val status = fs.getFileStatus(path)
+
+            //println(s"GDALFileFormat - reading path '${path.toString}'")
 
             if (supportedExtensions.contains("*") || supportedExtensions.exists(status.getPath.getName.toLowerCase(Locale.ROOT).endsWith)) {
                 if (filterFuncs.forall(_.apply(status)) && isAllowedExtension(status, options)) {

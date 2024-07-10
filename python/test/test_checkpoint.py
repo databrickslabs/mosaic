@@ -21,7 +21,7 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
             "checkpoint directory should equal dir.")
         self.assertEqual(
             self.get_context().get_checkpoint_dir(),
-            self.spark.conf.get("spark.databricks.labs.mosaic.raster.checkpoint"),
+            self.spark.conf.get("spark.databricks.labs.mosaic.tile.checkpoint"),
             "checkpoint directory should equal spark conf.")
 
         # - checkpoint on
@@ -35,8 +35,8 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         result.write.format("noop").mode("overwrite").save()
         self.assertEqual(result.count(), 1)
         tile = result.select("tile").first()[0]
-        raster = tile['raster']
-        self.assertIsInstance(raster, str, "raster type should be string.")
+        raster = tile['tile']
+        self.assertIsInstance(raster, str, "tile type should be string.")
 
         # - update path
         api.gdal.update_checkpoint_dir(self.spark, self.new_check_dir) # <- important to call from api.gdal
@@ -52,8 +52,8 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         result.write.format("noop").mode("overwrite").save()
         self.assertEqual(result.count(), 1)
         tile = result.select("tile").first()[0]
-        raster = tile['raster']
-        self.assertIsInstance(raster, str, "raster type should be string.")
+        raster = tile['tile']
+        self.assertIsInstance(raster, str, "tile type should be string.")
 
         # - checkpoint off
         api.gdal.set_checkpoint_off(self.spark) # <- important to call from api.gdal
@@ -66,8 +66,8 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         result.write.format("noop").mode("overwrite").save()
         self.assertEqual(result.count(), 1)
         tile = result.select("tile").first()[0]
-        raster = tile['raster']
-        self.assertNotIsInstance(raster, str, "raster type should be binary (not string).")
+        raster = tile['tile']
+        self.assertNotIsInstance(raster, str, "tile type should be binary (not string).")
 
         # - reset
         api.gdal.reset_checkpoint(self.spark)
@@ -84,5 +84,5 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         result.write.format("noop").mode("overwrite").save()
         self.assertEqual(result.count(), 1)
         tile = result.select("tile").first()[0]
-        raster = tile['raster']
-        self.assertNotIsInstance(raster, str, "raster type should be binary (not string).")
+        raster = tile['tile']
+        self.assertNotIsInstance(raster, str, "tile type should be binary (not string).")

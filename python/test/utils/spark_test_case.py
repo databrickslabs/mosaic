@@ -41,7 +41,7 @@ class SparkTestCase(unittest.TestCase):
         )
         cls.spark.conf.set("spark.databricks.labs.mosaic.test.mode", "true")
         cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
-        cls.spark.conf.set("spark.databricks.labs.mosaic.raster.tmp.prefix", cls.tmp_dir)
+        cls.spark.conf.set("spark.databricks.labs.mosaic.tile.tmp.prefix", cls.tmp_dir)
         cls.spark.sparkContext.setLogLevel("ERROR")
 
     @classmethod

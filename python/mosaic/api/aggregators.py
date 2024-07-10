@@ -198,8 +198,8 @@ def grid_cell_union_agg(chips: ColumnOrName) -> Column:
 
 def rst_merge_agg(raster_tile: ColumnOrName) -> Column:
     """
-    Merges (unions) the aggregated raster tiles into a single tile.
-    Returns the raster tile representing the aggregated union of rasters on some grid cell.
+    Merges (unions) the aggregated tile tiles into a single tile.
+    Returns the tile tile representing the aggregated union of rasters on some grid cell.
 
     Parameters
     ----------
@@ -209,7 +209,7 @@ def rst_merge_agg(raster_tile: ColumnOrName) -> Column:
     Returns
     -------
      Column (RasterTileType)
-        Raster tile struct of the union raster.
+        Raster tile struct of the union tile.
     """
     return config.mosaic_context.invoke_function(
         "rst_merge_agg", pyspark_to_java_column(raster_tile)
@@ -218,17 +218,17 @@ def rst_merge_agg(raster_tile: ColumnOrName) -> Column:
 
 def rst_combineavg_agg(raster_tile: ColumnOrName) -> Column:
     """
-    Returns the raster tile representing the aggregated average of rasters.
+    Returns the tile tile representing the aggregated average of rasters.
 
     Parameters
     ----------
     raster_tile : Column (RasterTileType)
-        Aggregate raster tile col to combine.
+        Aggregate tile tile col to combine.
 
     Returns
     -------
     Column (RasterTileType)
-        The combined raster tile.
+        The combined tile tile.
     """
     return config.mosaic_context.invoke_function(
         "rst_combineavg_agg", pyspark_to_java_column(raster_tile)
@@ -239,12 +239,12 @@ def rst_derivedband_agg(
     raster_tile: ColumnOrName, python_func: ColumnOrName, func_name: ColumnOrName
 ) -> Column:
     """
-    Returns the raster tile representing the aggregation of rasters using provided python function.
+    Returns the tile tile representing the aggregation of rasters using provided python function.
 
     Parameters
     ----------
     raster_tile : Column (RasterTileType)
-        Aggregate raster tile col to derive from.
+        Aggregate tile tile col to derive from.
     python_func : Column (StringType)
         The python function to apply to the bands.
     func_name : Column (StringType)
@@ -254,7 +254,7 @@ def rst_derivedband_agg(
     -------
     Column (RasterTileType)
         Creates a new band by applying the given python function to the input rasters.
-        The result is a raster tile.
+        The result is a tile tile.
 
     """
     return config.mosaic_context.invoke_function(

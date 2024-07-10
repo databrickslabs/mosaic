@@ -34,7 +34,7 @@ class MosaicContext:
             self._index_system = "H3"
 
         try:
-            self._raster_api = spark.conf.get("spark.databricks.labs.mosaic.raster.api")
+            self._raster_api = spark.conf.get("spark.databricks.labs.mosaic.tile.api")
         except Py4JJavaError as e:
             self._raster_api = "GDAL"
 

@@ -1,13 +1,12 @@
 package com.databricks.labs.mosaic.datasource
 
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_READ_AS_PATH, MOSAIC_RASTER_READ_STRATEGY}
+import com.databricks.labs.mosaic.MOSAIC_RASTER_READ_STRATEGY
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat
-import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.an
 
-class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
+class GDALFileFormatTest extends SharedSparkSessionGDAL {
 
     test("Read netcdf with GDALFileFormat") {
         assume(System.getProperty("os.name") == "Linux")
@@ -22,13 +21,13 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
         noException should be thrownBy spark.read
             .format("gdal")
-            .option("driverName", "NetCDF")
+            .option("driverName", "netCDF")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("gdal")
-            .option("driverName", "NetCDF")
+            .option("driverName", "netCDF")
             .load(filePath)
             .select("metadata")
             .take(1)
@@ -48,13 +47,13 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
         noException should be thrownBy spark.read
             .format("gdal")
-            .option("driverName", "TIF")
+            .option("driverName", "GTiff") // TIF
             .load(filePath)
             .take(1)
-        
+
         spark.read
             .format("gdal")
-            .option("driverName", "TIF")
+            .option("driverName", "GTiff") // TIF
             .load(filePath)
             .select("metadata")
             .take(1)
@@ -117,21 +116,21 @@ class GDALFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
        spark.read
             .format("gdal")
             .option("extensions", "grb")
-            .option("raster.read.strategy", "retile_on_read")
+            .option(MOSAIC_RASTER_READ_STRATEGY, "retile_on_read")
             .load(filePath)
             .take(1)
 
         noException should be thrownBy spark.read
             .format("gdal")
             .option("extensions", "grb")
-            .option("raster.read.strategy", "retile_on_read")
+            .option(MOSAIC_RASTER_READ_STRATEGY, "retile_on_read")
             .load(filePath)
             .take(1)
 
         spark.read
             .format("gdal")
             .option("extensions", "grb")
-            .option("raster.read.strategy", "retile_on_read")
+            .option(MOSAIC_RASTER_READ_STRATEGY, "retile_on_read")
             .load(filePath)
             .select("metadata")
             .take(1)

@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-/** Returns the scale x of the raster. */
+/** Returns the scale x of the tile. */
 case class RST_ScaleX(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_ScaleX](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -17,7 +17,7 @@ case class RST_ScaleX(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = DoubleType
 
-    /** Returns the scale x of the raster. */
+    /** Returns the scale x of the tile. */
     override def rasterTransform(tile: RasterTile): Any = tile.raster.pixelXSize
 
 }
@@ -29,7 +29,7 @@ object RST_ScaleX extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns scale X in the raster tile.
+          |_FUNC_(expr1) - Returns scale X in the tile tile.
           |""".stripMargin
 
     override def example: String =

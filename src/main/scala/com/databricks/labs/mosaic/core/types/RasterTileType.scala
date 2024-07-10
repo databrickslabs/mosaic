@@ -4,11 +4,11 @@ import com.databricks.labs.mosaic.core.types.RasterTileType.getRasterDataType
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.types._
 
-/** Type definition for the raster tile. */
+/** Type definition for the tile tile. */
 class RasterTileType(fields: Array[StructField], useCheckpoint: Boolean) extends StructType(fields) {
 
     def rasterType: DataType = getRasterDataType(
-        fields.find(_.name == "raster").get.dataType, useCheckpoint)
+        fields.find(_.name == "tile").get.dataType, useCheckpoint)
 
     override def simpleString: String = "RASTER_TILE"
 
@@ -41,9 +41,9 @@ object RasterTileType {
       * @param idType
       *   Cellid type, can be one of [[LongType]], [[IntegerType]] or [[StringType]].
       * @param rasterType
-      *   Type of the raster. Can be one of [[ByteType]] or [[StringType]]. Not
-      *   to be confused with the data type of the raster. This is the type of
-      *   the column that contains the raster.
+      *   Type of the tile. Can be one of [[ByteType]] or [[StringType]]. Not
+      *   to be confused with the data type of the tile. This is the type of
+      *   the column that contains the tile.
       * @param useCheckpoint
       *    Use to test for checkpointing enabled.
       * @return
@@ -54,7 +54,7 @@ object RasterTileType {
         new RasterTileType(
             Array(
                 StructField("index_id", idType),
-                StructField("raster", getRasterDataType(rasterType, useCheckpoint)),
+                StructField("tile", getRasterDataType(rasterType, useCheckpoint)),
                 StructField("metadata", MapType(StringType, StringType))
             ),
             useCheckpoint
@@ -68,7 +68,7 @@ object RasterTileType {
       * @param idType
       *    Cellid type, can be one of [[LongType]], [[IntegerType]] or [[StringType]].
       * @param tileExpr
-      *    Expression containing a tile. This is used to infer the raster type
+      *    Expression containing a tile. This is used to infer the tile type
       *    when chaining expressions; may be an array of tiles.
       * @param useCheckpoint
       *    Use to test for checkpointing enabled.
@@ -79,10 +79,10 @@ object RasterTileType {
         require(Seq(LongType, IntegerType, StringType).contains(idType))
         tileExpr.dataType match {
             case st @ StructType(_)                       =>
-                apply(idType, st.find(_.name == "raster").get.dataType, useCheckpoint)
+                apply(idType, st.find(_.name == "tile").get.dataType, useCheckpoint)
             case _ @ArrayType(elementType: StructType, _) =>
-                apply(idType, elementType.find(_.name == "raster").get.dataType, useCheckpoint)
-            case _                                        => throw new IllegalArgumentException("Unsupported raster type.")
+                apply(idType, elementType.find(_.name == "tile").get.dataType, useCheckpoint)
+            case _                                        => throw new IllegalArgumentException("Unsupported tile type.")
         }
     }
 
@@ -91,7 +91,7 @@ object RasterTileType {
       *             Internally, calls class constructor.
       *
       * @param tileExpr
-      *   Expression containing a tile. This is used to infer the raster type
+      *   Expression containing a tile. This is used to infer the tile type
       *   when chaining expressions; may be an array of tiles.
       * @param useCheckpoint
       *    Use to test for checkpointing enabled.
@@ -102,7 +102,7 @@ object RasterTileType {
         tileExpr.dataType match {
             case StructType(fields)                    => new RasterTileType(fields, useCheckpoint)
             case ArrayType(elementType: StructType, _) => new RasterTileType(elementType.fields, useCheckpoint)
-            case _                                     => throw new IllegalArgumentException("Unsupported raster type.")
+            case _                                     => throw new IllegalArgumentException("Unsupported tile type.")
         }
     }
 

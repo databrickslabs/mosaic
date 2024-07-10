@@ -18,10 +18,10 @@ object SeparateBands {
     val tileDataType: DataType = StringType // always use checkpoint
 
     /**
-      * Separates raster bands into separate rasters. Empty bands are discarded.
+      * Separates tile bands into separate rasters. Empty bands are discarded.
       *
       * @param tile
-      *   The raster to retile.
+      *   The tile to retile.
       * @param exprConfigOpt
       *   Option [[ExprConfig]]
       * @return
@@ -43,7 +43,7 @@ object SeparateBands {
                 command = s"gdal_translate -of $driverShortName -b ${i + 1}",
                 writeOptions = outOptions,
                 exprConfigOpt
-            )
+            ).initAndHydrate() // <- required
 
             if (!result.isEmpty) {
                 val bandVal = (i + 1)

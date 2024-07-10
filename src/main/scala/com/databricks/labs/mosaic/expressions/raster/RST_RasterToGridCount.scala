@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.IntegerType
 
-/** Returns the number of cells in the raster. */
+/** Returns the number of cells in the tile. */
 case class RST_RasterToGridCount(
                                     raster: Expression,
                                     resolution: Expression,
@@ -22,7 +22,7 @@ case class RST_RasterToGridCount(
       with NullIntolerant
       with CodegenFallback {
 
-    /** Returns the number of cells in the raster. */
+    /** Returns the number of cells in the tile. */
     override def valuesCombiner(values: Seq[Double]): Int = values.length
 
 }
@@ -34,7 +34,7 @@ object RST_RasterToGridCount extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2) - Returns a collection of grid index cells with the number of pixels per cell for each band of the raster tile.
+          |_FUNC_(expr1, expr2) - Returns a collection of grid index cells with the number of pixels per cell for each band of the tile tile.
           |                       The output type is array<array<struct<index: long, measure: int>>>.
           |                       Raster mask is taken into account and only valid pixels are used for the calculation.
           |""".stripMargin

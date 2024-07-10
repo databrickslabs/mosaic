@@ -37,7 +37,7 @@ private class CleanUpManager extends Thread {
      * Cleans up LOCAL rasters that are older than [[MOSAIC_CLEANUP_AGE_LIMIT_MINUTES]],
      * e.g. 30 minutes from the configured local temp directory, e.g. "/tmp/mosaic_tmp";
      * config uses [[MOSAIC_RASTER_TMP_PREFIX]] for the "/tmp" portion of the path.
-     * - Cleaning up is destructive and should only be done when the raster is no longer needed,
+     * - Cleaning up is destructive and should only be done when the tile is no longer needed,
      *   so instead of cleaning up a specified local path as in versions prior to 0.4.3,
      *   this will clean up ANY files meeting the local age limit threshold.
      * - Manual mode can be configured to skip deletion of interim file writes,

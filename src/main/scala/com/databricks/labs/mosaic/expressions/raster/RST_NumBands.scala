@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-/** Returns the number of bands in the raster. */
+/** Returns the number of bands in the tile. */
 case class RST_NumBands(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_NumBands](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -17,7 +17,7 @@ case class RST_NumBands(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = IntegerType
 
-    /** Returns the number of bands in the raster. */
+    /** Returns the number of bands in the tile. */
     override def rasterTransform(tile: RasterTile): Any = tile.raster.numBands
 
 }
@@ -27,7 +27,7 @@ object RST_NumBands extends WithExpressionInfo {
 
     override def name: String = "rst_numbands"
 
-    override def usage: String = "_FUNC_(expr1) - Returns number of bands in the raster tile."
+    override def usage: String = "_FUNC_(expr1) - Returns number of bands in the tile tile."
 
     override def example: String =
         """

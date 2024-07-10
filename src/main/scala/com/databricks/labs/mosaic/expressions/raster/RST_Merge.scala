@@ -12,7 +12,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.DataType
 
-/** Returns a raster that is a result of merging an array of rasters. */
+/** Returns a tile that is a result of merging an array of rasters. */
 case class RST_Merge(
                         rastersExpr: Expression,
                         exprConfig: ExprConfig
@@ -36,7 +36,7 @@ case class RST_Merge(
       * @param tiles
       *   The rasters to be used.
       * @return
-      *   The merged raster.
+      *   The merged tile.
       */
     override def rasterTransform(tiles: Seq[RasterTile]): Any = {
         val index = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
@@ -57,15 +57,15 @@ object RST_Merge extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Merge (mosaic) an array of raster tile columns.
+          |_FUNC_(expr1) - Merge (mosaic) an array of tile tile columns.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
           |      > SELECT _FUNC_(array(raster_tile_1, raster_tile_2, raster_tile_3));
-          |        {index_id, raster, parent_path, driver}
-          |        {index_id, raster, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
           |        ...
           |  """.stripMargin
 

@@ -1,15 +1,14 @@
-package com.databricks.labs.mosaic.core.raster
+package com.databricks.labs.mosaic.core.raster.gdal
 
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_TEST_MODE}
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterIO
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
 import com.databricks.labs.mosaic.utils.PathUtils
-import com.databricks.labs.mosaic.utils.PathUtils.NO_PATH_STRING
+import com.databricks.labs.mosaic._
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
-import org.scalatest.matchers.should.Matchers._
 import org.gdal.gdal.{gdal => gdalJNI}
 import org.gdal.gdalconst
+import org.scalatest.matchers.should.Matchers._
 
 import java.nio.file.{Files, Paths}
 import scala.sys.process._
@@ -22,6 +21,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         assume(System.getProperty("os.name") == "Linux")
 
         val sc = this.spark
+
         val checkCmd = "gdalinfo --version"
         val resultDriver = Try(checkCmd.!!).getOrElse("")
         resultDriver should not be ""
@@ -39,21 +39,22 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
     test("Verify memsize handling") {
         val createInfo = Map(
-            "path" -> NO_PATH_STRING,
-            "parentPath" -> NO_PATH_STRING,
-            "driver" -> "GTiff"
+            RASTER_PATH_KEY -> NO_PATH_STRING,
+            RASTER_PARENT_PATH_KEY -> NO_PATH_STRING,
+            RASTER_DRIVER_KEY -> "GTiff"
         )
-        val null_raster = MosaicRasterGDAL(null, createInfo, -1)
+        val null_raster = RasterGDAL(createInfo, getExprConfigOpt)
         null_raster.getMemSize should be(-1)
 
         val np_content = spark.read.format("binaryFile")
             .load("src/test/resources/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
             .select("content").first.get(0).asInstanceOf[Array[Byte]]
-        val np_ds = MosaicRasterGDAL.readRaster(np_content, createInfo).getDatasetHydratedOpt().get
-        val np_raster = MosaicRasterGDAL(np_ds, createInfo, -1)
+        val np_raster = RasterIO.readRasterHydratedFromContent(np_content, createInfo, getExprConfigOpt)
         np_raster.getMemSize > 0 should be(true)
         info(s"np_content length? ${np_content.length}")
         info(s"np_raster memsize? ${np_raster.getMemSize}")
+
+        null_raster.flushAndDestroy()
     }
 
     //commenting out to allow toggling checkpoint on/off
@@ -62,18 +63,18 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 //        MosaicGDAL.isUseCheckpoint shouldBe false
 //    }
 
-    test("Read raster metadata from GeoTIFF file.") {
+    test("Read tile metadata from GeoTIFF file.") {
         assume(System.getProperty("os.name") == "Linux")
 
         val createInfo = Map(
-          "path" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
-          "parentPath" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
+          RASTER_PATH_KEY -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
+          RASTER_PARENT_PATH_KEY -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
         )
         // 0.4.3 PAM file might still be around
-        info(s"path -> ${createInfo("path")}")
-        val cleanPath = PathUtils.getCleanPath(createInfo("path"))
-        Try(Files.deleteIfExists(Paths.get(s"$cleanPath.aux.xml")))
-        val testRaster = MosaicRasterGDAL.readRaster(createInfo)
+        info(s"path -> ${createInfo(RASTER_PATH_KEY)}")
+        val fsPath = PathUtils.asFileSystemPath(createInfo(RASTER_PATH_KEY), uriGdalOpt = None)
+        Try(Files.deleteIfExists(Paths.get(s"$fsPath.aux.xml")))
+        val testRaster = RasterGDAL(createInfo, getExprConfigOpt)
         testRaster.xSize shouldBe 2400
         testRaster.ySize shouldBe 2400
         testRaster.numBands shouldBe 1
@@ -81,22 +82,22 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-8895604.157333, 1111950.519667, -7783653.637667, 2223901.039333)
-        testRaster.getDatasetHydratedOpt().get.GetProjection()
+        testRaster.withDatasetHydratedOpt().get.GetProjection()
         noException should be thrownBy testRaster.getSpatialReference
         an[Exception] should be thrownBy testRaster.getBand(-1)
         an[Exception] should be thrownBy testRaster.getBand(Int.MaxValue)
 
-        testRaster.destroy()
+        testRaster.flushAndDestroy()
     }
 
-    test("Read raster metadata from a GRIdded Binary file.") {
+    test("Read tile metadata from a GRIdded Binary file.") {
         assume(System.getProperty("os.name") == "Linux")
 
         val createInfo = Map(
-          "path" -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb"),
-          "parentPath" -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb")
+          RASTER_PATH_KEY -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb"),
+          RASTER_PARENT_PATH_KEY -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb")
         )
-        val testRaster = MosaicRasterGDAL.readRaster(createInfo)
+        val testRaster = RasterGDAL(createInfo, getExprConfigOpt)
         testRaster.xSize shouldBe 14
         testRaster.ySize shouldBe 14
         testRaster.numBands shouldBe 14
@@ -104,24 +105,24 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-0.375, -0.375, 10.125, 10.125)
 
-        testRaster.destroy()
+        testRaster.flushAndDestroy()
     }
 
-    test("Read raster metadata from a NetCDF file.") {
+    test("Read tile metadata from a NetCDF file.") {
         assume(System.getProperty("os.name") == "Linux")
         
         val createInfo = Map(
-          "path" -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc"),
-          "parentPath" -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc")
+          RASTER_PATH_KEY -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc"),
+          RASTER_PARENT_PATH_KEY -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc")
         )
-        val superRaster = MosaicRasterGDAL.readRaster(createInfo)
+        val superRaster = RasterGDAL(createInfo, getExprConfigOpt)
         val subdatasetPath = superRaster.subdatasets("bleaching_alert_area")
 
         val sdCreateInfo = Map(
-          "path" -> subdatasetPath,
-          "parentPath" -> subdatasetPath
+            RASTER_PATH_KEY -> subdatasetPath,
+            RASTER_PARENT_PATH_KEY -> subdatasetPath
         )
-        val testRaster = MosaicRasterGDAL.readRaster(sdCreateInfo)
+        val testRaster = RasterGDAL(sdCreateInfo, getExprConfigOpt)
 
         testRaster.xSize shouldBe 7200
         testRaster.ySize shouldBe 3600
@@ -130,18 +131,18 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-180.00000610436345, -89.99999847369712, 180.00000610436345, 89.99999847369712)
 
-        testRaster.destroy()
-        superRaster.destroy()
+        testRaster.flushAndDestroy()
+        superRaster.flushAndDestroy()
     }
 
     test("Raster pixel and extent sizes are correct.") {
         assume(System.getProperty("os.name") == "Linux")
 
         val createInfo = Map(
-          "path" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
-          "parentPath" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
+            RASTER_PATH_KEY -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
+            RASTER_PARENT_PATH_KEY -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
         )
-        val testRaster = MosaicRasterGDAL.readRaster(createInfo)
+        val testRaster = RasterGDAL(createInfo, getExprConfigOpt)
 
         testRaster.pixelXSize - 463.312716527 < 0.0000001 shouldBe true
         testRaster.pixelYSize - -463.312716527 < 0.0000001 shouldBe true
@@ -155,7 +156,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.xMin - -8895604.157333 < 0.0000001 shouldBe true
         testRaster.yMin - 2223901.039333 < 0.0000001 shouldBe true
 
-        testRaster.destroy()
+        testRaster.flushAndDestroy()
     }
 
     test("Raster filter operations are correct.") {
@@ -172,11 +173,10 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         ds.FlushCache()
 
         val createInfo = Map(
-          "path" -> "",
-          "parentPath" -> "",
-          "driver" -> "GTiff"
+          RASTER_DRIVER_KEY -> "GTiff"
         )
-        var result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "avg")
+
+        var result = RasterGDAL(ds, getExprConfigOpt, createInfo).filter(5, "avg")
 
         var resultValues = result.getBand(1).values
 
@@ -201,10 +201,11 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
               inputMatrix(32)(30) + inputMatrix(32)(31) + inputMatrix(32)(32) + inputMatrix(32)(33) + inputMatrix(32)(34)
         ).toDouble / 25.0
 
+        result.flushAndDestroy()
+
         // mode
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "mode")
-
+        result = RasterGDAL(ds, getExprConfigOpt, createInfo).filter(5, "mode")
 
         resultValues = result.getBand(1).values
 
@@ -255,9 +256,11 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           inputMatrix(49)(49)
         ).groupBy(identity).maxBy(_._2.size)._1.toDouble
 
+        result.flushAndDestroy()
+
         // median
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "median")
+        result = RasterGDAL(ds, getExprConfigOpt, createInfo).filter(5, "median")
 
         resultValues = result.getBand(1).values
 
@@ -294,9 +297,11 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           inputMatrix(12)(13)
         ).sorted.apply(12).toDouble
 
+        result.flushAndDestroy()
+
         // min filter
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "min")
+        result = RasterGDAL(ds, getExprConfigOpt, createInfo).filter(5, "min")
 
         resultValues = result.getBand(1).values
 
@@ -333,9 +338,11 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           inputMatrix(12)(13)
         ).min.toDouble
 
+        result.flushAndDestroy()
+
         // max filter
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "max")
+        result = RasterGDAL(ds, getExprConfigOpt, createInfo).filter(5, "max")
 
         resultValues = result.getBand(1).values
 
@@ -371,6 +378,10 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           inputMatrix(12)(12),
           inputMatrix(12)(13)
         ).max.toDouble
+
+        result.flushAndDestroy()
+
+        RasterIO.flushAndDestroy(ds)
 
     }
 

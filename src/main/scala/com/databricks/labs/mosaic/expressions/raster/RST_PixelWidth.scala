@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-/** Returns the pixel width of the raster. */
+/** Returns the pixel width of the tile. */
 case class RST_PixelWidth(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_PixelWidth](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -17,7 +17,7 @@ case class RST_PixelWidth(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = DoubleType
 
-    /** Returns the pixel width of the raster. */
+    /** Returns the pixel width of the tile. */
     override def rasterTransform(tile: RasterTile): Any = {
         tile.raster.getGeoTransformOpt match {
             case Some(gt) =>
@@ -40,7 +40,7 @@ object RST_PixelWidth extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns pixel width in the raster tile.
+          |_FUNC_(expr1) - Returns pixel width in the tile tile.
           |The width is a hypotenuse of a right triangle formed by scaleX and skewY.
           |""".stripMargin
 

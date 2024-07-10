@@ -38,7 +38,7 @@ case class RST_FromBands(
       * @param rasters
       *   The rasters to be used.
       * @return
-      *   The stacked and resampled raster.
+      *   The stacked and resampled tile.
       */
     override def rasterTransform(rasters: Seq[RasterTile]): Any = {
         rasters.head.copy(raster = MergeBands.merge(rasters.map(_.raster), "bilinear", Option(exprConfig)))
@@ -53,15 +53,15 @@ object RST_FromBands extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns raster tiles that are a result of stacking and resampling input bands.
+          |_FUNC_(expr1) - Returns tile tiles that are a result of stacking and resampling input bands.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
           |      > SELECT _FUNC_(array(band1, band2, band3));
-          |        {index_id, raster, parent_path, driver}
-          |        {index_id, raster, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
           |        ...
           |  """.stripMargin
 

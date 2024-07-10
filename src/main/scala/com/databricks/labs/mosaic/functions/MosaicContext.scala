@@ -22,6 +22,7 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{LongType, StringType}
 import org.apache.spark.sql.{Column, SparkSession}
 
+import java.nio.file.{Files, Paths}
 import scala.reflect.runtime.universe
 import scala.util.Try
 
@@ -1071,19 +1072,49 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
 object MosaicContext extends Logging {
 
-    var _tmpDir: String = ""
     val mosaicVersion: String = "0.4.3"
+    var _tmpDir: String = ""
+    var _tmpPrefix: String = ""
 
     private var instance: Option[MosaicContext] = None
 
-    def tmpDir(exprConfigOpt: Option[ExprConfig]): String = {
-        if (_tmpDir == "" || exprConfigOpt.isDefined) {
-            val prefix = Try { exprConfigOpt.get.getTmpPrefix }.toOption.getOrElse(MOSAIC_RASTER_TMP_PREFIX_DEFAULT) // 0.4.3 from ""
-            _tmpDir = FileUtils.createMosaicTmpDir(prefix)
-            _tmpDir
-        } else {
-            _tmpDir
+    private def configTmpSessionDir(exprConfigOpt: Option[ExprConfig]): String = {
+        val prefixCand = Try { exprConfigOpt.get.getTmpPrefix }.toOption.getOrElse(MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
+        if (_tmpDir == "" || _tmpPrefix == "" || (exprConfigOpt.isDefined && prefixCand != _tmpPrefix)) {
+            val (currTmpDir, currTmpPrefix) = (_tmpDir, _tmpPrefix)
+            _tmpPrefix = prefixCand
+            _tmpDir = FileUtils.createMosaicTmpDir(_tmpPrefix)
+
+            //scalastyle:off println
+            println(s"... MosaicContext - created new `_tmpDir`: '${_tmpDir}' (was '$currTmpDir' with tmpPrefix '$currTmpPrefix')")
+            //scalastyle:on println
         }
+        _tmpDir
+    }
+
+    /**
+     * For the configured Session temp directory.
+     * - this is the root dir, is used for `Context` (sub) directories
+     * @param exprConfigOpt
+     *   Option [[ExprConfig]].
+     * @return
+     */
+    def getTmpSessionDir(exprConfigOpt: Option[ExprConfig]): String = configTmpSessionDir(exprConfigOpt)
+
+    /**
+     * Will set up a session (root) dir, that only changes if a new prefix is provided.
+     * - For each call will provide a new directory underneath the session dir.
+     *
+     * @param exprConfigOpt
+     *   Option [[ExprConfig]] which will provide the tmp prefix, defaults to [[MOSAIC_RASTER_TMP_PREFIX_DEFAULT]].
+     * @return
+     */
+    def createTmpContextDir(exprConfigOpt: Option[ExprConfig]): String = {
+        // (1) configure the session tmp dir
+        val javaSessionDir = Paths.get(this.configTmpSessionDir(exprConfigOpt))
+        // (2) provide a new subdirectory
+        val javaContextDir = Files.createTempDirectory(javaSessionDir, "context_")
+        javaContextDir.toFile.getAbsolutePath
     }
 
     def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicContext = {

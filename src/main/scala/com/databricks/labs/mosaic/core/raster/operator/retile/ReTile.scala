@@ -11,11 +11,11 @@ object ReTile {
     val tileDataType: DataType = StringType // always use checkpoint
 
     /**
-      * Retiles a raster into tiles. Empty tiles are discarded. The tile size is
+      * Retiles a tile into tiles. Empty tiles are discarded. The tile size is
       * specified by the user via the tileWidth and tileHeight parameters.
       *
       * @param tile
-      *   The raster to retile.
+      *   The tile to retile.
       * @param tileWidth
       *   The width of the tiles.
       * @param tileHeight
@@ -30,6 +30,12 @@ object ReTile {
         exprConfigOpt: Option[ExprConfig]
     ): Seq[RasterTile] = {
         val raster = tile.raster
+
+        //scalastyle:off println
+        //println(s"is tile hydrated? ${tile.isDatasetHydrated}")
+        //println(s"createInfo -> ${tile.createInfo}")
+        //scalastyle:on println
+
         val (xR, yR) = raster.getDimensions
         val xTiles = Math.ceil(xR / tileWidth).toInt
         val yTiles = Math.ceil(yR / tileHeight).toInt
@@ -49,7 +55,7 @@ object ReTile {
                 command = s"gdal_translate -srcwin $xMin $yMin $xOffset $yOffset",
                 outOptions,
                 exprConfigOpt
-            )
+            ).initAndHydrate() // <- required
 
             if (!result.isEmpty) {
                 (true, result)

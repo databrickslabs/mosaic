@@ -1,7 +1,12 @@
 package com.databricks.labs.mosaic.utils
 
-import com.databricks.labs.mosaic.functions.{MosaicContext, ExprConfig}
+import com.databricks.labs.mosaic.{NO_DRIVER, NO_PATH_STRING}
+import com.databricks.labs.mosaic.core.raster.api.FormatLookup
+import com.databricks.labs.mosaic.core.raster.io.RasterIO
+import com.databricks.labs.mosaic.functions.{ExprConfig, MosaicContext}
+
 import java.nio.file.{Files, Path, Paths}
+import java.util.{Locale, UUID}
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
@@ -14,61 +19,156 @@ object PathUtils {
     val VOLUMES_TOKEN = "/Volumes"
     val WORKSPACE_TOKEN = "/Workspace"
 
-    val URI_TOKENS = Seq(FILE_TOKEN, DBFS_TOKEN)
+    val FS_URI_TOKENS = Seq(FILE_TOKEN, DBFS_TOKEN)
 
     /**
      * For clarity, this is the function to call when you want a path that could actually be found on the file system.
-     * - simply calls `getCleanPath` with 'addVsiZipToken' set to false.
+     * - calls `getCleanPath` with 'addVsiZipToken' set to false.
+     * - handle fuse conversion
+     * - also, strips all uris if detected
      * - non guarantees the path actually exists.
      *
      * @param rawPath
      *   Path to clean for file system.
-     *
+     * @param uriGdalOpt
+     *   Option uri part.
      * @return
      *   Cleaned path.
      */
-    def asFileSystemPath(rawPath: String): String = getCleanPath(rawPath, addVsiZipToken = false)
+    def asFileSystemPath(rawPath: String, uriGdalOpt: Option[String]): String = {
+        val cleanPath = getCleanPath(rawPath, addVsiZipToken = false, uriGdalOpt)
+        PathUtils.stripGdalUriPart(cleanPath, uriGdalOpt)
+    }
 
     /**
+     * See asFileSystemPath.
+     * - difference is that null or [[NO_PATH_STRING]] return None.
+     *
+     * @param rawPath
+     *   Path to clean for file system.
+     * @param uriGdalOpt
+     *   Option string to override path, default is None
+     * @return
+     *   Option string.
+     */
+    def asFileSystemPathOpt(rawPath: String, uriGdalOpt: Option[String]): Option[String] = {
+        if (rawPath == null || rawPath == NO_PATH_STRING) None
+        else Option(asFileSystemPath(rawPath, uriGdalOpt))
+    }
+
+    //scalastyle:off println
+    /**
      * Get subdataset GDAL path.
-     * - these paths end with ":subdataset".
+     * - these raw paths end with ":subdataset".
+     * - handle 'file:' and 'dbfs:' and call [[prepFusePath]].
      * - adds "/vsizip/" if needed.
+     * - strips quotes.
+     * - converts ".zip:" to ".zip[/...] for relative paths.
+     *
      * @param rawPath
      *   Provided path.
-     * @param uriFuseReady
-     *   drop URISchema part and call [[makeURIFuseReady]]
+     * @param uriGdalOpt
+     *   Option uri part.
      * @return
      *   Standardized path.
      */
-    def asSubdatasetGDALPathOpt(rawPath: String, uriFuseReady: Boolean): Option[String] =
+    def asSubdatasetGdalPathOpt(rawPath: String, uriGdalOpt: Option[String]): Option[String] =
         Try {
             // Subdatasets are paths with a colon in them.
             // We need to check for this condition and handle it.
             // Subdatasets paths are formatted as: "FORMAT:/path/to/file.tif:subdataset"
-            if (!isSubdataset(rawPath)) {
-                null
-            } else {
-                val subTokens = getSubdatasetTokenList(rawPath)
-                if (startsWithURI(rawPath)) {
-                    val uriSchema :: filePath :: subdataset :: Nil = subTokens
-                    val isZip = filePath.endsWith(".zip")
-                    val vsiPrefix = if (isZip) VSI_ZIP_TOKEN else ""
-                    val subPath = s"$uriSchema:$vsiPrefix$filePath:$subdataset"
-                    if (uriFuseReady) {
-                        // handle uri schema wrt fuse
-                        this.makeURIFuseReady(subPath, keepVsiZipToken = true)
-                    } else {
-                        subPath
-                    }
+
+            // (1) To avoid confusion, we want to handle fuse uri first.
+            // - removing '"' (quotes)
+            // - stripping [[VSI_ZIP_TOKEN]] at the start
+            // - also, no [[FS_URI_TOKENS]] will be present
+            val rawPathMod = this.prepFusePath(
+                rawPath,
+                keepVsiZipToken = false
+            )
+
+            var isZip = false // <- will be updated
+            val result = {
+                if (!isSubdataset(rawPathMod, uriGdalOpt)) {
+                    // (3) not a sub path
+                    //println(s"PathUtils - asSubdatasetGdalPathOpt - rawPathMod '$rawPathMod' not a subdataset")
+                    None
                 } else {
-                    val filePath :: subdataset :: Nil = subTokens
-                    val isZip = filePath.endsWith(".zip")
-                    val vsiPrefix = if (isZip) VSI_ZIP_TOKEN else ""
-                    // cannot make fuse ready without [[URI_TOKENS]]
-                    s"$vsiPrefix$filePath:$subdataset"
+                    // (4) is a sub path
+                    //println(s"PathUtils - asSubdatasetGdalPathOpt - rawPathMod '$rawPathMod' is a subdataset")
+                    val subTokens = getSubdatasetTokenList(rawPathMod)
+                    if (uriGdalOpt.isDefined && subTokens.length == 3) {
+                        // (4a) 3 tokens
+                        val uriSchema :: filePath :: subdataset :: Nil = subTokens
+                        isZip = filePath.endsWith(".zip")
+                        val subPath = {
+                            if (isZip) {
+                                // (4a1) handle zip
+                                // - note the change to '.zip/<subdataset>' (instead of '.zip:')
+                                // - note the addition of [[VSI_ZIP_TOKEN]]
+                                // - note the dropping of the `uriSchema`
+                                s"$VSI_ZIP_TOKEN$filePath/$subdataset"
+                            } else {
+                                // (4a2) essentially provide back `rawPathMod`
+                                s"$uriSchema:$filePath:$subdataset"
+                            }
+                        }
+                        //println(s"PathUtils - asSubdatasetGdalPathOpt - subPath (parsed from 3 tokens)? '$subPath'")
+                        Some(subPath)
+                    } else {
+                        // (4b) assumed 2 tokens (since is a subdataset)
+                        val filePath :: subdataset :: Nil = subTokens
+                        isZip = filePath.endsWith(".zip")
+                        val subPath = {
+                            if (isZip) {
+                                // (4b1) handle zip
+                                // - note the change to '.zip/<subdataset>' (instead of '.zip:')
+                                // - note the addition of [[VSI_ZIP_TOKEN]]
+                                s"$VSI_ZIP_TOKEN$filePath/$subdataset"
+                            } else {
+                                // (4b2) handle non-zip
+                                // - note the attempt to add back a URI from the driver name
+                                val extOpt = this.getExtOptFromPath(filePath, uriGdalOpt = None)
+                                val extDriverName = RasterIO.identifyDriverNameFromExtOpt(extOpt)
+                                val uriSchema = if (extDriverName != NO_DRIVER) s"${extDriverName.toUpperCase(Locale.ROOT)}:" else ""
+                                s"$uriSchema$filePath:$subdataset"
+                            }
+                        }
+                        //println(s"PathUtils - asSubdatasetGdalPathOpt - subPath (parsed from 2 tokens)? '$subPath'")
+                        Some(subPath)
+                    }
                 }
             }
-        }.toOption
+            result
+        }.getOrElse(None)
+    //scalastyle:on println
+
+    /**
+     * Get GDAL path.
+     * - handles with/without subdataset.
+     * - handle 'file:' and 'dbfs:' and call [[prepFusePath]].
+     * - adds "/vsizip/" if needed.
+     * - strips quotes.
+     * - converts ".zip:" to ".zip[/...] for relative paths.
+     *
+     * @param rawPath
+     *   Raw path to clean-up.
+     * @param uriGdalOpt
+     *   Option uri part.
+     * @return
+     */
+    def asGdalPathOpt(rawPath: String, uriGdalOpt: Option[String]): Option[String] = {
+        PathUtils.asSubdatasetGdalPathOpt(rawPath, uriGdalOpt) match {
+            case Some(sp) =>
+                // (1) try for subdataset path first
+                // - keeps uri unless zip
+                Some(sp)
+            case _ =>
+                // (2) if not successful, go for clean path (all but subdataset portion)
+                // - keeps uri unless zip
+                Some(PathUtils.getCleanPath(rawPath, addVsiZipToken = true, uriGdalOpt))
+        }
+    }
 
     /**
       * Cleans up variations of path.
@@ -78,10 +178,13 @@ object PathUtils {
       * - handles "aux.xml" sidecar file
       * - handles zips, including "/vsizip/"
       * @param rawPath
+      *   Raw path to clean-up.
+      * @param uriGdalOpt
+      *   Option uri part.
       */
     @deprecated("0.4.3 recommend to let CleanUpManager handle")
-    def cleanUpPath(rawPath: String): Unit = {
-        val cleanPath = getCleanPath(rawPath, addVsiZipToken = false)
+    def cleanUpPath(rawPath: String, uriGdalOpt: Option[String]): Unit = {
+        val cleanPath = getCleanPath(rawPath, addVsiZipToken = false, uriGdalOpt)
         val pamFilePath = s"$cleanPath.aux.xml"
 
         Try(Files.deleteIfExists(Paths.get(cleanPath)))
@@ -95,21 +198,23 @@ object PathUtils {
      * - Can pass a directory or a file path
      * - Subdataset file paths as well.
      * @param rawPathOrDir
-     *   will list directories recursively, will get a subdataset path or a clean path otherwise.
+     *   Will list directories recursively, will get a subdataset path or a clean path otherwise.
+     * @param uriGdalOpt
+     *   Option uri part.
      */
-    def cleanUpPAMFiles(rawPathOrDir: String): Unit = {
-        if (isSubdataset(rawPathOrDir)) {
+    def cleanUpPAMFiles(rawPathOrDir: String, uriGdalOpt: Option[String]): Unit = {
+        if (isSubdataset(rawPathOrDir, uriGdalOpt)) {
             // println(s"... subdataset path detected '$path'")
             Try(Files.deleteIfExists(
-                Paths.get(s"${getWithoutSubdatasetName(rawPathOrDir, addVsiZipToken = false)}.aux.xml"))
+                Paths.get(s"${asFileSystemPath(rawPathOrDir, uriGdalOpt)}.aux.xml"))
             )
         } else {
-            val cleanPathObj = Paths.get(getCleanPath(rawPathOrDir, addVsiZipToken = false))
+            val cleanPathObj = Paths.get(getCleanPath(rawPathOrDir, addVsiZipToken = false, uriGdalOpt))
             if (Files.isDirectory(cleanPathObj)) {
                 // println(s"... directory path detected '$cleanPathObj'")
                 cleanPathObj.toFile.listFiles()
                     .filter(f => f.isDirectory || f.toString.endsWith(".aux.xml"))
-                    .foreach(f => cleanUpPAMFiles(f.toString))
+                    .foreach(f => cleanUpPAMFiles(f.toString, uriGdalOpt))
             } else {
                 // println(s"... path detected '$cleanPathObj'")
                 if (cleanPathObj.toString.endsWith(".aux.xml")) {
@@ -129,19 +234,27 @@ object PathUtils {
       *   Path to copy from.
       * @param exprConfigOpt
       *   Option [[ExprConfig]].
+      * @param dirOpt
+      *   Option string to not have one generated, defaults to None.
       * @return
       *   The copied path.
       */
-    def copyToTmp(inRawPath: String, exprConfigOpt: Option[ExprConfig]): String = {
-        val copyFromPath = makeURIFuseReady(inRawPath, keepVsiZipToken = false)
+    def copyToTmp(inRawPath: String, exprConfigOpt: Option[ExprConfig], dirOpt: Option[String] = None): String = {
+        val copyFromPath = prepFusePath(inRawPath, keepVsiZipToken = false)
         val inPathDir = Paths.get(copyFromPath).getParent.toString
-
         val fullFileName = copyFromPath.split("/").last
-        val stemRegex = getStemRegex(inRawPath)
+        val stemRegexOpt = Option(getStemRegex(inRawPath))
+//        scalastyle:off println
+//        println(s"... `copyToTmp` copyFromPath? '$copyFromPath', inPathDir? '$inPathDir', " +
+//            s"fullFileName? '$fullFileName', stemRegex? '$stemRegex'")
+//        scalastyle:on println
+        val toDir = dirOpt match {
+            case Some(dir) => dir
+            case _ => MosaicContext.createTmpContextDir(exprConfigOpt)
+        }
+        wildcardCopy(inPathDir, toDir, stemRegexOpt)
 
-        wildcardCopy(inPathDir, MosaicContext.tmpDir(exprConfigOpt), stemRegex)
-
-        s"${MosaicContext.tmpDir(exprConfigOpt)}/$fullFileName"
+        s"$toDir/$fullFileName"
     }
 
     /**
@@ -157,10 +270,11 @@ object PathUtils {
       *   The tmp path.
       */
     def copyCleanPathToTmpWithRetry(inCleanPath: String, exprConfigOpt: Option[ExprConfig], retries: Int = 3): String = {
-        var tmpPath = copyToTmp(inCleanPath, exprConfigOpt)
+        val tmpDirOpt = Option(MosaicContext.createTmpContextDir(exprConfigOpt))
+        var tmpPath = copyToTmp(inCleanPath, exprConfigOpt, dirOpt = tmpDirOpt)
         var i = 0
         while (Files.notExists(Paths.get(tmpPath)) && i < retries) {
-            tmpPath = copyToTmp(inCleanPath, exprConfigOpt)
+            tmpPath = copyToTmp(inCleanPath, exprConfigOpt, dirOpt = tmpDirOpt)
             i += 1
         }
         tmpPath
@@ -171,26 +285,41 @@ object PathUtils {
       * - Directories are created.
       * - File itself is not create.
  *
-      * @param extension
+      * @param ext
       * The file extension to use.
       * @param exprConfigOpt
       *   Option [[ExprConfig]]
       * @return
       *   The tmp path.
       */
-    def createTmpFilePath(extension: String, exprConfigOpt: Option[ExprConfig]): String = {
-        val tmpDir = MosaicContext.tmpDir(exprConfigOpt)
-        val uuid = java.util.UUID.randomUUID.toString
-        val outPath = s"$tmpDir/raster_${uuid.replace("-", "_")}.$extension"
+    def createTmpFilePath(ext: String, exprConfigOpt: Option[ExprConfig]): String = {
+        val tmpDir = MosaicContext.createTmpContextDir(exprConfigOpt)
+        val filename = this.genFilenameUUID(ext, uuidOpt = None)
+        val outPath = s"$tmpDir/$filename"
         Files.createDirectories(Paths.get(outPath).getParent)
         outPath
     }
 
+    /** @return UUID standardized for use in Path or Directory. */
+    def genUUID: String = UUID.randomUUID().toString.replace("-", "_")
+
+    /** @return filename with UUID standardized for use in Path or Directory (raster_<uuid>.<ext>). */
+    def genFilenameUUID(ext: String, uuidOpt: Option[String]): String = {
+        val uuid = uuidOpt match {
+            case Some(u) => u
+            case _ => genUUID
+        }
+        s"raster_$uuid.$ext"
+    }
+
     /** @return Returns file extension as option (path converted to clean path). */
-    def getExtOptFromPath(path: String): Option[String] =
+    def getExtOptFromPath(path: String, uriGdalOpt: Option[String]): Option[String] =
         Try {
-            Paths.get(asFileSystemPath(path)).getFileName.toString.split("\\.").last
-        }.toOption
+            val ext = Paths.get(asFileSystemPathOpt(path, uriGdalOpt).orNull)
+                .getFileName.toString
+                .split("\\.").last
+            Some(ext)
+        }.getOrElse(None)
 
     /**
       * Generate regex string of path filename.
@@ -202,7 +331,7 @@ object PathUtils {
       *   Regex string.
       */
     def getStemRegex(path: String): String = {
-        val cleanPath = makeURIFuseReady(path, keepVsiZipToken = false)
+        val cleanPath = prepFusePath(path, keepVsiZipToken = false)
         val fileName = Paths.get(cleanPath).getFileName.toString
         val stemName = fileName.substring(0, fileName.lastIndexOf("."))
         val stemEscaped = stemName.replace(".", "\\.")
@@ -216,176 +345,102 @@ object PathUtils {
      *
      * @param rawPath
      *   Provided path.
+     * @param uriGdalOpt
+     *   Option uri part.
      * @return
      *   Option subdatasetName
      */
-    def getSubdatasetNameOpt(rawPath: String): Option[String] =
+    def getSubdatasetNameOpt(rawPath: String, uriGdalOpt: Option[String]): Option[String] =
         Try {
             // Subdatasets are paths with a colon in them.
             // We need to check for this condition and handle it.
             // Subdatasets paths are formatted as: "FORMAT:/path/to/file.tif:subdataset"
             val subTokens = getSubdatasetTokenList(rawPath)
             val result = {
-                if (startsWithURI(rawPath)) {
+                if (subTokens.length == 3) {
                     val _ :: _ :: subdataset :: Nil = subTokens
-                    subdataset
+                    Some(subdataset) // <- uri with a sub
+                } else if (subTokens.length == 2 && uriGdalOpt.isEmpty) {
+                    val t1 :: t2 :: Nil = subTokens
+                    Some(t2) // <- no uri so have a sub
                 } else {
-                    val _ :: subdataset :: Nil = subTokens
-                    subdataset
+                    None
                 }
             }
             result
-        }.toOption
-
-    /**
-     * Is a path a URI path, i.e. 'file:' or 'dbfs:' for our interests.
-     *
-     * @param rawPath
-     *   To check.
-     * @return
-     *   Whether the path starts with any [[URI_TOKENS]].
-     */
-    def startsWithURI(rawPath: String): Boolean = Try {
-        URI_TOKENS.exists(rawPath.startsWith)  // <- one element found?
-    }.getOrElse(false)
+        }.getOrElse(None)
 
     /**
      * Get Subdataset Tokens
      * - This is to enforce convention.
+     * - converts '.zip/' to '.zip:'
+     * - fuse conversion for consistency.
      *
      * @param rawPath
      *   To split into tokens (based on ':').
      * @return
      *   [[List]] of string tokens from the path.
      */
-    def getSubdatasetTokenList(rawPath: String): List[String] =
+    def getSubdatasetTokenList(rawPath: String): List[String] = {
+        // !!! avoid cyclic dependencies !!!
         Try {
-            rawPath.split(":").toList
+            this.prepFusePath(rawPath, keepVsiZipToken = true).split(":").toList
         }.getOrElse(List.empty[String])
-
-    /**
-     * Get path without the subdataset name, if present.
-     * - these paths end with ":subdataset".
-     * - split on ":" and return just the path,
-     *   not the subdataset.
-     * - remove any quotes at start and end.
-     *
-     * @param rawPath
-     *   Provided path.
-     * @param addVsiZipToken
-     *   Whether to include the [[VSI_ZIP_TOKEN]] (true means add it to zips).
-     * @return
-     *   Standardized path (no [[URI_TOKENS]] or ":subbdataset"
-     */
-    def getWithoutSubdatasetName(rawPath: String, addVsiZipToken: Boolean): String = {
-        // Subdatasets are paths with a colon in them.
-        // We need to check for this condition and handle it.
-        // Subdatasets paths are formatted as: "FORMAT:/path/to/file.tif:subdataset"
-        // Additionally if the path is a zip, the format looks like "FORMAT:/vsizip//path/to/file.zip:subdataset"
-        val tokens = getSubdatasetTokenList(rawPath)
-        val filePath = {
-            if (startsWithURI(rawPath)) {
-                // first and second token returned (not subdataset name)
-                val uriSchema :: filePath :: _ :: Nil = tokens
-                s"$uriSchema:$filePath"
-            } else if (tokens.length > 1) {
-                // first token returned (not subdataset name)
-                val filePath :: _ :: Nil = tokens
-                filePath
-            } else {
-                // single token (no uri or subdataset)
-                val filePath :: Nil = tokens
-                filePath
-            }
-        }
-
-        var result = filePath
-        // strip quotes
-        if (filePath.startsWith("\"")) result = result.drop(1)
-        if (filePath.endsWith("\"")) result = result.dropRight(1)
-
-        //handle vsizip
-        val isZip = result.endsWith(".zip")
-        if (
-            addVsiZipToken && isZip && !result.startsWith(VSI_ZIP_TOKEN)
-        ){
-            result = s"$VSI_ZIP_TOKEN$result"
-        } else if (!addVsiZipToken) {
-            result = this.replaceVsiZipToken(result)
-        }
-
-        result
     }
 
     /**
-      * Clean file path:
-      * (1) subdatasets (may be zips)
+      * Clean file path. This is different from `asFileSystemPath` as it is more GDAL friendly,
+      * effectively strips subdataset portion but otherwise looks like a GDAL path:
+      *
+      * (1) ':subdataset' (may be zips)
+      *     also '.zip/' and '.zip:'
       * (2) "normal" zips
-      * (3) [[URI_TOKENS]] for fuse readiness.
+      * (3) handle fuse ready
+      * (4) handles zips for vsizip + uri
       *
       * @param rawPath
       *   Provided path.
       * @param addVsiZipToken
       *   Specify whether the result should include [[VSI_ZIP_TOKEN]].
+      * @param uriGdalOpt
+      *   Option uri part.
       * @return
       *   Standardized file path string.
       */
-    def getCleanPath(rawPath: String, addVsiZipToken: Boolean): String = {
-        val filePath = {
-            if (isSubdataset(rawPath)) getWithoutSubdatasetName(rawPath, addVsiZipToken)    // <- (1) subs (may have URI)
-            else if (rawPath.endsWith(".zip")) getCleanZipPath(rawPath, addVsiZipToken)     // <- (2) normal zip
-            else rawPath
+    def getCleanPath(rawPath: String, addVsiZipToken: Boolean, uriGdalOpt: Option[String]): String = {
+
+        val result = {
+            if (isSubdataset(rawPath, uriGdalOpt)) {
+                // (1) GDAL path for subdataset - without name
+                //println(s"PathUtils - getCleanPath -> getWithoutSubdatasetName for rawPath '$rawPath'")
+                getWithoutSubdatasetName(rawPath, addVsiZipToken, uriGdalOpt)
+            } else if (rawPath.endsWith(".zip")) {
+                // (2a) normal zip (not a subdataset)
+                // - initially remove the [[VSI_ZIP_TOKEN]]
+                var result = this.prepFusePath(rawPath, keepVsiZipToken = false)
+
+                // (2b) for zips, take out the GDAL uri (if any)
+                result = this.stripGdalUriPart(result, uriGdalOpt)
+
+                // (2c) if 'addVsiZipToken' true, add [[VSI_ZIP_TOKEN]] to zips; conversely, remove if false
+                // - It is really important that the resulting path is /vsizip// and not /vsizip/
+                // /vsizip// is for absolute paths /viszip/ is relative to the current working directory
+                // /vsizip/ wont work on a cluster.
+                // - See: https://gdal.org/user/virtual_file_systems.html#vsizip-zip-archives
+                if (addVsiZipToken && !this.hasVisZipToken(result)) {
+                    // (2d) final condition where "normal" zip still hasn't had the [[VSI_ZIP_TOKEN]] added
+                    result = s"$VSI_ZIP_TOKEN$result"
+                } else if (!addVsiZipToken) {
+                    // (2e) final condition to strip [[VSI_ZIP_TOKEN]]
+                    result = this.replaceVsiZipToken(result)
+                }
+
+                result
+            } else {
+                // (3) just prep for fuse (not a zip)
+                this.prepFusePath(rawPath, keepVsiZipToken = false)
+            }
         }
-        // (3) handle [[URI_TOKENS]]
-        // - one final assurance of conformity to the expected behavior
-        // - mostly catching rawpath and subdataset (as zip path already handled)
-        val result =  makeURIFuseReady(filePath, keepVsiZipToken = addVsiZipToken)
-        result
-    }
-
-    /**
-      * Standardize zip paths.
-      *  - Add "/vsizip/" as directed.
-      *  - Called from `cleanPath`
-      *  - Don't call from `path` (if a subdataset)
-      *
-      * @param path
-      *   Provided path.
-      * @param addVsiZipToken
-      *   Specify whether the result should include [[VSI_ZIP_TOKEN]].
-      * @return
-      *   Standardized path.
-      */
-    def getCleanZipPath(path: String, addVsiZipToken: Boolean): String = {
-
-        // (1) handle subdataset path (start by dropping the subdataset name)
-        var result = {
-            if (isSubdataset(path)) getWithoutSubdatasetName(path, addVsiZipToken = false)
-            else path  // <- vsizip handled later (may have a "normal" zip here)
-        }
-        // (2) handle [[URI_TOKENS]] for FUSE (works with/without [[VIS_ZIP_TOKEN]])
-        // - there are no [[URI_TOKENS]] after this.
-        result = this.makeURIFuseReady(result, keepVsiZipToken = addVsiZipToken)
-
-        // (3) strip quotes
-        if (result.startsWith("\"")) result = result.drop(1)
-        if (result.endsWith("\"")) result = result.dropRight(1)
-
-        // (4) if 'addVsiZipToken' true, add [[VSI_ZIP_TOKEN]] to zips; conversely, remove if false
-        // - It is really important that the resulting path is /vsizip// and not /vsizip/
-        // /vsizip// is for absolute paths /viszip/ is relative to the current working directory
-        // /vsizip/ wont work on a cluster.
-        // - See: https://gdal.org/user/virtual_file_systems.html#vsizip-zip-archives
-        // - There are no [[URI_TOKENS]] now so can just prepend [[VSI_ZIP_TOKEN]].
-
-        if (addVsiZipToken && result.endsWith(".zip") && !this.hasVisZipToken(result)) {
-            // final condition where "normal" zip still hasn't had the [[VSI_ZIP_TOKEN]] added
-            result = s"$VSI_ZIP_TOKEN$result"
-        } else if (!addVsiZipToken) {
-            // final condition to strip [[VSI_ZIP_TOKEN]]
-            result = this.replaceVsiZipToken(result)
-        }
-
         result
     }
 
@@ -402,16 +457,18 @@ object PathUtils {
       *
       * @param path
       *   Provided path.
+      * @param uriGdalOpt
+      *   Option uri part.
       * @return
       *   True if path is in a fuse location.
       */
-    def isFusePathOrDir(path: String): Boolean = {
+    def isFusePathOrDir(path: String, uriGdalOpt: Option[String]): Boolean = {
         // clean path strips out "file:" and "dbfs:".
         // also, strips out [[VSI_ZIP_TOKEN]].
         // then can test for start of the actual file path,
         // startswith [[DBFS_FUSE_TOKEN]], [[VOLUMES_TOKEN]], or [[WORKSPACE_TOKEN]].
         // 0.4.3 - new function
-        getCleanPath(path, addVsiZipToken = false) match {
+        getCleanPath(path, addVsiZipToken = false, uriGdalOpt) match {
             case p if
                 p.startsWith(s"$DBFS_FUSE_TOKEN/") ||
                     p.startsWith(s"$VOLUMES_TOKEN/") ||
@@ -423,16 +480,36 @@ object PathUtils {
     /**
       * Is the path a subdataset?
       * - Known by ":" after the filename.
+      * - Handles '.zip/' as '.zip:'
       * - 0.4.3+  `isURIPath` to know if expecting 1 or 2 ":" in path.
       *
       * @param rawPath
       *   Provided path.
+      * @param uriGdalOpt
+      *   Option uri part.
       * @return
       *   True if is a subdataset.
       */
-    def isSubdataset(rawPath: String): Boolean = {
-        if (startsWithURI(rawPath)) getSubdatasetTokenList(rawPath).length == 3 // <- uri token
-        else getSubdatasetTokenList(rawPath).length == 2 // <- no uri token
+    def isSubdataset(rawPath: String, uriGdalOpt: Option[String]): Boolean = {
+        val subTokens = getSubdatasetTokenList(rawPath)
+        if (subTokens.length == 3) true  // <- uri token assumed
+        else if (uriGdalOpt.isEmpty && subTokens.length == 2) true // <- no uri token
+        else false
+    }
+
+    /**
+     * Test if a path is a zip file.
+     * - Don't call this within `getCleanPath` and similar.
+     *
+     * @param rawPath
+     *   The path to test (doesn't have to be raw).
+     * @param uriGdalOpt
+     *   Option uri part.
+     * @return
+     *   Whether file system path portion ends with ".zip".
+     */
+    def isZip(rawPath: String, uriGdalOpt: Option[String]): Boolean = {
+        this.asFileSystemPath(rawPath, uriGdalOpt).endsWith(".zip")
     }
 
     /**
@@ -452,36 +529,6 @@ object PathUtils {
     }
 
     /**
-      * Replace various path URI schemas for local FUSE handling.
-      * - DON'T PRE-STRIP THE URI SCHEMAS.
-      * - strips "file:". "dbfs:" URI Schemas
-      *- "dbfs:/..." when not a Volume becomes "/dbfs/".
-      * - VALID FUSE PATHS START WITH with "/dbfs/", "/Volumes/", and "/Workspace/"
-      *
-      * @param rawPath
-      *   Provided path.
-      * @param keepVsiZipToken
-      *   Whether to preserve [[VSI_ZIP_TOKEN]] if present.
-      * @return
-      *   Replaced string.
-      */
-    def makeURIFuseReady(rawPath: String, keepVsiZipToken: Boolean): String = {
-        // (1) does the path have [[VSI_ZIP_TOKEN]]?
-        val hasVsi = this.hasVisZipToken(rawPath)
-        // (2) remove [[VSI_ZIP_TOKEN]] and handle fuse tokens
-        var result = replaceVsiZipToken(rawPath)
-            .replace(s"$FILE_TOKEN/", "/")
-            .replace(s"$DBFS_TOKEN$VOLUMES_TOKEN/", s"$VOLUMES_TOKEN/")
-            .replace(s"$DBFS_TOKEN/", s"$DBFS_FUSE_TOKEN/")
-        // (3) if conditions met, prepend [[VSI_ZIP_TOKEN]]
-        if (hasVsi && keepVsiZipToken) {
-            result = s"$VSI_ZIP_TOKEN$result"
-        }
-
-        result
-    }
-
-    /**
      * When properly configured for GDAL, zip paths (including subdatasets) will have [[VSI_ZIP_TOKEN]] added.
      * - this removes that from any provided path.
      *
@@ -495,6 +542,103 @@ object PathUtils {
     }
 
     /**
+     * For GDAL URIs, e.g. 'ZARR', 'NETCDF', 'COG', 'GTIFF', and 'GRIB':
+     * - Call `parseGdalUriOpt` for the actual detected token.
+     * - Not for file system URIs, i.e. 'file:' or 'dbfs:'.
+     *
+     * @param rawPath
+     *   To check.
+     * @param uriDeepCheck
+     *   Whether to do a deep check of URIs or just more common ones.
+     * @return
+     *   Whether a uri token detected.
+     */
+    def hasGdalUriPart(
+                  rawPath: String,
+                  uriDeepCheck: Boolean
+              ): Boolean = {
+        this.parseGdalUriOpt(
+            rawPath,
+            uriDeepCheck
+        ).isDefined
+    }
+
+    //scalastyle:off println
+    /**
+     * For GDAL URIs, e.g. 'ZARR', 'NETCDF', 'COG', 'GTIFF', and 'GRIB':
+     * - Not for file system URIs, i.e. 'file:' or 'dbfs:'.
+     *
+     * @param rawPath
+     *   To check.
+     * @param uriDeepCheck
+     *   Whether to do a deep check of URIs or just more common ones.
+     * @return
+     *   Option with a matched token, must be in one of the lists under `FormatLookup` to be detected.
+     */
+    def parseGdalUriOpt(
+                       rawPath: String,
+                       uriDeepCheck: Boolean
+                   ): Option[String] = Try {
+
+        var uriOpt: Option[String] = None
+        var t1: String = ""
+        var t1Low: String = ""
+
+        // (1) split on ":"
+        val subTokens = this.getSubdatasetTokenList(rawPath)
+
+        if (subTokens.length > 1) {
+            // (2) nothing to do if < 2 tokens
+            // - standardize raw path
+            t1 = subTokens.head.replace(VSI_ZIP_TOKEN, "") // <- no colon here
+            t1Low = subTokens.head.toLowerCase(Locale.ROOT).replace(VSI_ZIP_TOKEN, "") + ":"
+
+           if (FormatLookup.COMMON_URI_TOKENS.exists(k => t1Low.startsWith(k.toLowerCase(Locale.ROOT)))) {
+                // (4) check [[COMMON_URI_TOKENS]]
+                uriOpt = Option(t1)
+            } else if (uriDeepCheck) {
+                if (FormatLookup.formats.keys.exists(k => t1Low.startsWith(s"${k.toLowerCase(Locale.ROOT)}:"))) {
+                    // (5a) Deep Check `formats` keys (have to add ':')
+                    uriOpt = Option(t1)
+                } else if (FormatLookup.ALL_VECTOR_URI_TOKENS.exists(k => t1Low.startsWith(k.toLowerCase(Locale.ROOT)))) {
+                    // (5b) Deep Check [[ALL_VECTOR_URI_TOKENS]]
+                    uriOpt = Option(t1)
+                } else if (FormatLookup.ALL_RASTER_URI_TOKENS.exists(k => t1Low.startsWith(k.toLowerCase(Locale.ROOT)))) {
+                    // (5b) Deep Check [[ALL_RASTER_URI_TOKENS]]
+                    uriOpt = Option(t1)
+                }
+            }
+        }
+            uriOpt
+        }.getOrElse(None)
+
+    /**
+     *  Strip the uri part out of the rawPath, if found.
+     *  - You would want to handle fuse before calling this!
+     *  - handles with and without colon
+     *  - not case sensitive (use the `parseGdalUriOpt` function to get the right case).
+     *  - careful calling this on a subdataset path, e.g. don't want to strip ".zip:" to be "."
+     * @param rawPath
+     *   To check.
+     * @param uriGdalOpt
+     *   Option with uri part, if any.
+     * @return
+     *   path with the uri part stripped out.
+     */
+    def stripGdalUriPart(rawPath: String, uriGdalOpt: Option[String]): String = {
+        uriGdalOpt match {
+            case Some(uriPart) =>
+                val uri = {
+                    if (uriPart.endsWith(":")) uriPart
+                    else s"$uriPart:"
+                }
+                rawPath.replace(s"$uri", "")
+            case _ => rawPath
+        }
+    }
+
+    //scalastyle:off println
+    /**
       * Perform a wildcard copy.
       * - This is pure file system based operation,
       *   with some regex around the 'pattern'.
@@ -503,13 +647,17 @@ object PathUtils {
       *   Provided in dir.
       * @param outDirPath
       *   Provided out dir.
-      * @param pattern
-      *   Regex pattern to match.
+      * @param patternOpt
+      *   Option, regex pattern to match, will default to ".*"
       */
-    def wildcardCopy(inDirPath: String, outDirPath: String, pattern: String): Unit = {
+    def wildcardCopy(inDirPath: String, outDirPath: String, patternOpt: Option[String]): Unit = {
+        //println(s"::: wildcardCopy :::")
         import org.apache.commons.io.FileUtils
-        val copyFromPath = makeURIFuseReady(inDirPath, keepVsiZipToken = false)
-        val copyToPath = makeURIFuseReady(outDirPath, keepVsiZipToken = false)
+        val copyFromPath = prepFusePath(inDirPath, keepVsiZipToken = false)
+        val copyToPath = prepFusePath(outDirPath, keepVsiZipToken = false)
+
+        val pattern = patternOpt.getOrElse(".*")
+        //println(s"... from: '$copyFromPath', to: '$copyToPath' (pattern '$pattern')")
 
         val toCopy = Files
             .list(Paths.get(copyFromPath))
@@ -517,15 +665,187 @@ object PathUtils {
             .collect(java.util.stream.Collectors.toList[Path])
             .asScala
 
-        for (path <- toCopy) {
+        for (path: Path <- toCopy) {
             val destination = Paths.get(copyToPath, path.getFileName.toString)
             // noinspection SimplifyBooleanMatch
             if (Files.isDirectory(path)) {
-                FileUtils.copyDirectory(path.toFile, destination.toFile)
+                //println(s"...path '${path.toString}' is directory (copying dir)")
+                org.apache.commons.io.FileUtils.copyDirectory(path.toFile, destination.toFile)
             } else if (path.toString != destination.toString) {
-                FileUtils.copyFile(path.toFile, destination.toFile)
+                //println(s"... copying '${path.toString}' to '${destination.toString}'")
+                Files.copy(path, destination)
+            } else {
+                //println(s"INFO - dest: '${destination.toString}' is the same as path (no action)")
             }
         }
     }
+    //scalastyle:on println
+
+    /** private for handling needed by other functions in PathUtils only. */
+    private def getWithoutSubdatasetName(
+                                            rawPath: String,
+                                            addVsiZipToken: Boolean,
+                                            uriGdalOpt: Option[String]
+                                        ): String = {
+
+        // (1) Subdatasets are paths with a colon in them.
+        // We need to check for this condition and handle it.
+        // Subdatasets paths are formatted as: "FORMAT:/path/to/file.tif:subdataset"
+        // Additionally if the path is a zip, the format looks like "FORMAT:/vsizip//path/to/file.zip:subdataset"
+        var isZip = false // <- set in the logic below
+        val tokens = getSubdatasetTokenList(rawPath)
+        var result = {
+            if (tokens.length == 3) {
+                // first and second token returned (not subdataset name)
+                val uriSchema :: filePath :: _ :: Nil = tokens
+                isZip = filePath.endsWith(".zip")
+                if (isZip) filePath
+                else s"$uriSchema:$filePath"
+            } else if (uriGdalOpt.isDefined && tokens.length == 2) {
+                // uri detected + filepath
+                val uriSchema :: filePath :: Nil = tokens
+                isZip = filePath.endsWith(".zip")
+                if (isZip) filePath
+                else s"$uriSchema:$filePath"
+            } else if (tokens.length == 2) {
+                // no uri detected, only return the first token
+                val filePath :: _ :: Nil = tokens
+                isZip = filePath.endsWith(".zip")
+                filePath
+            } else {
+                // return rawPath prepped
+                this.prepFusePath(rawPath, keepVsiZipToken = addVsiZipToken)
+            }
+        }
+        // (2)handle vsizip
+        // - add for zips if directed
+        // - remove for all if directed
+        if (isZip && addVsiZipToken && !result.startsWith(VSI_ZIP_TOKEN)) result = s"$VSI_ZIP_TOKEN$result"
+        if (!addVsiZipToken) result = this.replaceVsiZipToken(result)
+
+        result
+    }
+
+    /** private, handle file system uris for local fuse, also call `prepPath`. */
+    def prepFusePath(rawPath: String, keepVsiZipToken: Boolean): String = {
+        // !!! avoid cyclic dependencies !!!
+        val rawPathMod = this.prepPath(rawPath)
+        // (1) does the path have [[VSI_ZIP_TOKEN]]?
+        val hasVsi = this.hasVisZipToken(rawPathMod)
+        // (2) remove [[VSI_ZIP_TOKEN]] and handle fuse tokens
+        var result = replaceVsiZipToken(rawPathMod)
+            .replace(s"$FILE_TOKEN/", "/")
+            .replace(s"$DBFS_TOKEN$VOLUMES_TOKEN/", s"$VOLUMES_TOKEN/")
+            .replace(s"$DBFS_TOKEN/", s"$DBFS_FUSE_TOKEN/")
+        // (3) if conditions met, prepend [[VSI_ZIP_TOKEN]]
+        if (hasVsi && keepVsiZipToken) {
+            result = s"$VSI_ZIP_TOKEN$result"
+        }
+        result
+    }
+
+    private def prepPath(path: String): String = {
+        // !!! avoid cyclic dependencies !!!
+        // (1) null
+        var p = if (path == null) NO_PATH_STRING else path
+        // (2) quotes
+        p = p.replace("\"", "")
+        // (3) '.zip/' for non-directories
+        // - for subdataset path initial inputs
+        // - will end up as ".zip/" during subdataset processing
+        val pPath = Paths.get(p)
+        if (!Files.exists(pPath) || !Files.isDirectory(pPath)) {
+            // if not a real file or is but not a directory
+            // strip trailing '/' for '.zip/'
+            // replace '.zip/' with '.zip:'
+            if (p.endsWith(".zip/")) p = p.dropRight(1)
+            p = p.replace(".zip/", ".zip:")
+        }
+
+        p
+    }
+
+    //    /**
+    //     * Identify which FUSE URI if any is in a path.
+    //     * - Only tests [[URI_TOKENS]].
+    //     * - Recommend just using [[parseURIOpt()]].
+    //     *
+    //     * @param rawPath
+    //     *   To test for uri.
+    //     * @return
+    //     *   Returns Option string.
+    //     */
+    //    def getFuseUriOpt(rawPath: String): Option[String] = Try {
+    //        var uriOpt: Option[String] = None
+    //        var i = 0
+    //        while (uriOpt.isEmpty && i < FS_URI_TOKENS.length) {
+    //            if (rawPath.contains(FS_URI_TOKENS(i))) {
+    //                uriOpt = Some(FS_URI_TOKENS(i))
+    //            }
+    //            i += 1
+    //        }
+    //
+    //        uriOpt
+    //    }.getOrElse(None)
+
+//    /**
+//     * For file system URIs, i.e. 'file:' or 'dbfs:':
+//     * - Not for GDAL URIs, e.g. 'ZARR', 'NETCDF', 'COG', 'GTIFF', and 'GRIB':
+//     * - Call `parseFsUriOpt` for the actual uri part.
+//     *
+//     * @param rawPath
+//     *   To check.
+//     * @param uriDeepCheck
+//     *   Whether to do a deep check of URIs or just more common ones.
+//     * @return
+//     *   Whether a uri token detected.
+//     */
+//    def hasFsUriPart(
+//                        rawPath: String,
+//                        uriDeepCheck: Boolean
+//                    ): Boolean = {
+//        this.parseFsUriOpt(
+//            rawPath,
+//            uriDeepCheck
+//        ).isDefined
+//    }
+//
+//    /**
+//     * - For file system URIs, i.e. 'file:' or 'dbfs:'.
+//     *
+//     * @param rawPath
+//     *   To check.
+//     * @param uriDeepCheck
+//     *   Whether to do a deep check of URIs or just more common ones.
+//     * @return
+//     *   Option with a matched token, must be in one of the lists under `FormatLookup` to be detected.
+//     */
+//    def parseFsUriOpt(
+//                         rawPath: String,
+//                         uriDeepCheck: Boolean
+//                     ): Option[String] = Try {
+//
+//        var uriOpt: Option[String] = None
+//        var t1: String = ""
+//        var t1Low: String = ""
+//
+//        // (1) split on ":"
+//        // - handles '.zip/' as '.zip:'
+//        // - calls `prepPath`
+//        val subTokens = this.getSubdatasetTokenList(rawPath)
+//
+//        if (subTokens.length > 1) {
+//            // (2) nothing to do if < 2 tokens
+//            // - standardize raw path
+//            t1 = subTokens.head.replace(VSI_ZIP_TOKEN, "") // <- no colon here
+//            t1Low = subTokens.head.toLowerCase(Locale.ROOT).replace(VSI_ZIP_TOKEN, "") + ":"
+//            if (FS_URI_TOKENS.exists(t1Low.startsWith)) {
+//                // (3) check 'file:' and 'dbfs:'
+//                uriOpt = Option(t1)
+//            }
+//        }
+//
+//        uriOpt
+//    }.getOrElse(None)
 
 }

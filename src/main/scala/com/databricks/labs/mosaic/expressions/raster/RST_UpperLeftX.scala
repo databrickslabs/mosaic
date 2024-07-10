@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-/** Returns the upper left x of the raster. */
+/** Returns the upper left x of the tile. */
 case class RST_UpperLeftX(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_UpperLeftX](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -17,7 +17,7 @@ case class RST_UpperLeftX(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = DoubleType
 
-    /** Returns the upper left x of the raster. */
+    /** Returns the upper left x of the tile. */
     override def rasterTransform(tile: RasterTile): Any = tile.raster.originX
 
 }
@@ -27,7 +27,7 @@ object RST_UpperLeftX extends WithExpressionInfo {
 
     override def name: String = "rst_upperleftx"
 
-    override def usage: String = "_FUNC_(expr1) - Returns upper left x coordinate of the raster tile."
+    override def usage: String = "_FUNC_(expr1) - Returns upper left x coordinate of the tile tile."
 
     override def example: String =
         """

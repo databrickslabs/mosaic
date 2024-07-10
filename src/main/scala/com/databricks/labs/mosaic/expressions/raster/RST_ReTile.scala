@@ -25,7 +25,7 @@ case class RST_ReTile(
       with NullIntolerant
       with CodegenFallback {
 
-    /** @return provided raster data type (assumes that was handled for checkpointing.)*/
+    /** @return provided tile data type (assumes that was handled for checkpointing.)*/
     override def dataType: DataType = {
         // 0.4.3 changed from `rasterExpr.rasterType`
         RasterTileType(exprConfig.getCellIdType, rasterExpr, useCheckpoint = true) // always use checkpoint
@@ -52,7 +52,7 @@ object RST_ReTile extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2, expr3) - Returns a set of new raster tile with the specified size (tileWidth x tileHeight).
+          |_FUNC_(expr1, expr2, expr3) - Returns a set of new tile tile with the specified size (tileWidth x tileHeight).
           |""".stripMargin
 
     override def example: String =

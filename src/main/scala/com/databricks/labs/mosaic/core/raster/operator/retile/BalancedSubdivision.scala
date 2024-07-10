@@ -8,14 +8,14 @@ import com.databricks.labs.mosaic.functions.ExprConfig
 object BalancedSubdivision {
 
     /**
-      * Gets the number of splits for a raster. The number of splits is
-      * determined by the size of the raster and the desired size of the split
+      * Gets the number of splits for a tile. The number of splits is
+      * determined by the size of the tile and the desired size of the split
       * rasters. The number of splits is always a power of 4. This is a
       * heuristic method only due to compressions and other factors.
       * - 0.4.3 uses 0 as fallback.
       *
       * @param raster
-      *   The raster to split.
+      *   The tile to split.
       * @param destSize
       *   The desired size of the split rasters in MB.
       * @return
@@ -42,17 +42,17 @@ object BalancedSubdivision {
     }
 
     /**
-      * Gets the tile size for a raster. The tile size is determined by the
+      * Gets the tile size for a tile. The tile size is determined by the
       * number of splits. The tile size is always a power of 4. This is a
       * heuristic method only due to compressions and other factors.
       * @note
-      *   Power of 2 is used to split the raster in each step but the number of
+      *   Power of 2 is used to split the tile in each step but the number of
       *   splits is always a power of 4.
       *
       * @param x
-      *   The x dimension of the raster.
+      *   The x dimension of the tile.
       * @param y
-      *   The y dimension of the raster.
+      *   The y dimension of the tile.
       * @param numSplits
       *   The number of splits.
       * @return
@@ -78,13 +78,13 @@ object BalancedSubdivision {
     }
 
     /**
-      * Splits a raster into multiple rasters. The number of splits is
-      * determined by the size of the raster and the desired size of the split
+      * Splits a tile into multiple rasters. The number of splits is
+      * determined by the size of the tile and the desired size of the split
       * rasters. The number of splits is always a power of 4. This is a
       * heuristic method only due to compressions and other factors.
       *
       * @param tile
-      *   The raster to split.
+      *   The tile to split.
       * @param sizeInMb
       *   The desired size of the split rasters in MB.
       * @param exprConfigOpt

@@ -11,7 +11,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.DataType
 
-/** The expression for clipping a raster by a vector. */
+/** The expression for clipping a tile by a vector. */
 case class RST_SetSRID(
                           rastersExpr: Expression,
                           sridExpr: Expression,
@@ -33,18 +33,18 @@ case class RST_SetSRID(
     val geometryAPI: GeometryAPI = GeometryAPI(exprConfig.getGeometryAPI)
 
     /**
-      * Sets the SRID of raster tiles.
+      * Sets the SRID of tile tiles.
       *
       * @param tile
-      *   The raster to be used.
+      *   The tile to be used.
       * @param arg1
       *   The SRID to be used.
       * @return
-      *   The updated raster tile.
+      *   The updated tile tile.
       */
     override def rasterTransform(tile: RasterTile, arg1: Any): Any = {
 
-        // set srid on the raster
+        // set srid on the tile
         // - this is an in-place operation as of 0.4.3+
         // create a new object for the return
         tile.copy(raster = tile.raster.setSRID(arg1.asInstanceOf[Int]))
@@ -59,15 +59,15 @@ object RST_SetSRID extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Force set the SRID of a raster.
+          |_FUNC_(expr1) - Force set the SRID of a tile.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(raster, srid);
-          |        {index_id, raster, parentPath, driver}
-          |        {index_id, raster, parentPath, driver}
+          |      > SELECT _FUNC_(tile, srid);
+          |        {index_id, tile, parentPath, driver}
+          |        {index_id, tile, parentPath, driver}
           |        ...
           |  """.stripMargin
 

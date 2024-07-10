@@ -11,7 +11,7 @@ object GDALInfo {
       * script is called, InfoOptions expects a collection of same flags.
       *
       * @param raster
-      *   The raster to get info from.
+      *   The tile to get info from.
       * @param command
       *   The GDAL Info command.
       * @return

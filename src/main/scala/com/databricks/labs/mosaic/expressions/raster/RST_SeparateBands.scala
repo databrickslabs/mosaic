@@ -10,7 +10,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 
 /**
-  * Returns a set of new single-band rasters, one for each band in the input raster.
+  * Returns a set of new single-band rasters, one for each band in the input tile.
   */
 case class RST_SeparateBands(
                                 rasterExpr: Expression,
@@ -20,7 +20,7 @@ case class RST_SeparateBands(
       with CodegenFallback {
 
     /**
-      * Returns a set of new single-band rasters, one for each band in the input raster.
+      * Returns a set of new single-band rasters, one for each band in the input tile.
       */
     override def rasterGenerator(tile: RasterTile): Seq[RasterTile] = {
         SeparateBands.separate(tile, Option(exprConfig))
@@ -37,7 +37,7 @@ object RST_SeparateBands extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Separates raster bands into separate rasters. Empty bands are discarded.
+          |_FUNC_(expr1) - Separates tile bands into separate rasters. Empty bands are discarded.
           |""".stripMargin
 
     override def example: String =

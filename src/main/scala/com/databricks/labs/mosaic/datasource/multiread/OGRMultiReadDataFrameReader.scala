@@ -36,8 +36,9 @@ class OGRMultiReadDataFrameReader(sparkSession: SparkSession) extends MosaicData
         val layerNumber = config("layerNumber").toInt
         val layerName = config("layerName")
         val chunkSize = config("chunkSize").toInt
+        val uriDeepCheck = config("uriDeepCheck").toBoolean
 
-        val ds = OGRFileFormat.getDataSource(driverName, headPath)
+        val ds = OGRFileFormat.getDataSource(driverName, headPath, uriDeepCheck)
         val layer = OGRFileFormat.getLayer(ds, layerNumber, layerName)
         val partitionCount = 1 + (layer.GetFeatureCount / chunkSize)
 
@@ -83,6 +84,7 @@ class OGRMultiReadDataFrameReader(sparkSession: SparkSession) extends MosaicData
           "chunkSize" -> this.extraOptions.getOrElse("chunkSize", "5000"),
           "vsizip" -> this.extraOptions.getOrElse("vsizip", "false"),
           "asWKB" -> this.extraOptions.getOrElse("asWKB", "false"),
+          "uriDeepCheck" -> this.extraOptions.getOrElse("uriDeepCheck", "false")
         )
     }
 

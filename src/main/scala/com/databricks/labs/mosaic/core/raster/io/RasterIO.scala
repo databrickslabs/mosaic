@@ -1,13 +1,9 @@
 package com.databricks.labs.mosaic.core.raster.io
 
 import com.databricks.labs.mosaic.{NO_DRIVER, NO_EXT, NO_PATH_STRING, RASTER_DRIVER_KEY, RASTER_MEM_SIZE_KEY, RASTER_PATH_KEY}
-import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.{DatasetGDAL, PathGDAL, RasterGDAL}
-import com.databricks.labs.mosaic.core.raster.io.RasterIO.{
-    identifyDriverNameFromDataset,
-    identifyDriverNameFromRawPath,
-    identifyExtFromDriver
-}
+import com.databricks.labs.mosaic.core.raster.api.{FormatLookup, GDAL}
+import com.databricks.labs.mosaic.core.raster.gdal.{DatasetGDAL, PathGDAL, RasterBandGDAL, RasterGDAL}
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.{identifyDriverNameFromDataset, identifyDriverNameFromRawPath, identifyExtFromDriver}
 import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.{PathUtils, SysUtils}
 import org.gdal.gdal.{Dataset, Driver, gdal}
@@ -33,14 +29,17 @@ trait RasterIO {
       * for serialization.
       *   - Impl should also call destroy on the dataset.
       *   - Impl should handle flags.
+      *   - Impl should be able to write to fuse dir if specified.
       *
+      * @param toFuse
+      *   Whether to write to fuse during finalize; if [[RASTER_PATH_KEY]] not already under the specified fuse dir.
       * @return
       *   [[RasterGDAL]] `this` (fluent).
       */
-    def finalizeRaster(): RasterGDAL
+    def finalizeRaster(toFuse: Boolean): RasterGDAL
 
     /**
-      * Call to setup a raster (handle flags): (1) initFlag - if dataset exists,
+      * Call to setup a tile (handle flags): (1) initFlag - if dataset exists,
       * do (2); otherwise do (3). (2) datasetFlag - need to write to fuse and
       * set path. (3) pathFlag - need to load dataset and write to fuse (path
       * then replaced in createInfo).
@@ -74,8 +73,8 @@ trait RasterIO {
     // ////////////////////////////////////////////////////////////
 
     /**
-      * Destroys the raster object. After this operation the raster object is no
-      * longer usable. If the raster is needed again, use the refreshFromPath
+      * Destroys the tile object. After this operation the tile object is no
+      * longer usable. If the tile is needed again, use the refreshFromPath
       * method.
       * @return
       *   [[RasterGDAL]] `this` (fluent).
@@ -111,14 +110,17 @@ trait RasterIO {
       */
     def getParentPathOpt: Option[String]
 
-    /** @return current state of GDAL raster dataset object. */
+    /** @return current state of GDAL tile dataset object. */
     def isDatasetHydrated: Boolean
 
-    /** @return whether GDAL raster is flagged to be refreshed. */
+    /** @return whether GDAL tile is flagged to be refreshed. */
     def isDatasetRefreshFlag: Boolean
 
     /** @return whether this object is intentionally empty (not the dataset). */
     def isEmptyRasterGDAL: Boolean
+
+    /** @return whether fuse path is / would be in fuse dir. */
+    def isRawPathInFuseDir: Boolean
 
     /**
       * Specify a fuse dir option, e.g. other than configured checkpoint to use.
@@ -186,6 +188,7 @@ trait RasterIO {
 
     /**
       * Convenience method.
+      * - If you use this, make sure to delete the driver after use.
       *
       * @return
       *   Option [[Driver]] from hydrated [[Dataset]].
@@ -204,10 +207,12 @@ trait RasterIO {
       *
       * @param tryDatasetAndPathsAlso
       *   Whether to try (1) and (3) also or just (2), default false.
+      * @param uriPartOpt
+      *   Option uri part opt for (1) and (3).
       * @return
       *   Driver short name, default is NO_DRIVER.
       */
-    def getDriverName(tryDatasetAndPathsAlso: Boolean = false): String =
+    def getDriverName(tryDatasetAndPathsAlso: Boolean = false, uriPartOpt: Option[String] = None): String =
         Try {
             if (tryDatasetAndPathsAlso && this.isDatasetHydrated) {
                 // (1) try the dataset's driver (if available)
@@ -220,9 +225,13 @@ trait RasterIO {
                     case _                                           =>
                         if (tryDatasetAndPathsAlso) {
                             // (3) fallback to configured "path", then "parentPath" (based on raw path, e.g. for subdatasets)
-                            var pathDriverName = identifyDriverNameFromRawPath(getPathOpt.getOrElse(NO_PATH_STRING))
+                            var pathDriverName = identifyDriverNameFromRawPath(
+                                getPathOpt.getOrElse(NO_PATH_STRING), uriPartOpt
+                            )
                             if (pathDriverName == NO_DRIVER) {
-                                pathDriverName = identifyDriverNameFromRawPath(getParentPathOpt.getOrElse(NO_PATH_STRING))
+                                pathDriverName = identifyDriverNameFromRawPath(
+                                    getParentPathOpt.getOrElse(NO_PATH_STRING), uriPartOpt
+                                )
                             }
                             pathDriverName
                         } else NO_DRIVER
@@ -230,12 +239,10 @@ trait RasterIO {
             }
         }.getOrElse(NO_DRIVER)
 
-
-
 }
 
 /**
-  * Singleton providing centralized functions for reading / writing raster data
+  * Singleton providing centralized functions for reading / writing tile data
   * to a file system path or as bytes. Also, common support such as identifying
   * a driver or a driver extension.
   */
@@ -266,17 +273,25 @@ object RasterIO {
         PathUtils.createTmpFilePath(ext, exprConfigOpt)
     }
 
+    /** @return UUID standardized for use in Path or Directory.  */
+    def genUUID: String = PathUtils.genUUID
+
+    /** @return filename with UUID standardized for use in Path or Directory (raster_<uuid>.<ext>). */
+    def genFilenameUUID(ext: String, uuidOpt: Option[String]): String = PathUtils.genFilenameUUID(ext, uuidOpt)
+
     /**
-      * Identifies the driver of a raster from a file system path.
+      * Identifies the driver of a tile from a file system path.
       *
       * @param aPath
-      *   The path to the raster file.
+      *   The path to the tile file.
+      * @param uriPartOpt
+      *   Option uri part.
       * @return
       *   A string representing the driver short name, default [[NO_DRIVER]].
       */
-    def identifyDriverNameFromRawPath(aPath: String): String =
+    def identifyDriverNameFromRawPath(aPath: String, uriPartOpt: Option[String]): String =
         Try {
-            val readPath = PathUtils.asFileSystemPath(aPath)
+            val readPath = PathUtils.asFileSystemPath(aPath, uriPartOpt)
             val driver = gdal.IdentifyDriverEx(readPath)
             try {
                 driver.getShortName
@@ -286,7 +301,7 @@ object RasterIO {
         }.getOrElse(NO_DRIVER)
 
     /**
-      * Identifies the driver of a raster from a dataset.
+      * Identifies the driver of a tile from a dataset.
       *
       * @param dataset
       *   Get the driver from dataset.
@@ -312,15 +327,26 @@ object RasterIO {
         Try {
             extOpt match {
                 case Some(ext) if ext != NO_EXT =>
-                    val driver = gdal.IdentifyDriverEx(s"$NO_PATH_STRING.$ext")
+                    val driver = gdal.IdentifyDriverEx(ext)
                     try {
                         driver.getShortName
                     } finally {
                         driver.delete()
                     }
+
                 case _                          => NO_DRIVER
             }
-        }.getOrElse(NO_DRIVER)
+        }.getOrElse {
+            var result = NO_DRIVER
+
+            extOpt match {
+                case Some(ext) =>
+                    val idx = FormatLookup.formats.values.toList.indexOf(ext)
+                    if (idx > -1) result = FormatLookup.formats.keys.toList(idx)
+                case _ => ()
+            }
+            result
+        }
 
     /** @return Returns file extension. default [[NO_EXT]]. */
     def identifyExtFromDriver(driverShortName: String): String =
@@ -332,9 +358,9 @@ object RasterIO {
       * @return
       *   Returns file extension (converts to clean path). default [[NO_EXT]].
       */
-    def identifyExtFromPath(path: String): String =
+    def identifyExtFromPath(path: String, uriPartOpt: Option[String]): String =
         Try {
-            Paths.get(PathUtils.asFileSystemPath(path)).getFileName.toString.split("\\.").last
+            Paths.get(PathUtils.asFileSystemPath(path, uriPartOpt)).getFileName.toString.split("\\.").last
         }.getOrElse(NO_EXT)
 
     /** @return Returns file extension. */
@@ -362,45 +388,124 @@ object RasterIO {
       * @return
       *   Returns file extension as option (path converted to clean path).
       */
-    def identifyExtOptFromPath(path: String): Option[String] = PathUtils.getExtOptFromPath(path)
+    def identifyExtOptFromPath(path: String, uriPartOpt: Option[String]): Option[String] = {
+        PathUtils.getExtOptFromPath(path, uriPartOpt)
+    }
 
     // ////////////////////////////////////////////////////////
     // DATASET
     // ////////////////////////////////////////////////////////
 
+    //scalastyle:off println
     /**
-      * Opens a raster from a file system path with a given driver.
+     * Opens a tile from a file system path with a given driver.
+     *   - Use the raw path for subdatasets and /vsi* paths.
+     *
+     * @param pathGDAL
+     *   The [[PathGDAL]] to use.
+     * @param driverNameOpt
+     *   The driver short name to use. If None or NO_DRIVER, GDAL will try to
+     *   identify the driver from the file extension.
+     * @param exprConfigOpt
+     *   Option [[ExprConfig]]
+     * @return
+     *   A GDAL [[Dataset]] object.
+     */
+    def rawPathAsDatasetOpt(pathGDAL: PathGDAL, driverNameOpt: Option[String], exprConfigOpt: Option[ExprConfig]): Option[Dataset] =
+        Try {
+
+            // various checks to handle
+            var driverName = NO_DRIVER
+            var hasDriver = driverNameOpt.isDefined && driverNameOpt.get != NO_DRIVER
+            if (hasDriver) {
+                //println(s"RasterIO - rawPathAsDatasetOpt - driver passed")
+                driverName = driverNameOpt.get
+            } else {
+                //println(s"RasterIO - rawPathAsDatasetOpt - path ext (used in driver)? '${pathGDAL.getExtOpt}', path driver? '${pathGDAL.getPathDriverName}'")
+                driverName = pathGDAL.getPathDriverName
+                hasDriver = driverName != NO_DRIVER
+            }
+            val hasGDALPath = pathGDAL.asGDALPathOpt.isDefined
+            val hasSubPath = pathGDAL.isSubdatasetPath
+
+            // fallback path (no subdataset with this)
+            val fsPath = pathGDAL.asFileSystemPath
+            var gdalExSuccess = false
+            //println(s"fsPath? '$fsPath' | gdalPath? '${pathGDAL.asGdalPathOpt}' | driver? '$driverName'")
+
+            var dsOpt = {
+                if (hasDriver && hasGDALPath) {
+                    // use the provided driver and coerced gdal path
+                    try {
+                        val gdalPath = pathGDAL.asGDALPathOpt.get
+                        //println(s"RasterIO - rawPathAsDatasetOpt - `gdal.OpenEx` gdalPath? '$gdalPath' (driver? '$driverName')")
+                        val drivers = new JVector[String]() // java.util.Vector
+                        drivers.add(driverName)
+                        val result = gdal.OpenEx(gdalPath, GA_ReadOnly, drivers)
+                        if (result != null) gdalExSuccess = true
+                        Option(result)
+                    } catch {
+                        case _: Throwable =>
+                            //println(s"RasterIO - rawPathAsDatasetOpt - `gdal.Open` fsPath? '$fsPath'")
+                            val result = gdal.Open(fsPath, GA_ReadOnly)
+                            Option(result)
+                    }
+                } else {
+                    // just start from the file system path
+                    //println(s"RasterIO - rawPathAsDatasetOpt - `gdal.Open` fsPath? '$fsPath'")
+                    val result = gdal.Open(fsPath, GA_ReadOnly)
+                    Option(result)
+                }
+            }
+
+            //println(s"dsOpt -> ${dsOpt.toString}")
+            if (dsOpt.isDefined && hasSubPath && !gdalExSuccess) {
+                // try to load the subdataset from the dataset
+                // - we got here because the subdataset failed to load,
+                //   but the full dataset loaded.
+                //println(s"RasterIO - rawPathAsDatasetOpt - subdataset load")
+                val dsGDAL = DatasetGDAL()
+                try {
+                    dsGDAL.updateDataset(dsOpt.get, doUpdateDriver = true)
+                    pathGDAL.getPathSubdatasetNameOpt match {
+                        case Some(subName) =>
+                            val gdalPath = pathGDAL.asGDALPathOpt.get
+                            dsOpt = dsGDAL.getSubdatasetObj(gdalPath, subName, exprConfigOpt).getDatasetOpt // <- subdataset
+                        case _ =>
+                            dsOpt = None // <- no subdataset
+                    }
+
+                } finally {
+                    dsGDAL.flushAndDestroy()
+                }
+            }
+
+            dsOpt
+        }.getOrElse(None)
+    //scalastyle:on println
+
+    //scalastyle:off println
+    /**
+      * Opens a tile from a file system path with a given driver.
       *   - Use the raw path for subdatasets and /vsi* paths.
+      *   - this just constructs a [[PathGDAL]] and calls the other signature.
       *
       * @param rawPath
-      *   The path to the raster file.
+      *   The path to the tile file.
       * @param driverNameOpt
       *   The driver short name to use. If None or NO_DRIVER, GDAL will try to
       *   identify the driver from the file extension.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
       *   A GDAL [[Dataset]] object.
       */
-    def rawPathAsDatasetOpt(rawPath: String, driverNameOpt: Option[String]): Option[Dataset] =
-        Try {
-            // Add [[VSI_ZIP_TOKEN]] (if zip)
-            // - handles fuse
-            // - this is a safety net to reduce burden on callers
-            val path = {
-                if (PathUtils.isSubdataset(rawPath)) PathUtils.asSubdatasetGDALPathOpt(rawPath, uriFuseReady = true).get
-                else PathUtils.getCleanPath(rawPath, addVsiZipToken = true)
-            }
-
-            driverNameOpt match {
-                case Some(driverName) if driverName != NO_DRIVER =>
-                    // use the provided driver
-                    val drivers = new JVector[String]() // java.util.Vector
-                    drivers.add(driverName)
-                    gdal.OpenEx(path, GA_ReadOnly, drivers)
-                case _                                           =>
-                    // try just from raw path
-                    gdal.Open(path, GA_ReadOnly)
-            }
-        }.toOption
+    def rawPathAsDatasetOpt(rawPath: String, driverNameOpt: Option[String], exprConfigOpt: Option[ExprConfig]): Option[Dataset] = {
+        val uriDeepCheck = Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
+        val pathGDAL = PathGDAL(path = rawPath, uriDeepCheck)
+        rawPathAsDatasetOpt(pathGDAL, driverNameOpt, exprConfigOpt)
+    }
+    //scalastyle:on println
 
     // ////////////////////////////////////////////////////////
     // CLEAN
@@ -454,22 +559,45 @@ object RasterIO {
     // /////////////////////////////////////////////////////////////////////
 
     /**
-      * Reads a raster from a byte array. Expects "driver" in createInfo.
-      *   - Populates the raster with a dataset, if able.
+     * Reads a tile band from a file system path. Reads a subdataset band if
+     * the path is to a subdataset.
+     * @example
+     *   Raster: path = "/path/to/file.tif" Subdataset: path =
+     *   "FORMAT:/path/to/file.tif:subdataset"
+     * @param bandIndex
+     *   The band index to read (1+ indexed).
+     * @param createInfo
+     *   Map of create info for the tile.
+     * @param exprConfigOpt
+     *   Option [[ExprConfig]]
+     * @return
+     *   A [[RasterGDAL]] object.
+     */
+    def readRasterBand(bandIndex: Int, createInfo: Map[String, String], exprConfigOpt: Option[ExprConfig]): RasterBandGDAL = {
+        val tmpRaster = this.readRasterHydratedFromPath(createInfo, exprConfigOpt)
+        val result = tmpRaster.getBand(bandIndex)
+        tmpRaster.flushAndDestroy()
+
+        result
+    }
+
+    /**
+      * Reads a tile from a byte array. Expects "driver" in createInfo.
+      *   - Populates the tile with a dataset, if able.
       *   - May construct an empty [[RasterGDAL]], test `isEmptyRasterGDAL` and
       *     review error keys in `createInfo`.
       *
       * @param rasterArr
-      *   The byte array containing the raster data.
+      *   The byte array containing the tile data.
       * @param createInfo
-      *   Mosaic creation info of the raster. Note: This is not the same as the
-      *   metadata of the raster. This is not the same as GDAL creation options.
+      *   Mosaic creation info of the tile. Note: This is not the same as the
+      *   metadata of the tile. This is not the same as GDAL creation options.
       * @param exprConfigOpt
       *   Option [[ExprConfig]]
       * @return
       *   A [[RasterGDAL]] object (test `isEmptyRasterGDAL`).
       */
-    def rasterHydratedFromContent(
+    def readRasterHydratedFromContent(
         rasterArr: Array[Byte],
         createInfo: Map[String, String],
         exprConfigOpt: Option[ExprConfig]
@@ -482,7 +610,7 @@ object RasterIO {
             val result = RasterGDAL()
             result.updateCreateInfoError(
               "readRasterUniversalContent - explicitly empty conditions",
-              fullMsg = "check raster is non-empty and 'driver' name provided."
+              fullMsg = "check tile is non-empty and 'driver' name provided."
             )
             result
         } else {
@@ -492,30 +620,29 @@ object RasterIO {
             Files.write(Paths.get(tmpPath), rasterArr)
 
             // (3) Try reading as a tmp file, if that fails, rename as a zipped file
-            val dataset = RasterIO.rawPathAsDatasetOpt(tmpPath, Option(driverName)).orNull // <- allow null
+            val dataset = RasterIO.rawPathAsDatasetOpt(tmpPath, Option(driverName), exprConfigOpt).orNull // <- allow null
             if (dataset == null) {
                 val zippedPath = s"$tmpPath.zip"
                 Files.move(Paths.get(tmpPath), Paths.get(zippedPath), StandardCopyOption.REPLACE_EXISTING)
-                val readPath = PathUtils.getCleanZipPath(zippedPath, addVsiZipToken = true) // [[VSI_ZIP_TOKEN]] for GDAL
-                val ds1 = RasterIO.rawPathAsDatasetOpt(readPath, Option(driverName)).orNull // <- allow null
+                val ds1 = RasterIO.rawPathAsDatasetOpt(zippedPath, Option(driverName), exprConfigOpt).orNull // <- allow null
                 if (ds1 == null) {
                     // the way we zip using uuid is not compatible with GDAL
                     // we need to unzip and read the file if it was zipped by us
                     val parentDir = Paths.get(zippedPath).getParent
                     val prompt = SysUtils.runScript(Array("/bin/sh", "-c", s"cd $parentDir && unzip -o $zippedPath -d $parentDir"))
-                    // zipped files will have the old uuid name of the raster
-                    // we need to get the last extracted file name, but the last extracted file name is not the raster name
+                    // zipped files will have the old uuid name of the tile
+                    // we need to get the last extracted file name, but the last extracted file name is not the tile name
                     // we can't list folders due to concurrent writes
                     val ext = GDAL.getExtension(driverName)
                     val lastExtracted = SysUtils.getLastOutputLine(prompt)
                     val unzippedPath = PathUtils.parseUnzippedPathFromExtracted(lastExtracted, ext)
-                    val ds2 = RasterIO.rawPathAsDatasetOpt(unzippedPath, Option(driverName)).orNull // <- allow null
+                    val ds2 = RasterIO.rawPathAsDatasetOpt(unzippedPath, Option(driverName), exprConfigOpt).orNull // <- allow null
                     if (ds2 == null) {
                         // (3d) handle error with bytes
                         // - explicitly empty conditions
                         val result = RasterGDAL()
                         result.updateCreateInfoError(
-                          "readRasterUniversalContent - Error reading raster from bytes",
+                          "readRasterUniversalContent - Error reading tile from bytes",
                           fullMsg = prompt._3
                         )
                         result
@@ -536,7 +663,7 @@ object RasterIO {
                       ds1,
                       exprConfigOpt,
                       createInfo + (
-                        RASTER_PATH_KEY -> readPath,
+                        RASTER_PATH_KEY -> zippedPath,
                         RASTER_MEM_SIZE_KEY -> rasterArr.length.toString
                       )
                     )
@@ -556,9 +683,9 @@ object RasterIO {
     }
 
     /**
-      * Reads a raster from a file system path. Reads a subdataset if the path
+      * Reads a tile from a file system path. Reads a subdataset if the path
       * is to a subdataset.
-      *   - Populates the raster with a dataset, if able.
+      *   - Populates the tile with a dataset, if able.
       *   - May construct an empty [[RasterGDAL]], test `isEmptyRasterGDAL` and
       *     review error keys in `createInfo`.
       * @example
@@ -566,17 +693,18 @@ object RasterIO {
       *   "FORMAT:/path/to/file.tif:subdataset"
       *
       * @param createInfo
-      *   Map of create info for the raster.
+      *   Map of create info for the tile.
       * @param exprConfigOpt
       *   Option [[ExprConfig]]
       * @return
       *   A [[RasterGDAL]] object (test `isEmptyRasterGDAL`).
       */
-    def rasterHydratedFromPath(createInfo: Map[String, String], exprConfigOpt: Option[ExprConfig]): RasterGDAL = {
+    def readRasterHydratedFromPath(createInfo: Map[String, String], exprConfigOpt: Option[ExprConfig]): RasterGDAL = {
 
         // (1) initial variables from params
         // - construct a [[PathGDAL]] to assist
-        val inPathGDAL = PathGDAL(createInfo.getOrElse(RASTER_PATH_KEY, NO_PATH_STRING))
+        val uriDeepCheck = Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
+        val inPathGDAL = PathGDAL(createInfo.getOrElse(RASTER_PATH_KEY, NO_PATH_STRING), uriDeepCheck)
         val driverNameOpt = createInfo.get(RASTER_DRIVER_KEY)
 
         if (!inPathGDAL.isPathSetAndExists) {
@@ -586,148 +714,36 @@ object RasterIO {
             //   so don't worry about stripping back a path to "clean" ect... handled by the object
             val result = RasterGDAL()
             result.updateCreateInfoError(
-              "readRasterUniversalPath - explicitly empty conditions",
-              fullMsg = "check 'path' value provided (does it exist?)."
+                "readRasterUniversalPath - explicitly empty conditions",
+                fullMsg = "check 'path' value provided (does it exist?)."
             )
             result
         } else {
-            // (3) Prep for a subdataset path or a filesystem path
-            // - both of these handle fuse (e.g. if URISchema part of raw path)
-            val readPathOpt = {
-                if (inPathGDAL.isSubdatasetPath) inPathGDAL.asSubdatasetGDALFuseOpt
-                else inPathGDAL.asFileSystemPathOpt
-            }
-            // (4) load readPath to dataset
-            readPathOpt match {
-                case Some(readPath) => this.rawPathAsDatasetOpt(readPath, driverNameOpt) match {
-                        case Some(dataset) =>
-                            // (4a) dataset was successful
-                            RasterGDAL(
-                              dataset,
-                              exprConfigOpt,
-                              createInfo
-                            )
-                        case _             =>
-                            // (4b) dataset was unsuccessful
-                            // - create empty object
-                            val result = RasterGDAL()
-                            result.updateCreateInfoError(
-                              "readRasterUniversalPath - issue generating dataset from subdataset or filesystem path",
-                              fullMsg = s"""
-                                             |Error reading raster from path: $readPath
-                                             |Error: ${gdal.GetLastErrorMsg()}
-                                           """
-                            )
-                            result
-                    }
-                case _              =>
-                    // (4c) the initial option unsuccessful
+            // (3) attempt to load inPathGDAL to dataset
+            this.rawPathAsDatasetOpt(inPathGDAL, driverNameOpt, exprConfigOpt) match {
+                case Some(dataset) =>
+                    // (4a) dataset was successful
+                    // - update the driver name (just in case)
+                    RasterGDAL(
+                        dataset,
+                        exprConfigOpt,
+                        createInfo + (RASTER_DRIVER_KEY -> this.identifyDriverNameFromDataset(dataset))
+                    )
+                case _ =>
+                    // (4b) dataset was unsuccessful
+                    // - create empty object
                     val result = RasterGDAL()
                     result.updateCreateInfoError(
-                      "readRasterUniversalPath - issue generating subdataset or filesystem path",
-                      fullMsg = s"check initial path '${inPathGDAL.path}' ."
+                        "readRasterUniversalPath - issue generating dataset from subdataset or filesystem path",
+                        fullMsg =
+                            s"""
+                               |Error reading tile from path: ${inPathGDAL.path}
+                               |Error: ${gdal.GetLastErrorMsg()}
+                                           """
                     )
                     result
             }
         }
     }
-
-    // ////////////////////////////////////////////////////////////
-    // ??? ARE THESE NEEDED ???
-    // ////////////////////////////////////////////////////////////
-//
-//    /**
-//     * This is a simple Getter.
-//     * @return
-//     *   returns option for the fuse dir used, None means using latest
-//     *   configured checkpoint dir.
-//     */
-//    def getFusePathOpt: Option[String]
-//
-//    /** @return whether fuse path has same extension, default is false. */
-//    def isPathExtMatchFuse: Boolean
-//
-//    /** @return whether fuse is available for loading as dataset. */
-//    def isFusePathSetAndExists: Boolean
-//
-//    /**
-//     * @return
-//     *   whether fuse path is / would be in fuse dir (following RasterIO
-//     *   conventions).
-//     */
-//    def isFusePathInFuseDir: Boolean
-//
-//    /**
-//     * @return
-//     *   whether the path is the same as the fuse path (false if either are
-//     *   None).
-//     */
-//    def isCreateInfoPathSameAsFuse: Boolean
-//
-//    /**
-//     * Fuse path which will be used in persisting the raster
-//     *   - This does not generate a new path, just conditionally might
-//     *     invalidate an existing path (make None).
-//     *   - Use Impl `_handleFlags` or higher methods `withDatasetHydrated` or
-//     *     `finalizeRaster` to actually perform the writes.
-//     *
-//     * @param forceNone
-//     *   For various externals that require a new fuse path (based on latest
-//     *   fuse `config` settings). Will invalidate existing path.
-//     *   - This does not generate a new path.
-//     *
-//     * @return
-//     *   [[RasterGDAL]] `this` (fluent).
-//     */
-//    def configFusePathOpt(forceNone: Boolean): RasterGDAL
-//
-//    /**
-//     * Set new path.
-//     *   - invalidates existing paths (local and fuse) or dataset.
-//     *
-//     * @param rawPath
-//     *   path to set.
-//     * @param fuseDirOverrideOpt
-//     *   If option provide, set / use the specified fuse directory.
-//     * @return
-//     *   [[RasterGDAL]] `this` (fluent).
-//     */
-//    def configNewRawPath(
-//                            rawPath: String,
-//                            fuseDirOverrideOpt: Option[String] = None
-//                        ): RasterGDAL
-//
-//    /** @inheritdoc */
-//    override def isPathExtMatchFuse: Boolean =
-//        Try {
-//            datasetGDAL.pathGDAL.getExtOpt.get == fuseGDAL.getExtOpt.get
-//        }.getOrElse(false)
-//
-//    /** @inheritdoc */
-//    override def isFusePathSetAndExists: Boolean = fuseGDAL.isPathSetAndExists
-//
-//    /** @inheritdoc */
-//    override def isFusePathInFuseDir: Boolean =
-//        Try {
-//            // !!! avoid cyclic dependencies !!!
-//            // - wrapped to handle false conditions
-//            this.fuseDirOpt match {
-//                case Some(dir) => this.fuseGDAL.path.startsWith(dir)
-//                case _         => this.fuseGDAL.path.startsWith(GDAL.getCheckpointDir)
-//            }
-//        }.getOrElse(false)
-//
-//    /** @inheritdoc */
-//    override def isCreateInfoPathSameAsFuse: Boolean =
-//        Try {
-//            // !!! avoid cyclic dependencies !!!
-//            this.getRawPath == fuseGDAL.path
-//        }.getOrElse(false)
-//
-//    /** fuse path option to None; returns `this` (fluent). */
-//    def resetFusePathOpt(): RasterGDAL = {
-//        fuseGDAL.resetPath
-//        this
-//    }
 
 }

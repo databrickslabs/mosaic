@@ -14,12 +14,12 @@ import scala.util.Try
 
 /**
   * VectorClipper is an object that defines the interface for managing a clipper
-  * shapefile used for clipping a raster by a vector geometry.
+  * shapefile used for clipping a tile by a vector geometry.
   */
 object VectorClipper {
 
     /**
-      * Generates an in memory shapefile that is used to clip a raster.
+      * Generates an in memory shapefile that is used to clip a tile.
       * @param exprConfigOpt
       *   Option [[ExprConfig]]
       * @return
@@ -31,7 +31,7 @@ object VectorClipper {
     }
 
     /**
-      * Generates a shapefile data source that is used to clip a raster.
+      * Generates a shapefile data source that is used to clip a tile.
       * @param fileName
       *   The shapefile data source.
       * @return
@@ -44,7 +44,7 @@ object VectorClipper {
     }
 
     /**
-      * Generates a clipper shapefile that is used to clip a raster. The
+      * Generates a clipper shapefile that is used to clip a tile. The
       * shapefile is flushed to disk and then the data source is deleted. The
       * shapefile is accessed by gdalwarp by file name.
      *
@@ -55,7 +55,7 @@ object VectorClipper {
       * @param srcCrs
       *   The geometry CRS.
       * @param dstCrs
-      *   The raster CRS.
+      *   The tile CRS.
       * @param geometryAPI
       *   The geometry API.
       * @param exprConfigOpt

@@ -7,23 +7,23 @@ import org.gdal.osr.SpatialReference
 
 /**
   * RasterProject is an object that defines the interface for projecting a
-  * raster.
+  * tile.
   */
 object RasterProject {
 
     /**
-      * Projects a raster to a new CRS. The method handles all the abstractions
+      * Projects a tile to a new CRS. The method handles all the abstractions
       * over GDAL Warp. It uses cubic resampling to ensure that the output is
       * smooth.
       *
       * @param raster
-      *   The raster to project.
+      *   The tile to project.
       * @param destCRS
       *   The destination CRS.
       * @param exprConfigOpt
       *   Option [[ExprConfig]]
       * @return
-      *   A projected raster.
+      *   A projected tile.
       */
     def project(raster: RasterGDAL, destCRS: SpatialReference, exprConfigOpt: Option[ExprConfig]): RasterGDAL = {
         val tmpPath = raster.createTmpFileFromDriver(exprConfigOpt)

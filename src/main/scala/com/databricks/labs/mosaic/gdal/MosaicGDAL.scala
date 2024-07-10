@@ -3,10 +3,18 @@ package com.databricks.labs.mosaic.gdal
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.io.CleanUpManager
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_BLOCKSIZE_DEFAULT, MOSAIC_RASTER_CHECKPOINT,
-    MOSAIC_RASTER_CHECKPOINT_DEFAULT, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT, MOSAIC_RASTER_TMP_PREFIX_DEFAULT,
-    MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
-import com.databricks.labs.mosaic.functions.{MosaicContext, ExprConfig}
+import com.databricks.labs.mosaic.{
+    MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT,
+    MOSAIC_CLEANUP_AGE_LIMIT_MINUTES,
+    MOSAIC_RASTER_BLOCKSIZE_DEFAULT,
+    MOSAIC_RASTER_CHECKPOINT,
+    MOSAIC_RASTER_CHECKPOINT_DEFAULT,
+    MOSAIC_RASTER_TMP_PREFIX_DEFAULT,
+    MOSAIC_RASTER_USE_CHECKPOINT,
+    MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT,
+    MOSAIC_TEST_MODE
+}
+import com.databricks.labs.mosaic.functions.{ExprConfig, MosaicContext}
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
@@ -21,6 +29,9 @@ import scala.util.Try
 //noinspection DuplicatedCode
 /** GDAL environment preparation and configuration. Some functions only for driver. */
 object MosaicGDAL extends Logging {
+
+    /** update this var each time `config*` is invoked. */
+    var exprConfigOpt: Option[ExprConfig] = None
 
     private val usrlibsoPath = "/usr/lib/libgdal.so"
     private val usrlibso30Path = "/usr/lib/libgdal.so.30"
@@ -56,9 +67,9 @@ object MosaicGDAL extends Logging {
         spark.conf.get(GDAL_ENABLED, "false").toBoolean || sys.env.getOrElse("GDAL_ENABLED", "false").toBoolean
 
     /** Configures the GDAL environment. */
-    def configureGDAL(exprConfig: ExprConfig): Unit = {
-        val CPL_TMPDIR = MosaicContext.tmpDir(Option(exprConfig))
-        val GDAL_PAM_PROXY_DIR = MosaicContext.tmpDir(Option(exprConfig))
+    def configureGDAL(exprConfigOpt: Option[ExprConfig]): Unit = {
+        val CPL_TMPDIR = MosaicContext.getTmpSessionDir(exprConfigOpt)
+        val GDAL_PAM_PROXY_DIR = MosaicContext.getTmpSessionDir(exprConfigOpt)
         gdal.SetConfigOption("GDAL_VRT_ENABLE_PYTHON", "YES")
         gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
         gdal.SetConfigOption("CPL_TMPDIR", CPL_TMPDIR)
@@ -68,28 +79,37 @@ object MosaicGDAL extends Logging {
         gdal.SetConfigOption("CPL_LOG", s"$CPL_TMPDIR/gdal.log")
         gdal.SetConfigOption("GDAL_CACHEMAX", "512")
         gdal.SetConfigOption("GDAL_NUM_THREADS", "ALL_CPUS")
-        exprConfig.getGDALConf.foreach { case (k, v) => gdal.SetConfigOption(k.split("\\.").last, v) }
-        setBlockSize(exprConfig)
-        configureCheckpoint(exprConfig)
-        configureLocalRasterDir(exprConfig)
+        exprConfigOpt match {
+            case Some(exprConfig) =>
+                exprConfig.getGDALConf.foreach { case (k, v) => gdal.SetConfigOption(k.split("\\.").last, v) }
+            case _ => ()
+        }
+        setBlockSize(exprConfigOpt)
+        configureCheckpoint(exprConfigOpt)
+        configureLocalRasterDir(exprConfigOpt)
     }
 
-    def configureCheckpoint(exprConfig: ExprConfig): Unit = {
-        this.checkpointDir = exprConfig.getRasterCheckpoint
-        this.useCheckpoint = exprConfig.isRasterUseCheckpoint
+    def configureCheckpoint(exprConfigOpt: Option[ExprConfig]): Unit = {
+        this.checkpointDir = Try(exprConfigOpt.get.getRasterCheckpoint)
+            .getOrElse(MOSAIC_RASTER_CHECKPOINT_DEFAULT)
+        this.useCheckpoint = Try(exprConfigOpt.get.isRasterUseCheckpoint)
+            .getOrElse(MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT.toBoolean)
     }
 
-    def configureLocalRasterDir(exprConfig: ExprConfig): Unit = {
-        this.manualMode = exprConfig.isManualCleanupMode
-        this.cleanUpAgeLimitMinutes = exprConfig.getCleanUpAgeLimitMinutes
+    def configureLocalRasterDir(exprConfigOpt: Option[ExprConfig]): Unit = {
+        this.manualMode = Try(exprConfigOpt.get.isManualCleanupMode)
+            .getOrElse(false)
+        this.cleanUpAgeLimitMinutes = Try(exprConfigOpt.get.getCleanUpAgeLimitMinutes)
+            .getOrElse(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES.toInt)
 
         // don't allow a fuse path
-        if (PathUtils.isFusePathOrDir(exprConfig.getTmpPrefix)) {
+        val tmpPrefix = Try(exprConfigOpt.get.getTmpPrefix).getOrElse(MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
+        if (PathUtils.isFusePathOrDir(tmpPrefix, uriGdalOpt = None)) {
             throw new Error(
-                s"configured tmp prefix '${exprConfig.getTmpPrefix}' must be local, " +
+                s"configured tmp prefix '$tmpPrefix' must be local, " +
                     s"not fuse mounts ('/dbfs/', '/Volumes/', or '/Workspace/')")
         } else {
-            this.localRasterDir = s"${exprConfig.getTmpPrefix}/mosaic_tmp"
+            this.localRasterDir = s"$tmpPrefix/mosaic_tmp"
         }
 
         // make sure cleanup manager thread is running
@@ -97,8 +117,8 @@ object MosaicGDAL extends Logging {
     }
 
 
-    def setBlockSize(exprConfig: ExprConfig): Unit = {
-        val blockSize = exprConfig.getRasterBlockSize
+    def setBlockSize(exprConfigOpt: Option[ExprConfig]): Unit = {
+        val blockSize = Try(exprConfigOpt.get.getRasterBlockSize).getOrElse(0)
         if (blockSize > 0) {
             this.blockSize = blockSize
         }
@@ -119,13 +139,13 @@ object MosaicGDAL extends Logging {
       */
     def enableGDAL(spark: SparkSession): Unit = {
         // refresh configs in case spark had changes
-        val exprConfig = ExprConfig(spark)
+        exprConfigOpt = Option(ExprConfig(spark))
 
         if (!wasEnabled(spark) && !enabled) {
             Try {
                 enabled = true
                 loadSharedObjects()
-                configureGDAL(exprConfig)
+                configureGDAL(exprConfigOpt)
                 gdal.AllRegister()
                 spark.conf.set(GDAL_ENABLED, "true")
             } match {
@@ -139,8 +159,8 @@ object MosaicGDAL extends Logging {
                     throw exception
             }
         } else {
-            configureCheckpoint(exprConfig)
-            configureLocalRasterDir(exprConfig)
+            configureCheckpoint(exprConfigOpt)
+            configureLocalRasterDir(exprConfigOpt)
         }
     }
 
@@ -199,7 +219,7 @@ object MosaicGDAL extends Logging {
             val msg = "Null checkpoint path provided."
             logError(msg)
             throw new NullPointerException(msg)
-        } else if (!isTestMode && !PathUtils.isFusePathOrDir(dir)) {
+        } else if (!isTestMode && !PathUtils.isFusePathOrDir(dir, uriGdalOpt = None)) {
             val msg = "Checkpoint path must be a (non-local) fuse location."
             logError(msg)
             throw new InvalidPathException(dir, msg)
@@ -252,6 +272,7 @@ object MosaicGDAL extends Logging {
             val indexSystem = IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem)
             val geometryAPI =  GeometryAPI.apply(exprConfig.getGeometryAPI)
             MosaicContext.build(indexSystem, geometryAPI)
+            exprConfigOpt = Option(exprConfig) // <- update the class variable
         }
         val mc = MosaicContext.context()
         mc.register(spark)

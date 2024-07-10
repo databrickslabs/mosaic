@@ -11,7 +11,7 @@ import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
 
-/** Returns the min value per band of the raster. */
+/** Returns the min value per band of the tile. */
 case class RST_Min(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_Min](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -19,7 +19,7 @@ case class RST_Min(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = ArrayType(DoubleType)
 
-    /** Returns the min value per band of the raster. */
+    /** Returns the min value per band of the tile. */
     override def rasterTransform(tile: RasterTile): Any = {
         val raster = tile.raster
         raster.withDatasetHydratedOpt() match {

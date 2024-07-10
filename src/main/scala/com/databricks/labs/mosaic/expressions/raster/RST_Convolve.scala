@@ -12,7 +12,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
-/** The expression for applying kernel filter on a raster. */
+/** The expression for applying kernel filter on a tile. */
 case class RST_Convolve(
                            rastersExpr: Expression,
                            kernelExpr: Expression,
@@ -34,14 +34,14 @@ case class RST_Convolve(
     val geometryAPI: GeometryAPI = GeometryAPI(exprConfig.getGeometryAPI)
 
     /**
-      * Clips a raster by a vector.
+      * Clips a tile by a vector.
       *
       * @param tile
-      *   The raster to be used.
+      *   The tile to be used.
       * @param arg1
       *   The vector to be used.
       * @return
-      *   The clipped raster.
+      *   The clipped tile.
       */
     override def rasterTransform(tile: RasterTile, arg1: Any): Any = {
         val kernel = arg1.asInstanceOf[ArrayData].array.map(_.asInstanceOf[ArrayData].array.map(
@@ -67,13 +67,13 @@ object RST_Convolve extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a raster with the kernel filter applied.
+          |_FUNC_(expr1) - Returns a tile with the kernel filter applied.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(raster, kernel);
+          |      > SELECT _FUNC_(tile, kernel);
           |        {index_id, clipped_raster, parentPath, driver}
           |        {index_id, clipped_raster, parentPath, driver}
           |        ...

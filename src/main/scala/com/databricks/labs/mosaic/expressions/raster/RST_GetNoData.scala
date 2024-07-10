@@ -10,7 +10,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.{ArrayType, DataType, DoubleType}
 
-/** The expression for extracting the no data value of a raster. */
+/** The expression for extracting the no data value of a tile. */
 case class RST_GetNoData(
                             rastersExpr: Expression,
                             exprConfig: ExprConfig
@@ -25,12 +25,12 @@ case class RST_GetNoData(
     override def dataType: DataType = ArrayType(DoubleType)
 
     /**
-      * Extracts the no data value of a raster.
+      * Extracts the no data value of a tile.
       *
       * @param tile
-      *   The raster to be used.
+      *   The tile to be used.
       * @return
-      *   The no data value of the raster.
+      *   The no data value of the tile.
       */
     override def rasterTransform(tile: RasterTile): Any = {
         val raster = tile.raster
@@ -46,7 +46,7 @@ object RST_GetNoData extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns no data values for raster tile bands.
+          |_FUNC_(expr1) - Returns no data values for tile tile bands.
           |""".stripMargin
 
     override def example: String =

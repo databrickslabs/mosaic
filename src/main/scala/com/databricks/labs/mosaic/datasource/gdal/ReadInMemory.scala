@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
+import com.databricks.labs.mosaic.{RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
@@ -13,6 +14,8 @@ import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
+
+import scala.util.Try
 
 /** An object defining the in memory read strategy for the GDAL file format. */
 object ReadInMemory extends ReadStrategy {
@@ -67,11 +70,11 @@ object ReadInMemory extends ReadStrategy {
       * @param requiredSchema
       *   Required schema.
       * @param options
-      * Options passed to the reader.
+      *   Options passed to the reader.
       * @param indexSystem
-      * Index system.
-      * @param exprConfig
-      * [[ExprConfig]]
+      *   Index system.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]].
       * @return
       *   Iterator of internal rows.
       */
@@ -81,17 +84,29 @@ object ReadInMemory extends ReadStrategy {
                          requiredSchema: StructType,
                          options: Map[String, String],
                          indexSystem: IndexSystem,
-                         exprConfig: ExprConfig
+                         exprConfigOpt: Option[ExprConfig]
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
-        val readPath = PathUtils.asFileSystemPath(inPath)
+
+        val uriDeepCheck = {
+            if (options.contains("uriDeepCheck")) options("uriDeepCheck").toBoolean
+            else Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
+        }
+        val uriGdalOpt = PathUtils.parseGdalUriOpt(inPath, uriDeepCheck)
+        val readPath = PathUtils.asFileSystemPath(inPath, uriGdalOpt)
         val contentBytes: Array[Byte] = readContent(fs, status)
+
+        val driverName = options.get("driverName") match {
+            case Some(name) if name.nonEmpty => name
+            case _ => identifyDriverNameFromRawPath(inPath, uriGdalOpt)
+        }
+
         val createInfo = Map(
-            "path" -> readPath,
-            "parentPath" -> inPath,
-            "driver" -> identifyDriverNameFromRawPath(inPath)
+            RASTER_PATH_KEY -> readPath,
+            RASTER_PARENT_PATH_KEY -> inPath,
+            RASTER_DRIVER_KEY -> driverName
         )
-        val raster = RasterGDAL(createInfo, Option(exprConfig))
+        val raster = RasterGDAL(createInfo, exprConfigOpt)
         val uuid = getUUID(status)
 
         val fields = requiredSchema.fieldNames.filter(_ != TILE).map {

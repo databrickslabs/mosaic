@@ -1,11 +1,11 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.{NO_PATH_STRING, RASTER_DRIVER_KEY}
+import com.databricks.labs.mosaic.{NO_PATH_STRING, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterIO.{createTmpFileFromDriver, rasterHydratedFromContent}
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.{createTmpFileFromDriver, readRasterHydratedFromContent}
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
@@ -21,8 +21,8 @@ import org.apache.spark.unsafe.types.UTF8String
 import java.nio.file.{Files, Paths}
 
 /**
-  * The raster for construction of a raster tile. This should be the first
-  * expression in the expression tree for a raster tile.
+  * The tile for construction of a tile tile. This should be the first
+  * expression in the expression tree for a tile tile.
   */
 case class RST_FromContent(
                               contentExpr: Expression,
@@ -55,7 +55,7 @@ case class RST_FromContent(
     override def elementSchema: StructType = StructType(Array(StructField("tile", dataType)))
 
     /**
-      * subdivides raster binary content into tiles of the specified size (in
+      * subdivides tile binary content into tiles of the specified size (in
       * MB).
       * @param input
       *   The input file path.
@@ -67,15 +67,15 @@ case class RST_FromContent(
         val resultType = RasterTile.getRasterType(
             RasterTileType(exprConfig.getCellIdType, BinaryType, exprConfig.isRasterUseCheckpoint))
 
-        val driverShortName = driverExpr.eval(input).asInstanceOf[UTF8String].toString
+        val driverName = driverExpr.eval(input).asInstanceOf[UTF8String].toString
         var rasterArr = contentExpr.eval(input).asInstanceOf[Array[Byte]]
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
 
         if (targetSize <= 0 || rasterArr.length <= targetSize) {
             // - no split required
-            var raster = rasterHydratedFromContent(
+            var raster = readRasterHydratedFromContent(
                 rasterArr,
-                Map(RASTER_DRIVER_KEY -> driverShortName),
+                Map(RASTER_DRIVER_KEY -> driverName),
                 Option(exprConfig)
             )
 
@@ -91,16 +91,23 @@ case class RST_FromContent(
             // do this for TraversableOnce[InternalRow]
             Seq(InternalRow.fromSeq(Seq(row)))
         } else {
-            // target size is > 0 and raster size > target size
-            // - write the initial raster to file (unsplit)
+            // target size is > 0 and tile size > target size
+            // - write the initial tile to file (unsplit)
             // - createDirectories in case of context isolation
-            val tmpPath = createTmpFileFromDriver(driverShortName, Option(exprConfig))
+            val tmpPath = createTmpFileFromDriver(driverName, Option(exprConfig))
             Files.createDirectories(Paths.get(tmpPath).getParent)
             Files.write(Paths.get(tmpPath), rasterArr)
 
             // split to tiles up to specified threshold
             var results = ReTileOnRead
-                .localSubdivide(tmpPath, NO_PATH_STRING, targetSize, exprConfig)
+                .localSubdivide(
+                    Map(
+                        RASTER_PATH_KEY -> tmpPath,
+                        RASTER_DRIVER_KEY -> driverName
+                    ),
+                    targetSize,
+                    Option(exprConfig)
+                )
                 .map(_.formatCellId(indexSystem))
             val rows = results.map(_.serialize(resultType, doDestroy = true, Option(exprConfig)))
 
@@ -128,14 +135,14 @@ object RST_FromContent extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2, expr3) - Returns raster tiles from binary content within threshold in MBs.
+          |_FUNC_(expr1, expr2, expr3) - Returns tile tiles from binary content within threshold in MBs.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
           |      > SELECT _FUNC_(raster_bin, driver, size_in_mb);
-          |        {index_id, raster, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
           |        ...
           |  """.stripMargin
 

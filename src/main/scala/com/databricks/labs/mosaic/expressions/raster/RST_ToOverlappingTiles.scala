@@ -11,7 +11,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 
 /**
   * Returns a set of new rasters which are the result of a rolling window over
-  * the input raster.
+  * the input tile.
   */
 case class RST_ToOverlappingTiles(
                                      rasterExpr: Expression,
@@ -25,7 +25,7 @@ case class RST_ToOverlappingTiles(
 
     /**
       * Returns a set of new rasters which are the result of a rolling window
-      * over the input raster.
+      * over the input tile.
       */
     override def rasterGenerator(tile: RasterTile): Seq[RasterTile] = {
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
@@ -45,7 +45,7 @@ object RST_ToOverlappingTiles extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2, expr3, expr4) - Returns a set of new raster tiles with the specified tile size (tileWidth x tileHeight).
+          |_FUNC_(expr1, expr2, expr3, expr4) - Returns a set of new tile tiles with the specified tile size (tileWidth x tileHeight).
           |                                     The tiles will overlap by the specified amount.
           |""".stripMargin
 

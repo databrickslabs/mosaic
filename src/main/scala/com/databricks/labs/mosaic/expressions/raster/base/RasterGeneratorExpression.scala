@@ -15,17 +15,17 @@ import org.apache.spark.sql.types._
 import scala.reflect.ClassTag
 
 /**
-  * Base class for all raster generator expressions that take no arguments. It
+  * Base class for all tile generator expressions that take no arguments. It
   * provides the boilerplate code needed to create a function builder for a
   * given expression. It minimises amount of code needed to create a new
   * expression. These expressions are used to generate a collection of new
-  * rasters based on the input raster. The new rasters are written in the
+  * rasters based on the input tile. The new rasters are written in the
   * checkpoint directory. The files are written as GeoTiffs. Subdatasets are not
   * supported, please flatten beforehand.
   * @param rasterExpr
-  *   The expression for the raster. If the raster is stored on disc, the path
-  *   to the raster is provided. If the raster is stored in memory, the bytes of
-  *   the raster are provided.
+  *   The expression for the tile. If the tile is stored on disc, the path
+  *   to the tile is provided. If the tile is stored in memory, the bytes of
+  *   the tile are provided.
   * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
@@ -65,10 +65,10 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
 
     /**
       * The function to be overridden by the extending class. It is called when
-      * the expression is evaluated. It provides the raster band to the
+      * the expression is evaluated. It provides the tile band to the
       * expression. It abstracts spark serialization from the caller.
       * @param raster
-      *   The raster to be used.
+      *   The tile to be used.
       * @return
       *   Sequence of generated new rasters to be written.
       */

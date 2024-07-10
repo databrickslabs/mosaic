@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-/** Returns the subdatasets of the raster. */
+/** Returns the subdatasets of the tile. */
 case class RST_Subdatasets(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_Subdatasets](
       raster,
@@ -21,7 +21,7 @@ case class RST_Subdatasets(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = MapType(StringType, StringType)
 
-    /** Returns the subdatasets of the raster. */
+    /** Returns the subdatasets of the tile. */
     override def rasterTransform(tile: RasterTile): Any = buildMapString(tile.raster.subdatasets)
 
 }
@@ -31,7 +31,7 @@ object RST_Subdatasets extends WithExpressionInfo {
 
     override def name: String = "rst_subdatasets"
 
-    override def usage: String = "_FUNC_(expr1) - Extracts subdataset paths and descriptions from a raster tile dataset."
+    override def usage: String = "_FUNC_(expr1) - Extracts subdataset paths and descriptions from a tile tile dataset."
 
     override def example: String =
         """

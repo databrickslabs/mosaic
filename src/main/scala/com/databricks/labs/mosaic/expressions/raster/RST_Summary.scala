@@ -14,7 +14,7 @@ import org.gdal.gdal.gdal.GDALInfo
 
 import java.util.{Vector => JVector}
 
-/** Returns the summary info the raster. */
+/** Returns the summary info the tile. */
 case class RST_Summary(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_Summary](raster, returnsRaster = false, exprConfig: ExprConfig)
       with NullIntolerant
@@ -22,7 +22,7 @@ case class RST_Summary(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = StringType
 
-    /** Returns the summary info the raster. */
+    /** Returns the summary info the tile. */
     override def rasterTransform(tile: RasterTile): Any = {
         val vector = new JVector[String]()
         // For other flags check the way gdalinfo.py script is called, InfoOptions expects a collection of same flags.
@@ -43,7 +43,7 @@ object RST_Summary extends WithExpressionInfo {
 
     override def name: String = "rst_summary"
 
-    override def usage: String = "_FUNC_(expr1) - Generates GDAL summary for the raster tile."
+    override def usage: String = "_FUNC_(expr1) - Generates GDAL summary for the tile tile."
 
     override def example: String =
         """

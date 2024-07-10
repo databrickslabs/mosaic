@@ -12,13 +12,13 @@ import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, 
 import scala.reflect.ClassTag
 
 /**
-  * Base class for all raster band expressions that take no arguments. It
+  * Base class for all tile band expressions that take no arguments. It
   * provides the boilerplate code needed to create a function builder for a
   * given expression. It minimises amount of code needed to create a new
   * expression.
   * @param rasterExpr
-  *   The path to the raster if MOSAIC_RASTER_STORAGE is set to
-  *   MOSAIC_RASTER_STORAGE_DISK. The bytes of the raster if
+  *   The path to the tile if MOSAIC_RASTER_STORAGE is set to
+  *   MOSAIC_RASTER_STORAGE_DISK. The bytes of the tile if
   *   MOSAIC_RASTER_STORAGE is set to MOSAIC_RASTER_STORAGE_BYTE.
   * @param bandExpr
   *   The expression for the band index.
@@ -45,10 +45,10 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
 
     /**
       * The function to be overridden by the extending class. It is called when
-      * the expression is evaluated. It provides the raster band to the
+      * the expression is evaluated. It provides the tile band to the
       * expression. It abstracts spark serialization from the caller.
       * @param raster
-      *   The raster to be used.
+      *   The tile to be used.
       * @param band
       *   The band to be used.
       * @return
@@ -57,14 +57,14 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
     def bandTransform(raster: RasterTile, band: RasterBandGDAL): Any
 
     /**
-      * Evaluation of the expression. It evaluates the raster path and the loads
-      * the raster from the path. It evaluates the band index and loads the
-      * specified band. It handles the clean up of the raster before returning
+      * Evaluation of the expression. It evaluates the tile path and the loads
+      * the tile from the path. It evaluates the band index and loads the
+      * specified band. It handles the clean up of the tile before returning
       * the results.
       *
       * @param inputRaster
-      *   The path to the raster if MOSAIC_RASTER_STORAGE is set to
-      *   MOSAIC_RASTER_STORAGE_DISK. The bytes of the raster if
+      *   The path to the tile if MOSAIC_RASTER_STORAGE is set to
+      *   MOSAIC_RASTER_STORAGE_DISK. The bytes of the tile if
       *   MOSAIC_RASTER_STORAGE is set to MOSAIC_RASTER_STORAGE_BYTE.
       * @param inputBand
       *   The band index to be used. It is an Int.
@@ -80,6 +80,8 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
             Option(exprConfig)
         )
         val bandIndex = inputBand.asInstanceOf[Int]
+
+        tile.initAndHydrateTile() // <- required
 
         val band = tile.raster.getBand(bandIndex)
         var result = bandTransform(tile, band)

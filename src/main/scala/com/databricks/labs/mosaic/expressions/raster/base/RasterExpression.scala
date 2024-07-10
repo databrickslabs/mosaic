@@ -13,13 +13,13 @@ import org.apache.spark.sql.types.DataType
 import scala.reflect.ClassTag
 
 /**
-  * Base class for all raster expressions that take no arguments. It provides
+  * Base class for all tile expressions that take no arguments. It provides
   * the boilerplate code needed to create a function builder for a given
   * expression. It minimises amount of code needed to create a new expression.
   * @param rasterExpr
-  *   The expression for the raster. If the raster is stored on disc, the path
-  *   to the raster is provided. If the raster is stored in memory, the bytes of
-  *   the raster are provided.
+  *   The expression for the tile. If the tile is stored on disc, the path
+  *   to the tile is provided. If the tile is stored in memory, the bytes of
+  *   the tile are provided.
   * @param returnsRaster
   *   for serialization handling.
   * @param exprConfig
@@ -44,21 +44,21 @@ abstract class RasterExpression[T <: Expression: ClassTag](
 
     /**
       * The function to be overridden by the extending class. It is called when
-      * the expression is evaluated. It provides the raster to the expression.
+      * the expression is evaluated. It provides the tile to the expression.
       * It abstracts spark serialization from the caller.
       * @param raster
-      *   The raster to be used.
+      *   The tile to be used.
       * @return
       *   The result of the expression.
       */
     def rasterTransform(raster: RasterTile): Any
 
     /**
-      * Evaluation of the expression. It evaluates the raster path and the loads
-      * the raster from the path. It handles the clean up of the raster before
+      * Evaluation of the expression. It evaluates the tile path and the loads
+      * the tile from the path. It handles the clean up of the tile before
       * returning the results.
       * @param input
-      *   The input raster as either a path or bytes.
+      *   The input tile as either a path or bytes.
       *
       * @return
       *   The result of the expression.

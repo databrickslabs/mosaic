@@ -35,11 +35,11 @@ case class RST_MapAlgebra(
     /**
       * Map Algebra.
       * @param tiles
-      *   The raster to be used.
+      *   The tile to be used.
       * @param arg1
       *   The red band index.
       * @return
-      *   The raster (tile) from the calculation.
+      *   The tile (tile) from the calculation.
       */
     override def rasterTransform(tiles: Seq[RasterTile], arg1: Any): Any = {
         val jsonSpec = arg1.asInstanceOf[UTF8String].toString
@@ -105,14 +105,14 @@ object RST_MapAlgebra extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2) - Performs map algebra on the raster tiles.
+          |_FUNC_(expr1, expr2) - Performs map algebra on the tile tiles.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
           |      > SELECT _FUNC_(raster_tiles, "{calc: 'A+B', A_index: 0, B_index: 1}");
-          |        {index_id, raster, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
           |        ...
           |  """.stripMargin
 

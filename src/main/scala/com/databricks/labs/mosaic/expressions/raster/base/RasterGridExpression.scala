@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.gdal.{RasterBandGDAL, RasterGDAL}
 
 /**
-  * Base trait for raster grid expressions. It provides the boilerplate code
+  * Base trait for tile grid expressions. It provides the boilerplate code
   * needed to create a function builder for a given expression. It minimises
   * amount of code needed to create a new expression.
   */
@@ -13,7 +13,7 @@ trait RasterGridExpression {
     /**
       * Transforms a pixel to a cell ID and a value.
       * @param gt
-      *   The geotransform of the raster.
+      *   The geotransform of the tile.
       * @param indexSystem
       *   The index system to be used.
       * @param resolution
@@ -42,10 +42,10 @@ trait RasterGridExpression {
     }
 
     /**
-      * Transforms a raster to a sequence of maps. Each map contains cell IDs
+      * Transforms a tile to a sequence of maps. Each map contains cell IDs
       * and values for a given band.
       * @param raster
-      *   The raster to be transformed.
+      *   The tile to be transformed.
       * @param indexSystem
       *   The index system to be used.
       * @param resolution
@@ -64,7 +64,7 @@ trait RasterGridExpression {
                 val bandTransform = (band: RasterBandGDAL) => {
                     val results = band.transformValues[(Long, Double)] (pixelTransformer (gt, indexSystem, resolution), (0L, - 1.0) )
                     results
-                        // Filter out default cells. We don't want to return them since they are masked in original raster.
+                        // Filter out default cells. We don't want to return them since they are masked in original tile.
                         // We use 0L as a dummy cell ID for default cells.
                         .map (row => row.filter (_._1 != 0L) )
                         .filterNot (_.isEmpty)

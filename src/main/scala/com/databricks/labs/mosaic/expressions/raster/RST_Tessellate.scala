@@ -11,7 +11,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 
 /**
   * Returns a set of new rasters which are the result of the tessellation of the
-  * input raster.
+  * input tile.
   */
 case class RST_Tessellate(
                              rasterExpr: Expression,
@@ -23,7 +23,7 @@ case class RST_Tessellate(
 
     /**
       * Returns a set of new rasters which are the result of the tessellation of
-      * the input raster.
+      * the input tile.
       */
     override def rasterGenerator(tile: RasterTile, resolution: Int): Seq[RasterTile] = {
         RasterTessellate.tessellate(
@@ -46,7 +46,7 @@ object RST_Tessellate extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2) - Returns a set of new raster tiles with the specified resolution within configured grid.
+          |_FUNC_(expr1, expr2) - Returns a set of new tile tiles with the specified resolution within configured grid.
           |""".stripMargin
 
     override def example: String =

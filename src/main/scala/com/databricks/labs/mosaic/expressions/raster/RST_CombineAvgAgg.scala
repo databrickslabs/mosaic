@@ -18,7 +18,7 @@ import org.apache.spark.sql.types.{ArrayType, DataType}
 import scala.collection.mutable.ArrayBuffer
 
 /**
-  * Returns a new raster that is a result of combining an array of rasters using
+  * Returns a new tile that is a result of combining an array of rasters using
   * average of pixels.
   */
 //noinspection DuplicatedCode
@@ -132,13 +132,13 @@ object RST_CombineAvgAgg {
           db.orNull,
           "rst_combine_avg_agg",
           """
-            |    _FUNC_(tiles)) - Aggregate to combine raster tiles using an average of pixels.
+            |    _FUNC_(tiles)) - Aggregate to combine tile tiles using an average of pixels.
             """.stripMargin,
           "",
           """
             |    Examples:
             |      > SELECT _FUNC_(raster_tile);
-            |        {index_id, raster, parent_path, driver}
+            |        {index_id, tile, parent_path, driver}
             |  """.stripMargin,
           "",
           "agg_funcs",

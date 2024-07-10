@@ -11,7 +11,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.DataType
 import org.apache.spark.unsafe.types.UTF8String
 
-/** Returns the subdatasets of the raster. */
+/** Returns the subdatasets of the tile. */
 case class RST_GetSubdataset(
                                 tileExpr: Expression,
                                 subsetName: Expression,
@@ -29,7 +29,7 @@ case class RST_GetSubdataset(
         RasterTileType(exprConfig.getCellIdType, tileExpr, exprConfig.isRasterUseCheckpoint)
     }
 
-    /** Returns the subdatasets of the raster. */
+    /** Returns the subdatasets of the tile. */
     override def rasterTransform(tile: RasterTile, arg1: Any): Any = {
         val subsetName = arg1.asInstanceOf[UTF8String].toString
         tile.copy(raster = tile.raster.getSubdataset(subsetName))
@@ -42,13 +42,13 @@ object RST_GetSubdataset extends WithExpressionInfo {
 
     override def name: String = "rst_getsubdataset"
 
-    override def usage: String = "_FUNC_(expr1, expr2) - Extracts subdataset raster tile."
+    override def usage: String = "_FUNC_(expr1, expr2) - Extracts subdataset tile tile."
 
     override def example: String =
         """
           |    Examples:
           |      > SELECT _FUNC_(raster_tile, 'SUBDATASET_1_NAME');
-          |        {index_id, raster, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
           |  """.stripMargin
 
     override def builder(exprConfig: ExprConfig): FunctionBuilder = {

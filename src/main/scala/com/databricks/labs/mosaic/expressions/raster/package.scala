@@ -4,17 +4,19 @@ import org.apache.spark.sql.catalyst.util.{ArrayBasedMapBuilder, ArrayBasedMapDa
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
-/** Utility methods for raster expressions. */
+import scala.util.Try
+
+/** Utility methods for tile expressions. */
 package object raster {
 
-    /** Datatype representing pixels in a raster. */
+    /** Datatype representing pixels in a tile. */
     val PixelCoordsType: DataType = StructType(Seq(StructField("x", IntegerType), StructField("y", IntegerType)))
 
-    /** Datatype representing pixels in a raster. */
+    /** Datatype representing pixels in a tile. */
     val WorldCoordsType: DataType = StructType(Seq(StructField("x", DoubleType), StructField("y", DoubleType)))
 
     /**
-      * Datatype representing a raster projected to a grid.
+      * Datatype representing a tile projected to a grid.
       * @param cellIDType
       *   The cell ID type of the index system.
       * @param measureType
@@ -56,11 +58,12 @@ package object raster {
       * @return
       *   Deserialized map.
       */
-    def extractMap(mapData: MapData): Map[String, String] = {
-        val keys = mapData.keyArray().toArray[UTF8String](StringType).map(_.toString)
-        val values = mapData.valueArray().toArray[UTF8String](StringType).map(_.toString)
-        keys.zip(values).toMap
-    }
+    def extractMap(mapData: MapData): Map[String, String] =
+        Try {
+            val keys = mapData.keyArray().toArray[UTF8String](StringType).map(_.toString)
+            val values = mapData.valueArray().toArray[UTF8String](StringType).map(_.toString)
+            keys.zip(values).toMap
+        }.getOrElse(Map.empty[String, String])
 
     /**
       * Builds a spark map from a scala Map[String, Double].

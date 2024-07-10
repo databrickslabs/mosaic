@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.DoubleType
 
-/** Returns the median value of the raster. */
+/** Returns the median value of the tile. */
 case class RST_RasterToGridMedian(
                                      raster: Expression,
                                      resolution: Expression,
@@ -22,7 +22,7 @@ case class RST_RasterToGridMedian(
       with NullIntolerant
       with CodegenFallback {
 
-    /** Returns the median value of the raster. */
+    /** Returns the median value of the tile. */
     override def valuesCombiner(values: Seq[Double]): Double = {
         if (values.size > 2) values.sorted.apply(values.size / 2) else values.head
     }
@@ -36,7 +36,7 @@ object RST_RasterToGridMedian extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2) - Returns a collection of grid index cells with the median pixel value per cell for each band of the raster tile.
+          |_FUNC_(expr1, expr2) - Returns a collection of grid index cells with the median pixel value per cell for each band of the tile tile.
           |                       The output type is array<array<struct<index: long, measure: double>>>.
           |                       Raster mask is taken into account and only valid pixels are used for the calculation.
           |""".stripMargin

@@ -55,7 +55,7 @@ object RST_DerivedBand extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Combine an array of raster tiles using provided python function.
+          |_FUNC_(expr1) - Combine an array of tile tiles using provided python function.
           |""".stripMargin
 
     override def example: String =
@@ -68,8 +68,8 @@ object RST_DerivedBand extends WithExpressionInfo {
           |             ',
           |             'average'
           |       );
-          |        {index_id, raster, parent_path, driver}
-          |        {index_id, raster, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
           |        ...
           |  """.stripMargin
 

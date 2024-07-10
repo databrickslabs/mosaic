@@ -15,7 +15,7 @@ object PixelCombineRasters {
     val tileDataType: DataType = BinaryType
 
     /**
-      * Merges the rasters into a single raster.
+      * Merges the rasters into a single tile.
       *
       * @param rasters
       *   The rasters to merge.

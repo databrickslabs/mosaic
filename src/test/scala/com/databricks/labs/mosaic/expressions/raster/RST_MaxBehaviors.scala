@@ -13,9 +13,7 @@ trait RST_MaxBehaviors extends QueryTest {
     def behavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         val sc = this.spark
         import sc.implicits._
-        sc.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, "false")
-
-        sc.conf.get(MOSAIC_TEST_MODE, "false") should be("true")
+        sc.sparkContext.setLogLevel("ERROR")
 
         // init
         val mc = MosaicContext.build(indexSystem, geometryAPI)

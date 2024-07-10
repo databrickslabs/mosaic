@@ -11,7 +11,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.DataType
 
-/** Returns the world coordinate of the raster. */
+/** Returns the world coordinate of the tile. */
 case class RST_WorldToRasterCoord(
                                      raster: Expression,
                                      x: Expression,
@@ -24,8 +24,8 @@ case class RST_WorldToRasterCoord(
     override def dataType: DataType = PixelCoordsType
 
     /**
-      * Returns the x and y of the raster by applying GeoTransform as a tuple of
-      * Integers. This will ensure projection of the raster is respected.
+      * Returns the x and y of the tile by applying GeoTransform as a tuple of
+      * Integers. This will ensure projection of the tile is respected.
       */
     override def rasterTransform(tile: RasterTile, arg1: Any, arg2: Any): Any = {
         val xGeo = arg1.asInstanceOf[Double]
@@ -46,7 +46,7 @@ object RST_WorldToRasterCoord extends WithExpressionInfo {
 
     override def name: String = "rst_worldtorastercoord"
 
-    override def usage: String = "_FUNC_(expr1, expr2, expr3) - Returns x and y coordinates (pixel, line) of the raster tile pixel coord."
+    override def usage: String = "_FUNC_(expr1, expr2, expr3) - Returns x and y coordinates (pixel, line) of the tile tile pixel coord."
 
     override def example: String =
         """

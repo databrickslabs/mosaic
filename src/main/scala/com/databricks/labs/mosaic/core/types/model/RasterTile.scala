@@ -14,14 +14,14 @@ import org.apache.spark.unsafe.types.UTF8String
 import scala.util.{Failure, Success, Try}
 
 /**
-  * A case class modeling an instance of a mosaic raster tile.
+  * A case class modeling an instance of a mosaic tile tile.
   *
   * @param index
   *   Index ID.
   * @param raster
   *   Raster instance corresponding to the tile.
   * @param rasterType
-  *   Preserve the type of the raster payload from deserialization,
+  *   Preserve the type of the tile payload from deserialization,
   *   will be [[StringType]] or [[BinaryType]].
   */
 case class RasterTile(
@@ -31,26 +31,35 @@ case class RasterTile(
 ) {
 
     /**
-      * Indicates whether the raster is present.
+      * Indicates whether the tile is present.
       *
       * @return
-      *   True if the raster is present, false otherwise.
+      *   True if the tile is present, false otherwise.
       */
     def isEmpty: Boolean = Option(raster).forall(_.isEmpty)
 
     /**
      * Finalize the tile.
-     * - essentially calls `raster.finalizeRaster()`.
+     * - essentially calls `tile.finalizeRaster()`.
+     * @param toFuse
+     *   Whether to write to fuse during finalize; if [[RASTER_PATH_KEY]] not already under the specified fuse dir.
+     * @param overrideFuseDirOpt
+     *   Option to specify the fuse dir location, None means use checkpoint dir;
+     *   only relevant if 'toFuse' is true, default is None.
+     *
      * @return
      *   [[RasterTile]] `this` (fluent).
      */
-    def finalizeTile(): RasterTile = {
-        Try(this.raster.finalizeRaster())
+    def finalizeTile(toFuse: Boolean, overrideFuseDirOpt: Option[String] = None): RasterTile = {
+        Try{
+            if (overrideFuseDirOpt.isDefined) this.raster.setFuseDirOpt(overrideFuseDirOpt)
+            this.raster.finalizeRaster(toFuse)
+        }
         this
     }
 
     /**
-     * Destroys the raster [[Dataset]] object.
+     * Destroys the tile [[Dataset]] object.
      * @return
      *   [[RasterTile]] `this` (fluent).
      */
@@ -76,6 +85,22 @@ case class RasterTile(
             case (_: StringType, Left(value)) => this.copy(index = Right(indexSystem.format(value)))
             case _                            => throw new IllegalArgumentException("Invalid cell id data type")
         }
+    }
+
+    /**
+     * Attempt to initialize and hydrate the tile.
+     * - essentially calls `tile.initAndHydrate()`.
+     *
+     * @param forceInit
+     *   Whether to force an init, regardless of internal state of tile.
+     * @return
+     *   [[RasterTile]] `this` (fluent).
+     */
+    def initAndHydrateTile(forceInit: Boolean = false): RasterTile = {
+        Try{
+            this.raster.initAndHydrate(forceInit = forceInit)
+        }
+        this
     }
 
     /**
@@ -110,7 +135,7 @@ case class RasterTile(
       * Serialize to spark internal representation.
       *
       * @param rasterDT
-      *    How to encode the raster.
+      *    How to encode the tile.
       *    - Options are [[StringType]] or [[BinaryType]]
       *    - If checkpointing is used, [[StringType]] will be forced
       *    - call finalize on tiles when serializing them.
@@ -130,8 +155,10 @@ case class RasterTile(
                      overrideFuseDirOpt: Option[String] = None
                  ): InternalRow = {
 
-        // (1) finalize the tile's raster
-        this.finalizeTile() // path will be backed to fuse dir
+        // (1) finalize the tile's tile
+        // - write to fuse if [[StringType]]
+        val toFuse = rasterDT == StringType
+        this.finalizeTile(toFuse, overrideFuseDirOpt = overrideFuseDirOpt)
 
         // (2) serialize the tile according to the specified serialization type
         val encodedRaster = GDAL.writeRasters(
@@ -176,7 +203,7 @@ object RasterTile {
 
     /**
      * Smart constructor based on Spark internal instance.
-     * - Must infer raster data type
+     * - Must infer tile data type
      *
      * @param row
      *   An instance of [[InternalRow]].

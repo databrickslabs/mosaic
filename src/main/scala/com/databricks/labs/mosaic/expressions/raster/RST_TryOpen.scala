@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-/** Returns true if the raster is empty. */
+/** Returns true if the tile is empty. */
 case class RST_TryOpen(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_TryOpen](raster, returnsRaster = false, exprConfig)
         with NullIntolerant
@@ -17,7 +17,7 @@ case class RST_TryOpen(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = BooleanType
 
-    /** Returns true if the raster can be opened. */
+    /** Returns true if the tile can be opened. */
     override def rasterTransform(tile: RasterTile): Any = {
         tile.raster.withDatasetHydratedOpt().isDefined
     }
@@ -29,7 +29,7 @@ object RST_TryOpen extends WithExpressionInfo {
 
     override def name: String = "rst_tryopen"
 
-    override def usage: String = "_FUNC_(expr1) - Returns true if the raster tile can be opened."
+    override def usage: String = "_FUNC_(expr1) - Returns true if the tile tile can be opened."
 
     override def example: String =
         """

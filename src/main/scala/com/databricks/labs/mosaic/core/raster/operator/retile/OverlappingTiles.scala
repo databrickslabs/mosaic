@@ -16,12 +16,12 @@ object OverlappingTiles {
     val tileDataType: DataType = StringType // always use checkpoint
 
     /**
-      * Retiles a raster into overlapping tiles.
+      * Retiles a tile into overlapping tiles.
  *
       * @note
       *   The overlap percentage is a percentage of the tile size.
       * @param tile
-      *   The raster to retile.
+      *   The tile to retile.
       * @param tileWidth
       *   The width of the tiles.
       * @param tileHeight
@@ -59,7 +59,7 @@ object OverlappingTiles {
                     command = s"gdal_translate -srcwin $xOff $yOff $width $height",
                     outOptions,
                     exprConfigOpt
-                )
+                ).initAndHydrate() // <- required
 
                 if (!result.isEmpty) {
                     (true, result)
@@ -72,6 +72,9 @@ object OverlappingTiles {
 
         val (result, invalid) = tiles.flatten.partition(_._1) // true goes to result
         //        invalid.flatMap(t => Option(t._2)).foreach(_.destroy()) // destroy invalids
+        //scalastyle:off println
+        //println(s"OverlappingTiles - tiles # ${tiles.length}, results # ${result.length}, invalids # ${invalid.length}")
+        //scalastyle:on println
         result.map(t => RasterTile(null, t._2, tileDataType)) // return valid tiles
 
     }

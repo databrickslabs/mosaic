@@ -13,7 +13,7 @@ import org.apache.spark.sql.types._
 import scala.util.Try
 
 
-/** Returns the max value per band of the raster. */
+/** Returns the max value per band of the tile. */
 case class RST_Max(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_Max](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -21,7 +21,7 @@ case class RST_Max(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = ArrayType(DoubleType)
 
-    /** Returns the max value per band of the raster. */
+    /** Returns the max value per band of the tile. */
     override def rasterTransform(tile: RasterTile): Any = Try {
         val raster = tile.raster
         val nBands = raster.withDatasetHydratedOpt().get.GetRasterCount()

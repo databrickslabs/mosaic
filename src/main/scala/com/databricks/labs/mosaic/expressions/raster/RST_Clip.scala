@@ -14,7 +14,7 @@ import org.apache.spark.sql.types.{BooleanType, DataType}
 
 import scala.util.Try
 
-/** The expression for clipping a raster by a vector. */
+/** The expression for clipping a tile by a vector. */
 case class RST_Clip(
                        rastersExpr: Expression,
                        geometryExpr: Expression,
@@ -38,16 +38,16 @@ case class RST_Clip(
     val geometryAPI: GeometryAPI = GeometryAPI(exprConfig.getGeometryAPI)
 
     /**
-      * Clips a raster by a vector.
+      * Clips a tile by a vector.
       *
       * @param tile
-      *   The raster to be used.
+      *   The tile to be used.
       * @param arg1
       *   The vector to be used.
       * @param arg2
       *    cutline handling (boolean).
       * @return
-      *   The clipped raster.
+      *   The clipped tile.
       */
     override def rasterTransform(tile: RasterTile, arg1: Any, arg2: Any): Any = {
         val geometry = geometryAPI.geometry(arg1, geometryExpr.dataType)
@@ -70,7 +70,7 @@ object RST_Clip extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1,expr2) - Returns a raster tile clipped by provided vector.
+          |_FUNC_(expr1,expr2) - Returns a tile tile clipped by provided vector.
           |""".stripMargin
 
     override def example: String =

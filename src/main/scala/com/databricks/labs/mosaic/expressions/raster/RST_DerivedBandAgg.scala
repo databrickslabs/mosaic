@@ -18,7 +18,7 @@ import org.apache.spark.unsafe.types.UTF8String
 import scala.collection.mutable.ArrayBuffer
 
 /**
-  * Returns a new raster that is a result of combining an array of rasters using
+  * Returns a new tile that is a result of combining an array of rasters using
   * average of pixels.
   */
 //noinspection DuplicatedCode
@@ -137,7 +137,7 @@ object RST_DerivedBandAgg {
           db.orNull,
           "rst_derived_band_agg",
           """
-            |    _FUNC_(tiles)) - Aggregate which combines raster tiles using provided python function.
+            |    _FUNC_(tiles)) - Aggregate which combines tile tiles using provided python function.
             """.stripMargin,
           "",
           """
@@ -148,7 +148,7 @@ object RST_DerivedBandAgg {
             |           ',
             |           'average'
             |       );
-            |        {index_id, raster, parent_path, driver}
+            |        {index_id, tile, parent_path, driver}
             |  """.stripMargin,
           "",
           "agg_funcs",

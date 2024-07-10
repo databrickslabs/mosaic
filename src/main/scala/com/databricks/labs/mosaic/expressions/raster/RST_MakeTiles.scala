@@ -22,17 +22,17 @@ import java.nio.file.{Files, Paths}
 import scala.util.Try
 
 /**
-  * Creates raster tiles from the input column.
+  * Creates tile tiles from the input column.
   * - spark config to turn checkpointing on for all functions in 0.4.3
-  * - this is the only function able to write raster to
+  * - this is the only function able to write tile to
   *    checkpoint (even if the spark config is set to false).
   * - can be useful when you want to start from the configured checkpoint
   *   but work with binary payloads from there.
  *  - more at [[com.databricks.labs.mosaic.gdal.MosaicGDAL]].
   * @param inputExpr
-  *   The expression for the raster. If the raster is stored on disc, the path
-  *   to the raster is provided. If the raster is stored in memory, the bytes of
-  *   the raster are provided.
+  *   The expression for the tile. If the tile is stored on disc, the path
+  *   to the tile is provided. If the tile is stored in memory, the bytes of
+  *   the tile are provided.
   * @param sizeInMBExpr
   *   The size of the tiles in MB. If set to -1, the file is loaded and returned
   *   as a single tile. If set to 0, the file is loaded and subdivided into
@@ -40,7 +40,7 @@ import scala.util.Try
   *   subdivided into tiles of the specified size. If the file is too big to fit
   *   in memory, it is subdivided into tiles of size 64MB.
   * @param driverExpr
-  *   The driver to use for reading the raster. If not specified, the driver is
+  *   The driver to use for reading the tile. If not specified, the driver is
   *   inferred from the file extension. If the input is a byte array, the driver
   *   has to be specified.
   * @param withCheckpointExpr
@@ -88,11 +88,16 @@ case class RST_MakeTiles(
 
     override def elementSchema: StructType = StructType(Array(StructField("tile", dataType)))
 
+    private def getUriPartOpt(path: String): Option[String] = {
+        val uriDeepCheck = Try(exprConfig.isUriDeepCheck).getOrElse(false)
+        PathUtils.parseGdalUriOpt(path, uriDeepCheck)
+    }
+
     private def getDriver(rawInput: Any, rawDriver: String): String = {
         if (rawDriver == NO_DRIVER) {
             if (inputExpr.dataType == StringType) {
                 val path = rawInput.asInstanceOf[UTF8String].toString
-                identifyDriverNameFromRawPath(path)
+                identifyDriverNameFromRawPath(path, getUriPartOpt(path))
             } else {
                 throw new IllegalArgumentException("Driver has to be specified for byte array input")
             }
@@ -101,11 +106,12 @@ case class RST_MakeTiles(
         }
     }
 
-    private def getInputSize(rawInput: Any): Long = {
+    private def getInputSize(rawInput: Any, uriDeepCheck: Boolean): Long = {
         if (inputExpr.dataType == StringType) {
             val path = rawInput.asInstanceOf[UTF8String].toString
-            val cleanPath = PathUtils.asFileSystemPath(path)
-            Files.size(Paths.get(cleanPath))
+            val uriGdalOpt = PathUtils.parseGdalUriOpt(path, uriDeepCheck)
+            val fsPath = PathUtils.asFileSystemPath(path, uriGdalOpt)
+            Files.size(Paths.get(fsPath))
         } else {
             val bytes = rawInput.asInstanceOf[Array[Byte]]
             bytes.length
@@ -113,7 +119,7 @@ case class RST_MakeTiles(
     }
 
     /**
-      * Loads a raster from a file and subdivides it into tiles of the specified
+      * Loads a tile from a file and subdivides it into tiles of the specified
       * size (in MB).
       * @param input
       *   The input file path.
@@ -128,16 +134,17 @@ case class RST_MakeTiles(
         val rawInput = inputExpr.eval(input)
         val driverShortName = getDriver(rawInput, rawDriver)
         val targetSize = sizeInMBExpr.eval(input).asInstanceOf[Int]
-        val inputSize = getInputSize(rawInput)
+        val inputSize = getInputSize(rawInput, uriDeepCheck = false) // <- this can become a config
         val path = if (inputExpr.dataType == StringType) rawInput.asInstanceOf[UTF8String].toString else NO_PATH_STRING
+
+        val createInfo = Map(
+            RASTER_PATH_KEY -> path,
+            RASTER_DRIVER_KEY -> driverShortName
+        )
 
         if (targetSize <= 0 && inputSize <= Integer.MAX_VALUE) {
             // - no split required
-            val createInfo = Map(
-                RASTER_PATH_KEY -> path,
-                RASTER_DRIVER_KEY -> driverShortName,
-                RASTER_PARENT_PATH_KEY -> NO_PATH_STRING
-            )
+
             var raster = GDAL.readRasterExpr(
                 rawInput,
                 createInfo,
@@ -154,8 +161,8 @@ case class RST_MakeTiles(
             // do this for TraversableOnce[InternalRow]
             Seq(InternalRow.fromSeq(Seq(row)))
         } else {
-            // target size is > 0 and raster size > target size
-            // - write the initial raster to file (unsplit)
+            // target size is > 0 and tile size > target size
+            // - write the initial tile to file (unsplit)
             // - createDirectories in case of context isolation
             val readPath =
                 if (inputExpr.dataType == StringType) {
@@ -168,7 +175,11 @@ case class RST_MakeTiles(
                 }
             val size = if (targetSize <= 0) 64 else targetSize
             var results = ReTileOnRead
-                .localSubdivide(readPath, NO_PATH_STRING, size, exprConfig)
+                .localSubdivide(
+                    createInfo + (RASTER_PATH_KEY -> readPath, RASTER_PARENT_PATH_KEY -> path),
+                    size,
+                    Option(exprConfig)
+                )
                 .map(_.formatCellId(indexSystem))
             val rows = results.map(_.serialize(resultType, doDestroy = true, Option(exprConfig)))
 
@@ -202,7 +213,7 @@ object RST_MakeTiles extends WithExpressionInfo {
         """
           |    Examples:
           |      > SELECT _FUNC_(raster_path);
-          |        {index_id, raster, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
           |        ...
           |  """.stripMargin
 

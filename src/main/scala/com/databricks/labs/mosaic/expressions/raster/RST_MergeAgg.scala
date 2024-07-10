@@ -16,7 +16,7 @@ import org.apache.spark.sql.types.{ArrayType, DataType}
 
 import scala.collection.mutable.ArrayBuffer
 
-/** Merges rasters into a single raster. */
+/** Merges rasters into a single tile. */
 //noinspection DuplicatedCode
 case class RST_MergeAgg(
                            rastersExpr: Expression,
@@ -128,13 +128,13 @@ object RST_MergeAgg {
           db.orNull,
           "rst_merge_agg",
           """
-            |    _FUNC_(tiles)) - Aggregate merge of raster tiles.
+            |    _FUNC_(tiles)) - Aggregate merge of tile tiles.
             """.stripMargin,
           "",
           """
             |    Examples:
             |      > SELECT _FUNC_(raster_tile);
-            |        {index_id, raster, parent_path, driver}
+            |        {index_id, tile, parent_path, driver}
             |  """.stripMargin,
           "",
           "agg_funcs",

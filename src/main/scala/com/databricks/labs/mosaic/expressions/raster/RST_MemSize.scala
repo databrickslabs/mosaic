@@ -11,7 +11,7 @@ import org.apache.spark.sql.types._
 
 import scala.util.Try
 
-/** Returns the memory size of the raster in bytes. */
+/** Returns the memory size of the tile in bytes. */
 case class RST_MemSize(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_MemSize](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -19,9 +19,9 @@ case class RST_MemSize(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = LongType
 
-    /** Returns the memory size of the raster in bytes. */
+    /** Returns the memory size of the tile in bytes. */
     override def rasterTransform(tile: RasterTile): Any = {
-        Try(tile.raster.getMemSize).getOrElse(-1)
+        Try(tile.raster.calcMemSize()).getOrElse(-1)
     }
 
 }
@@ -31,7 +31,7 @@ object RST_MemSize extends WithExpressionInfo {
 
     override def name: String = "rst_memsize"
 
-    override def usage: String = "_FUNC_(expr1) - Returns number of bytes for in memory representation of the raster tile."
+    override def usage: String = "_FUNC_(expr1) - Returns number of bytes for in memory representation of the tile tile."
 
     override def example: String =
         """

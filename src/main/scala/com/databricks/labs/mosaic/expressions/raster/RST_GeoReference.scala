@@ -9,7 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-/** Returns the georeference of the raster. */
+/** Returns the georeference of the tile. */
 case class RST_GeoReference(raster: Expression, exprConfig: ExprConfig)
     extends RasterExpression[RST_GeoReference](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
@@ -17,7 +17,7 @@ case class RST_GeoReference(raster: Expression, exprConfig: ExprConfig)
 
     override def dataType: DataType = MapType(StringType, DoubleType)
 
-    /** Returns the georeference of the raster. */
+    /** Returns the georeference of the tile. */
     override def rasterTransform(tile: RasterTile): Any = {
         tile.raster.getGeoTransformOpt match {
             case Some(gt) =>
@@ -41,7 +41,7 @@ object RST_GeoReference extends WithExpressionInfo {
 
     override def name: String = "rst_georeference"
 
-    override def usage: String = "_FUNC_(expr1) - Extracts geo reference from a raster tile."
+    override def usage: String = "_FUNC_(expr1) - Extracts geo reference from a tile tile."
 
     override def example: String =
         """
