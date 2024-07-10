@@ -44,8 +44,8 @@ runs:
             # [2] pre-clean
             # - make dirs (just in case)
             # - get counts
-            mkdir -p /tmp/mosaic_tmp
-            mkdir -p /dbfs/checkpoint/mosaic_tmp
+            sudo mkdir -p /tmp/mosaic_tmp
+            sudo mkdir -p /dbfs/checkpoint/mosaic_tmp
             sudo echo "files (pre-clean) -> # $(find /tmp/mosaic_tmp | wc -l) in '/tmp/mosaic_tmp'"
             sudo echo "files (pre-clean) -> # $(find /dbfs/checkpoint/mosaic_tmp | wc -l) in '/dbfs/checkpoint/mosaic_tmp'"
             # [3] remove local tmp files
