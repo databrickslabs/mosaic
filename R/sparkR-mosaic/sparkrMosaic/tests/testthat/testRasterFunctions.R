@@ -1,6 +1,6 @@
 generate_singleband_raster_df <- function() {
   read.df(
-    rawPath = "sparkrMosaic/tests/testthat/data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF",
+    path = "sparkrMosaic/tests/testthat/data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF",
     source = "gdal",
     tile.read.strategy = "in_memory"
     )
@@ -76,7 +76,7 @@ test_that("tile aggregation functions behave as intended", {
   collection_sdf <- withColumn(collection_sdf, "tile", rst_tooverlappingtiles(column("tile"), lit(200L), lit(200L), lit(10L)))
 
   merge_sdf <- summarize(
-    groupBy(collection_sdf, "rawPath"),
+    groupBy(collection_sdf, "path"),
     alias(rst_merge_agg(column("tile")), "tile")
     )
   merge_sdf <- withColumn(merge_sdf, "extent", st_astext(rst_boundingbox(column("tile"))))
@@ -85,7 +85,7 @@ test_that("tile aggregation functions behave as intended", {
   expect_equal(first(collection_sdf)$extent, first(merge_sdf)$extent)
 
   combine_avg_sdf <- summarize(
-    groupBy(collection_sdf, "rawPath"),
+    groupBy(collection_sdf, "path"),
     alias(rst_combineavg_agg(column("tile")), "tile")
   )
   combine_avg_sdf <- withColumn(combine_avg_sdf, "extent", st_astext(rst_boundingbox(column("tile"))))
@@ -101,7 +101,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   region_keys <- c("NAME", "STATE", "BOROUGH", "BLOCK", "TRACT")
 
   census_sdf <- read.df(
-    rawPath = "sparkrMosaic/tests/testthat/data/Blocks2020.zip",
+    path = "sparkrMosaic/tests/testthat/data/Blocks2020.zip",
     source = "com.databricks.labs.mosaic.datasource.OGRFileFormat",
     vsizip = "true",
     chunkSize = "20"
@@ -115,7 +115,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   census_sdf <- select(census_sdf, c(region_keys, "chip.*"))
 
   raster_sdf <- read.df(
-    rawPath = "sparkrMosaic/tests/testthat/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc",
+    path = "sparkrMosaic/tests/testthat/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc",
     source = "gdal",
     tile.read.strategy = "in_memory"
   )

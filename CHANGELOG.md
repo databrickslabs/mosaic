@@ -22,7 +22,7 @@
 - `RST_PixelCount` now supports optional 'countNoData' and 'countMask' (defaults are `false`, can now be `true`) to optionally get full 
    pixel counts where mask is 0.0 and noData is what is configured in the tile
 - Added `RST_Write` to save a generated 'tile' to a specified directory (e.g. fuse) location using its GDAL driver and 
-  tile data / rawPath; useful for formalizing the rawPath when writing a Lakehouse table (allowing removal of interim
+  tile data / path; useful for formalizing the path when writing a Lakehouse table (allowing removal of interim
   checkpointed data)
 - Improved `raster_to_grid` reader performance by using checkpointing for interim steps and adjusting repartitioning;
   default read strategy for this reader and its underlying `.format("gdal")` reader is "as_path" instead of "in_memory"
@@ -59,7 +59,7 @@
 - Added tiller functions, ST_AsGeoJSONTile and ST_AsMVTTile, for creating GeoJSON and MVT tiles as aggregations of geometries.
 - Added filter and convolve functions for tile data.
 - Raster tile schema changed to be <tile:struct<index_id:bigint, tile:binary, metadata:map<string, string>>.
-- Raster tile metadata will contain driver, parentPath and rawPath.
+- Raster tile metadata will contain driver, parentPath and path.
 - Raster tile metadata will contain warnings and errors in case of failures.
 - All tile functions ensure rasters are TILED and not STRIPED when appropriate.
 - GDAL cache memory has been decreased to 512MB to reduce memory usage and competition with Spark.
@@ -108,7 +108,7 @@
 - Fixed photon check for DBR warnings.
 - Bump maven-surefire-plugin from 3.0.0 to 3.1.0.
 - Fix the bug described in issue 360: incomplete coverage from grid_geometrykring and grid_tessellate.
-- Add default value for script location rawPath to init script.
+- Add default value for script location path to init script.
 
 ## v0.3.10
 - Fixed k-ring logic for BNG grid close to the edge of the grid
@@ -120,7 +120,7 @@
 - Fix intersection operations with ESRI geometry APIs
 - Fixed custom grid issues for grids not multiple of the root size resolution
 - Fixed python binding for rst_georeference
-- Fixed ESRI create polygon with correct rawPath order with ESRI APIs
+- Fixed ESRI create polygon with correct path order with ESRI APIs
 - Fixed automatic SQL registration with GDAL
 
 ## v0.3.9

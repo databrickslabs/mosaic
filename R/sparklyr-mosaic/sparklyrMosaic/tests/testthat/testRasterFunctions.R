@@ -3,7 +3,7 @@ generate_singleband_raster_df <- function() {
     sc,
     name = "tile",
     source = "gdal",
-    rawPath = "data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF",
+    path = "data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF",
     options = list("tile.read.strategy" = "in_memory")
   )
 }
@@ -31,7 +31,7 @@ test_that("scalar tile functions behave as intended", {
     mutate(rst_clip = rst_clip(tile, rst_boundingbox)) %>%
     mutate(rst_combineavg = rst_combineavg(array(tile, rst_clip))) %>%
     mutate(rst_frombands = rst_frombands(array(tile, tile))) %>%
-    mutate(rst_fromfile = rst_fromfile(rawPath, -1L)) %>%
+    mutate(rst_fromfile = rst_fromfile(path, -1L)) %>%
     mutate(rst_georeference = rst_georeference(tile)) %>%
     mutate(rst_getnodata = rst_getnodata(tile)) %>%
     mutate(rst_subdatasets = rst_subdatasets(tile)) %>%
@@ -106,7 +106,7 @@ test_that("tile aggregation functions behave as intended", {
     mutate(tile = rst_tooverlappingtiles(tile, 200L, 200L, 10L))
 
   merge_sdf <- collection_sdf %>%
-    group_by(rawPath) %>%
+    group_by(path) %>%
     summarise(tile = rst_merge_agg(tile)) %>%
     mutate(extent = st_astext(rst_boundingbox(tile)))
 
@@ -117,7 +117,7 @@ test_that("tile aggregation functions behave as intended", {
   )
 
   combine_avg_sdf <- collection_sdf %>%
-    group_by(rawPath) %>%
+    group_by(path) %>%
     summarise(tile = rst_combineavg_agg(tile)) %>%
     mutate(extent = st_astext(rst_boundingbox(tile)))
 
@@ -138,7 +138,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
     sc,
     name = "census_raw",
     source = "com.databricks.labs.mosaic.datasource.OGRFileFormat",
-    rawPath = "data/Blocks2020.zip",
+    path = "data/Blocks2020.zip",
     options = list(
       "vsizip" = "true",
       "chunkSize" = "20"
@@ -156,7 +156,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
       sc,
       name = "raster_raw",
       source = "gdal",
-      rawPath = "data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc",
+      path = "data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc",
       options = list("tile.read.strategy" = "in_memory")
     ) %>%
       mutate(tile = rst_separatebands(tile)) %>%

@@ -35,10 +35,10 @@ Firstly we will create a spark DataFrame from a directory of tile files.
 
 .. code-block:: python
 
-    df = spark.read.format("gdal").load("dbfs:/rawPath/to/tile/files").repartition(400)
+    df = spark.read.format("gdal").load("dbfs:/path/to/tile/files").repartition(400)
     df.show()
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
-    |                                                      rawPath |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
+    |                                                      path |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
     | dbfs:/FileStore/geospatial/odin/alaska/B02/-424495268.tif | 1970-01-20T15:49:53.135+0000 | 211660514 | 7836235824828840960 | 10980 | 10980 |         1 | {AREA_OR_POINT=Po... |          {} | 32602 | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |
     | dbfs:/FileStore/geospatial/odin/alaska/B02/-524425268.tif | 1970-01-20T15:49:53.135+0000 | 212060218 | 7836235824828840961 | 10980 | 10980 |         1 | {AREA_OR_POINT=Po... |          {} | 32602 | {index_id: 593308294097927192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |
@@ -87,10 +87,10 @@ Firstly we will create a spark DataFrame from a directory of tile files.
 
 .. code-block:: python
 
-    df = spark.read.format("gdal").load("dbfs:/rawPath/to/tile/files").repartition(400)
+    df = spark.read.format("gdal").load("dbfs:/path/to/tile/files").repartition(400)
     df.show()
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
-    |                                                      rawPath |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
+    |                                                      path |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
     | dbfs:/FileStore/geospatial/odin/alaska/B02/-424495268.tif | 1970-01-20T15:49:53.135+0000 | 211660514 | 7836235824828840960 | 10980 | 10980 |         1 | {AREA_OR_POINT=Po... |          {} | 32602 | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |
     | dbfs:/FileStore/geospatial/odin/alaska/B02/-524425268.tif | 1970-01-20T15:49:53.135+0000 | 212060218 | 7836235824828840961 | 10980 | 10980 |         1 | {AREA_OR_POINT=Po... |          {} | 32602 | {index_id: 593308294097927192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |
@@ -142,10 +142,10 @@ Firstly we will create a spark DataFrame from a directory of tile files.
 
 .. code-block:: python
 
-    df = spark.read.format("gdal").load("dbfs:/rawPath/to/tile/files").repartition(400)
+    df = spark.read.format("gdal").load("dbfs:/path/to/tile/files").repartition(400)
     df.show()
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
-    |                                                      rawPath |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
+    |                                                      path |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
     | dbfs:/FileStore/geospatial/odin/alaska/B02/-424495268.tif | 1970-01-20T15:49:53.135+0000 | 211660514 | 7836235824828840960 | 10980 | 10980 |         1 | {AREA_OR_POINT=Po... |          {} | 32602 | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |
     | dbfs:/FileStore/geospatial/odin/alaska/B02/-524425268.tif | 1970-01-20T15:49:53.135+0000 | 212060218 | 7836235824828840961 | 10980 | 10980 |         1 | {AREA_OR_POINT=Po... |          {} | 32602 | {index_id: 593308294097927192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |
@@ -200,7 +200,7 @@ Finally we will apply the function to the DataFrame.
     # This will overwrite the existing tile field in the tile column
     df.select(col("tile").withField("tile", compute_ndvi("tile.tile", lit(1), lit(2)))).show()
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
-    |                                                      rawPath |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
+    |                                                      path |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
     | dbfs:/FileStore/geospatial/odin/alaska/B02/-424495268.tif | 1970-01-20T15:49:53.135+0000 | 211660514 | 7836235824828840960 | 10980 | 10980 |         1 | {AREA_OR_POINT=Po... |          {} | 32602 | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |
     | dbfs:/FileStore/geospatial/odin/alaska/B02/-524425268.tif | 1970-01-20T15:49:53.135+0000 | 212060218 | 7836235824828840961 | 10980 | 10980 |         1 | {AREA_OR_POINT=Po... |          {} | 32602 | {index_id: 593308294097927192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |
@@ -220,10 +220,10 @@ Firstly we will create a spark DataFrame from a directory of tile files.
 
 .. code-block:: python
 
-    df = spark.read.format("gdal").load("dbfs:/rawPath/to/tile/files").repartition(400)
+    df = spark.read.format("gdal").load("dbfs:/path/to/tile/files").repartition(400)
     df.show()
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
-    |                                                      rawPath |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
+    |                                                      path |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
     | dbfs:/FileStore/geospatial/odin/alaska/B02/-424495268.tif | 1970-01-20T15:49:53.135+0000 | 211660514 | 7836235824828840960 | 10980 | 10980 |         1 | {AREA_OR_POINT=Po... |          {} | 32602 | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |
     | dbfs:/FileStore/geospatial/odin/alaska/B02/-524425268.tif | 1970-01-20T15:49:53.135+0000 | 212060218 | 7836235824828840961 | 10980 | 10980 |         1 | {AREA_OR_POINT=Po... |          {} | 32602 | {index_id: 593308294097927192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" } |
@@ -277,10 +277,10 @@ depending on your needs.
               **profile
             ) as dst:
                 dst.write(data_arr) # <- adjust as needed
-            # - [4] copy to fuse rawPath
+            # - [4] copy to fuse path
             Path(fuse_dir).mkdir(parents=True, exist_ok=True)
             fuse_path = f"{fuse_dir}/{file_name}"
-            if not os.rawPath.exists(fuse_path):
+            if not os.path.exists(fuse_path):
                 shutil.copyfile(tmp_path, fuse_path)
         return fuse_path
 
@@ -293,15 +293,15 @@ Finally we will apply the function to the DataFrame.
         "tile.tile",
         lit("GTiff").alias("driver"),
         "uuid",
-        lit("/dbfs/rawPath/to/output/dir").alias("fuse_dir")
+        lit("/dbfs/path/to/output/dir").alias("fuse_dir")
       )
     ).display()
     +----------------------------------------------+
     | write_raster(tile, driver, uuid, fuse_dir) |
     +----------------------------------------------+
-    | /dbfs/rawPath/to/output/dir/1234.tif            |
-    | /dbfs/rawPath/to/output/dir/4545.tif            |
-    | /dbfs/rawPath/to/output/dir/3215.tif            |
+    | /dbfs/path/to/output/dir/1234.tif            |
+    | /dbfs/path/to/output/dir/4545.tif            |
+    | /dbfs/path/to/output/dir/3215.tif            |
     | ...                                          |
     +----------------------------------------------+
 
@@ -321,7 +321,7 @@ above.
 
         Path(fuse_dir).mkdir(parents=True, exist_ok=True)
         fuse_path = f"{fuse_dir}/{file_name}"
-        if not os.rawPath.exists(fuse_path):
+        if not os.path.exists(fuse_path):
             with tempfile.TemporaryDirectory() as tmp_dir:
                 tmp_path = f"{tmp_dir}/{file_name}"
                 # - write within the tmp_dir context
@@ -341,15 +341,15 @@ Finally we will apply the function to the DataFrame.
       write_binary(
         "tile.tile",
         F.concat("uuid", F.lit(".tif")).alias("file_name"),
-        F.lit("/dbfs/rawPath/to/output/dir").alias("fuse_dir")
+        F.lit("/dbfs/path/to/output/dir").alias("fuse_dir")
       )
     ).display()
     +-------------------------------------------+
     | write_binary(tile, file_name, fuse_dir) |
     +-------------------------------------------+
-    | /dbfs/rawPath/to/output/dir/1234.tif         |
-    | /dbfs/rawPath/to/output/dir/4545.tif         |
-    | /dbfs/rawPath/to/output/dir/3215.tif         |
+    | /dbfs/path/to/output/dir/1234.tif         |
+    | /dbfs/path/to/output/dir/4545.tif         |
+    | /dbfs/path/to/output/dir/3215.tif         |
     | ...                                       |
     +-------------------------------------------+
 
@@ -402,7 +402,7 @@ Example of calling the UDF (original data was NetCDF). If you have more than 1 b
     base_table = (
      df
        .select(
-         "rawPath",
+         "path",
          "metadata",
          "tile"
        )

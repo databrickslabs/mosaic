@@ -3,8 +3,8 @@ library(testthat)
 library(readr)
 
 spark_location <- Sys.getenv("SPARK_HOME")
-library(SparkR, lib.loc = c(file.rawPath(spark_location, "R", "lib")))
-.libPaths(c(file.rawPath(spark_location, "R", "lib"), .libPaths()))
+library(SparkR, lib.loc = c(file.path(spark_location, "R", "lib")))
+.libPaths(c(file.path(spark_location, "R", "lib"), .libPaths()))
 
 # find the sparkrMosaic tar
 file_list <- list.files()
@@ -32,4 +32,4 @@ spark <- sparkR.session(
 )
 enableMosaic()
 
-testthat::test_local(rawPath="./sparkrMosaic")
+testthat::test_local(path="./sparkrMosaic")

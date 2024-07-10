@@ -55,12 +55,12 @@ The reader supports the following options:
     * layerNumber - number of the layer to read (IntegerType), zero-indexed
 
 
-.. function:: spark.read.format("ogr").load(rawPath)
+.. function:: spark.read.format("ogr").load(path)
 
     Loads a vector file and returns the result as a :class:`DataFrame`.
 
-    :param rawPath: the rawPath of the vector file
-    :type rawPath: Column(StringType)
+    :param path: the path of the vector file
+    :type path: Column(StringType)
     :return: :class:`DataFrame`
 
     :example:
@@ -128,12 +128,12 @@ and parsed into expected types on execution. The reader supports the following o
     * layerNumber - number of the layer to read (IntegerType), zero-indexed [pass as String]
 
 
-.. function:: mos.read().format("multi_read_ogr").load(rawPath)
+.. function:: mos.read().format("multi_read_ogr").load(path)
 
     Loads a vector file and returns the result as a :class:`DataFrame`.
 
-    :param rawPath: the rawPath of the vector file
-    :type rawPath: Column(StringType)
+    :param path: the path of the vector file
+    :type path: Column(StringType)
     :return: :class:`DataFrame`
 
     :example:
@@ -186,12 +186,12 @@ The reader supports the following options:
     * layerNumber - number of the layer to read (IntegerType), zero-indexed
     * vsizip - if the vector files are zipped files, set this to true (BooleanType)
 
-.. function:: spark.read.format("geo_db").load(rawPath)
+.. function:: spark.read.format("geo_db").load(path)
 
     Loads a GeoDB file and returns the result as a :class:`DataFrame`.
 
-    :param rawPath: the rawPath of the GeoDB file
-    :type rawPath: Column(StringType)
+    :param path: the path of the GeoDB file
+    :type path: Column(StringType)
     :return: :class:`DataFrame`
 
     :example:
@@ -245,12 +245,12 @@ The reader supports the following options:
     * layerNumber - number of the layer to read (IntegerType), zero-indexed
     * vsizip - if the vector files are zipped files, set this to true (BooleanType)
 
-.. function:: spark.read.format("shapefile").load(rawPath)
+.. function:: spark.read.format("shapefile").load(path)
 
     Loads a Shapefile and returns the result as a :class:`DataFrame`.
 
-    :param rawPath: the rawPath of the Shapefile
-    :type rawPath: Column(StringType)
+    :param path: the path of the Shapefile
+    :type path: Column(StringType)
     :return: :class:`DataFrame`
 
     :example:
@@ -333,7 +333,7 @@ Here is an example UDF to list layers, supporting both zipped and non-zipped.
       """
       List layer names (in index order).
        - in_path: file location for read; when used with `zip_path`,
-          this will be the relative rawPath within a zip to open
+          this will be the relative path within a zip to open
        - driver: name of GDAL driver to use
        - zip_path: follows format 'zip:///some/file.zip' (Optional, default is None); zip gets opened something like:
           `with fiona.open('/test/a.shp', vfs='zip:///tmp/dir1/test.zip', driver='<driver>') as f:`
@@ -378,7 +378,7 @@ Here is an example UDF to count rows for a layer, supporting both zipped and non
       """
       Count rows for the provided vector file.
        - in_path: file location for read; when used with `zip_path`,
-          this will be the relative rawPath within a zip to open
+          this will be the relative path within a zip to open
        - driver: name of GDAL driver to use
        - layer: integer (zero-indexed) or string (name)
        - zip_path: follows format 'zip:///some/file.zip' (Optional, default is None); zip gets opened something like:
@@ -428,7 +428,7 @@ Here is an example UDF to get spark friendly schema for a layer, supporting both
       """
       Get the schema for the provided vector file layer.
        - in_path: file location for read; when used with `zip_path`,
-          this will be the relative rawPath within a zip to open
+          this will be the relative path within a zip to open
        - driver: name of GDAL driver to use
        - layer: integer (zero-indexed) or string (name)
        - zip_path: follows format 'zip:///some/file.zip' (Optional, default is None); zip gets opened something like:
@@ -482,17 +482,17 @@ In this example, we can use :code:`zip_path` from :code:`df` because we left "zi
     from pyspark.sql.types import BooleanType
 
     @udf(returnType=BooleanType())
-    def test_double_zip(rawPath):
+    def test_double_zip(path):
       """
       Tests whether a zip contains zips, which is not supported by
       Mosaic GDAL APIs.
-       - rawPath: to check
+       - path: to check
       Returns boolean
       """
       import zipfile
 
       try:
-        with zipfile.ZipFile(rawPath, mode="r") as zip:
+        with zipfile.ZipFile(path, mode="r") as zip:
           for f in zip.namelist():
             if f.lower().endswith(".zip"):
               return True

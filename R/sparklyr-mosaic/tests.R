@@ -28,4 +28,4 @@ sc <- spark_connect(master="local[*]", config=config)
 enableMosaic(sc)
 enableGDAL(sc)
 
-testthat::test_local(rawPath="./sparklyrMosaic")
+testthat::test_local(path="./sparklyrMosaic")

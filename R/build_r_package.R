@@ -1,5 +1,5 @@
 spark_location <- Sys.getenv("SPARK_HOME")
-library(SparkR, lib.loc = c(file.rawPath(spark_location, "R", "lib")))
+library(SparkR, lib.loc = c(file.path(spark_location, "R", "lib")))
 library(pkgbuild)
 
 build_mosaic_bindings <- function(){

@@ -38,7 +38,7 @@ A base Spark SQL data source for reading GDAL tile data sources.
 It reads metadata of the tile and exposes the direct paths for the tile files.
 The output of the reader is a DataFrame with the following columns (provided in order):
 
-    * :code:`rawPath` - rawPath read (StringType)
+    * :code:`path` - path read (StringType)
     * :code:`modificationTime` - last modification of the tile (TimestampType)
     * :code:`length` -  size of the tile, e.g. memory size (LongType)
     * :code:`uuid` -  unique identifier for the tile (LongType)
@@ -58,8 +58,8 @@ The output of the reader is a DataFrame with the following columns (provided in 
     Loads a GDAL tile file and returns the result as a DataFrame.
     It uses the standard spark reader patthern of :code:`spark.read.format(*).option(*).load(*)`.
 
-    :param rawPath: rawPath to the tile file on dbfs
-    :type rawPath: Column(StringType)
+    :param path: path to the tile file on dbfs
+    :type path: Column(StringType)
     :rtype: DataFrame
 
     :example:
@@ -69,7 +69,7 @@ The output of the reader is a DataFrame with the following columns (provided in 
 
         df = spark.read.format("gdal")\
             .option("driverName", "GTiff")\
-            .load("dbfs:/rawPath/to/tile.tif")
+            .load("dbfs:/path/to/tile.tif")
         df.show()
         +---------------------------------------------------------------------------------------------------------------+------+------+----------+---------------------+--------------------+-----+----------------------+
         |                                                                                                           tile| ySize| xSize| bandCount|             metadata|         subdatasets| srid|              proj4Str|
@@ -81,7 +81,7 @@ The output of the reader is a DataFrame with the following columns (provided in 
 
         val df = spark.read.format("gdal")
             .option("driverName", "GTiff")
-            .load("dbfs:/rawPath/to/tile.tif")
+            .load("dbfs:/path/to/tile.tif")
         df.show()
         +---------------------------------------------------------------------------------------------------------------+------+------+----------+---------------------+--------------------+-----+----------------------+
         |                                                                                                           tile| ySize| xSize| bandCount|             metadata|         subdatasets| srid|              proj4Str|
@@ -133,8 +133,8 @@ The reader supports the following options:
     Loads a GDAL tile file and returns the result as a DataFrame.
     It uses the standard spark reader pattern of :code:`mos.read().format(*).option(*).load(*)`.
 
-    :param rawPath: rawPath to the tile file on dbfs
-    :type rawPath: Column(StringType)
+    :param path: path to the tile file on dbfs
+    :type path: Column(StringType)
     :rtype: DataFrame
 
     :example:
@@ -149,7 +149,7 @@ The reader supports the following options:
             .option("retile", "true")\
             .option("tileSize", "1000")\
             .option("kRingInterpolate", "2")\
-            .load("dbfs:/rawPath/to/tile.tif")
+            .load("dbfs:/path/to/tile.tif")
         df.show()
         +--------+--------+------------------+
         |band_id |cell_id |cell_value        |
@@ -169,7 +169,7 @@ The reader supports the following options:
             .option("retile", "true")
             .option("tileSize", "1000")
             .option("kRingInterpolate", "2")
-            .load("dbfs:/rawPath/to/tile.tif")
+            .load("dbfs:/path/to/tile.tif")
         df.show()
         +--------+--------+------------------+
         |band_id |cell_id |cell_value        |

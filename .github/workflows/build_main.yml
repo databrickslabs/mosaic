@@ -32,8 +32,7 @@ jobs:
         uses: ./.github/actions/python_build
       - name: upload python artefacts
         uses: ./.github/actions/upload_python_artefacts
-#  R tests failing, commenting out for now.
-#      - name: build R
-#        uses: ./.github/actions/r_build
-#      - name: upload r artefacts
-#        uses: ./.github/actions/upload_r_artefacts
+      - name: build R
+        uses: ./.github/actions/r_build
+      - name: upload r artefacts
+        uses: ./.github/actions/upload_r_artefacts
