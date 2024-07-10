@@ -2,11 +2,18 @@ package com.databricks.labs.mosaic.core.geometry.multipoint
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
+import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOINT, POINT}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom._
+import org.locationtech.jts.geom.util.GeometryExtracter
+import org.locationtech.jts.triangulate.{ConformingDelaunayTriangulationBuilder, ConformingDelaunayTriangulator, ConstraintVertex}
+
+import java.util
+import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
 
 class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(multiPoint) with MosaicMultiPoint {
 
@@ -41,6 +48,62 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
     override def getHolePoints: Seq[Seq[Seq[MosaicPointJTS]]] = Nil
 
     override def getShellPoints: Seq[Seq[MosaicPointJTS]] = Seq(asSeq)
+
+    def triangulate(breaklines: Option[MosaicMultiLineStringJTS]): GeometryCollection = {
+        val tolerance = 0.01
+        val triangulator = new ConformingDelaunayTriangulationBuilder()
+        val geomFact = multiPoint.getFactory
+
+        triangulator.setSites(multiPoint)
+        if (breaklines.isDefined) {
+            triangulator.setConstraints(breaklines.get.getGeom)
+        }
+        triangulator.setTolerance(tolerance)
+
+
+        val geom = triangulator.getTriangles(geomFact)
+        //        val result = GeometryExtracter.extract(geom, "Polygon")
+        //            .toArray()
+        //            .map(_.asInstanceOf[Polygon])
+        //            .map(p => {
+        //                val coords = p.getCoordinates
+        //                new Triangle(coords(0), coords(1), coords(2))
+        //            })
+        //            .toSeq
+        //        result
+        geom.asInstanceOf[GeometryCollection]
+    }
+
+    def interpolateElevation(breaklines: Option[MosaicMultiLineStringJTS], gridPoints: MosaicMultiPointJTS) : MosaicMultiPointJTS = {
+        val triangles = triangulate(breaklines)
+
+        class PolygonIntersectionFilter(p: Point) extends GeometryFilter {
+            val intersectingPolygons: ListBuffer[Polygon] = ListBuffer()
+
+            override def filter(geom: Geometry): Unit = {
+                geom match {
+                    case polygon: Polygon if geom.intersects(p) =>
+                        intersectingPolygons += polygon
+                    case _ =>
+                }
+            }
+
+            def getIntersectingPoly: Polygon = intersectingPolygons.toList.head
+        }
+
+        val result = gridPoints.asSeq.map(
+            p => {
+                val point = p.getGeom.asInstanceOf[Point]
+                val filter = new PolygonIntersectionFilter(point)
+                triangles.apply(filter)
+                val polyCoords = filter.getIntersectingPoly.getCoordinates
+                val tri = new Triangle(polyCoords(0), polyCoords(1), polyCoords(2))
+                val z = tri.interpolateZ(point.getCoordinate)
+                MosaicPointJTS(point.getFactory.createPoint(new Coordinate(point.getX, point.getY, z)))
+            }
+        )
+        MosaicMultiPointJTS.fromSeq(result)
+    }
 
 }
 

@@ -121,4 +121,18 @@ class TestMultiPointJTS extends AnyFlatSpec {
         multiPoint.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
     }
 
+    "MosaicMultiPointJTS" should "perform an unconstrained Delauny tringulation" in {
+        val multiPoint = MosaicMultiPointJTS.fromWKT("MULTIPOINT Z (2 1 0, 3 2 1, 1 3 3, 0 2 2)").asInstanceOf[MosaicMultiPointJTS]
+        val triangulated = multiPoint.triangulate(None)
+        triangulated.toText shouldBe "GEOMETRYCOLLECTION (POLYGON ((0 2, 2 1, 1 3, 0 2)), POLYGON ((1 3, 2 1, 3 2, 1 3)))"
+    }
+
+    "MosaicMultiPointJTS" should "perform elevation interpolation" in {
+        val multiPoint = MosaicMultiPointJTS.fromWKT("MULTIPOINT Z (2.5 1.5 0, 3.5 2.5 1, 1.5 3.5 3, 0.5 2.5 2)").asInstanceOf[MosaicMultiPointJTS]
+        val gridPoints = MosaicMultiPointJTS.fromWKT("MULTIPOINT (2 2, 3 2, 1 3, 2 3)").asInstanceOf[MosaicMultiPointJTS]
+        val z = multiPoint.interpolateElevation(None, gridPoints)
+        z.toWKT shouldBe "MULTIPOINT ((2 2), (3 2), (1 3), (2 3))"
+        z.asSeq.map(_.getZ) shouldBe Seq(0.8333333333333334, 0.5, 2.5, 2.1666666666666665)
+    }
+
 }
