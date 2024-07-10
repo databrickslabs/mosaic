@@ -1,0 +1,11 @@
+name: cleanup build
+description: cleanup build
+runs:
+  using: "composite"
+  steps:
+    - name: Remove tmp files
+      shell: bash
+      run : |
+        # - update apt
+        sudo rm -rf /tmp/mosaic_tmp *
+        sudo rm -rf /dbfs/checkpoint/mosaic_tmp *
