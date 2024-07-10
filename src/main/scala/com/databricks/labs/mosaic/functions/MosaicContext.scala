@@ -1166,7 +1166,9 @@ object MosaicContext extends Logging {
                          |    You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.""".stripMargin
 
             logError(msg)
+            //scalastyle:off println
             println(msg)
+            //scalastyle:on println
             throw new Exception(msg)
         }
 
@@ -1177,7 +1179,9 @@ object MosaicContext extends Logging {
                          |      - Runtime ML for spatial AI benefits
                          |  Mosaic 0.4.x series restricts executing this cluster.""".stripMargin
             logError(msg)
+            //scalastyle:off println
             println(msg)
+            //scalastyle:on println
             throw new Exception(msg)
         }
         true

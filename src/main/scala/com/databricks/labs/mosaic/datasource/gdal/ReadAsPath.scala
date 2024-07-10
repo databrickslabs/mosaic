@@ -119,7 +119,6 @@ object ReadAsPath extends ReadStrategy {
         )
         val raster = RasterGDAL(createInfo, exprConfigOpt) // unhydrated
         val tile = RasterTile(null, raster, tileDataType)
-        
         val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
         val fields = trimmedSchema.fieldNames.map {
             case PATH              => status.getPath.toString

@@ -128,7 +128,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   raster_sdf <- withColumn(raster_sdf, "tile", rst_tessellate(column("tile"), lit(target_resolution)))
 
   clipped_sdf <- join(raster_sdf, census_sdf, raster_sdf$tile.index_id == census_sdf$index_id)
-  clipped_sdf <- withColumn(clipped_sdf, "tile", rst_clip(column("tile"), column("wkb")))
+  clipped_sdf <- withColumn(clipped_sdf, "tile", rst_clip(column("tile"), column("wkb"), TRUE))
 
   merged_precipitation <- summarize(
     groupBy(clipped_sdf, "timestep"),

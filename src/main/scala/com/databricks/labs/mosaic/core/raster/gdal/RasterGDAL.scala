@@ -1004,10 +1004,10 @@ case class RasterGDAL(
                 case _ => None
             }
         }
-        if (datasetGDAL.subdatasetNameOpt.isEmpty){
+        if (datasetGDAL.subdatasetNameOpt.isEmpty) {
             datasetGDAL.subdatasetNameOpt = createInfo.get(RASTER_SUBDATASET_NAME_KEY)
         }
-        if (datasetGDAL.bandIdxOpt.isEmpty){
+        if (datasetGDAL.bandIdxOpt.isEmpty) {
             datasetGDAL.bandIdxOpt = {
                 createInfo.get(RASTER_BAND_INDEX_KEY) match {
                     // bandIx >= 1 is valid

@@ -65,7 +65,6 @@ case class ST_AsGeojsonTileAgg(
         val srs = getSRS(buffer.head, geometryExpr, geometryAPI)
 
         val layer = createLayer(ds, srs, attributesExpr.dataType.asInstanceOf[StructType])
-        
         insertRows(buffer, layer, geometryExpr, geometryAPI, attributesExpr)
 
         ds.FlushCache()

@@ -54,7 +54,7 @@ private class CleanUpManager extends Thread {
             println(s"\n... Thread ${Thread.currentThread().getName} initiating cleanup " +
                 s"- age limit? $ageLimit, dir? '$localDir'\n")
             cleanUpManualDir(ageLimit, localDir, keepRoot = true)
-        }  else None
+        } else None
     }
     // scalastyle:on println
 

@@ -28,7 +28,7 @@ test_that("scalar tile functions behave as intended", {
     mutate(rst_bandmetadata = rst_bandmetadata(tile, 1L)) %>%
     mutate(rst_boundingbox = rst_boundingbox(tile)) %>%
     mutate(rst_boundingbox = st_buffer(rst_boundingbox, -0.001)) %>%
-    mutate(rst_clip = rst_clip(tile, rst_boundingbox)) %>%
+    mutate(rst_clip = rst_clip(tile, rst_boundingbox, TRUE)) %>%
     mutate(rst_combineavg = rst_combineavg(array(tile, rst_clip))) %>%
     mutate(rst_frombands = rst_frombands(array(tile, tile))) %>%
     mutate(rst_fromfile = rst_fromfile(path, -1L)) %>%
@@ -171,7 +171,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   clipped_sdf <- indexed_raster_sdf %>%
     sdf_select(tile, tile.index_id, timestep, .drop_parents = FALSE) %>%
     inner_join(census_sdf, by = "index_id") %>%
-    mutate(tile = rst_clip(tile, wkb))
+    mutate(tile = rst_clip(tile, wkb, TRUE))
 
   merged_precipitation <- clipped_sdf %>%
     group_by(region_keys, timestep) %>%

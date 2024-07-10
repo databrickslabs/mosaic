@@ -180,7 +180,6 @@ object Mosaic {
                 if (!lineSegment.isEmpty) {
                     val chip = MosaicChip(isCore = false, Left(current), lineSegment)
                     val kRing = indexSystem.kRing(current, 1)
-                    
                     // Ignore already processed chips and those which are already in the
                     // queue to be processed
                     val toQueue = kRing.filterNot((newTraversed ++ accumulator._1).contains)

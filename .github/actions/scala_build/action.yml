@@ -45,9 +45,11 @@ runs:
             # - make dirs (just in case)
             # - get counts
             sudo mkdir -p /tmp/mosaic_tmp
+            TMP_CNT=$( sudo find /tmp/mosaic_tmp | wc -l )
+            echo "files (pre-clean)? $TMP_CNT in '/tmp/mosaic_tmp'"
             sudo mkdir -p /dbfs/checkpoint/mosaic_tmp
-            sudo echo "files (pre-clean) -> # $(find /tmp/mosaic_tmp | wc -l) in '/tmp/mosaic_tmp'"
-            sudo echo "files (pre-clean) -> # $(find /dbfs/checkpoint/mosaic_tmp | wc -l) in '/dbfs/checkpoint/mosaic_tmp'"
+            FUSE_CNT=$( sudo find /dbfs/checkpoint/mosaic_tmp | wc -l )
+            echo "files (pre-clean)? $FUSE_CNT in '/dbfs/checkpoint/mosaic_tmp'"
             # [3] remove local tmp files
             sudo echo "... cleaning '/tmp/mosaic_tmp'"
             sudo rm -rf /tmp/mosaic_tmp/*
@@ -56,8 +58,10 @@ runs:
             sudo rm -rf /dbfs/checkpoint/mosaic_tmp/*
             # [5] post-clean
             # - get counts
-            sudo echo "files (post-clean) -> # $(find /tmp/mosaic_tmp | wc -l) in '/tmp/mosaic_tmp'"
-            sudo echo "files (post-clean) -> # $(find /dbfs/checkpoint/mosaic_tmp | wc -l) in '/dbfs/checkpoint/mosaic_tmp'"
+            TMP_CNT=$( sudo find /tmp/mosaic_tmp | wc -l )
+            echo "files (post-clean)? $TMP_CNT in '/tmp/mosaic_tmp'"
+            FUSE_CNT=$( sudo find /dbfs/checkpoint/mosaic_tmp | wc -l )
+            echo "files (post-clean)? $FUSE_CNT in '/dbfs/checkpoint/mosaic_tmp'"
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
           shell: bash

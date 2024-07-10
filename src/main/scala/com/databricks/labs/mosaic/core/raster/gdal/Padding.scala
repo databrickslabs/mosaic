@@ -12,7 +12,6 @@ case class Padding(
         val r = if (right) 1 else 0
         val t = if (top) 1 else 0
         val b = if (bottom) 1 else 0
-        
         val yStart = t * stride * rowWidth
         val yEnd = array.length - b * stride * rowWidth
 
