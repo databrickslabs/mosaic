@@ -38,7 +38,26 @@ runs:
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
-          run: sudo mvn -q clean install
+          run: |
+            # [1] mvn tests
+            sudo mvn -q clean install 
+            # [2] pre-clean
+            # - make dirs (just in case)
+            # - get counts
+            mkdir -p /tmp/mosaic_tmp
+            mkdir -p /dbfs/checkpoint/mosaic_tmp
+            sudo echo "files (pre-clean) -> # $(find /tmp/mosaic_tmp | wc -l) in '/tmp/mosaic_tmp'"
+            sudo echo "files (pre-clean) -> # $(find /dbfs/checkpoint/mosaic_tmp | wc -l) in '/dbfs/checkpoint/mosaic_tmp'"
+            # [3] remove local tmp files
+            sudo echo "... cleaning '/tmp/mosaic_tmp'"
+            sudo rm -rf /tmp/mosaic_tmp/*
+            # [4] remove pseudo fuse files
+            sudo echo "... cleaning '/dbfs/checkpoint/mosaic_tmp'"
+            sudo rm -rf /dbfs/checkpoint/mosaic_tmp/*
+            # [5] post-clean
+            # - get counts
+            sudo echo "files (post-clean) -> # $(find /tmp/mosaic_tmp | wc -l) in '/tmp/mosaic_tmp'"
+            sudo echo "files (post-clean) -> # $(find /dbfs/checkpoint/mosaic_tmp | wc -l) in '/dbfs/checkpoint/mosaic_tmp'"
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
           shell: bash

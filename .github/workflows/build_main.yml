@@ -29,8 +29,6 @@ jobs:
         uses: ./.github/actions/scala_build
       - name: upload scala artefacts
         uses: ./.github/actions/upload_scala_artefacts
-      - name: cleanup tmp files
-        uses: ./.github/actions/build_cleanup
 # ::: PYTHON :::
       - name: build python
         uses: ./.github/actions/python_build
