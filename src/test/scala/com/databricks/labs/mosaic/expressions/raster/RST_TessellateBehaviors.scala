@@ -49,8 +49,6 @@ trait RST_TessellateBehaviors extends QueryTest {
         result.length should be(441)
         info(s"tif example -> ${result.head}")
 
-        // TODO rst_separatebands and rst_setsrid are affecting test
-
         val netcdf = spark.read
             .format("gdal")
             .load("src/test/resources/binary/netcdf-CMIP5/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc")

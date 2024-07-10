@@ -42,7 +42,7 @@ object FileUtils {
      * @return
      */
     def createMosaicTmpDir(prefix: String = MOSAIC_RASTER_TMP_PREFIX_DEFAULT): String = {
-        val tempRoot = Paths.get(s"$prefix/mosaic_tmp/")
+        val tempRoot = Paths.get(prefix, "mosaic_tmp")
         if (!Files.exists(tempRoot)) {
             Files.createDirectories(tempRoot)
         }

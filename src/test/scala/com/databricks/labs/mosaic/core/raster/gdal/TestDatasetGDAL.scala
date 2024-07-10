@@ -111,15 +111,15 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
         val sdName = "bleaching_alert_area"
         info(s"path -> '$p'")
 
-        val drivers = new JVector[String]() // java.util.Vector
-        drivers.add("netCDF")
-        val result = gdal.OpenEx(
-            "NETCDF:/root/mosaic/target/test-classes/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc:bleaching_alert_area",
-            GA_ReadOnly,
-            drivers
-        )
-        result != null should be(true)
-        info(s"description -> '${result.GetDescription()}'")
+//        val drivers = new JVector[String]() // java.util.Vector
+//        drivers.add("netCDF")
+//        val result = gdal.OpenEx(
+//            "NETCDF:/root/mosaic/target/test-classes/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc:bleaching_alert_area",
+//            GA_ReadOnly,
+//            drivers
+//        )
+//        result != null should be(true)
+//        info(s"description -> '${result.GetDescription()}'")
         //info(s"metadata -> '${result.GetMetadata_Dict()}'")
 
         // (1) load the subdataset

@@ -1080,10 +1080,12 @@ object MosaicContext extends Logging {
 
     private def configTmpSessionDir(exprConfigOpt: Option[ExprConfig]): String = {
         val prefixCand = Try { exprConfigOpt.get.getTmpPrefix }.toOption.getOrElse(MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
+        //println(s"MosaicContext - configTmpSessionDir -> prefixCand? '$prefixCand'")
         if (_tmpDir == "" || _tmpPrefix == "" || (exprConfigOpt.isDefined && prefixCand != _tmpPrefix)) {
             val (currTmpDir, currTmpPrefix) = (_tmpDir, _tmpPrefix)
             _tmpPrefix = prefixCand
-            _tmpDir = FileUtils.createMosaicTmpDir(_tmpPrefix)
+            _tmpDir = FileUtils.createMosaicTmpDir(prefix = _tmpPrefix)
+            Files.createDirectories(Paths.get(_tmpDir)) // <- python bindings need this
 
             //scalastyle:off println
             println(s"... MosaicContext - created new `_tmpDir`: '${_tmpDir}' (was '$currTmpDir' with tmpPrefix '$currTmpPrefix')")
@@ -1111,10 +1113,12 @@ object MosaicContext extends Logging {
      */
     def createTmpContextDir(exprConfigOpt: Option[ExprConfig]): String = {
         // (1) configure the session tmp dir
-        val javaSessionDir = Paths.get(this.configTmpSessionDir(exprConfigOpt))
+        // - Make sure it exits
+        val sessionDirJava = Paths.get(this.configTmpSessionDir(exprConfigOpt))
+        Files.createDirectories(sessionDirJava)
         // (2) provide a new subdirectory
-        val javaContextDir = Files.createTempDirectory(javaSessionDir, "context_")
-        javaContextDir.toFile.getAbsolutePath
+        val contextDirJava = Files.createTempDirectory(sessionDirJava, "context_")
+        contextDirJava.toFile.getAbsolutePath
     }
 
     def build(indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicContext = {
