@@ -24,8 +24,6 @@ jobs:
     steps:
       - name: checkout code
         uses: actions/checkout@v2
-      - name: setup cleanup tmp files
-        uses: ./.github/actions/build_cleanup
 # ::: SCALA :::
       - name: build scala
         uses: ./.github/actions/scala_build
