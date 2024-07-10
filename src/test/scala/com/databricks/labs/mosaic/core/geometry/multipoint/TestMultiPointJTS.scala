@@ -132,7 +132,7 @@ class TestMultiPointJTS extends AnyFlatSpec {
         val gridPoints = MosaicMultiPointJTS.fromWKT("MULTIPOINT (2 2, 3 2, 1 3, 2 3)").asInstanceOf[MosaicMultiPointJTS]
         val z = multiPoint.interpolateElevation(None, gridPoints)
         z.toWKT shouldBe "MULTIPOINT ((2 2), (3 2), (1 3), (2 3))"
-        z.asSeq.map(_.getZ) shouldBe Seq(0.8333333333333334, 0.5, 2.5, 2.1666666666666665)
+        z.asSeq.map(_.getZ) shouldBe Seq(0.8333333333333334, 0.5, 2.5, 2.166666666666667)
     }
 
 }

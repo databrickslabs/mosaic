@@ -8,8 +8,8 @@ import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOINT, POINT}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom._
-import org.locationtech.jts.geom.util.GeometryExtracter
-import org.locationtech.jts.triangulate.{ConformingDelaunayTriangulationBuilder, ConformingDelaunayTriangulator, ConstraintVertex}
+import org.locationtech.jts.index.strtree.STRtree
+import org.locationtech.jts.triangulate.ConformingDelaunayTriangulationBuilder
 
 import java.util
 import scala.collection.JavaConverters._
@@ -60,43 +60,23 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
         }
         triangulator.setTolerance(tolerance)
 
-
         val geom = triangulator.getTriangles(geomFact)
-        //        val result = GeometryExtracter.extract(geom, "Polygon")
-        //            .toArray()
-        //            .map(_.asInstanceOf[Polygon])
-        //            .map(p => {
-        //                val coords = p.getCoordinates
-        //                new Triangle(coords(0), coords(1), coords(2))
-        //            })
-        //            .toSeq
-        //        result
         geom.asInstanceOf[GeometryCollection]
     }
 
     def interpolateElevation(breaklines: Option[MosaicMultiLineStringJTS], gridPoints: MosaicMultiPointJTS) : MosaicMultiPointJTS = {
         val triangles = triangulate(breaklines)
-
-        class PolygonIntersectionFilter(p: Point) extends GeometryFilter {
-            val intersectingPolygons: ListBuffer[Polygon] = ListBuffer()
-
-            override def filter(geom: Geometry): Unit = {
-                geom match {
-                    case polygon: Polygon if geom.intersects(p) =>
-                        intersectingPolygons += polygon
-                    case _ =>
-                }
-            }
-
-            def getIntersectingPoly: Polygon = intersectingPolygons.toList.head
+        val tree = new STRtree(4)
+        for (i <- 0 until triangles.getNumGeometries) {
+            val geom = triangles.getGeometryN(i)
+            tree.insert(geom.getEnvelopeInternal, geom)
         }
 
         val result = gridPoints.asSeq.map(
             p => {
                 val point = p.getGeom.asInstanceOf[Point]
-                val filter = new PolygonIntersectionFilter(point)
-                triangles.apply(filter)
-                val polyCoords = filter.getIntersectingPoly.getCoordinates
+                val poly = tree.query(p.getGeom.getEnvelopeInternal)
+                val polyCoords = poly.get(0).asInstanceOf[Polygon].getCoordinates
                 val tri = new Triangle(polyCoords(0), polyCoords(1), polyCoords(2))
                 val z = tri.interpolateZ(point.getCoordinate)
                 MosaicPointJTS(point.getFactory.createPoint(new Coordinate(point.getX, point.getY, z)))
