@@ -1,12 +1,18 @@
-name: publish python package to test-pypi
+name: publish python package to pypi
 on:
   release:
     types: [published]
 
 jobs:
   build-n-publish:
-    name: Build project and publish to TestPyPI
-    runs-on: ubuntu-22.04
+    name: Build project and publish to PyPI
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      # Used to authenticate to PyPI via OIDC and sign the release's artifacts with sigstore-python.
+      id-token: write
+      # Used to attach signing artifacts to the published release.
+      contents: write
     strategy:
       matrix:
         python: [ 3.10.12 ]
@@ -24,6 +30,4 @@ jobs:
       - name: Publish a Python distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.LABS_PYPI_TOKEN }}
           packages_dir: python/dist/
