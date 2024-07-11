@@ -172,29 +172,29 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
 
         region_keys = ["NAME", "STATE", "BOROUGH", "BLOCK", "TRACT"]
 
-        # census_df = (
-        #     readers.read()
-        #     .format("multi_read_ogr")
-        #     .option("vsizip", "true")
-        #     .option("chunkSize", "20")
-        #     .load("test/data/Blocks2020.zip")
-        #     .select(*region_keys, "geom_0", "geom_0_srid")
-        #     .dropDuplicates()
-        #     .withColumn("geom_0", api.st_simplify("geom_0", lit(0.001)))
-        #     .withColumn(
-        #         "geom_0", api.st_updatesrid("geom_0", col("geom_0_srid"), lit(4326))
-        #     )
-        #     .withColumn(
-        #         "chip", api.grid_tessellateexplode("geom_0", lit(target_resolution))
-        #     )
-        #     .select(*region_keys, "chip.*")
-        # )
-        # # print(f"...census_df count? {census_df.count()}")
-        # self.assertEqual(census_df.count(), 2)
+        census_df = (
+            readers.read()
+            .format("multi_read_ogr")
+            .option("vsizip", "true")
+            .option("chunkSize", "20")
+            .load("test/data/Blocks2020.zip")
+            .select(*region_keys, "geom_0", "geom_0_srid")
+            .dropDuplicates()
+            .withColumn("geom_0", api.st_simplify("geom_0", lit(0.001)))
+            .withColumn(
+                "geom_0", api.st_updatesrid("geom_0", col("geom_0_srid"), lit(4326))
+            )
+            .withColumn(
+                "chip", api.grid_tessellateexplode("geom_0", lit(target_resolution))
+            )
+            .select(*region_keys, "chip.*")
+        )
+        # print(f"...census_df count? {census_df.count()}")
+        self.assertEqual(census_df.count(), 2)
 
         df = (
             self.spark.read.format("gdal")
-            .option("tile.read.strategy", "as_path")
+            .option("tile.read.strategy", "in_memory")
             .load(
                 "test/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc"
             )
@@ -206,33 +206,34 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
                     api.rst_metadata("tile"), "NC_GLOBAL#GDAL_MOSAIC_BAND_INDEX"
                 ),
             )
-            # .withColumn("tile", api.rst_setsrid("tile", lit(4326)))
-            # .where(col("timestep") == 21)
-            # .withColumn(
-            #     "tile", api.rst_tooverlappingtiles("tile", lit(20), lit(20), lit(10))
-            # )
-            # .repartition(self.spark.sparkContext.defaultParallelism)
+            .withColumn("tile", api.rst_setsrid("tile", lit(4326)))
+            .where(col("timestep") == 21)
+            .withColumn(
+                "tile", api.rst_tooverlappingtiles("tile", lit(20), lit(20), lit(10))
+            )
+            .repartition(self.spark.sparkContext.defaultParallelism)
         )
         print(f"...df count? {df.count()}")
-        print(f"""... metadata -> {df.select(api.rst_metadata("tile")).first()[0]}""")
+        print(f"...df tile? {df.select('tile').first()[0]}")
+        #print(f"""... metadata -> {df.select(api.rst_metadata("tile")).first()[0]}""")
         print(f"""... timesteps -> {[r[0] for r in df.select("timestep").distinct().collect()]}""")
 
-        # prh_bands_indexed = df.withColumn(
-        #     "tile", api.rst_tessellate("tile", lit(target_resolution))
-        # )
-        #
-        # clipped_precipitation = (
-        #     prh_bands_indexed.alias("var")
-        #     .join(
-        #         census_df.alias("aoi"),
-        #         how="inner",
-        #         on=col("var.tile.index_id") == col("aoi.index_id"),
-        #     )
-        #     .withColumn("tile", api.rst_clip("var.tile", "aoi.wkb"))
-        # )
-        #
-        # merged_precipitation = clipped_precipitation.groupBy(*region_keys).agg(
-        #     api.rst_merge_agg("tile").alias("tile")
-        # )
-        #
-        # self.assertEqual(merged_precipitation.count(), 1)
+        prh_bands_indexed = df.withColumn(
+            "tile", api.rst_tessellate("tile", lit(target_resolution))
+        )
+
+        clipped_precipitation = (
+            prh_bands_indexed.alias("var")
+            .join(
+                census_df.alias("aoi"),
+                how="inner",
+                on=col("var.tile.index_id") == col("aoi.index_id"),
+            )
+            .withColumn("tile", api.rst_clip("var.tile", "aoi.wkb"))
+        )
+
+        merged_precipitation = clipped_precipitation.groupBy(*region_keys).agg(
+            api.rst_merge_agg("tile").alias("tile")
+        )
+
+        self.assertEqual(merged_precipitation.count(), 1)

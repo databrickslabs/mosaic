@@ -1,14 +1,6 @@
 package com.databricks.labs.mosaic.core.raster.gdal
 
-import com.databricks.labs.mosaic.{
-    NO_DRIVER,
-    NO_PATH_STRING,
-    RASTER_BAND_INDEX_KEY,
-    RASTER_DRIVER_KEY,
-    RASTER_PARENT_PATH_KEY,
-    RASTER_PATH_KEY,
-    RASTER_SUBDATASET_NAME_KEY
-}
+import com.databricks.labs.mosaic.{BAND_META_GET_KEY, BAND_META_SET_KEY, NO_DRIVER, NO_PATH_STRING, RASTER_BAND_INDEX_KEY, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.core.raster.io.RasterIO
 import com.databricks.labs.mosaic.functions.ExprConfig
 import org.gdal.gdal.Dataset
@@ -332,6 +324,34 @@ case class DatasetGDAL() {
         subdatasets(aPathGDAL)
     }
 
+    /**
+     * Key for band number assembled and attempted.
+     * - This is the metadata key managed by Mosaic.
+     * - So becomes <globalPrefix>#GDAL_MOSAIC_BAND_INDEX
+     * - For NetCDF this is "NC_GLOBAL#GDAL_MOSAIC_BAND_INDEX"
+     * - [[BAND_META_GET_KEY]] is has "GDAL_" pre-pended, where
+     *   [[BAND_META_SET_KEY]] does not.
+     *
+     * @globalPrefix
+     *   E.g. "NC_GLOBAL" (based on dataset).
+     * @return value for [[BAND_META_GET_KEY]] if found in metadata; otherwise -1.
+     */
+    def tryBandNumFromMetadata(globalPrefix: String): Int =
+        Try {
+            tryKeyFromMetadata(s"$globalPrefix#$BAND_META_GET_KEY").toInt
+        }.getOrElse(-1)
+
+    /** @return value for key if found in metadata; otherwise "". */
+    def tryKeyFromMetadata(key: String): String = Try {
+        dataset.GetMetadataItem(key)
+    }.getOrElse("")
+
+    /** Set a metadata key, if dataset hydrated; return `this` (fluent). */
+    def setMetaKey(key: String, value: String): DatasetGDAL =
+        Try {
+            dataset.SetMetadataItem(key, value)
+            this
+        }.getOrElse(this)
 
     /**
      * Set the dataset, update the driver if directed.
@@ -355,10 +375,11 @@ case class DatasetGDAL() {
         this
     }
 
-    /** fluent update, return [[DatasetGDAL]] this. */
+    /** fluent update, return [[DatasetGDAL]] this (also sets metadata key). */
     def updateBandIdx(idx: Int): DatasetGDAL = {
         if (idx < 1) bandIdxOpt = None
         else bandIdxOpt = Option(idx)
+        this.setMetaKey(BAND_META_SET_KEY, idx.toString)
         this
     }
 
@@ -393,6 +414,8 @@ object DatasetGDAL {
 
     /**
      * Constructor for un-hydrated (no [[Dataset]] initially.
+     * - Sets the driver based on provided, if valid;
+     *   otherwise based on path, if possible.
      *
      * @param path
      * @param driverName
@@ -401,7 +424,24 @@ object DatasetGDAL {
     def apply(path: String, driverName: String): DatasetGDAL = {
         val result = DatasetGDAL()
         result.updatePath(path)
-        result.updateDriverName(driverName)
+        if (driverName != NO_DRIVER) result.updateDriverName(driverName)
+        else result.updateDriverName(result.pathGDAL.getPathDriverName)
+
+
+        result
+    }
+
+    /**
+     * Constructor for un-hydrated (no [[Dataset]] initially.
+     * - Sets the driver based on path, if possible.
+     *
+     * @param path
+     * @return [[DatasetGDAL]]
+     */
+    def apply(path: String): DatasetGDAL = {
+        val result = DatasetGDAL()
+        result.updatePath(path)
+        result.updateDriverName(result.pathGDAL.getPathDriverName)
 
         result
     }

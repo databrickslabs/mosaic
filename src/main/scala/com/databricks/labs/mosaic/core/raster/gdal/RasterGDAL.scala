@@ -609,9 +609,10 @@ case class RasterGDAL(
                 .toMap
         }.getOrElse(Map.empty[Int, Map[String, Double]])
 
-    /** Update band num, return `this` (fluent). */
+    /** Update band num (including on metadata), return `this` (fluent). */
     def updateCreateInfoBandIndex(num: Int): RasterGDAL = {
-        this.createInfo += (RASTER_BAND_INDEX_KEY -> num.toString)
+        // need dataset hydrated for metadata set
+        this.initAndHydrate().createInfo += (RASTER_BAND_INDEX_KEY -> num.toString)
         datasetGDAL.updateBandIdx(num)
         this
     }

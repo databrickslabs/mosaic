@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.raster.api
 
-import com.databricks.labs.mosaic.{RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.{RASTER_BAND_INDEX_KEY, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.raster.gdal.{GDALReader, GDALWriter, RasterBandGDAL, RasterGDAL}
 import com.databricks.labs.mosaic.core.raster.io.RasterIO
 import com.databricks.labs.mosaic.core.raster.operator.transform.RasterTransform
@@ -153,7 +153,8 @@ object GDAL extends RasterTransform
         val tmpRaster = RasterIO.readRasterHydratedFromPath(
             Map(
                 RASTER_PATH_KEY -> path,
-                RASTER_PARENT_PATH_KEY -> parentPath
+                RASTER_PARENT_PATH_KEY -> parentPath,
+                RASTER_BAND_INDEX_KEY -> bandIndex.toString
             ),
             exprConfigOpt
         )

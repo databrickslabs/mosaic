@@ -1,12 +1,14 @@
 package com.databricks.labs.mosaic.core.raster.operator.separate
 
-import com.databricks.labs.mosaic.{NO_PATH_STRING, RASTER_BAND_INDEX_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.{BAND_META_SET_KEY, NO_PATH_STRING, RASTER_BAND_INDEX_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.createTmpFileFromDriver
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
 import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.types.{DataType, StringType}
+
+import scala.util.Try
 
 /**
   * ReTile is a helper object for splitting multi-band rasters into
@@ -46,6 +48,8 @@ object SeparateBands {
             ).initAndHydrate() // <- required
 
             if (!result.isEmpty) {
+                // update the band index
+                // both the variable and the metadata
                 val bandVal = (i + 1)
                 result.updateCreateInfoBandIndex(bandVal)
                 (true, result)

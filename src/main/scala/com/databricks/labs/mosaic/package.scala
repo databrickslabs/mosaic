@@ -33,6 +33,9 @@ package object mosaic {
     val MOSAIC_URI_DEEP_CHECK = "spark.databricks.labs.mosaic.uri.deep.check"
     val MOSAIC_URI_DEEP_CHECK_DEFAULT = "true"
 
+    val BAND_META_SET_KEY = "MOSAIC_BAND_INDEX"
+    val BAND_META_GET_KEY = "GDAL_MOSAIC_BAND_INDEX"
+
     val MOSAIC_RASTER_READ_STRATEGY = "tile.read.strategy"
     val MOSAIC_RASTER_READ_IN_MEMORY = "in_memory"
     val MOSAIC_RASTER_READ_AS_PATH = "as_path"

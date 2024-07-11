@@ -2,7 +2,7 @@ generate_singleband_raster_df <- function() {
   read.df(
     path = "sparkrMosaic/tests/testthat/data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF",
     source = "gdal",
-    tile.read.strategy = "as_path"
+    tile.read.strategy = "in_memory"
     )
 }
 
@@ -103,6 +103,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   census_sdf <- read.df(
     path = "sparkrMosaic/tests/testthat/data/Blocks2020.zip",
     source = "com.databricks.labs.mosaic.datasource.OGRFileFormat",
+    driverName = "netCDF",
     vsizip = "true",
     chunkSize = "20"
   )
