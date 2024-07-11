@@ -166,7 +166,9 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         MosaicGDAL.setBlockSize(30)
 
-        val ds = gdalJNI.GetDriverByName("GTiff").Create(s"$getMosaicTmpRootDir/test.tif", 50, 50, 1, gdalconst.gdalconstConstants.GDT_Float32)
+        val driver = gdalJNI.GetDriverByName("GTiff")
+        val ds = driver.Create(s"$getMosaicTmpRootDir/test.tif", 50, 50, 1, gdalconst.gdalconstConstants.GDT_Float32)
+        driver.delete()
 
         val values = 0 until 50 * 50
         ds.GetRasterBand(1).WriteRaster(0, 0, 50, 50, values.toArray)

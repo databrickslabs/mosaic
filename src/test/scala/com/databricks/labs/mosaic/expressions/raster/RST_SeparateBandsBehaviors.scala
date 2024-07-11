@@ -1,14 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.{BAND_META_GET_KEY, BAND_META_SET_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.{BAND_META_GET_KEY, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.raster.gdal.DatasetGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO
 import com.databricks.labs.mosaic.functions.{ExprConfig, MosaicContext}
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
-import org.apache.spark.sql.functions._
 import org.scalatest.matchers.should.Matchers._
 
 trait RST_SeparateBandsBehaviors extends QueryTest {

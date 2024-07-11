@@ -1,10 +1,12 @@
 package com.databricks.labs.mosaic.utils
 
 import com.databricks.labs.mosaic.MOSAIC_RASTER_TMP_PREFIX_DEFAULT
+import com.databricks.labs.mosaic.core.raster.io.CleanUpManager
 
 import java.io.{BufferedInputStream, File, FileInputStream, IOException}
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor}
+import scala.sys.process._
 import scala.util.Try
 
 object FileUtils {
@@ -50,8 +52,24 @@ object FileUtils {
         tempDir.toFile.getAbsolutePath
     }
 
+    /** Delete provided path (only deletes empty dirs). */
+    def tryDeleteFileOrDir(path: Path): Boolean = {
+        if (!CleanUpManager.USE_SUDO) Try(Files.delete(path)).isSuccess
+        else {
+            val err = new StringBuilder()
+            val procLogger = ProcessLogger(_ => (), err append _)
+            val filePath = path.toString
+            //scalastyle:off println
+            //println(s"FileUtils - tryDeleteFileOrDir -> '$filePath'")
+            //scalastyle:on println
+            s"sudo rm -f $filePath" ! procLogger
+            err.length() == 0
+        }
+    }
+
     /**
      * Delete files recursively (no conditions).
+     *
      * @param root
      *   May be a directory or a file.
      * @param keepRoot
@@ -61,13 +79,13 @@ object FileUtils {
 
         Files.walkFileTree(root, new SimpleFileVisitor[Path] {
             override def visitFile(file: Path, attributes: BasicFileAttributes): FileVisitResult = {
-                Try(Files.delete(file))
+                tryDeleteFileOrDir(file)
                 FileVisitResult.CONTINUE
             }
 
             override def postVisitDirectory(dir: Path, exception: IOException): FileVisitResult = {
                 if ((!keepRoot || dir.compareTo(root) != 0) && isEmptyDir(dir)) {
-                    Try(Files.delete(dir))
+                    tryDeleteFileOrDir(dir)
                 }
                 FileVisitResult.CONTINUE
             }
@@ -106,7 +124,7 @@ object FileUtils {
 
                     if (isPathModTimeGTMillis(file, ageMillis)) {
                         // file or dir that is older than age
-                        Try(Files.delete(file))
+                        tryDeleteFileOrDir(file)
                         FileVisitResult.CONTINUE
                     } else if (Files.isDirectory(file) && !Files.isSameFile(root, file)) {
                         //scalastyle:off println
@@ -127,7 +145,7 @@ object FileUtils {
                         (!keepRoot || dir.compareTo(root) != 0) && isEmptyDir(dir)
                             && isPathModTimeGTMillis(dir, ageMillis)
                     ) {
-                        Try(Files.delete(dir))
+                        tryDeleteFileOrDir(dir)
                     }
                     FileVisitResult.CONTINUE
                 }
@@ -162,6 +180,19 @@ object FileUtils {
     def isPathModTimeGTMillis(p: Path, ageMillis: Long): Boolean = {
         val diff = System.currentTimeMillis() - Files.getLastModifiedTime(p).toMillis
         diff > ageMillis
+    }
+
+    /** @return whether sudo is supported in this env. */
+    def withSudo: Boolean = {
+        val out = new StringBuilder()
+        val err = new StringBuilder()
+        val procLogger = ProcessLogger(_ => out, err append _)
+        s"groups | grep sudo" ! procLogger
+        val result = out == "sudo" // user has sudo group
+        //scalastyle:off println
+        //println(s"FileUtils - does this env support sudo? $result")
+        //scalastyle:on println
+        result
     }
 
 }

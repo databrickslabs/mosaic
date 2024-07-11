@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.core.raster.api
 
 import com.databricks.labs.mosaic.{RASTER_BAND_INDEX_KEY, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.raster.gdal.{GDALReader, GDALWriter, RasterBandGDAL, RasterGDAL}
-import com.databricks.labs.mosaic.core.raster.io.RasterIO
+import com.databricks.labs.mosaic.core.raster.io.{CleanUpManager, RasterIO}
 import com.databricks.labs.mosaic.core.raster.operator.transform.RasterTransform
 import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
@@ -305,10 +305,11 @@ object GDAL extends RasterTransform
                 ageMinutes match {
                     case now if now == 0 =>
                         // run cmd and capture the output
+                        val sudoToken = if (CleanUpManager.USE_SUDO) "sudo " else ""
                         val err = new StringBuilder()
                         val procLogger = ProcessLogger(_ => (), err append _)
-                        if (keepRoot) s"rm -rf $dir/*" ! procLogger
-                        else s"rm -rf $dir" ! procLogger
+                        if (keepRoot) s"${sudoToken}rm -rf $dir/*" ! procLogger
+                        else s"${sudoToken}rm -rf $dir" ! procLogger
                         if (err.length() > 0) Some(err.toString())
                         else None
                     case age if age > 0  =>

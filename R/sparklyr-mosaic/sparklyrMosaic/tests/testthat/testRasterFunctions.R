@@ -140,7 +140,6 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
     source = "com.databricks.labs.mosaic.datasource.OGRFileFormat",
     path = "data/Blocks2020.zip",
     options = list(
-      "driverName" = "netCDF",
       "vsizip" = "true",
       "chunkSize" = "20"
     )

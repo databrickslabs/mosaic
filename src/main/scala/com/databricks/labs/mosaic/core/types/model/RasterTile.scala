@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.types.model
 
-import com.databricks.labs.mosaic.{BAND_META_GET_KEY, NO_PATH_STRING, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.{NO_PATH_STRING, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL

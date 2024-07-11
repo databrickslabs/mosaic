@@ -103,7 +103,6 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   census_sdf <- read.df(
     path = "sparkrMosaic/tests/testthat/data/Blocks2020.zip",
     source = "com.databricks.labs.mosaic.datasource.OGRFileFormat",
-    driverName = "netCDF",
     vsizip = "true",
     chunkSize = "20"
   )

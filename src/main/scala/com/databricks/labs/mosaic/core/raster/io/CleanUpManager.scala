@@ -1,8 +1,9 @@
 package com.databricks.labs.mosaic.core.raster.io
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL.cleanUpManualDir
-import com.databricks.labs.mosaic.core.raster.io.CleanUpManager.{delayMinutesAtomic, interruptAtomic}
+import com.databricks.labs.mosaic.core.raster.io.CleanUpManager.{delayMinutesAtomic, interruptAtomic, USE_SUDO}
 import com.databricks.labs.mosaic.gdal.MosaicGDAL.{getCleanUpAgeLimitMinutesThreadSafe, getLocalRasterDirThreadSafe, isManualModeThreadSafe}
+import com.databricks.labs.mosaic.utils.FileUtils
 
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 import scala.concurrent.duration.DurationInt
@@ -52,7 +53,7 @@ private class CleanUpManager extends Thread {
             val ageLimit = getCleanUpAgeLimitMinutesThreadSafe
             val localDir = getLocalRasterDirThreadSafe
             println(s"\n... Thread ${Thread.currentThread().getName} initiating cleanup " +
-                s"- age limit? $ageLimit, dir? '$localDir'\n")
+                s"- age limit? $ageLimit, dir? '$localDir' (sudo? $USE_SUDO)\n")
             cleanUpManualDir(ageLimit, localDir, keepRoot = true)
         } else None
     }
@@ -66,6 +67,7 @@ object CleanUpManager {
     private val THREAD_NAME = "Mosaic-CleanUp-Manager"
     private val delayMinutesAtomic = new AtomicInteger(5)
     private val interruptAtomic = new AtomicBoolean(false)
+    val USE_SUDO = FileUtils.withSudo
 
     /** initialize clean thread. */
     private var cleanThread = new CleanUpManager()
