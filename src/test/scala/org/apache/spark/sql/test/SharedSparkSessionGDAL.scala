@@ -1,7 +1,7 @@
 package org.apache.spark.sql.test
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.functions.ExprConfig
+import com.databricks.labs.mosaic.functions.{ExprConfig, MosaicContext}
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
 import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
@@ -68,9 +68,9 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
     override def afterEach(): Unit = {
         super.afterEach()
 
-        // clean up 30+ minute old checkpoint files (for testing)
+        // option: clean checkpoint files (for testing)
         // - this specifies to remove fuse mount files which are mocked for development
-        GDAL.cleanUpManualDir(ageMinutes = 30, getCheckpointRootDir, keepRoot = true, allowFuseDelete = true) match {
+        GDAL.cleanUpManualDir(ageMinutes = 5, getCheckpointRootDir, keepRoot = true, allowFuseDelete = true) match {
             case Some(msg) => info(s"cleanup mosaic tmp dir msg -> '$msg'")
             case _ => ()
         }
@@ -81,14 +81,12 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         // - super.afterAll stops spark
         Try(super.afterAll())
 
-        // option: clean up configured MosaicTmpRootDir
-        // - all but those in the last 5 minutes
-        // - this is separate from the managed process (10 minute cleanup)
-        // - this seems to affect
-//        GDAL.cleanUpManualDir(ageMinutes = 5, getMosaicTmpRootDir, keepRoot = true) match {
-//            case Some(msg) => info(s"cleanup mosaic tmp dir msg -> '$msg'")
-//            case _ => ()
-//        }
+        // option: clean up configured MosaicContex Session Dir
+        // - this is separate from the managed process
+        GDAL.cleanUpManualDir(ageMinutes = 0, MosaicContext.getTmpSessionDir(getExprConfigOpt), keepRoot = true) match {
+            case Some(msg) => info(s"cleanup mosaic tmp dir msg -> '$msg'")
+            case _ => ()
+        }
     }
 
     protected def getCheckpointRootDir: String = "/dbfs/checkpoint"
