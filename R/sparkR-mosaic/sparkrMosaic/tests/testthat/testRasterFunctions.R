@@ -2,7 +2,7 @@ generate_singleband_raster_df <- function() {
   read.df(
     path = "sparkrMosaic/tests/testthat/data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF",
     source = "gdal",
-    tile.read.strategy = "in_memory"
+    tile.read.strategy = "as_path"
     )
 }
 
@@ -117,7 +117,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   raster_sdf <- read.df(
     path = "sparkrMosaic/tests/testthat/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc",
     source = "gdal",
-    tile.read.strategy = "in_memory"
+    tile.read.strategy = "as_path"
   )
 
   raster_sdf <- withColumn(raster_sdf, "tile", rst_separatebands(column("tile")))
@@ -128,7 +128,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   raster_sdf <- withColumn(raster_sdf, "tile", rst_tessellate(column("tile"), lit(target_resolution)))
 
   clipped_sdf <- join(raster_sdf, census_sdf, raster_sdf$tile.index_id == census_sdf$index_id)
-  clipped_sdf <- withColumn(clipped_sdf, "tile", rst_clip(column("tile"), column("wkb"), TRUE))
+  clipped_sdf <- withColumn(clipped_sdf, "tile", rst_clip(column("tile"), column("wkb")))
 
   merged_precipitation <- summarize(
     groupBy(clipped_sdf, "timestep"),
