@@ -184,13 +184,12 @@ object FileUtils {
 
     /** @return whether sudo is supported in this env. */
     def withSudo: Boolean = {
-        val out = new StringBuilder()
-        val err = new StringBuilder()
-        val procLogger = ProcessLogger(_ => out, err append _)
-        s"groups | grep sudo" ! procLogger
-        val result = out == "sudo" // user has sudo group
+        val stdout = new StringBuilder()
+        val stderr = new StringBuilder()
+        val status = "id -u -n" ! ProcessLogger(stdout append _, stderr append _)
+        val result = stdout.toString() != "root" // user needs sudo
         //scalastyle:off println
-        //println(s"FileUtils - does this env support sudo? $result")
+        println(s"FileUtils - does this env need sudo (non-root)? $result (out? '$stdout', err: '$stderr', status: $status)")
         //scalastyle:on println
         result
     }
