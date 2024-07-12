@@ -107,7 +107,7 @@ Here is the block size spark session config available for GDAL, e.g. :code:`spar
    * - Config
      - Default
      - Comments
-   * - spark.databricks.labs.mosaic.tile.blocksize
+   * - spark.databricks.labs.mosaic.raster.blocksize
      - "128"
      - Blocksize in pixels, see :ref:`rst_convolve` and :ref:`rst_filter` for more
 
@@ -144,7 +144,7 @@ FUSE Checkpointing
 
 Mosaic supports checkpointing rasters to a specified `POSIX-style <https://docs.databricks.com/en/files/index.html>`__
 FUSE directory (local mount to Cloud Object Storage). For DBR 13.3 LTS, we focus primarly on DBFS, but this will expand
-with future versions. This is to allow lightweight rows, where the :code:`tile` column stores the path instead of the
+with future versions. This is to allow lightweight rows, where the :code:`raster` column stores the path instead of the
 binary payload itself; available in 0.4.3+:
 
   POSIX-style paths provide data access relative to the driver root (/). POSIX-style paths never require a scheme.
@@ -174,10 +174,10 @@ through :code:`dbutils.fs.rm('<CHECKPOINT_FUSE_DIR>', True)` or similar, more
    * - Config
      - Default
      - Comments
-   * - spark.databricks.labs.mosaic.tile.checkpoint
-     - "/dbfs/tmp/mosaic/tile/checkpoint"
+   * - spark.databricks.labs.mosaic.raster.checkpoint
+     - "/dbfs/tmp/mosaic/raster/checkpoint"
      - Checkpoint location, see :any:`rst_maketiles` for example
-   * - spark.databricks.labs.mosaic.tile.use.checkpoint
+   * - spark.databricks.labs.mosaic.raster.use.checkpoint
      - "false"
      - Checkpoint for session, in 0.4.3+
 
@@ -188,7 +188,7 @@ Local CleanUp Manager
 Mosaic initializes a separate clean-up thread to manage local files according to a specified age-off policy. The
 configuration allows for -1 (no automated clean-up) as well as a specified manual mode that skips managed clean-up
 (default is "false"). The default file age-off is 30 minute, but we recommend you adjust as needed to suit your workload
-through the supported spark configs. Also, the actual local tile directory will be :code:`<tmp_prefix>/mosaic_tmp` which
+through the supported spark configs. Also, the actual local raster directory will be :code:`<tmp_prefix>/mosaic_tmp` which
 means the default is :code:`/tmp/mosaic_tmp`. Please note that you have to account for the fact that this is a distributed
 execution, so clean-up involves the driver as well as the worker nodes; both are handled in managed mode.
 
@@ -199,7 +199,7 @@ execution, so clean-up involves the driver as well as the worker nodes; both are
    * - Config
      - Default
      - Comments
-   * - spark.databricks.labs.mosaic.tile.tmp.prefix
+   * - spark.databricks.labs.mosaic.raster.tmp.prefix
      - "" (will use "/tmp")
      - Local directory for workers
    * - spark.databricks.labs.mosaic.manual.cleanup.mode

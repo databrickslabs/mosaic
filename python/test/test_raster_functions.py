@@ -194,7 +194,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
 
         df = (
             self.spark.read.format("gdal")
-            .option("tile.read.strategy", "in_memory")
+            .option("raster.read.strategy", "in_memory")
             .load(
                 "test/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc"
             )

@@ -60,7 +60,7 @@ trait RST_ClipBehaviors extends QueryTest {
 
         info("\n::: base :::")
         val df = spark.read.format("gdal").load(testPath)
-            .withColumn("content", $"tile.tile")
+            .withColumn("content", $"tile.raster")
             .withColumn("pixels", rst_pixelcount($"tile"))
             .withColumn("size", rst_memsize($"tile"))
             .withColumn("srid", rst_srid($"tile"))

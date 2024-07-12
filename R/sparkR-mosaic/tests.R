@@ -26,8 +26,8 @@ spark <- sparkR.session(
   master = "local[*]"
   ,sparkJars = mosaic_jar_path,
   sparkConfig = list(
-    spark.databricks.labs.mosaic.tile.tmp.prefix = paste0(pwd, "/mosaic_tmp", sep="")
-    ,spark.databricks.labs.mosaic.tile.checkpoint = paste0(pwd, "/mosaic_checkpoint", sep="")
+    spark.databricks.labs.mosaic.raster.tmp.prefix = paste0(pwd, "/mosaic_tmp", sep="")
+    ,spark.databricks.labs.mosaic.raster.checkpoint = paste0(pwd, "/mosaic_checkpoint", sep="")
   )
 )
 enableMosaic()

@@ -2,7 +2,7 @@ generate_singleband_raster_df <- function() {
   read.df(
     path = "sparkrMosaic/tests/testthat/data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF",
     source = "gdal",
-    tile.read.strategy = "in_memory"
+    raster.read.strategy = "in_memory"
     )
 }
 
@@ -117,7 +117,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   raster_sdf <- read.df(
     path = "sparkrMosaic/tests/testthat/data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc",
     source = "gdal",
-    tile.read.strategy = "as_path"
+    raster.read.strategy = "as_path"
   )
 
   raster_sdf <- withColumn(raster_sdf, "tile", rst_separatebands(column("tile")))

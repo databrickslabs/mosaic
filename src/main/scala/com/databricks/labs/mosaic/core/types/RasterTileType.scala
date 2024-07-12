@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.types.RasterTileType.getRasterDataType
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.types._
 
-/** Type definition for the tile tile. */
+/** Type definition for the raster tile. */
 class RasterTileType(fields: Array[StructField], useCheckpoint: Boolean) extends StructType(fields) {
 
     def rasterType: DataType = getRasterDataType(
@@ -42,8 +42,8 @@ object RasterTileType {
       *   Cellid type, can be one of [[LongType]], [[IntegerType]] or [[StringType]].
       * @param rasterType
       *   Type of the tile. Can be one of [[ByteType]] or [[StringType]]. Not
-      *   to be confused with the data type of the tile. This is the type of
-      *   the column that contains the tile.
+      *   to be confused with the data type of the raster. This is the type of
+      *   the column that contains the raster.
       * @param useCheckpoint
       *    Use to test for checkpointing enabled.
       * @return
@@ -68,7 +68,7 @@ object RasterTileType {
       * @param idType
       *    Cellid type, can be one of [[LongType]], [[IntegerType]] or [[StringType]].
       * @param tileExpr
-      *    Expression containing a tile. This is used to infer the tile type
+      *    Expression containing a tile. This is used to infer the raster type
       *    when chaining expressions; may be an array of tiles.
       * @param useCheckpoint
       *    Use to test for checkpointing enabled.
@@ -91,7 +91,7 @@ object RasterTileType {
       *             Internally, calls class constructor.
       *
       * @param tileExpr
-      *   Expression containing a tile. This is used to infer the tile type
+      *   Expression containing a tile. This is used to infer the raster type
       *   when chaining expressions; may be an array of tiles.
       * @param useCheckpoint
       *    Use to test for checkpointing enabled.

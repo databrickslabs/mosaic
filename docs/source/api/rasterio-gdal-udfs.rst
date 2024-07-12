@@ -6,12 +6,12 @@ Rasterio + GDAL UDFs
 Intro
 ################
 
-Rasterio (https://rasterio.readthedocs.io/en/latest/) is a Python library for reading and writing geospatial tile datasets.
-It uses GDAL (https://gdal.org/) for file I/O and tile formatting and provides a Python API for GDAL functions.
-It is a great library for working with tile data in Python and it is a popular choice for many geospatial data scientists.
-Rasterio UDFs provide a way to use Rasterio Python API in Spark for distributed processing of tile data.
+Rasterio (https://rasterio.readthedocs.io/en/latest/) is a Python library for reading and writing geospatial raster datasets.
+It uses GDAL (https://gdal.org/) for file I/O and raster formatting and provides a Python API for GDAL functions.
+It is a great library for working with raster data in Python and it is a popular choice for many geospatial data scientists.
+Rasterio UDFs provide a way to use Rasterio Python API in Spark for distributed processing of raster data.
 The data structures used by Mosaic are compatible with Rasterio and can be used interchangeably.
-In this section we will show how to use Rasterio UDFs to process tile data in Mosaic + Spark.
+In this section we will show how to use Rasterio UDFs to process raster data in Mosaic + Spark.
 We assume that you have a basic understanding of Rasterio and GDAL. We also provide an example which directly calls GDAL
 Translate and Warp.
 
@@ -26,16 +26,16 @@ Please note that we advise the users to set these configuration to ensure proper
     spark.conf.set("spark.sql.shuffle.partitions", "400") # maybe higher, depending
 
 
-Rasterio tile plotting
+Rasterio raster plotting
 #############################################
 
-In this example we will show how to plot a tile file using Rasterio Python API.
+In this example we will show how to plot a raster file using Rasterio Python API.
 
-Firstly we will create a spark DataFrame from a directory of tile files.
+Firstly we will create a spark DataFrame from a directory of raster files.
 
 .. code-block:: python
 
-    df = spark.read.format("gdal").load("dbfs:/path/to/tile/files").repartition(400)
+    df = spark.read.format("gdal").load("dbfs:/path/to/raster/files").repartition(400)
     df.show()
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
     |                                                      path |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
@@ -46,7 +46,7 @@ Firstly we will create a spark DataFrame from a directory of tile files.
     | ...                                                       | ...                          | ...       | ...                 | ...   | ...   | ...       | ...                  | ...         | ...   | ...                                                                                                           |
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
 
-Next we will define a function that will plot a given tile file.
+Next we will define a function that will plot a given raster file.
 
 .. code-block:: python
 
@@ -56,38 +56,38 @@ Next we will define a function that will plot a given tile file.
     from io import BytesIO
     from pyspark.sql.functions import udf
 
-    def plot_raster(tile):
+    def plot_raster(raster):
         fig, ax = pyplot.subplots(1, figsize=(12, 12))
 
-        with MemoryFile(BytesIO(tile)) as memfile:
+        with MemoryFile(BytesIO(raster)) as memfile:
             with memfile.open() as src:
                 show(src, ax=ax)
                 pyplot.show()
 
 Finally we will apply the function to the DataFrame collected results.
-Note that in order to plot the tile we need to collect the results to the driver.
+Note that in order to plot the raster we need to collect the results to the driver.
 Please apply reasonable filters to the DataFrame before collecting the results.
 
 .. code-block:: python
 
-    plot_raster(df.select("tile").limit(1).collect()[0]["tile"]["tile"])
+    plot_raster(df.select("tile").limit(1).collect()[0]["tile"]["raster"])
 
 .. figure:: ../images/rasterio/plot_raster.png
    :figclass: doc-figure
 
-   Fig 1. Plot tile using Rasterio Python API
+   Fig 1. Plot raster using Rasterio Python API
 
 
 UDF example for computing band statistics
 #############################################
 
-In this example we will show how to compute band statistics for a tile file.
+In this example we will show how to compute band statistics for a raster file.
 
-Firstly we will create a spark DataFrame from a directory of tile files.
+Firstly we will create a spark DataFrame from a directory of raster files.
 
 .. code-block:: python
 
-    df = spark.read.format("gdal").load("dbfs:/path/to/tile/files").repartition(400)
+    df = spark.read.format("gdal").load("dbfs:/path/to/raster/files").repartition(400)
     df.show()
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
     |                                                      path |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
@@ -98,7 +98,7 @@ Firstly we will create a spark DataFrame from a directory of tile files.
     | ...                                                       | ...                          | ...       | ...                 | ...   | ...   | ...       | ...                  | ...         | ...   | ...                                                                                                           |
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
 
-Next we will define a function that will compute band statistics for a given tile file.
+Next we will define a function that will compute band statistics for a given raster file.
 
 .. code-block:: python
 
@@ -109,8 +109,8 @@ Next we will define a function that will compute band statistics for a given til
     from pyspark.sql.functions import udf
 
     @udf("double")
-    def compute_band_mean(tile):
-      with MemoryFile(BytesIO(tile)) as memfile:
+    def compute_band_mean(raster):
+      with MemoryFile(BytesIO(raster)) as memfile:
         with memfile.open() as dataset:
           return dataset.statistics(bidx = 1).mean
 
@@ -118,7 +118,7 @@ Finally we will apply the function to the DataFrame.
 
 .. code-block:: python
 
-    df.select(compute_band_mean("tile.tile")).show()
+    df.select(compute_band_mean("tile.raster")).show()
     +----------------------------+
     | compute_band_mean(tile)  |
     +----------------------------+
@@ -132,17 +132,17 @@ Finally we will apply the function to the DataFrame.
 UDF example for computing NDVI
 #############################################
 
-In this example we will show how to compute NDVI for a tile file.
+In this example we will show how to compute NDVI for a raster file.
 NDVI is a common index used to assess vegetation health.
 It is computed as follows: ndvi = (nir - red) / (nir + red).
-NDVI output is a single band tile file with values in the range [-1, 1].
-We will show how to return a tile object as a result of a UDF.
+NDVI output is a single band raster file with values in the range [-1, 1].
+We will show how to return a raster object as a result of a UDF.
 
-Firstly we will create a spark DataFrame from a directory of tile files.
+Firstly we will create a spark DataFrame from a directory of raster files.
 
 .. code-block:: python
 
-    df = spark.read.format("gdal").load("dbfs:/path/to/tile/files").repartition(400)
+    df = spark.read.format("gdal").load("dbfs:/path/to/raster/files").repartition(400)
     df.show()
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
     |                                                      path |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
@@ -153,7 +153,7 @@ Firstly we will create a spark DataFrame from a directory of tile files.
     | ...                                                       | ...                          | ...       | ...                 | ...   | ...   | ...       | ...                  | ...         | ...   | ...                                                                                                           |
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
 
-Next we will define a function that will compute NDVI for a given tile file.
+Next we will define a function that will compute NDVI for a given raster file.
 
 .. code-block:: python
 
@@ -164,8 +164,8 @@ Next we will define a function that will compute NDVI for a given tile file.
     from pyspark.sql.functions import udf
 
     @udf("binary")
-    def compute_ndvi(tile, nir_band, red_band):
-      with MemoryFile(BytesIO(tile)) as memfile:
+    def compute_ndvi(raster, nir_band, red_band):
+      with MemoryFile(BytesIO(raster)) as memfile:
         with memfile.open() as dataset:
           red = dataset.read(red_band)
           nir = dataset.read(nir_band)
@@ -185,10 +185,10 @@ Finally we will apply the function to the DataFrame.
 
 .. code-block:: python
 
-    df.select(compute_ndvi("tile.tile", lit(1), lit(2))).show()
+    df.select(compute_ndvi("tile.raster", lit(1), lit(2))).show()
     # The output is a binary column containing the NDVI tile
     +------------------------------+
-    | compute_ndvi(tile, 1, 2)   |
+    | compute_ndvi(raster, 1, 2)   |
     +------------------------------+
     | 000000 ... 00000000000000000 |
     | 000000 ... 00000000000000000 |
@@ -196,9 +196,9 @@ Finally we will apply the function to the DataFrame.
     | ...                          |
     +------------------------------+
 
-    # We can update the tile column with the NDVI tile in place as well
-    # This will overwrite the existing tile field in the tile column
-    df.select(col("tile").withField("tile", compute_ndvi("tile.tile", lit(1), lit(2)))).show()
+    # We can update the tile column with the NDVI raster in place as well
+    # This will overwrite the existing raster field in the tile column
+    df.select(col("tile").withField("raster", compute_ndvi("tile.raster", lit(1), lit(2)))).show()
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
     |                                                      path |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
@@ -209,18 +209,18 @@ Finally we will apply the function to the DataFrame.
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
 
 
-UDF example for writing tile files to disk
+UDF example for writing raster files to disk
 #############################################
 
 In this example we will show how to write a tile file to disk using Rasterio Python API.
 This is an examples showing how to materialize a tile binary object as a tile file on disk.
 The format of the output file should match the driver format of the binary object.
 
-Firstly we will create a spark DataFrame from a directory of tile files.
+Firstly we will create a spark DataFrame from a directory of raster files.
 
 .. code-block:: python
 
-    df = spark.read.format("gdal").load("dbfs:/path/to/tile/files").repartition(400)
+    df = spark.read.format("gdal").load("dbfs:/path/to/raster/files").repartition(400)
     df.show()
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
     |                                                      path |             modificationTime |    length |                uuid | ySize | xSize | bandCount |             metadata | subdatasets |  srid |                                                                                                          tile |
@@ -231,9 +231,9 @@ Firstly we will create a spark DataFrame from a directory of tile files.
     | ...                                                       | ...                          | ...       | ...                 | ...   | ...   | ...       | ...                  | ...         | ...   | ...                                                                                                           |
     +-----------------------------------------------------------+------------------------------+-----------+---------------------+-------+-------+-----------+----------------------+-------------+-------+---------------------------------------------------------------------------------------------------------------+
 
-Next we will define a function that will write a given tile file to disk. A "gotcha" to keep in mind is that you do
+Next we will define a function that will write a given raster file to disk. A "gotcha" to keep in mind is that you do
 not want to have a file context manager open when you go to write out its context as the context manager will not yet
-have been flushed. Another "gotcha" might be that the tile dataset does not have CRS included; if this arises, we
+have been flushed. Another "gotcha" might be that the raster dataset does not have CRS included; if this arises, we
 recommend adjusting the function to specify the CRS and set it on the dst variable, more at
 `rasterio.crs <https://rasterio.readthedocs.io/en/stable/api/rasterio.crs.html>`__. We would also point out that notional
 "file_id" param can be constructed as a repeatable name from other field(s) in your dataframe / table or be random,
@@ -242,7 +242,7 @@ depending on your needs.
 .. code-block:: python
 
     @udf("string")
-    def write_raster(tile, driver, file_id, fuse_dir):
+    def write_raster(raster, driver, file_id, fuse_dir):
         from io import BytesIO
         from pathlib import Path
         from rasterio.io import MemoryFile
@@ -256,7 +256,7 @@ depending on your needs.
         with tempfile.TemporaryDirectory() as tmp_dir:
             profile = None
             data_arr = None
-            with MemoryFile(BytesIO(tile)) as memfile:
+            with MemoryFile(BytesIO(raster)) as memfile:
                 with memfile.open() as dataset:
                     profile = dataset.profile
                     data_arr = dataset.read()
@@ -267,7 +267,7 @@ depending on your needs.
             driver_map = {v: k for k, v in extensions_map.items()}
             extension = driver_map[driver] #e.g. GTiff
             file_name = f"{file_id}.{extension}"
-            # - [3] write local tile
+            # - [3] write local raster
             # - this is showing a single band [1]
             #   being written
             tmp_path = f"{tmp_dir}/{file_name}"
@@ -290,14 +290,14 @@ Finally we will apply the function to the DataFrame.
 
     df.select(
       write_raster(
-        "tile.tile",
+        "tile.raster",
         lit("GTiff").alias("driver"),
         "uuid",
         lit("/dbfs/path/to/output/dir").alias("fuse_dir")
       )
     ).display()
     +----------------------------------------------+
-    | write_raster(tile, driver, uuid, fuse_dir) |
+    | write_raster(raster, driver, uuid, fuse_dir) |
     +----------------------------------------------+
     | /dbfs/path/to/output/dir/1234.tif            |
     | /dbfs/path/to/output/dir/4545.tif            |
@@ -305,7 +305,7 @@ Finally we will apply the function to the DataFrame.
     | ...                                          |
     +----------------------------------------------+
 
-Sometimes you don't need to be quite as fancy. Consider when you simply want to specify to write out tile contents,
+Sometimes you don't need to be quite as fancy. Consider when you simply want to specify to write out raster contents,
 assuming you specify the extension in the file_name. This is just writing binary column to file, nothing further. Again,
 we use a notional "uuid" column as part of "file_name" param, which would have the same considerations as mentioned
 above.
@@ -339,13 +339,13 @@ Finally we will apply the function to the DataFrame.
 
     df.select(
       write_binary(
-        "tile.tile",
+        "tile.raster",
         F.concat("uuid", F.lit(".tif")).alias("file_name"),
         F.lit("/dbfs/path/to/output/dir").alias("fuse_dir")
       )
     ).display()
     +-------------------------------------------+
-    | write_binary(tile, file_name, fuse_dir) |
+    | write_binary(raster, file_name, fuse_dir) |
     +-------------------------------------------+
     | /dbfs/path/to/output/dir/1234.tif         |
     | /dbfs/path/to/output/dir/4545.tif         |
@@ -365,14 +365,14 @@ package. You can replace the calls with whatever you need to do. The output stru
 .. figure:: ../images/rasterio/quadbin.png
    :figclass: doc-figure
 
-The UDF example sets tile extent, block size, and interpolation. It specifies source SRID as 4326;
+The UDF example sets raster extent, block size, and interpolation. It specifies source SRID as 4326;
 additionally, output type and nodata values are specified. COG overviews are not generated
 nor is an ALPHA band, but they could be. Again, you would modify this example to suit your needs.
 
 .. code-block:: python
 
     @udf("binary")
-    def transform_raw_raster(tile):
+    def transform_raw_raster(raster):
      import tempfile
      import uuid
      from osgeo import gdal
@@ -384,7 +384,7 @@ nor is an ALPHA band, but they could be. Again, you would modify this example to
        fn4 = f"{tmp_dir}/{uuid.uuid4().hex}.tif"
 
        with open(fn1, "wb") as f:
-         f.write(tile)
+         f.write(raster)
 
        gdal.Translate(fn2, fn1, options="-of GTiff -a_ullr -180 90 180 -90 -a_nodata -32767 -ot Int16")
        gdal.Warp(fn3, fn2, options= "-tr 0.125 -0.125 -r cubicspline")
@@ -414,7 +414,7 @@ Example of calling the UDF (original data was NetCDF). If you have more than 1 b
        .withColumn(
          "tile",
          F.col("tile")
-           .withField("tile", transform_raw_raster("tile.tile"))
+           .withField("raster", transform_raw_raster("tile.raster"))
            .withField(
              "metadata",
              F.map_concat("tile.metadata", F.create_map(F.lit("driver"), F.lit("GTiff")))

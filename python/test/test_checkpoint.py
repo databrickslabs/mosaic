@@ -21,7 +21,7 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
             "checkpoint directory should equal dir.")
         self.assertEqual(
             self.get_context().get_checkpoint_dir(),
-            self.spark.conf.get("spark.databricks.labs.mosaic.tile.checkpoint"),
+            self.spark.conf.get("spark.databricks.labs.mosaic.raster.checkpoint"),
             "checkpoint directory should equal spark conf.")
 
         # - checkpoint on

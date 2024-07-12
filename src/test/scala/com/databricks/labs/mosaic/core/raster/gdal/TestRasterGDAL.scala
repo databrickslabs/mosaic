@@ -108,7 +108,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.flushAndDestroy()
     }
 
-    test("Read tile metadata from a NetCDF file.") {
+    test("Read raster metadata from a NetCDF file.") {
         assume(System.getProperty("os.name") == "Linux")
         
         val createInfo = Map(

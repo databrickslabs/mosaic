@@ -21,7 +21,7 @@ class MosaicTestCaseWithGDAL(MosaicTestCase):
         cls.spark.conf.set("spark.databricks.labs.mosaic.test.mode", "true")
         cls.spark.conf.set("spark.databricks.labs.mosaic.manual.cleanup.mode", "false")
         cls.spark.conf.set("spark.databricks.labs.mosaic.cleanup.age.limit.minutes", "10") # "30" default
-        # cls.spark.conf.set("spark.databricks.labs.mosaic.tile.use.checkpoint", "true") # "false" default
+        # cls.spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "true") # "false" default
 
         pwd_dir = os.getcwd()
         cls.check_dir = f"{pwd_dir}/checkpoint"
@@ -30,7 +30,7 @@ class MosaicTestCaseWithGDAL(MosaicTestCase):
             os.makedirs(cls.check_dir)
         if not os.path.exists(cls.new_check_dir):
             os.makedirs(cls.new_check_dir)
-        cls.spark.conf.set("spark.databricks.labs.mosaic.tile.checkpoint", cls.check_dir)
+        cls.spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", cls.check_dir)
 
         api.enable_mosaic(cls.spark)
         api.enable_gdal(cls.spark)
@@ -46,6 +46,6 @@ class MosaicTestCaseWithGDAL(MosaicTestCase):
     def generate_singleband_raster_df(self) -> DataFrame:
         return (
             self.spark.read.format("gdal")
-            .option("tile.read.strategy", "in_memory")
+            .option("raster.read.strategy", "in_memory")
             .load("test/data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
         )

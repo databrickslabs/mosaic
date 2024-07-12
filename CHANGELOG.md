@@ -11,14 +11,14 @@
 - Python version limited to "<3.11,>=3.10" for DBR
 - iPython dependency limited to "<8.11,>=7.4.2" for both DBR and keplergl-jupyter
 - Expanded support for fuse-based checkpointing (persisted tile storage), managed through:
-  - spark config `spark.databricks.labs.mosaic.tile.checkpoint`
+  - spark config `spark.databricks.labs.mosaic.raster.checkpoint`
   - python: `mos.enable_gdal(spark, with_checkpoint_dir=dir)` - additional functions include 
     `gdal.update_checkpoint_dir`, and `gdal.reset_checkpoint`
   - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, dir)` (similar bindings to python as well)
 - Local files generally are no longer eagerly deleted (disposed) but are controlled through 
   `spark.databricks.labs.mosaic.manual.cleanup.mode`
   and `spark.databricks.labs.mosaic.cleanup.age.limit.minutes` along with existing ability to specify the session 
-  local storage root dir with `spark.databricks.labs.mosaic.tile.tmp.prefix`
+  local storage root dir with `spark.databricks.labs.mosaic.raster.tmp.prefix`
 - `RST_PixelCount` now supports optional 'countNoData' and 'countMask' (defaults are `false`, can now be `true`) to optionally get full 
    pixel counts where mask is 0.0 and noData is what is configured in the tile
 - Added `RST_Write` to save a generated 'tile' to a specified directory (e.g. fuse) location using its GDAL driver and 

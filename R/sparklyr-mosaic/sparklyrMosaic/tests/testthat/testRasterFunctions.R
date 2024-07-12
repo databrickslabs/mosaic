@@ -4,7 +4,7 @@ generate_singleband_raster_df <- function() {
     name = "tile",
     source = "gdal",
     path = "data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF",
-    options = list("tile.read.strategy" = "in_memory")
+    options = list("raster.read.strategy" = "in_memory")
   )
 }
 
@@ -157,7 +157,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
       name = "raster_raw",
       source = "gdal",
       path = "data/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc",
-      options = list("tile.read.strategy" = "as_path")
+      options = list("raster.read.strategy" = "as_path")
     ) %>%
       mutate(tile = rst_separatebands(tile)) %>%
       sdf_register("tile")

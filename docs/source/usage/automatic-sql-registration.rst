@@ -111,7 +111,7 @@ You should see all the supported :code:`ST_` functions registered by Mosaic appe
 .. warning::
    Issue 297: https://github.com/databrickslabs/mosaic/issues/297
    Since Mosaic V0.3.6 Automatic SQL Registration can fail with the following error message:
-   "java.lang.Exception: spark.databricks.labs.mosaic.tile.api". This is due to a missing key in the spark
+   "java.lang.Exception: spark.databricks.labs.mosaic.raster.api". This is due to a missing key in the spark
    configuration. The issue has been fixed since Mosaic V0.3.10. For releases between V0.3.6 and V0.3.10
-   please add the following configuration to your cluster spark configs: (spark.databricks.labs.mosaic.tile.api, "GDAL"),
-   or alternatively in python/scala code: spark.conf.set("spark.databricks.labs.mosaic.tile.api", "GDAL")
+   please add the following configuration to your cluster spark configs: (spark.databricks.labs.mosaic.raster.api, "GDAL"),
+   or alternatively in python/scala code: spark.conf.set("spark.databricks.labs.mosaic.raster.api", "GDAL")

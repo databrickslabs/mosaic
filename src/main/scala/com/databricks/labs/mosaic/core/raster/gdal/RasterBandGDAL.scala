@@ -26,13 +26,13 @@ case class RasterBandGDAL(band: Band, id: Int) {
 
     /**
       * @return
-      *   Returns the pixels of the tile as a 1D array.
+      *   Returns the pixels of the raster as a 1D array.
       */
     def values: Array[Double] = values(0, 0, xSize, ySize)
 
     /**
       * @return
-      *   Returns the pixels of the tile as a 1D array.
+      *   Returns the pixels of the raster as a 1D array.
       */
     def maskValues: Array[Double] = maskValues(0, 0, xSize, ySize)
 
