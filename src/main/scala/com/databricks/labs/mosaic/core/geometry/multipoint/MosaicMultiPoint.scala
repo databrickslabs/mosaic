@@ -22,9 +22,9 @@ trait MosaicMultiPoint extends MosaicGeometry {
     override def getShells: Seq[MosaicLineString] =
         throw MosaicCoreException.InvalidGeometryOperation("getShells should not be called on MultiPoints.")
 
-    def triangulate(breaklines: MosaicMultiLineString, tol: Double): Seq[MosaicPolygon]
+    def triangulate(breaklines: Seq[MosaicLineString], tol: Double): Seq[MosaicPolygon]
 
-    def interpolateElevation(breaklines: MosaicMultiLineString, gridPoints: MosaicMultiPoint, tolerance: Double) : MosaicMultiPoint
+    def interpolateElevation(breaklines: Seq[MosaicLineString], gridPoints: MosaicMultiPoint, tolerance: Double) : MosaicMultiPoint
 
     def generateMultiPointGrid(origin: MosaicPoint, xCells: Int, yCells: Int, xSize: Double, ySize: Double): MosaicMultiPoint
 

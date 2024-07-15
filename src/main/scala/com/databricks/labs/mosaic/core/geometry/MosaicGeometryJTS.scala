@@ -2,25 +2,28 @@ package com.databricks.labs.mosaic.core.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.{GeometryAPI, JTS}
 import com.databricks.labs.mosaic.core.geometry.geometrycollection.MosaicGeometryCollectionJTS
-import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
+import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringJTS}
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.multipoint.MosaicMultiPointJTS
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
-import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
-import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
+import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
+import com.databricks.labs.mosaic.core.geometry.polygon.{MosaicPolygon, MosaicPolygonJTS}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import com.esotericsoftware.kryo.Kryo
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.algorithm.hull.ConcaveHull
-import org.locationtech.jts.geom.{Geometry, GeometryCollection, GeometryFactory}
+import org.locationtech.jts.geom.{Geometry, GeometryCollection, GeometryFactory, LineString}
 import org.locationtech.jts.geom.util.AffineTransformation
 import org.locationtech.jts.io._
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
 import org.locationtech.jts.operation.buffer.{BufferOp, BufferParameters}
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
+import org.locationtech.jts.triangulate.ConformingDelaunayTriangulationBuilder
 
 import java.util
+import scala.collection.JavaConverters._
+
 
 abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
@@ -252,6 +255,25 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
     override def transformCRSXY(sridTo: Int): MosaicGeometryJTS = super.transformCRSXY(sridTo, None).asInstanceOf[MosaicGeometryJTS]
 
     override def getAPI: GeometryAPI = JTS
+
+        //TODO here, multipoint or elsewhere?
+//    override def triangulate(masspoints: Seq[MosaicPoint], breaklines: Seq[MosaicLineString], tolerance: Double): Seq[MosaicPolygon] = {
+//        val triangulator = new ConformingDelaunayTriangulationBuilder()
+//        val geomFact = new GeometryFactory()
+//
+//        val multiPoint = geomFact.createMultiPointFromCoords(masspoints.map(_.coord).toArray)
+//
+//        triangulator.setSites(multiPoint)
+//        if (breaklines.nonEmpty) {
+//            val lineGeom = geomFact.createMultiLineString(breaklines.map(_.asInstanceOf[MosaicLineStringJTS].getGeom.asInstanceOf[LineString]).toArray)
+//            triangulator.setConstraints(lineGeom)
+//        }
+//        triangulator.setTolerance(tolerance)
+//        val triangles = triangulator.getTriangles(geomFact)
+//        val result = for (i <- 0 until triangles.getNumGeometries) yield MosaicPolygonJTS(triangles.getGeometryN(i))
+//        result
+//
+//    }
 }
 
 object MosaicGeometryJTS extends GeometryReader {

@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.core.geometry.multipoint
 
 import com.databricks.labs.mosaic.core.geometry._
-import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
+import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringJTS}
 import com.databricks.labs.mosaic.core.geometry.multilinestring.{MosaicMultiLineString, MosaicMultiLineStringJTS}
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
 import com.databricks.labs.mosaic.core.geometry.polygon.{MosaicPolygon, MosaicPolygonJTS}
@@ -50,13 +50,14 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
 
     override def getShellPoints: Seq[Seq[MosaicPointJTS]] = Seq(asSeq)
 
-    def triangulate(breaklines: MosaicMultiLineString, tolerance: Double): Seq[MosaicPolygon] = {
+    def triangulate(breaklines: Seq[MosaicLineString], tolerance: Double): Seq[MosaicPolygon] = {
         val triangulator = new ConformingDelaunayTriangulationBuilder()
         val geomFact = multiPoint.getFactory
 
         triangulator.setSites(multiPoint)
-        if (!breaklines.asInstanceOf[MosaicMultiLineStringJTS].getGeom.isEmpty) {
-            triangulator.setConstraints(breaklines.asInstanceOf[MosaicMultiLineStringJTS].getGeom)
+        if (breaklines.nonEmpty) {
+            val multiLineString = MosaicMultiLineStringJTS.fromSeq(breaklines)
+            triangulator.setConstraints(multiLineString.getGeom)
         }
         triangulator.setTolerance(tolerance)
 
@@ -68,7 +69,7 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
         result
     }
 
-    override def interpolateElevation(breaklines: MosaicMultiLineString, gridPoints: MosaicMultiPoint, tolerance: Double): MosaicMultiPointJTS = {
+    override def interpolateElevation(breaklines: Seq[MosaicLineString], gridPoints: MosaicMultiPoint, tolerance: Double): MosaicMultiPointJTS = {
         val triangles = triangulate(breaklines, tolerance).asInstanceOf[Seq[MosaicPolygonJTS]]
         val tree = new STRtree(4)
         triangles.foreach(p => tree.insert(p.getGeom.getEnvelopeInternal, p.getGeom))

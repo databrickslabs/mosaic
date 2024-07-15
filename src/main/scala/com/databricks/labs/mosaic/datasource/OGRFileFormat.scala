@@ -339,7 +339,7 @@ object OGRFileFormat extends Serializable {
             .map(feature.GetGeomFieldRef)
             .flatMap(f => {
                 if (Option(f).isDefined) {
-                    f.FlattenTo2D()
+                    //f.FlattenTo2D()
                     Seq(
                       if (asWKB) f.ExportToWkb else f.ExportToWkt,
                       Try(f.GetSpatialReference.GetAuthorityCode(null)).getOrElse("0")
