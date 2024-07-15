@@ -34,4 +34,30 @@ trait ST_TriangulateBehaviours extends QueryTest {
 
     }
 
+    def conformingTriangulateBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+
+        val mc = mosaicContext
+        import mc.functions._
+        val sc = spark
+        import sc.implicits._
+        mc.register(spark)
+
+        val pointsPath = "src/test/resources/binary/elevation/sd46_dtm_point.shp"
+        val linesPath = "src/test/resources/binary/elevation/sd46_dtm_breakline.shp"
+        val points = MosaicContext.read.option("asWKB", "true").format("multi_read_ogr").load(pointsPath)
+        val breaklines = MosaicContext.read.option("asWKB", "true").format("multi_read_ogr").load(linesPath)
+        val linesDf = breaklines
+            .where(st_geometrytype($"geom_0") === "LINESTRING")
+            .groupBy()
+            .agg(collect_list($"geom_0").as("breaklines"))
+        val result = points
+            .groupBy()
+            .agg(collect_list($"geom_0").as("masspoints"))
+            .crossJoin(linesDf)
+            .withColumn("mesh", st_triangulate($"masspoints", $"breaklines", lit(0.01)))
+            .drop($"masspoints", $"breaklines")
+        noException should be thrownBy result.collect()
+
+    }
+
 }

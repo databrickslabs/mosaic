@@ -5,6 +5,7 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineString
 import com.databricks.labs.mosaic.core.geometry.multipoint.MosaicMultiPoint
+import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOINT, POINT}
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.geometry.base.VectorExpression
@@ -49,10 +50,29 @@ case class ST_Triangulate (
                 .eval(input)
                 .asInstanceOf[ArrayData]
                 .toObjectArray(firstElementType)
-                .map(geometryAPI.geometry(_, firstElementType))
+                .map({
+                    obj =>
+                        val g = geometryAPI.geometry(obj, firstElementType)
+                        g.getGeometryType.toUpperCase(Locale.ROOT) match {
+                            case "POINT" => g.asInstanceOf[MosaicPoint]
+                            case _ => throw new UnsupportedOperationException("ST_Triangulate requires Point geometry as masspoints input")
+                        }
+                })
 
         val multiPointGeom = geometryAPI.fromSeq(pointsGeom, MULTIPOINT).asInstanceOf[MosaicMultiPoint]
-        val linesGeom = inputLinesArray.eval(input).asInstanceOf[ArrayData].toObjectArray(secondElementType).map(geometryAPI.geometry(_, secondElementType).asInstanceOf[MosaicLineString])
+        val linesGeom =
+            inputLinesArray
+                .eval(input)
+                .asInstanceOf[ArrayData]
+                .toObjectArray(secondElementType)
+                .map({
+                    obj =>
+                        val g = geometryAPI.geometry(obj, secondElementType)
+                            g.getGeometryType.toUpperCase(Locale.ROOT) match {
+                                case "LINESTRING" => g.asInstanceOf[MosaicLineString]
+                                case _ => throw new UnsupportedOperationException("ST_Triangulate requires LINESTRING geometry as breakline input")
+                            }
+                })
 
         val triangles =  multiPointGeom.triangulate(linesGeom, inputTolerance.eval(input).asInstanceOf[Double])
 
