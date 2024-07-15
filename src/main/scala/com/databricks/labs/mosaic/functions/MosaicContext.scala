@@ -640,6 +640,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_transform(geom: Column, srid: Column): Column = ColumnAdapter(ST_Transform(geom.expr, srid.expr, expressionConfig))
         def st_translate(geom1: Column, xd: Column, yd: Column): Column =
             ColumnAdapter(ST_Translate(geom1.expr, xd.expr, yd.expr, expressionConfig))
+        def st_triangulate(geom1: Column, geom2: Column, tol: Column): Column =
+            ColumnAdapter(ST_Triangulate(geom1.expr, geom2.expr, tol.expr, expressionConfig))
         def st_x(geom: Column): Column = ColumnAdapter(ST_X(geom.expr, expressionConfig))
         def st_y(geom: Column): Column = ColumnAdapter(ST_Y(geom.expr, expressionConfig))
         def st_z(geom: Column): Column = ColumnAdapter(ST_Z(geom.expr, expressionConfig))

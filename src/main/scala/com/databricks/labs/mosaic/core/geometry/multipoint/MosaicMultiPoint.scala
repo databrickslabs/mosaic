@@ -4,6 +4,8 @@ import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.labs.mosaic.core.MosaicCoreException
+import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineString
+import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygon
 
 trait MosaicMultiPoint extends MosaicGeometry {
 
@@ -19,5 +21,11 @@ trait MosaicMultiPoint extends MosaicGeometry {
 
     override def getShells: Seq[MosaicLineString] =
         throw MosaicCoreException.InvalidGeometryOperation("getShells should not be called on MultiPoints.")
+
+    def triangulate(breaklines: MosaicMultiLineString, tol: Double): Seq[MosaicPolygon]
+
+    def interpolateElevation(breaklines: MosaicMultiLineString, gridPoints: MosaicMultiPoint, tolerance: Double) : MosaicMultiPoint
+
+    def generateMultiPointGrid(origin: MosaicPoint, xCells: Int, yCells: Int, xSize: Double, ySize: Double): MosaicMultiPoint
 
 }

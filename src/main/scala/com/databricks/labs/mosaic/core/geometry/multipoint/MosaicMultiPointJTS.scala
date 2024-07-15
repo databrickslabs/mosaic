@@ -2,8 +2,9 @@ package com.databricks.labs.mosaic.core.geometry.multipoint
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
-import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringJTS
-import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
+import com.databricks.labs.mosaic.core.geometry.multilinestring.{MosaicMultiLineString, MosaicMultiLineStringJTS}
+import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
+import com.databricks.labs.mosaic.core.geometry.polygon.{MosaicPolygon, MosaicPolygonJTS}
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOINT, POINT}
 import org.apache.spark.sql.catalyst.InternalRow
@@ -13,7 +14,7 @@ import org.locationtech.jts.triangulate.ConformingDelaunayTriangulationBuilder
 
 import java.util
 import scala.collection.JavaConverters._
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 
 class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(multiPoint) with MosaicMultiPoint {
 
@@ -49,42 +50,50 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
 
     override def getShellPoints: Seq[Seq[MosaicPointJTS]] = Seq(asSeq)
 
-    def triangulate(breaklines: Option[MosaicMultiLineStringJTS]): GeometryCollection = {
-        val tolerance = 0.01
+    def triangulate(breaklines: MosaicMultiLineString, tolerance: Double): Seq[MosaicPolygon] = {
         val triangulator = new ConformingDelaunayTriangulationBuilder()
         val geomFact = multiPoint.getFactory
 
         triangulator.setSites(multiPoint)
-        if (breaklines.isDefined) {
-            triangulator.setConstraints(breaklines.get.getGeom)
+        if (!breaklines.asInstanceOf[MosaicMultiLineStringJTS].getGeom.isEmpty) {
+            triangulator.setConstraints(breaklines.asInstanceOf[MosaicMultiLineStringJTS].getGeom)
         }
         triangulator.setTolerance(tolerance)
 
         val geom = triangulator.getTriangles(geomFact)
-        geom.asInstanceOf[GeometryCollection]
+        val result = ArrayBuffer.empty[MosaicPolygonJTS]
+        for (i <- 0 until geom.getNumGeometries) {
+            result += MosaicPolygonJTS(geom.getGeometryN(i))
+        }
+        result
     }
 
-    def interpolateElevation(breaklines: Option[MosaicMultiLineStringJTS], gridPoints: MosaicMultiPointJTS) : MosaicMultiPointJTS = {
-        val triangles = triangulate(breaklines)
+    override def interpolateElevation(breaklines: MosaicMultiLineString, gridPoints: MosaicMultiPoint, tolerance: Double): MosaicMultiPointJTS = {
+        val triangles = triangulate(breaklines, tolerance).asInstanceOf[Seq[MosaicPolygonJTS]]
         val tree = new STRtree(4)
-        for (i <- 0 until triangles.getNumGeometries) {
-            val geom = triangles.getGeometryN(i)
-            tree.insert(geom.getEnvelopeInternal, geom)
-        }
+        triangles.foreach(p => tree.insert(p.getGeom.getEnvelopeInternal, p.getGeom))
 
-        val result = gridPoints.asSeq.map(
-            p => {
+        val result = gridPoints.asSeq
+            .map(_.asInstanceOf[MosaicPointJTS])
+            .map(p => {
                 val point = p.getGeom.asInstanceOf[Point]
                 val poly = tree.query(p.getGeom.getEnvelopeInternal)
                 val polyCoords = poly.get(0).asInstanceOf[Polygon].getCoordinates
                 val tri = new Triangle(polyCoords(0), polyCoords(1), polyCoords(2))
                 val z = tri.interpolateZ(point.getCoordinate)
                 MosaicPointJTS(point.getFactory.createPoint(new Coordinate(point.getX, point.getY, z)))
-            }
-        )
+            })
         MosaicMultiPointJTS.fromSeq(result)
     }
 
+    override def generateMultiPointGrid(origin: MosaicPoint, xCells: Int, yCells: Int, xSize: Double, ySize: Double): MosaicMultiPointJTS = {
+        val gridPoints = for (i <- 0 until xCells; j <- 0 until yCells) yield {
+            val x = origin.getX + i * xSize
+            val y = origin.getY + j * ySize
+            MosaicPointJTS(multiPoint.getFactory.createPoint(new Coordinate(x, y)))
+        }
+        MosaicMultiPointJTS.fromSeq(gridPoints)
+    }
 }
 
 object MosaicMultiPointJTS extends GeometryReader {
