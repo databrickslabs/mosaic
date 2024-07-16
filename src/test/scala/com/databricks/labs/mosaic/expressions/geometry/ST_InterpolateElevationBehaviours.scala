@@ -41,7 +41,7 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
                 $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
             )
         noException should be thrownBy result.collect()
-        result.count() shouldBe 1000000L +- 100
+        result.count() shouldBe 1000000L
     }
 
     def conformingInterpolationBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
@@ -63,13 +63,7 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
             .groupBy()
             .agg(collect_list($"geom_0").as("breaklines"))
 
-        val buffer = 500.0
-
         val result = points
-            .where(
-                st_x($"geom_0").between(348000.0 - buffer, 349000.0 + buffer) &&
-                st_y($"geom_0").between(461000.0 - buffer, 462000.0 + buffer)
-            )
             .groupBy()
             .agg(collect_list($"geom_0").as("masspoints"))
             .crossJoin(linesDf)
