@@ -13,13 +13,13 @@ import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import com.esotericsoftware.kryo.Kryo
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.algorithm.hull.ConcaveHull
-import org.locationtech.jts.geom.{Geometry, GeometryCollection, GeometryFactory, LineString}
+import org.locationtech.jts.geom.impl.CoordinateArraySequenceFactory
+import org.locationtech.jts.geom.{CoordinateSequence, Geometry, GeometryCollection, GeometryFactory}
 import org.locationtech.jts.geom.util.AffineTransformation
 import org.locationtech.jts.io._
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
 import org.locationtech.jts.operation.buffer.{BufferOp, BufferParameters}
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
-import org.locationtech.jts.triangulate.ConformingDelaunayTriangulationBuilder
 
 import java.util
 import scala.collection.JavaConverters._
@@ -29,7 +29,11 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def getNumGeometries: Int = geom.getNumGeometries
 
-    override def getDimension: Int = geom.getDimension
+    override def getDimension: Int = getCoordinateSequence.getDimension
+
+    private def getCoordinateSequence: CoordinateSequence = {
+        CoordinateArraySequenceFactory.instance().create(geom.getCoordinates)
+    }
 
     def compactGeometry: MosaicGeometryJTS = {
         val geometries = for (i <- 0 until getNumGeometries) yield geom.getGeometryN(i)
@@ -238,13 +242,13 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         MosaicGeometryJTS(unaryUnion)
     }
 
-    override def toWKT: String = new WKTWriter().write(geom)
+    override def toWKT: String = new WKTWriter(getDimension).write(geom)
 
     override def toJSON: String = new GeoJsonWriter().write(geom)
 
     override def toHEX: String = WKBWriter.toHex(toWKB)
 
-    override def toWKB: Array[Byte] = new WKBWriter().write(geom)
+    override def toWKB: Array[Byte] = new WKBWriter(getDimension).write(geom)
 
     override def numPoints: Int = geom.getNumPoints
 
@@ -256,24 +260,6 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def getAPI: GeometryAPI = JTS
 
-        //TODO here, multipoint or elsewhere?
-//    override def triangulate(masspoints: Seq[MosaicPoint], breaklines: Seq[MosaicLineString], tolerance: Double): Seq[MosaicPolygon] = {
-//        val triangulator = new ConformingDelaunayTriangulationBuilder()
-//        val geomFact = new GeometryFactory()
-//
-//        val multiPoint = geomFact.createMultiPointFromCoords(masspoints.map(_.coord).toArray)
-//
-//        triangulator.setSites(multiPoint)
-//        if (breaklines.nonEmpty) {
-//            val lineGeom = geomFact.createMultiLineString(breaklines.map(_.asInstanceOf[MosaicLineStringJTS].getGeom.asInstanceOf[LineString]).toArray)
-//            triangulator.setConstraints(lineGeom)
-//        }
-//        triangulator.setTolerance(tolerance)
-//        val triangles = triangulator.getTriangles(geomFact)
-//        val result = for (i <- 0 until triangles.getNumGeometries) yield MosaicPolygonJTS(triangles.getGeometryN(i))
-//        result
-//
-//    }
 }
 
 object MosaicGeometryJTS extends GeometryReader {

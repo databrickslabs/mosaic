@@ -26,6 +26,6 @@ trait MosaicMultiPoint extends MosaicGeometry {
 
     def interpolateElevation(breaklines: Seq[MosaicLineString], gridPoints: MosaicMultiPoint, tolerance: Double) : MosaicMultiPoint
 
-    def generateMultiPointGrid(origin: MosaicPoint, xCells: Int, yCells: Int, xSize: Double, ySize: Double): MosaicMultiPoint
+    def meshGrid(origin: MosaicPoint, xCells: Int, yCells: Int, xSize: Double, ySize: Double): MosaicMultiPoint
 
 }

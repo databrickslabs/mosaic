@@ -8,6 +8,7 @@ import com.databricks.labs.mosaic.core.types.ChipType
 import com.databricks.labs.mosaic.datasource.multiread.MosaicDataFrameReader
 import com.databricks.labs.mosaic.expressions.constructors._
 import com.databricks.labs.mosaic.expressions.format._
+import com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.expressions.geometry.ST_MinMaxXYZ._
 import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.index._
@@ -171,6 +172,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[ST_Envelope](expressionConfig)
         mosaicRegistry.registerExpression[ST_GeometryType](expressionConfig)
         mosaicRegistry.registerExpression[ST_HasValidCoordinates](expressionConfig)
+        mosaicRegistry.registerExpression[ST_InterpolateElevation](expressionConfig)
         mosaicRegistry.registerExpression[ST_Intersection](expressionConfig)
         mosaicRegistry.registerExpression[ST_Intersects](expressionConfig)
         mosaicRegistry.registerExpression[ST_IsValid](expressionConfig)
@@ -190,6 +192,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[ST_SRID](expressionConfig)
         mosaicRegistry.registerExpression[ST_Translate](expressionConfig)
         mosaicRegistry.registerExpression[ST_Transform](expressionConfig)
+        mosaicRegistry.registerExpression[ST_Triangulate](expressionConfig)
         mosaicRegistry.registerExpression[ST_UnaryUnion](expressionConfig)
         mosaicRegistry.registerExpression[ST_Union](expressionConfig)
         mosaicRegistry.registerExpression[ST_UpdateSRID](expressionConfig)
@@ -619,6 +622,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_geometrytype(geom: Column): Column = ColumnAdapter(ST_GeometryType(geom.expr, expressionConfig))
         def st_hasvalidcoordinates(geom: Column, crsCode: Column, which: Column): Column =
             ColumnAdapter(ST_HasValidCoordinates(geom.expr, crsCode.expr, which.expr, expressionConfig))
+        def st_interpolateelevation(pointsArray: Column, linesArray: Column, tol: Column, origin: Column, xWidth: Column, yWidth: Column, xSize: Column, ySize: Column): Column =
+            ColumnAdapter(geometry.ST_InterpolateElevation(pointsArray.expr, linesArray.expr, tol.expr, origin.expr, xWidth.expr, yWidth.expr, xSize.expr, ySize.expr, expressionConfig))
         def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr, expressionConfig))
         def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr, expressionConfig))
         def st_length(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, expressionConfig))
@@ -640,8 +645,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_transform(geom: Column, srid: Column): Column = ColumnAdapter(ST_Transform(geom.expr, srid.expr, expressionConfig))
         def st_translate(geom1: Column, xd: Column, yd: Column): Column =
             ColumnAdapter(ST_Translate(geom1.expr, xd.expr, yd.expr, expressionConfig))
-        def st_triangulate(geom1: Column, geom2: Column, tol: Column): Column =
-            ColumnAdapter(ST_Triangulate(geom1.expr, geom2.expr, tol.expr, expressionConfig))
+        def st_triangulate(pointsArray: Column, linesArray: Column, tol: Column): Column =
+            ColumnAdapter(ST_Triangulate(pointsArray.expr, linesArray.expr, tol.expr, expressionConfig))
         def st_x(geom: Column): Column = ColumnAdapter(ST_X(geom.expr, expressionConfig))
         def st_y(geom: Column): Column = ColumnAdapter(ST_Y(geom.expr, expressionConfig))
         def st_z(geom: Column): Column = ColumnAdapter(ST_Z(geom.expr, expressionConfig))

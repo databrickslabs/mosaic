@@ -87,7 +87,7 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
         MosaicMultiPointJTS.fromSeq(result)
     }
 
-    override def generateMultiPointGrid(origin: MosaicPoint, xCells: Int, yCells: Int, xSize: Double, ySize: Double): MosaicMultiPointJTS = {
+    override def meshGrid(origin: MosaicPoint, xCells: Int, yCells: Int, xSize: Double, ySize: Double): MosaicMultiPointJTS = {
         val gridPoints = for (i <- 0 until xCells; j <- 0 until yCells) yield {
             val x = origin.getX + i * xSize
             val y = origin.getY + j * ySize
