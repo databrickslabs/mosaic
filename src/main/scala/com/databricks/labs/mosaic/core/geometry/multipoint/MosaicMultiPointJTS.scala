@@ -5,9 +5,13 @@ import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, Mo
 import com.databricks.labs.mosaic.core.geometry.multilinestring.{MosaicMultiLineString, MosaicMultiLineStringJTS}
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
 import com.databricks.labs.mosaic.core.geometry.polygon.{MosaicPolygon, MosaicPolygonJTS}
+import com.databricks.labs.mosaic.core.raster.operator.clip.VectorClipper
 import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOINT, POINT}
 import org.apache.spark.sql.catalyst.InternalRow
+import org.gdal.ogr.{DataSource, Feature, FeatureDefn, GeomFieldDefn, Layer, ogr, Geometry => OGRGeometry}
+import org.gdal.ogr.ogr.{CreateGeometryFromWkb, GetDriverByName}
+import org.gdal.ogr.ogrConstants.wkbPoint
 import org.locationtech.jts.geom._
 import org.locationtech.jts.index.strtree.STRtree
 import org.locationtech.jts.triangulate.ConformingDelaunayTriangulationBuilder
@@ -94,6 +98,25 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
             MosaicPointJTS(multiPoint.getFactory.createPoint(new Coordinate(x, y)))
         }
         MosaicMultiPointJTS.fromSeq(gridPoints)
+    }
+
+    def toDataSource(fileName: String): DataSource = {
+
+        ogr.RegisterAll()
+        val memDriver = GetDriverByName("Memory")
+        val memDataSource = memDriver.CreateDataSource(fileName)
+        val layer = memDataSource.CreateLayer("points", getSpatialReferenceOSR, wkbPoint)
+
+        asSeq
+            .foreach(p => {
+                val geom = CreateGeometryFromWkb(p.toWKB)
+                val featureDefn = layer.GetLayerDefn()
+                val feature = new Feature(featureDefn)
+                feature.SetGeometry(geom)
+                layer.CreateFeature(feature)
+            })
+        layer.SyncToDisk()
+        memDataSource
     }
 }
 

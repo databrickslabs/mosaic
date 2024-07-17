@@ -244,11 +244,15 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def toWKT: String = new WKTWriter(getDimension).write(geom)
 
+    override def toWKT(coordDims: Int): String = new WKTWriter(coordDims).write(geom)
+
     override def toJSON: String = new GeoJsonWriter().write(geom)
 
     override def toHEX: String = WKBWriter.toHex(toWKB)
 
     override def toWKB: Array[Byte] = new WKBWriter(getDimension).write(geom)
+
+    override def toWKB(coordDims: Int): Array[Byte] = new WKBWriter(coordDims).write(geom)
 
     override def numPoints: Int = geom.getNumPoints
 
