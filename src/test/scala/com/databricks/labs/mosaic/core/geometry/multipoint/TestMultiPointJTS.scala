@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, Mo
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
-import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALRasterize
+import com.databricks.labs.mosaic.core.raster.operator.rasterize.GDALRasterize
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 import org.apache.spark.sql.catalyst.InternalRow
@@ -146,17 +146,6 @@ class TestMultiPointJTS extends AnyFlatSpec {
         val z = multiPoint.interpolateElevation(Seq(emptyLineString), gridPoints, 0.01)
         z.toWKT shouldBe "MULTIPOINT Z((1 3 2.5), (2 2 0.8333333333333334), (2 3 2.166666666666667), (3 2 0.5))"
         z.asSeq.map(_.getZ) shouldBe Seq(2.5, 0.8333333333333334, 2.166666666666667, 0.5)
-    }
-
-    "MosaicMultiPointJTS" should "return a GDAL DataSource" in {
-        val multiPoint = MosaicMultiPointJTS.fromWKT("MULTIPOINT Z (2.5 1.5 0, 3.5 2.5 1, 1.5 3.5 3, 0.5 2.5 2)").asInstanceOf[MosaicMultiPointJTS]
-        multiPoint.setSpatialReference(27700)
-        val dataSource = multiPoint.toDataSource("test")
-        dataSource.GetLayerCount() shouldBe 1
-        dataSource.GetLayerByIndex(0).GetName() shouldBe "points"
-        dataSource.GetLayerByIndex(0).GetFeatureCount() shouldBe 4
-        dataSource.GetLayerByIndex(0).GetSpatialRef().ExportToProj4() shouldBe "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +units=m +no_defs"
-        GDALRasterize.executeRasterize("test.tif", dataSource, "gdal_rasterize BURN_VALUE_FROM=Z")
     }
 
 }

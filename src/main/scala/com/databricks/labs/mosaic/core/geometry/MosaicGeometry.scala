@@ -191,6 +191,4 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def getAPI: GeometryAPI
 
-//    def triangulate(masspoints: Seq[MosaicPoint], breaklines: Seq[MosaicLineString], tolerance: Double): Seq[MosaicPolygon]
-
 }
