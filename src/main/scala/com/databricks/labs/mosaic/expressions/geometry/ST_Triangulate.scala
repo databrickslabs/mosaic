@@ -4,9 +4,11 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.multipoint.MosaicMultiPoint
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
+import com.databricks.labs.mosaic.core.raster.operator.rasterize.GDALRasterize
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression}

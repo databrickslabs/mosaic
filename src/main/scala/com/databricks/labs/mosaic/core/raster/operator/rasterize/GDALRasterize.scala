@@ -17,6 +17,19 @@ object GDALRasterize {
     private val layerName = "FEATURES"
     private val valueFieldName = "VALUES"
 
+    /**
+     * Rasterize the geometries and values and writes these into a new raster file.
+     *
+     * @param geoms The geometries to rasterize.
+     * @param values The values to burn into the raster. If not supplied, the Z values of the geometries will be used.
+     * @param origin The origin (top left-hand coordinate) of the raster.
+     * @param xWidth The width of the raster in pixels.
+     * @param yWidth The height of the raster in pixels.
+     * @param xSize The pixel size for x-axis pixels.
+     * @param ySize The pixel size of y-axis pixels.
+     * @param noDataValue The NoData value to use.
+     * @return A MosaicRasterGDAL object containing the generated raster.
+     */
     def executeRasterize(
         geoms: Seq[MosaicGeometry],
         values: Option[Seq[Double]],
@@ -32,10 +45,11 @@ object GDALRasterize {
         val vecDataSource = writeToDataSource(geoms, valuesToBurn, None)
 
         gdal.AllRegister()
-        val writeOptions = MosaicRasterWriteOptions.GTiff
+        val writeOptions = MosaicRasterWriteOptions.GTiff.copy(compression = "LZW")
         val outputPath = PathUtils.createTmpFilePath(writeOptions.format)
         val driver = gdal.GetDriverByName(writeOptions.format)
-        val newRaster = driver.Create(outputPath, xWidth, yWidth, 1, gdalconstConstants.GDT_Float64)
+        val createOptionsVec = OperatorOptions.parseOptions(OperatorOptions.appendOptions("", writeOptions))
+        val newRaster = driver.Create(outputPath, xWidth, yWidth, 1, gdalconstConstants.GDT_Float64, createOptionsVec)
         newRaster.FlushCache()
 
         newRaster.SetSpatialRef(vecDataSource.GetLayer(0).GetSpatialRef())
@@ -66,6 +80,17 @@ object GDALRasterize {
         MosaicRasterGDAL.readRaster(createInfo)
     }
 
+
+    /**
+     * Writes the geometries and values to a DataSource object.
+     *
+     * @param geoms The geometries to write to the DataSource.
+     * @param valuesToBurn The values to burn into the raster.
+     * @param geometryType The type of geometry to write to the DataSource.
+     * @param format The format of the DataSource (driver the should be used).
+     * @param path The path to write the DataSource to.
+     * @return A DataSource object containing the geometries and values.
+     */
     def writeToDataSource(
         geoms: Seq[MosaicGeometry],
         valuesToBurn: Seq[Double],

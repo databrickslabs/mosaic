@@ -12,6 +12,17 @@ import org.scalatest.matchers.should.Matchers._
 
 trait ST_InterpolateElevationBehaviours extends QueryTest {
 
+    val pointsPath = "src/test/resources/binary/elevation/sd46_dtm_point.shp"
+    val linesPath = "src/test/resources/binary/elevation/sd46_dtm_breakline.shp"
+    val outputRegion = "POLYGON((348000 462000, 348000 461000, 349000 461000, 349000 462000, 348000 462000))"
+    val buffer = 50.0
+    val xWidth = 1000
+    val yWidth = 1000
+    val xSize = 1.0
+    val ySize = -1.0
+    val tolerance = 1.0
+    val origin = "POINT(348000 462000)"
+
     def simpleInterpolationBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
 
         val mc = mosaicContext
@@ -20,20 +31,25 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
         import sc.implicits._
         mc.register(spark)
 
-        val pointsPath = "src/test/resources/binary/elevation/sd46_dtm_point.shp"
-        val points = MosaicContext.read.option("asWKB", "true").format("multi_read_ogr").load(pointsPath)
+        val points = MosaicContext.read
+            .option("asWKB", "true")
+            .format("multi_read_ogr")
+            .load(pointsPath)
+            .withColumn("filterGeom", st_geomfromwkt(lit(outputRegion)))
+            .where(st_intersects($"geom_0", st_buffer($"filterGeom", lit(buffer))))
+
         val result = points
             .groupBy()
             .agg(collect_list($"geom_0").as("masspoints"))
             .withColumn("breaklines", array().cast(ArrayType(StringType)))
-            .withColumn("tolerance", lit(0.01))
-            .withColumn("origin", st_point(lit(348000.0), lit(462000.0)))
-            .withColumn("grid_size_x", lit(1000))
-            .withColumn("grid_size_y", lit(1000))
-            .withColumn("pixel_size_x", lit(1.0))
-            .withColumn("pixel_size_y", lit(-1.0))
+            .withColumn("tolerance", lit(tolerance))
+            .withColumn("origin", st_geomfromwkt(lit(origin)))
+            .withColumn("grid_size_x", lit(xWidth))
+            .withColumn("grid_size_y", lit(yWidth))
+            .withColumn("pixel_size_x", lit(xSize))
+            .withColumn("pixel_size_y", lit(ySize))
             .withColumn("elevation", st_interpolateelevation(
-                $"masspoints", $"breaklines", lit(0.01),
+                $"masspoints", $"breaklines", $"tolerance",
                 $"origin", $"grid_size_x", $"grid_size_y",
                 $"pixel_size_x", $"pixel_size_y"))
             .drop(
@@ -52,14 +68,20 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
         import sc.implicits._
         mc.register(spark)
 
-        val pointsPath = "src/test/resources/binary/elevation/sd46_dtm_point.shp"
-        val linesPath = "src/test/resources/binary/elevation/sd46_dtm_breakline.shp"
+        val points = MosaicContext.read
+            .option("asWKB", "true")
+            .format("multi_read_ogr")
+            .load(pointsPath)
+            .withColumn("filterGeom", st_geomfromwkt(lit(outputRegion)))
+            .where(st_intersects($"geom_0", st_buffer($"filterGeom", lit(buffer))))
 
-        val points = MosaicContext.read.option("asWKB", "true").format("multi_read_ogr").load(pointsPath)
-        val breaklines = MosaicContext.read.option("asWKB", "true").format("multi_read_ogr").load(linesPath)
-
-        val linesDf = breaklines
+        val linesDf = MosaicContext.read
+            .option("asWKB", "true")
+            .format("multi_read_ogr")
+            .load(linesPath)
             .where(st_geometrytype($"geom_0") === "LINESTRING")
+            .withColumn("filterGeom", st_geomfromwkt(lit(outputRegion)))
+            .where(st_intersects($"geom_0", st_buffer($"filterGeom", lit(buffer))))
             .groupBy()
             .agg(collect_list($"geom_0").as("breaklines"))
 
@@ -67,14 +89,14 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
             .groupBy()
             .agg(collect_list($"geom_0").as("masspoints"))
             .crossJoin(linesDf)
-            .withColumn("tolerance", lit(0.01))
-            .withColumn("origin", st_point(lit(348000.0), lit(462000.0)))
-            .withColumn("grid_size_x", lit(1000))
-            .withColumn("grid_size_y", lit(1000))
-            .withColumn("pixel_size_x", lit(1.0))
-            .withColumn("pixel_size_y", lit(-1.0))
+            .withColumn("tolerance", lit(tolerance))
+            .withColumn("origin", st_geomfromwkt(lit(origin)))
+            .withColumn("grid_size_x", lit(xWidth))
+            .withColumn("grid_size_y", lit(yWidth))
+            .withColumn("pixel_size_x", lit(xSize))
+            .withColumn("pixel_size_y", lit(ySize))
             .withColumn("interpolated_grid_point", st_interpolateelevation(
-                $"masspoints", $"breaklines", lit(0.01),
+                $"masspoints", $"breaklines", $"tolerance",
                 $"origin", $"grid_size_x", $"grid_size_y",
                 $"pixel_size_x", $"pixel_size_y"))
             .withColumn("elevation", st_z($"interpolated_grid_point"))
