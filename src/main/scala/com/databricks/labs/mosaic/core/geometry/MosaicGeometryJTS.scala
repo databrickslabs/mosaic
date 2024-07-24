@@ -2,12 +2,12 @@ package com.databricks.labs.mosaic.core.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.{GeometryAPI, JTS}
 import com.databricks.labs.mosaic.core.geometry.geometrycollection.MosaicGeometryCollectionJTS
-import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringJTS}
+import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.multipoint.MosaicMultiPointJTS
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
-import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
-import com.databricks.labs.mosaic.core.geometry.polygon.{MosaicPolygon, MosaicPolygonJTS}
+import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
+import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import com.esotericsoftware.kryo.Kryo

@@ -38,7 +38,7 @@ case class RST_DTMFromGeoms(
     override def nullable: Boolean = false
 
     def firstElementType: DataType = pointsArray.dataType.asInstanceOf[ArrayType].elementType
-    def secondElementType: DataType = pointsArray.dataType.asInstanceOf[ArrayType].elementType
+    def secondElementType: DataType = linesArray.dataType.asInstanceOf[ArrayType].elementType
 
     def getGeometryAPI(expressionConfig: MosaicExpressionConfig): GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
 
@@ -64,10 +64,10 @@ case class RST_DTMFromGeoms(
             linesArray
                 .eval(input)
                 .asInstanceOf[ArrayData]
-                .toObjectArray(firstElementType)
+                .toObjectArray(secondElementType)
                 .map({
                     obj =>
-                        val g = geometryAPI.geometry(obj, firstElementType)
+                        val g = geometryAPI.geometry(obj, secondElementType)
                         g.getGeometryType.toUpperCase(Locale.ROOT) match {
                             case "LINESTRING" => g.asInstanceOf[MosaicLineString]
                             case _ => throw new UnsupportedOperationException("RST_DTMFromGeoms requires LineString geometry as breaklines input")
@@ -81,7 +81,7 @@ case class RST_DTMFromGeoms(
         val gridSizeYValue = gridSizeY.eval(input).asInstanceOf[Double]
         val toleranceValue = tolerance.eval(input).asInstanceOf[Double]
 
-        val gridPoints = multiPointGeom.meshGrid(origin, gridWidthXValue, gridWidthYValue, gridSizeXValue, gridSizeYValue)
+        val gridPoints = multiPointGeom.pointGrid(origin, gridWidthXValue, gridWidthYValue, gridSizeXValue, gridSizeYValue)
 
         val interpolatedPoints = multiPointGeom
             .interpolateElevation(linesGeom, gridPoints, toleranceValue)

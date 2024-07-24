@@ -135,14 +135,14 @@ class TestMultiPointJTS extends AnyFlatSpec {
     "MosaicMultiPointJTS" should "generate an equally spaced grid of points for use in elevation interpolation" in {
         val origin = MosaicPointJTS.fromWKT("POINT (0 0)").asInstanceOf[MosaicPointJTS]
         val grid = MosaicMultiPointJTS.fromWKT("MULTIPOINT (0 0, 0 1, 0 2, 1 0, 1 1, 1 2, 2 0, 2 1, 2 2)").asInstanceOf[MosaicMultiPointJTS]
-        val generatedGrid = grid.meshGrid(origin, 3, 3, 1.0, 1.0)
+        val generatedGrid = grid.pointGrid(origin, 3, 3, 1.0, 1.0)
         generatedGrid.toWKT shouldBe grid.toWKT
     }
 
     "MosaicMultiPointJTS" should "perform elevation interpolation" in {
         val multiPoint = MosaicMultiPointJTS.fromWKT("MULTIPOINT Z (2.5 1.5 0, 3.5 2.5 1, 1.5 3.5 3, 0.5 2.5 2)").asInstanceOf[MosaicMultiPointJTS]
         val origin = MosaicPointJTS.fromWKT("POINT (0 0)").asInstanceOf[MosaicPointJTS]
-        val gridPoints = multiPoint.meshGrid(origin, 5, 5, 1, 1).intersection(multiPoint.convexHull).asInstanceOf[MosaicMultiPointJTS]
+        val gridPoints = multiPoint.pointGrid(origin, 5, 5, 1, 1).intersection(multiPoint.convexHull).asInstanceOf[MosaicMultiPointJTS]
         val z = multiPoint.interpolateElevation(Seq(emptyLineString), gridPoints, 0.01)
         z.toWKT shouldBe "MULTIPOINT Z((1 3 2.5), (2 2 0.8333333333333334), (2 3 2.166666666666667), (3 2 0.5))"
         z.asSeq.map(_.getZ) shouldBe Seq(2.5, 0.8333333333333334, 2.166666666666667, 0.5)

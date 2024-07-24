@@ -77,7 +77,7 @@ case class ST_InterpolateElevation(
         val gridSizeYValue = gridSizeY.eval(input).asInstanceOf[Double]
         val toleranceValue = tolerance.eval(input).asInstanceOf[Double]
 
-        val gridPoints = multiPointGeom.meshGrid(origin, gridWidthXValue, gridWidthYValue, gridSizeXValue, gridSizeYValue)
+        val gridPoints = multiPointGeom.pointGrid(origin, gridWidthXValue, gridWidthYValue, gridSizeXValue, gridSizeYValue)
 
         val interpolatedPoints = multiPointGeom
             .interpolateElevation(linesGeom, gridPoints, toleranceValue)
