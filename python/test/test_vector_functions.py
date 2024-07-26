@@ -337,20 +337,29 @@ class TestVectorFunctions(MosaicTestCase):
         )
 
         interpolation_df = (
-            df
-            .withColumn("origin", api.st_geomfromwkt(lit("POINT (0.6 1.8)")))
+            df.withColumn("origin", api.st_geomfromwkt(lit("POINT (0.6 1.8)")))
             .withColumn("xWidth", lit(12))
             .withColumn("yWidth", lit(6))
             .withColumn("xSize", lit(0.1))
             .withColumn("ySize", lit(0.1))
             .withColumn(
-                "interpolated", api.st_interpolateelevation(
-                    "masspoints", "breaklines", lit(0.01),
-                    "origin", "xWidth", "yWidth", "xSize", "ySize"
-                )
+                "interpolated",
+                api.st_interpolateelevation(
+                    "masspoints",
+                    "breaklines",
+                    lit(0.01),
+                    "origin",
+                    "xWidth",
+                    "yWidth",
+                    "xSize",
+                    "ySize",
+                ),
             )
         )
 
         interpolation_df.cache()
         self.assertEqual(interpolation_df.count(), 12 * 6)
-        self.assertIn("POINT Z(0.6 2 1.8)", [r["interpolated"] for r in interpolation_df.collect()])
+        self.assertIn(
+            "POINT Z(0.6 2 1.8)",
+            [r["interpolated"] for r in interpolation_df.collect()],
+        )
