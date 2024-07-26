@@ -1,6 +1,15 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.{MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT, MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_MANUAL_CLEANUP_MODE, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE, RASTER_MEM_SIZE_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.{
+    MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT,
+    MOSAIC_CLEANUP_AGE_LIMIT_MINUTES,
+    MOSAIC_MANUAL_CLEANUP_MODE,
+    MOSAIC_RASTER_USE_CHECKPOINT,
+    MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT,
+    MOSAIC_TEST_MODE,
+    RASTER_MEM_SIZE_KEY,
+    RASTER_PATH_KEY
+}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL

@@ -35,7 +35,7 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         result.write.format("noop").mode("overwrite").save()
         self.assertEqual(result.count(), 1)
         tile = result.select("tile").first()[0]
-        raster = tile['tile']
+        raster = tile['raster']
         self.assertIsInstance(raster, str, "tile type should be string.")
 
         # - update path
@@ -52,7 +52,7 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         result.write.format("noop").mode("overwrite").save()
         self.assertEqual(result.count(), 1)
         tile = result.select("tile").first()[0]
-        raster = tile['tile']
+        raster = tile['raster']
         self.assertIsInstance(raster, str, "tile type should be string.")
 
         # - checkpoint off
@@ -66,7 +66,7 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         result.write.format("noop").mode("overwrite").save()
         self.assertEqual(result.count(), 1)
         tile = result.select("tile").first()[0]
-        raster = tile['tile']
+        raster = tile['raster']
         self.assertNotIsInstance(raster, str, "tile type should be binary (not string).")
 
         # - reset
@@ -84,5 +84,5 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         result.write.format("noop").mode("overwrite").save()
         self.assertEqual(result.count(), 1)
         tile = result.select("tile").first()[0]
-        raster = tile['tile']
+        raster = tile['raster']
         self.assertNotIsInstance(raster, str, "tile type should be binary (not string).")

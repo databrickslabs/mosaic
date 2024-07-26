@@ -8,7 +8,7 @@ import org.apache.spark.sql.types._
 class RasterTileType(fields: Array[StructField], useCheckpoint: Boolean) extends StructType(fields) {
 
     def rasterType: DataType = getRasterDataType(
-        fields.find(_.name == "tile").get.dataType, useCheckpoint)
+        fields.find(_.name == "raster").get.dataType, useCheckpoint)
 
     override def simpleString: String = "RASTER_TILE"
 
@@ -41,7 +41,7 @@ object RasterTileType {
       * @param idType
       *   Cellid type, can be one of [[LongType]], [[IntegerType]] or [[StringType]].
       * @param rasterType
-      *   Type of the tile. Can be one of [[ByteType]] or [[StringType]]. Not
+      *   Type of the raster. Can be one of [[ByteType]] or [[StringType]]. Not
       *   to be confused with the data type of the raster. This is the type of
       *   the column that contains the raster.
       * @param useCheckpoint
@@ -54,7 +54,7 @@ object RasterTileType {
         new RasterTileType(
             Array(
                 StructField("index_id", idType),
-                StructField("tile", getRasterDataType(rasterType, useCheckpoint)),
+                StructField("raster", getRasterDataType(rasterType, useCheckpoint)),
                 StructField("metadata", MapType(StringType, StringType))
             ),
             useCheckpoint
@@ -79,10 +79,10 @@ object RasterTileType {
         require(Seq(LongType, IntegerType, StringType).contains(idType))
         tileExpr.dataType match {
             case st @ StructType(_)                       =>
-                apply(idType, st.find(_.name == "tile").get.dataType, useCheckpoint)
+                apply(idType, st.find(_.name == "raster").get.dataType, useCheckpoint)
             case _ @ArrayType(elementType: StructType, _) =>
-                apply(idType, elementType.find(_.name == "tile").get.dataType, useCheckpoint)
-            case _                                        => throw new IllegalArgumentException("Unsupported tile type.")
+                apply(idType, elementType.find(_.name == "raster").get.dataType, useCheckpoint)
+            case _                                        => throw new IllegalArgumentException("Unsupported raster type.")
         }
     }
 
@@ -102,7 +102,7 @@ object RasterTileType {
         tileExpr.dataType match {
             case StructType(fields)                    => new RasterTileType(fields, useCheckpoint)
             case ArrayType(elementType: StructType, _) => new RasterTileType(elementType.fields, useCheckpoint)
-            case _                                     => throw new IllegalArgumentException("Unsupported tile type.")
+            case _                                     => throw new IllegalArgumentException("Unsupported raster type.")
         }
     }
 
