@@ -219,9 +219,14 @@ def rst_derivedband(
 
 
 def rst_dtmfromgeoms(
-        points_array: ColumnOrName, lines_array: ColumnOrName, tol: ColumnOrName,
-        origin: ColumnOrName, x_width: ColumnOrName, y_width: ColumnOrName,
-        x_size: ColumnOrName, y_size: ColumnOrName
+    points_array: ColumnOrName,
+    lines_array: ColumnOrName,
+    tol: ColumnOrName,
+    origin: ColumnOrName,
+    x_width: ColumnOrName,
+    y_width: ColumnOrName,
+    x_size: ColumnOrName,
+    y_size: ColumnOrName,
 ) -> Column:
     """
     Generate a raster with interpolated elevations across a grid of points described by

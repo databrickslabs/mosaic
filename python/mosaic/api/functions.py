@@ -618,7 +618,7 @@ def st_haversine(
 
 
 def st_triangulate(
-        points_array: ColumnOrName, lines_array: ColumnOrName, tol: ColumnOrName
+    points_array: ColumnOrName, lines_array: ColumnOrName, tol: ColumnOrName
 ) -> Column:
     """
     Generate a triangulated surface mesh from the set of points `points_array` and constraint lines `lines_array`.
@@ -650,9 +650,14 @@ def st_triangulate(
 
 
 def st_interpolateelevation(
-        points_array: ColumnOrName, lines_array: ColumnOrName, tol: ColumnOrName,
-        origin: ColumnOrName, x_width: ColumnOrName, y_width: ColumnOrName,
-        x_size: ColumnOrName, y_size: ColumnOrName
+    points_array: ColumnOrName,
+    lines_array: ColumnOrName,
+    tol: ColumnOrName,
+    origin: ColumnOrName,
+    x_width: ColumnOrName,
+    y_width: ColumnOrName,
+    x_size: ColumnOrName,
+    y_size: ColumnOrName,
 ) -> Column:
     """
     Compute interpolated elevations across a grid of points described by
