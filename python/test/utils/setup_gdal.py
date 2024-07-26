@@ -20,7 +20,7 @@ class GDALInstaller:
             to_fuse_dir=self._temp_dir,
             script_out_name=self.GDAL_INIT_SCRIPT_FILENAME,
             jni_so_copy=False,
-            test_mode=True
+            test_mode=True,
         )
 
     def list_files(self) -> list[str]:

@@ -24,7 +24,7 @@ class FuseInstaller:
             jar_copy=self.jar_copy,
             jni_so_copy=self.jni_so_copy,
             script_out_name=self.FUSE_INIT_SCRIPT_FILENAME,
-            test_mode=True
+            test_mode=True,
         )
 
     def run_init_script(self) -> int:
