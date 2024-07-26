@@ -162,7 +162,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
       mutate(tile = rst_separatebands(tile)) %>%
       sdf_register("raster")
 
-  indexed_raster_sdf <- sdf_sql(sc, "SELECT tile, element_at(rst_metadata(tile), 'NC_GLOBAL#GDAL_MOSAIC_BAND_INDEX') as timestep FROM tile") %>%
+  indexed_raster_sdf <- sdf_sql(sc, "SELECT tile, element_at(rst_metadata(tile), 'NC_GLOBAL#GDAL_MOSAIC_BAND_INDEX') as timestep FROM raster") %>%
     filter(timestep == 21L) %>%
     mutate(tile = rst_setsrid(tile, 4326L)) %>%
     mutate(tile = rst_tooverlappingtiles(tile, 20L, 20L, 10L)) %>%
