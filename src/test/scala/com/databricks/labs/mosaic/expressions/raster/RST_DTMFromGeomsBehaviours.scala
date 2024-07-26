@@ -99,7 +99,5 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
                 $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
             ).cache()
         noException should be thrownBy result.collect()
-        val outputPath = result.select("tile.raster").first().getString(0)
-        print(outputPath)
     }
 }
