@@ -19,7 +19,7 @@ test_that("mosaic can read single-band GeoTiff", {
 
 })
 
-test_that("scalar tile functions behave as intended", {
+test_that("scalar raster functions behave as intended", {
   sdf <- generate_singleband_raster_df()
   sdf <- withColumn(sdf, "rst_rastertogridavg", rst_rastertogridavg(column("tile"), lit(9L)))
   sdf <- withColumn(sdf, "rst_rastertogridcount", rst_rastertogridcount(column("tile"), lit(9L)))
@@ -44,7 +44,7 @@ test_that("scalar tile functions behave as intended", {
   expect_no_error(write.df(sdf, source = "noop", mode = "overwrite"))
 })
 
-test_that("tile flatmap functions behave as intended", {
+test_that("raster flatmap functions behave as intended", {
   retiled_sdf <- generate_singleband_raster_df()
   retiled_sdf <- withColumn(retiled_sdf, "rst_retile", rst_retile(column("tile"), lit(1200L), lit(1200L)))
 
@@ -70,7 +70,7 @@ test_that("tile flatmap functions behave as intended", {
   expect_equal(nrow(overlap_sdf), 87)
 })
 
-test_that("tile aggregation functions behave as intended", {
+test_that("raster aggregation functions behave as intended", {
   collection_sdf <- generate_singleband_raster_df()
   collection_sdf <- withColumn(collection_sdf, "extent", st_astext(rst_boundingbox(column("tile"))))
   collection_sdf <- withColumn(collection_sdf, "tile", rst_tooverlappingtiles(column("tile"), lit(200L), lit(200L), lit(10L)))
