@@ -144,8 +144,8 @@ class TestMultiPointJTS extends AnyFlatSpec {
         val origin = MosaicPointJTS.fromWKT("POINT (0 0)").asInstanceOf[MosaicPointJTS]
         val gridPoints = multiPoint.pointGrid(origin, 5, 5, 1, 1).intersection(multiPoint.convexHull).asInstanceOf[MosaicMultiPointJTS]
         val z = multiPoint.interpolateElevation(Seq(emptyLineString), gridPoints, 0.01)
-        z.toWKT shouldBe "MULTIPOINT Z((1 3 2.5), (2 2 0.8333333333333334), (2 3 2.166666666666667), (3 2 0.5))"
-        z.asSeq.map(_.getZ) shouldBe Seq(2.5, 0.8333333333333334, 2.166666666666667, 0.5)
+        z.toWKT shouldBe "MULTIPOINT Z((1 3 2.5), (2 2 0.8333333333333334), (2 3 2.1666666666666665), (3 2 0.5))"
+        z.asSeq.map(_.getZ) shouldBe Seq(2.5, 0.8333333333333334, 2.1666666666666665, 0.5)
     }
 
 }

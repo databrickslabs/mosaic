@@ -12,6 +12,9 @@ import org.gdal.ogr.ogr.{CreateGeometryFromWkb, GetDriverByName}
 import org.gdal.ogr.ogrConstants.{OFTReal, wkbPoint, wkbPolygon}
 import org.gdal.ogr.{DataSource, Feature, FieldDefn, ogr}
 
+import java.util.{Vector => JVector}
+import scala.collection.JavaConverters._
+
 object GDALRasterize {
 
     private val layerName = "FEATURES"
@@ -45,10 +48,11 @@ object GDALRasterize {
         val vecDataSource = writeToDataSource(geoms, valuesToBurn, None)
 
         gdal.AllRegister()
-        val writeOptions = MosaicRasterWriteOptions.GTiff.copy(compression = "LZW")
+        val writeOptions = MosaicRasterWriteOptions.GTiff
         val outputPath = PathUtils.createTmpFilePath(writeOptions.format)
         val driver = gdal.GetDriverByName(writeOptions.format)
-        val createOptionsVec = OperatorOptions.parseOptions(OperatorOptions.appendOptions("", writeOptions))
+        val createOptionsVec = new JVector[String]()
+        createOptionsVec.addAll(Seq("COMPRESS=LZW", "TILED=YES").asJavaCollection)
         val newRaster = driver.Create(outputPath, xWidth, yWidth, 1, gdalconstConstants.GDT_Float64, createOptionsVec)
         newRaster.FlushCache()
 

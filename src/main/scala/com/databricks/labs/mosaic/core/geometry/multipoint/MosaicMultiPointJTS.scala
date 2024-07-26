@@ -122,7 +122,6 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
 
         val result = gridPoints.asSeq
             .map(_.asInstanceOf[MosaicPointJTS])
-            .map(_.translate(1, -1))
             .map(p => {
                 val point = p.getGeom.asInstanceOf[Point]
                 val intersectingPoly = tree.query(p.getGeom.getEnvelopeInternal).asScala
@@ -140,7 +139,7 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
                     case None => throw new Exception("Grid point could not be matched to triangle")
                 }
                 interpolatedPoint.setSpatialReference(getSpatialReference)
-                interpolatedPoint.translate(-1, 1)
+                interpolatedPoint
             })
         MosaicMultiPointJTS.fromSeq(result)
     }

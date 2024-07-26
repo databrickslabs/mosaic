@@ -35,7 +35,9 @@ class TestGDALRasterize extends AnyFunSuite {
         val translatedPoints = pointGeoms.map(_.translate(348000.0, 462000.0))
 
         val origin = "POINT (0 2)" // top left-hand corner of north-up image
-        val originGeom = GeometryAPI.apply("JTS").geometry(origin, "WKT").asInstanceOf[MosaicPoint]
+        val originGeom = GeometryAPI("JTS").geometry(origin, "WKT")
+            .translate(348000.0, 462000.0)
+            .asInstanceOf[MosaicPoint]
         originGeom.setSpatialReference(27700)
 
         val raster = GDALRasterize.executeRasterize(translatedPoints, None, originGeom, 3, 3, 1.0, -1.0)
