@@ -175,9 +175,45 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
     inner_join(census_sdf, by = "index_id") %>%
     mutate(tile = rst_clip(tile, wkb))
 
+
   merged_precipitation <- clipped_sdf %>%
     group_by(region_keys, timestep) %>%
     summarise(tile = rst_merge_agg(tile))
 
   expect_equal(sdf_nrow(merged_precipitation), 1)
+})
+
+test_that ("a terrain model can be produced from point geometries", {
+
+  sdf <- sdf_copy_to(sc, data.frame(
+      wkt = c(
+        "POINT Z (3 2 1)",
+        "POINT Z (2 1 0)",
+        "POINT Z (1 3 3)",
+        "POINT Z (0 2 2)"
+      )
+    )
+  ) %>%
+    group_by() %>%
+    summarise(masspoints = collect_list("wkt")) %>%
+    mutate(
+      breaklines = array("LINESTRING EMPTY"),
+      origin = st_geomfromwkt("POINT (0.6 1.8)"),
+      xWidth = 12L,
+      yWidth = 6L,
+      xSize = as.double(0.1),
+      ySize = as.double(0.1),
+      tile = rst_dtmfromgeoms(
+        masspoints,
+        breaklines,
+        as.double(0.01),
+        origin,
+        xWidth,
+        yWidth,
+        xSize,
+        ySize
+      )
+    )
+  expect_equal(sdf_nrow(sdf), 1)
+
 })

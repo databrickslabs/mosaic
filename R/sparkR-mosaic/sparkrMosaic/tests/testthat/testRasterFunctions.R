@@ -8,6 +8,7 @@ generate_singleband_raster_df <- function() {
 
 test_that("mosaic can read single-band GeoTiff", {
   sdf <- generate_singleband_raster_df()
+  
   row <- first(sdf)
   expect_equal(row$length, 1067862L)
   expect_equal(row$x_size, 2400)
@@ -141,7 +142,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
 
 })
 
-test_that("RST_DTMFromGeoms works as expected", {
+test_that("a terrain model can be produced from point geometries", {
 
 sdf <- createDataFrame(
   data.frame(

@@ -119,7 +119,7 @@ case class RST_DTMFromGeoms(
 
 object RST_DTMFromGeoms extends WithExpressionInfo {
 
-    override def name: String = "rst_dtmfromegeoms"
+    override def name: String = "rst_dtmfromgeoms"
 
     override def usage: String = {
         "_FUNC_(expr1, expr2, expr3, expr4, expr5, expr6, expr7, expr8) - Returns the interpolated heights " +
