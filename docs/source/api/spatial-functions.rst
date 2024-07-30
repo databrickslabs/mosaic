@@ -1580,6 +1580,75 @@ st_transform
     by specifying the :code:`srcSRID` and :code:`dstSRID`.
 
 
+st_triangulate
+**************
+
+.. function:: st_triangulate(pointsArray, linesArray, tolerance)
+
+    Performs a conforming Delaunay triangulation using the points in :code:`pointsArray` including :code:`linesArray` as constraint / break lines.
+
+    :code:`tolerance` sets the tolerance for snapping nearby points together before executing the initial triangulation.
+
+    This is a generator expression and the resulting DataFrame will contain one row per triangle returned by the algorithm.
+
+    :param pointsArray: Array of geometries respresenting the points to be triangulated
+    :type pointsArray: Column (ArrayType(Geometry))
+    :param linesArray: Array of geometries respresenting the lines to be used as constraints
+    :type linesArray: Column (ArrayType(Geometry))
+    :param tolerance: A tolerance value for snapping nearby points together before executing the initial triangulation
+    :type tolerance: Column (DoubleType)
+    :rtype: Column (Geometry)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+
+    df = (
+      spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
+      .withColumn('geom', st_setsrid(st_geomfromwkt('wkt'), lit(4326)))
+    )
+    df.select(st_astext(st_transform('geom', lit(3857)))).show(1, False)
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |convert_to(st_transform(geom, 3857))                                                                                                                                      |
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    val df = List("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").toDF("wkt")
+      .withColumn("geom", st_setsrid(st_geomfromwkt(col("wkt")), lit(4326)))
+    df.select(st_astext(st_transform(col("geom"), lit(3857)))).show(1, false)
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |convert_to(st_transform(geom, 3857))                                                                                                                                      |
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    select st_astext(st_transform(st_setsrid(st_geomfromwkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"), 4326) as geom, 3857))
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |convert_to(st_transform(geom, 3857))                                                                                                                                      |
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
+    df <- withColumn(df, 'geom', st_setsrid(st_geomfromwkt(column('wkt')), lit(4326L)))
+
+    showDF(select(df, st_astext(st_transform(column('geom'), lit(3857L)))), truncate=F)
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |convert_to(st_transform(geom, 3857))                                                                                                                                      |
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
+    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
 st_translate
 ************
 
