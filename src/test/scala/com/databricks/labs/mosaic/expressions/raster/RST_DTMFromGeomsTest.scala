@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.JTS
-import com.databricks.labs.mosaic.core.index.H3IndexSystem
+import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 
@@ -14,4 +14,11 @@ class RST_DTMFromGeomsTest extends QueryTest with SharedSparkSessionGDAL with RS
             assume(System.getProperty("os.name") == "Linux")
             conformedTriangulationRasterizeTest(H3IndexSystem, JTS)
     }
+
+    registerIgnoredTest("Ignored due to resource / duration")(
+        test("Testing RST_DTMFromGeoms for conforming triangulation over multiple grid regions with manual GDAL registration (BNG, JTS).") {
+            assume(System.getProperty("os.name") == "Linux")
+            multiRegionTriangulationRasterizeTest(BNGIndexSystem, JTS)
+        }
+    )
 }

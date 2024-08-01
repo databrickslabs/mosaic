@@ -19,6 +19,7 @@ import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.{ArrayType, DataType, StringType}
+import org.apache.spark.unsafe.types.UTF8String
 
 import java.util.Locale
 
@@ -61,10 +62,15 @@ case class RST_DTMFromGeoms(
                 })
 
         val multiPointGeom = geometryAPI.fromSeq(pointsGeom, MULTIPOINT).asInstanceOf[MosaicMultiPoint]
-        val linesGeom =
-            linesArray
-                .eval(input)
-                .asInstanceOf[ArrayData]
+        val linesArrayData = linesArray
+            .eval(input)
+            .asInstanceOf[ArrayData]
+
+
+        val linesGeom = if (linesArrayData == null) {
+            Array(geometryAPI.geometry(UTF8String.fromString("LINESTRING EMPTY"), StringType).asInstanceOf[MosaicLineString])
+        } else {
+            linesArrayData
                 .toObjectArray(secondElementType)
                 .map({
                     obj =>
@@ -74,6 +80,7 @@ case class RST_DTMFromGeoms(
                             case _ => throw new UnsupportedOperationException("RST_DTMFromGeoms requires LineString geometry as breaklines input")
                         }
                 })
+        }
 
         val origin = geometryAPI.geometry(gridOrigin.eval(input), gridOrigin.dataType).asInstanceOf[MosaicPoint]
         val gridWidthXValue = gridWidthX.eval(input).asInstanceOf[Int]

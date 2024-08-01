@@ -3,23 +3,24 @@ package com.databricks.labs.mosaic.expressions.raster
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.functions.MosaicRegistryBehaviors.mosaicContext
 import org.apache.spark.sql.functions.{array, collect_list, lit}
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.apache.spark.sql.types.{ArrayType, StringType}
-import org.scalatest.matchers.must.Matchers._
+import org.scalatest.matchers.should.Matchers._
 
 trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
 
+    val pointsPath = "src/test/resources/binary/elevation/sd46_dtm_point.shp"
+    val linesPath = "src/test/resources/binary/elevation/sd46_dtm_breakline.shp"
+
     def simpleRasterizeTest(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
 
-        val mc = mosaicContext
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         val sc = spark
         import sc.implicits._
         mc.register(spark)
 
-        val pointsPath = "src/test/resources/binary/elevation/sd46_dtm_point.shp"
         val pointsDf = MosaicContext.read
             .option("asWKB", "true")
             .format("multi_read_ogr")
@@ -50,14 +51,12 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
 
     def conformedTriangulationRasterizeTest(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
 
-        val mc = mosaicContext
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         val sc = spark
         import sc.implicits._
         mc.register(spark)
 
-        val pointsPath = "src/test/resources/binary/elevation/sd46_dtm_point.shp"
-        val linesPath = "src/test/resources/binary/elevation/sd46_dtm_breakline.shp"
         val outputRegion = "POLYGON((348000 462000, 348000 461000, 349000 461000, 349000 462000, 348000 462000))"
 
         val pointsDf = MosaicContext.read
@@ -100,4 +99,73 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
             ).cache()
         noException should be thrownBy result.collect()
     }
+
+    def multiRegionTriangulationRasterizeTest(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        import mc.functions._
+        val sc = spark
+        import sc.implicits._
+        mc.register(spark)
+
+        val outputRegion = "POLYGON ((340000 460000, 350000 460000, 350000 470000, 340000 470000, 340000 460000))"
+        val rasterBuffer = 500.0
+
+        val rasterExtentsDf =
+            List(outputRegion).toDF("wkt")
+            .withColumn("extent_geom", st_geomfromwkt($"wkt"))
+            .withColumn("extent_geom", st_setsrid($"extent_geom", lit(27700)))
+            .withColumn("cells", grid_tessellateexplode($"extent_geom", lit(3)))
+            .withColumn("extent", st_geomfromwkb($"cells.wkb"))
+            .withColumn("extent_buffered", st_buffer($"extent", lit(rasterBuffer)))
+            .withColumn("raster_origin", st_point(st_xmin($"extent"), st_ymax($"extent"))) // top left
+            .withColumn("raster_origin", st_setsrid($"raster_origin", lit(27700)))
+            .select("cells.index_id", "extent_buffered", "raster_origin")
+
+        val pointsDf = MosaicContext.read
+            .option("asWKB", "true")
+            .format("multi_read_ogr")
+            .load(pointsPath)
+            .where($"geom_0".notEqual(lit("POINT EMPTY")))
+            .withColumn("geom", st_geomfromwkb($"geom_0"))
+            .withColumn("geom", st_setsrid($"geom", lit(27700)))
+            .crossJoin(rasterExtentsDf)
+            .where(st_intersects($"geom", $"extent_buffered"))
+            .groupBy("index_id", "raster_origin")
+            .agg(collect_list($"geom").as("masspoints"))
+
+        val linesDf = MosaicContext.read
+            .option("asWKB", "true")
+            .format("multi_read_ogr")
+            .load(linesPath)
+            .where(st_geometrytype($"geom_0") === "LINESTRING")
+            .withColumn("geom", st_geomfromwkb($"geom_0"))
+            .withColumn("geom", st_setsrid($"geom", lit(27700)))
+            .crossJoin(rasterExtentsDf)
+            .where(st_intersects($"geom", $"extent_buffered"))
+            .groupBy("index_id", "raster_origin")
+            .agg(collect_list($"geom").as("breaklines"))
+
+        val inputsDf = pointsDf
+            .join(linesDf, Seq("index_id", "raster_origin"), "left")
+
+        val result = inputsDf
+            .repartition(sc.sparkContext.defaultParallelism)
+            .withColumn("tolerance", lit(0.5))
+            .withColumn("grid_size_x", lit(1000))
+            .withColumn("grid_size_y", lit(1000))
+            .withColumn("pixel_size_x", lit(1.0))
+            .withColumn("pixel_size_y", lit(-1.0))
+            .withColumn("tile", rst_dtmfromgeoms(
+                $"masspoints", $"breaklines", $"tolerance",
+                $"raster_origin", $"grid_size_x", $"grid_size_y",
+                $"pixel_size_x", $"pixel_size_y"))
+            .drop(
+                $"masspoints", $"breaklines", $"tolerance", $"raster_origin",
+                $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
+            ).cache()
+        noException should be thrownBy result.collect()
+        result.count() shouldBe inputsDf.count()
+    }
+
 }

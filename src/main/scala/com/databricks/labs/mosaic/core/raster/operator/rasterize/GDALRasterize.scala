@@ -44,23 +44,41 @@ object GDALRasterize {
         noDataValue: Int = (-99999)
     ): MosaicRasterGDAL = {
 
-        val valuesToBurn = values.getOrElse(geoms.map(_.getAnyPoint.getZ)) // can come back and make this the mean
-        val vecDataSource = writeToDataSource(geoms, valuesToBurn, None)
-
         gdal.AllRegister()
         val writeOptions = MosaicRasterWriteOptions.GTiff
         val outputPath = PathUtils.createTmpFilePath(writeOptions.format)
         val driver = gdal.GetDriverByName(writeOptions.format)
         val createOptionsVec = new JVector[String]()
         createOptionsVec.addAll(Seq("COMPRESS=LZW", "TILED=YES").asJavaCollection)
-        val newRaster = driver.Create(outputPath, xWidth, yWidth, 1, gdalconstConstants.GDT_Float64, createOptionsVec)
-        newRaster.FlushCache()
 
-        newRaster.SetSpatialRef(vecDataSource.GetLayer(0).GetSpatialRef())
+        val newRaster = driver.Create(outputPath, xWidth, yWidth, 1, gdalconstConstants.GDT_Float64, createOptionsVec)
+        val rasterCRS = if (geoms.isEmpty) origin.getSpatialReferenceOSR else geoms.head.getSpatialReferenceOSR
+        newRaster.SetSpatialRef(rasterCRS)
         newRaster.SetGeoTransform(Array(origin.getX, xSize, 0.0, origin.getY, 0.0, ySize))
 
         val outputBand = newRaster.GetRasterBand(1)
         outputBand.SetNoDataValue(noDataValue)
+        outputBand.FlushCache()
+
+        newRaster.FlushCache()
+
+        if (geoms.isEmpty) {
+
+            val errorMsg = "No geometries to rasterize."
+            newRaster.delete()
+            val createInfo = Map(
+                "path" -> outputPath,
+                "parentPath" -> "",
+                "driver" -> writeOptions.format,
+                "last_command" -> "",
+                "last_error" -> errorMsg,
+                "all_parents" -> ""
+            )
+            return MosaicRasterGDAL.readRaster(createInfo)
+        }
+
+        val valuesToBurn = values.getOrElse(geoms.map(_.getAnyPoint.getZ)) // can come back and make this the mean
+        val vecDataSource = writeToDataSource(geoms, valuesToBurn, None)
 
         val command = s"gdal_rasterize ATTRIBUTE=$valueFieldName"
         val effectiveCommand = OperatorOptions.appendOptions(command, writeOptions)
