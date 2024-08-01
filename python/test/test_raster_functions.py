@@ -1,4 +1,13 @@
-from pyspark.sql.functions import abs, col, first, lit, sqrt, array, element_at
+from pyspark.sql.functions import (
+    abs,
+    col,
+    collect_list,
+    first,
+    lit,
+    sqrt,
+    array,
+    element_at,
+)
 
 from .context import api, readers
 from .utils import MosaicTestCaseWithGDAL
@@ -228,3 +237,66 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         )
 
         self.assertEqual(merged_precipitation.count(), 1)
+
+    def test_dtmfromgeoms(self):
+
+        outputRegion = "POLYGON((348000 462000, 348000 461000, 349000 461000, 349000 462000, 348000 462000))"
+
+        points_df = (
+            readers.read()
+            .format("multi_read_ogr")
+            .option("vsizip", "true")
+            .option("asWKB", "true")
+            .load("test/data/sd46_dtm_point.zip")
+            .withColumn("geom_0", api.st_geomfromwkb("geom_0"))
+            .withColumn("geom_0", api.st_setsrid("geom_0", lit(27700)))
+            .withColumn("filterGeom", api.st_geomfromwkt(lit(outputRegion)))
+            .groupBy()
+            .agg(collect_list("geom_0").alias("masspoints"))
+        )
+        lines_df = (
+            readers.read()
+            .format("multi_read_ogr")
+            .option("vsizip", "true")
+            .option("asWKB", "true")
+            .load("test/data/sd46_dtm_breakline.zip")
+            .where(api.st_geometrytype("geom_0") == "LINESTRING")
+            .withColumn("filterGeom", api.st_geomfromwkt(lit(outputRegion)))
+            .where(api.st_intersects("geom_0", api.st_buffer("filterGeom", lit(500.0))))
+            .groupBy()
+            .agg(collect_list("geom_0").alias("breaklines"))
+        )
+        result = (
+            points_df.crossJoin(lines_df)
+            .withColumn("tolerance", lit(0.5))
+            .withColumn("origin", api.st_point(lit(348000.0), lit(462000.0)))
+            .withColumn("grid_size_x", lit(1000))
+            .withColumn("grid_size_y", lit(1000))
+            .withColumn("pixel_size_x", lit(1.0))
+            .withColumn("pixel_size_y", lit(-1.0))
+            .withColumn(
+                "tile",
+                api.rst_dtmfromgeoms(
+                    "masspoints",
+                    "breaklines",
+                    "tolerance",
+                    "origin",
+                    "grid_size_x",
+                    "grid_size_y",
+                    "pixel_size_x",
+                    "pixel_size_y",
+                ),
+            )
+            .drop(
+                "masspoints",
+                "breaklines",
+                "tolerance",
+                "origin",
+                "grid_size_x",
+                "grid_size_y",
+                "pixel_size_x",
+                "pixel_size_y",
+            )
+        )
+
+        result.write.mode("overwrite").format("noop").save()

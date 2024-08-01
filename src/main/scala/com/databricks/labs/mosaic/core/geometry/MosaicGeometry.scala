@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
+import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygon
 import org.gdal.ogr.ogr
 import org.gdal.osr.SpatialReference
 import org.gdal.osr.osrConstants._

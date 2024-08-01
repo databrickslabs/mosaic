@@ -24,7 +24,9 @@ class MosaicTestCaseWithGDAL(MosaicTestCase):
             os.makedirs(cls.check_dir)
         if not os.path.exists(cls.new_check_dir):
             os.makedirs(cls.new_check_dir)
-        cls.spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", cls.check_dir)
+        cls.spark.conf.set(
+            "spark.databricks.labs.mosaic.raster.checkpoint", cls.check_dir
+        )
 
         api.enable_mosaic(cls.spark)
         api.enable_gdal(cls.spark)

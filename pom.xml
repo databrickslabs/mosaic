@@ -93,7 +93,7 @@
             <artifactId>h3</artifactId>
             <!--H3 fixed at 3.7.0 until Photon updates the version-->
             <!--suppress MavenPackageUpdate-->
-            <version>3.7.0</version>
+            <version>3.7.2</version>
         </dependency>
         <dependency>
             <groupId>org.locationtech.jts</groupId>

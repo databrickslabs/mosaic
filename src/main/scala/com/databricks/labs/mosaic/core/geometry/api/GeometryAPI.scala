@@ -108,6 +108,10 @@ abstract class GeometryAPI(
 
     def fromCoords(coords: Seq[Double]): MosaicPoint
 
+    def fromSeq(geoms: Seq[MosaicGeometry], geomType: GeometryTypeEnum.Value): MosaicGeometry = {
+        reader.fromSeq(geoms, geomType)
+    }
+
     def ioCodeGen: GeometryIOCodeGen
 
     def codeGenTryWrap(code: String): String

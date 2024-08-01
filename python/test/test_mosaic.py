@@ -10,7 +10,9 @@ class TestMosaicContext(SparkTestCase):
     def test_has_context(self):
         _ = MosaicLibraryHandler(self.spark)
         context = MosaicContext(self.spark)
-        self.assertTrue(context.has_context(), "JVM context should be available after python init.")
+        self.assertTrue(
+            context.has_context(), "JVM context should be available after python init."
+        )
 
     def test_invoke_function(self):
         _ = MosaicLibraryHandler(self.spark)
