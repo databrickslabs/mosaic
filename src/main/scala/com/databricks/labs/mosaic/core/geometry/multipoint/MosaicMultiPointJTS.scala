@@ -124,23 +124,21 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
             .map(_.asInstanceOf[MosaicPointJTS])
             .map(p => {
                 val point = p.getGeom.asInstanceOf[Point]
-                val intersectingPoly = tree.query(p.getGeom.getEnvelopeInternal).asScala
+                point -> tree.query(p.getGeom.getEnvelopeInternal).asScala
                     .map(_.asInstanceOf[Polygon])
                     .find(_.intersects(point))
-                val interpolatedPoint = intersectingPoly match {
-                    case Some(poly) =>
-                        val polyCoords = poly.getCoordinates
-                        val tri = new Triangle(polyCoords(0), polyCoords(1), polyCoords(2))
-                        val z = tri.interpolateZ(point.getCoordinate)
-                        if (z.isNaN) {
-                            throw new Exception("Interpolated Z value is NaN")
-                        }
-                        MosaicPointJTS(point.getFactory.createPoint(new Coordinate(point.getX, point.getY, z)))
-                    case None => throw new Exception("Grid point could not be matched to triangle")
-                }
-                interpolatedPoint.setSpatialReference(getSpatialReference)
-                interpolatedPoint
-            })
+            }).toMap
+            .collect({ case (pt, Some(ply)) => pt -> ply })
+            .map({
+                case (point: Point, poly: Polygon) =>
+                    val polyCoords = poly.getCoordinates
+                    val tri = new Triangle(polyCoords(0), polyCoords(1), polyCoords(2))
+                    val z = tri.interpolateZ(point.getCoordinate)
+                    if (z.isNaN) { throw new Exception("Interpolated Z value is NaN") }
+                    val interpolatedPoint = MosaicPointJTS(point.getFactory.createPoint(new Coordinate(point.getX, point.getY, z)))
+                    interpolatedPoint.setSpatialReference(getSpatialReference)
+                    interpolatedPoint
+            }).toSeq
         MosaicMultiPointJTS.fromSeq(result)
     }
 

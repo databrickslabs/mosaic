@@ -1,6 +1,7 @@
 import unittest
 import os
 import shutil
+import warnings
 from importlib.metadata import version
 
 from pyspark.sql import SparkSession
@@ -54,3 +55,5 @@ class SparkTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         self.spark.sparkContext.setLogLevel("ERROR")
+        warnings.filterwarnings("ignore", category=ResourceWarning)
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
