@@ -173,9 +173,13 @@ case class RasterTile(
         // - safety net for parent path
         val parentPath = this.raster.identifyPseudoPathOpt().getOrElse(NO_PATH_STRING)
         val newCreateInfo = raster.getCreateInfo + (RASTER_PATH_KEY -> path, RASTER_PARENT_PATH_KEY -> parentPath)
-        val mapData = buildMapString(newCreateInfo)
+
+        // scalastyle:off println
+        //println(s"rasterTile - serialize - toFuse? $toFuse | newCreateInfo? $newCreateInfo")
+        // scalastyle:on println
 
         // (4) actual serialization
+        val mapData = buildMapString(newCreateInfo)
         if (Option(index).isDefined) {
             if (index.isLeft) InternalRow.fromSeq(
               Seq(index.left.get, encodedRaster, mapData)

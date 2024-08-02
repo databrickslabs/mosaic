@@ -23,7 +23,9 @@ cd /root/mosaic && mvn package -DskipTests
 
 # [4] build python
 # - refer to dockerfile for what is already built
+# - update pip
 echo "\n::: [4] ... build python :::\n"
+python3 -m pip install --upgrade pip
 cd /root/mosaic/python && pip install .
 
 # [5] extras (if any)

@@ -123,9 +123,9 @@ rst_combineavg_agg
 
 .. function:: rst_combineavg_agg(tile)
 
-    Aggregates tile tiles by averaging pixel values.
+    Aggregates raster tiles by averaging pixel values.
 
-    :param tile: A grouped column containing tile tiles.
+    :param tile: A grouped column containing raster tiles.
     :type tile: Column (RasterTileType)
     :rtype: Column: RasterTileType
 
@@ -133,7 +133,7 @@ rst_combineavg_agg
 
   Notes
     - Each :code:`tile` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
-    - The output tile will have the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input tiles.
+    - The output tile will have the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input raster tiles.
 
     Also, see :ref:`rst_combineavg_agg` function.
 ..
@@ -177,9 +177,9 @@ rst_derivedband_agg
 
 .. function:: rst_derivedband_agg(tile, python_func, func_name)
 
-    Combines a group by statement over aggregated tile tiles by using the provided python function.
+    Combines a group by statement over aggregated raster tiles by using the provided python function.
 
-    :param tile: A grouped column containing tile tile(s).
+    :param tile: A grouped column containing raster tile(s).
     :type tile: Column (RasterTileType)
     :param python_func: A function to evaluate in python.
     :type python_func: Column (StringType)
@@ -189,8 +189,8 @@ rst_derivedband_agg
 
 .. note::
   Notes
-    - Input tile tiles in :code:`tile` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
-    - The output tile will have the same the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input tile tiles.
+    - Input raster tiles in :code:`tile` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
+    - The output tile will have the same the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input raster tiles.
 ..
 
     :example:
@@ -268,9 +268,9 @@ rst_merge_agg
 
 .. function:: rst_merge_agg(tile)
 
-    Aggregates tile tiles into a single tile.
+    Aggregates raster tiles into a single tile.
 
-    :param tile: A column containing tile tiles.
+    :param tile: A column containing raster tiles.
     :type tile: Column (RasterTileType)
     :rtype: Column: RasterTileType
 

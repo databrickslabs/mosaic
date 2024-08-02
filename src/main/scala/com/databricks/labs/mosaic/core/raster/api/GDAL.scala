@@ -117,7 +117,7 @@ object GDAL extends RasterTransform
                         overrideDirOpt: Option[String]
     ): Seq[Any] = {
         rasters.map(raster =>
-            if (raster != null) {
+            if (raster != null && !raster.isEmptyRasterGDAL) {
                 rasterDT match {
                     case StringType => writeRasterAsStringType(raster, doDestroy, overrideDirOpt)
                     case BinaryType => writeRasterAsBinaryType(raster, doDestroy, exprConfigOpt)

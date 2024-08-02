@@ -116,11 +116,13 @@ The documentation has been produced using [Sphinx](https://www.sphinx-doc.org/en
 
 To build the docs:
 - Install the pandoc library (follow the instructions for your platform [here](https://pandoc.org/installing.html)).
+- You can run `docs/mosaic-docs.sh` or do the manual steps that follow.
 - Install the python requirements from `docs/docs-requirements.txt`.
 - Build the HTML documentation by running `make html` from `docs/`.
   - For nbconvert you may have to symlink your jupyter share folder, 
     e.g. `sudo ln -s /opt/homebrew/share/jupyter /usr/local/share`. 
-- You can locally host the docs by running the `reload.py` script in the `docs/source/` directory.
+- You can locally host the docs by running the `reload.py` script in the `docs/source/` directory; 
+  recommend running `reload.py` through IntelliJ for auto-refresh features.
 
 ## Style
 

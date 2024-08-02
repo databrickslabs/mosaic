@@ -124,10 +124,11 @@ case class RasterGDAL(
         Try {
             try {
                 // make sure createinfo in sync
+                // - calls _initCreateInfo
                 // - also [[DatasetGDAL]] and its objects
                 // - this could be only on an `initFlag` test,
                 //   but seems better to always do it
-                this._initCreateInfo
+                this.getCreateInfo
 
                 // !!! avoid cyclic dependencies !!!
                 /*

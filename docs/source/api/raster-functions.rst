@@ -7,25 +7,25 @@ Intro
 Raster functions are available in mosaic if you have installed the optional dependency `GDAL`.
 Please see :doc:`Install and Enable GDAL with Mosaic </usage/install-gdal>` for installation instructions.
 
-    * Mosaic provides several unique tile functions that are not available in other Spark packages.
-      Mainly tile to grid functions, which are useful for reprojecting the tile data into a standard grid index
-      system. This is useful for performing spatial joins between tile data and vector data.
-    * Mosaic also provides a scalable retiling function that can be used to retile tile data in case of bottlenecking
+    * Mosaic provides several unique raster functions that are not available in other Spark packages.
+      Mainly raster to grid functions, which are useful for reprojecting the raster data into a standard grid index
+      system. This is useful for performing spatial joins between raster data and vector data.
+    * Mosaic also provides a scalable retiling function that can be used to retile raster data in case of bottlenecking
       due to large files.
-    * All tile functions respect the :code:`rst_` prefix naming convention.
+    * All raster functions use the :code:`rst_` prefix naming convention.
 
 Tile objects
 ------------
 
-Mosaic tile functions perform operations on "tile tile" objects. These can be created explicitly using functions
+Mosaic raster functions perform operations on "raster tile" objects. These can be created explicitly using functions
 such as :ref:`rst_fromfile` or :ref:`rst_fromcontent` or implicitly when using Mosaic's GDAL datasource reader
 e.g. :code:`spark.read.format("gdal")`
 
 **Important changes to tile objects**
-    * The Mosaic tile tile schema changed in v0.4.1 to the following:
+    * The Mosaic raster tile schema changed in v0.4.1 to the following:
       :code:`<tile:struct<index_id:bigint, tile:binary, metadata:map<string, string>>`. All APIs that use tiles now follow
       this schema.
-    * The function :ref:`rst_maketiles` allows for the tile tile schema to hold either a path pointer (string)
+    * The function :ref:`rst_maketiles` allows for the raster tile schema to hold either a path pointer (string)
       or a byte array representation of the source tile. It also supports optional checkpointing for increased
       performance during chains of tile operations.
 
@@ -49,7 +49,7 @@ rst_avg
 
     Returns an array containing mean values for each band.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: ArrayType(DoubleType)
 
@@ -91,7 +91,7 @@ rst_bandmetadata
     Extract the metadata describing the tile band.
     Metadata is return as a map of key value pairs.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param band: The band number to extract metadata for.
     :type band: Column (IntegerType)
@@ -155,7 +155,7 @@ rst_boundingbox
 
     Returns the bounding box of the tile as a polygon geometry.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: StructType(DoubleType, DoubleType, DoubleType, DoubleType)
 
@@ -196,9 +196,9 @@ rst_clip
 
     Clips :code:`tile` with :code:`geometry`, provided in a supported encoding (WKB, WKT or GeoJSON).
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
-    :param geometry: A column containing the geometry to clip the tile to.
+    :param geometry: A column containing the geometry to clip the raster to.
     :type geometry: Column (GeometryType)
     :param cutline_all_touched: A column to specify pixels boundary behavior.
     :type cutline_all_touched: Column (BooleanType)
@@ -208,7 +208,7 @@ rst_clip
   **Notes**
 
     The :code:`geometry` parameter:
-      - Expected to be in the same coordinate reference system as the tile.
+      - Expected to be in the same coordinate reference system as the raster.
       - a polygon or a multipolygon.
 
     The :code:`cutline_all_touched` parameter:
@@ -220,12 +220,12 @@ rst_clip
     The actual GDAL command to clip looks something like the following (after some setup):
       :code:`"gdalwarp -wo CUTLINE_ALL_TOUCHED=<TRUE|FALSE> -cutline <GEOMETRY> -crop_to_cutline"`
 
-    The output tile tiles will have:
+    The output raster tiles will have:
       - the same extent as the input geometry.
-      - the same number of bands as the input tile.
-      - the same pixel data type as the input tile.
-      - the same pixel size as the input tile.
-      - the same coordinate reference system as the input tile.
+      - the same number of bands as the input raster.
+      - the same pixel data type as the input raster.
+      - the same pixel size as the input raster.
+      - the same coordinate reference system as the input raster.
 ..
 
     :example:
@@ -264,16 +264,16 @@ rst_combineavg
 
 .. function:: rst_combineavg(tiles)
 
-    Combines a collection of tile tiles by averaging the pixel values.
+    Combines a collection of raster tiles by averaging the pixel values.
 
-    :param tiles: A column containing an array of tile tiles.
+    :param tiles: A column containing an array of raster tiles.
     :type tiles: Column (ArrayType(RasterTileType))
     :rtype: Column: RasterTileType
 
 .. note::
   **Notes**
-    - Each tile in :code:`tiles` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
-    - The output tile will have the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input tiles.
+    - Each raster in :code:`tiles` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
+    - The output tile will have the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input raster tiles.
 
     Also, see :ref:`rst_combineavg_agg` function.
 ..
@@ -317,11 +317,11 @@ rst_convolve
 
 .. function:: rst_convolve(tile, kernel)
 
-    Applies a convolution filter to the tile. The result is Mosaic tile tile representing the filtered input :code:`tile`.
+    Applies a convolution filter to the tile. The result is Mosaic raster tile representing the filtered input :code:`tile`.
 
-    :param tile: A column containing tile tile.
+    :param tile: A column containing raster tile.
     :type tile: Column (RasterTileType)
-    :param kernel: The kernel to apply to the tile.
+    :param kernel: The kernel to apply to the raster.
     :type kernel: Column (ArrayType(ArrayType(DoubleType)))
     :rtype: Column: RasterTileType
 
@@ -408,9 +408,9 @@ rst_derivedband
 
 .. function:: rst_derivedband(tiles, python_func, func_name)
 
-    Combine an array of tile tiles using provided python function.
+    Combine an array of raster tiles using provided python function.
 
-    :param tiles: A column containing an array of tile tiles.
+    :param tiles: A column containing an array of raster tiles.
     :type tiles: Column (ArrayType(RasterTileType))
     :param python_func: A function to evaluate in python.
     :type python_func: Column (StringType)
@@ -420,8 +420,8 @@ rst_derivedband
 
 .. note::
   **Notes**
-    - Input tile tiles in :code:`tiles` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
-    - The output tile will have the same the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input tile tiles.
+    - Input raster tiles in :code:`tiles` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
+    - The output tile will have the same the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input raster tiles.
 
   See also: :ref:`rst_derivedband_agg` function.
 ..
@@ -492,12 +492,12 @@ rst_filter
 
 .. function:: rst_filter(tile,kernel_size,operation)
 
-    Applies a filter to the tile.
-    Returns a new tile tile with the filter applied.
+    Applies a filter to the raster.
+    Returns a new raster tile with the filter applied.
     :code:`kernel_size` is the number of pixels to compare; it must be odd.
     :code:`operation` is the op to apply, e.g. 'avg', 'median', 'mode', 'max', 'min'.
 
-    :param tile: Mosaic tile tile struct column.
+    :param tile: Mosaic raster tile struct column.
     :type tile: Column (RasterTileType)
     :param kernel_size: The size of the kernel. Has to be odd.
     :type kernel_size: Column (IntegerType)
@@ -541,15 +541,15 @@ rst_frombands
 
 .. function:: rst_frombands(tiles)
 
-    Combines a collection of tile tiles of different bands into a single tile.
+    Combines a collection of raster tiles of different bands into a single tile.
 
-    :param tiles: A column containing an array of tile tiles.
+    :param tiles: A column containing an array of raster tiles.
     :type tiles: Column (ArrayType(RasterTileType))
     :rtype: Column: RasterTileType
 
 .. note::
   **Notes**
-    - All tile tiles must have the same extent.
+    - All raster tiles must have the same extent.
     - The tiles must have the same pixel coordinate reference system.
     - The output tile will have the same extent as the input tiles.
     - The output tile will have the a number of bands equivalent to the number of input tiles.
@@ -596,24 +596,22 @@ rst_fromcontent
 
 .. function:: rst_fromcontent(raster_bin, driver, <size_in_MB>)
 
-    Returns a tile from tile data.
+    Returns a tile from raster data.
 
-
-    :param raster_bin: A column containing the tile data.
+    :param raster_bin: A column containing the raster data.
     :type raster_bin: Column (BinaryType)
-    :param driver: GDAL driver to use to open the tile.
+    :param driver: GDAL driver to use to open the raster.
     :type driver: Column(StringType)
-    :param size_in_MB: Optional parameter to specify the size of the tile tile in MB. Default is not to split the input.
+    :param size_in_MB: Optional parameter to specify the size of the raster tile in MB. Default is not to split the input.
     :type size_in_MB: Column (IntegerType)
     :rtype: Column: RasterTileType
 
 .. note::
   **Notes**
-    - The input tile must be a byte array in a BinaryType column.
-    - The driver required to read the tile must be one supplied with GDAL.
-    - If the size_in_MB parameter is specified, the tile will be split into tiles of the specified size.
-    - If the size_in_MB parameter is not specified or if the size_in_Mb < 0, the tile will only be split if it exceeds Integer.MAX_VALUE. The split will be at a threshold of 64MB in this case.
-
+    - The input raster must be a byte array in a BinaryType column.
+    - The driver required to read the raster must be one supplied with GDAL.
+    - If the size_in_MB parameter is specified, the raster will be split into tiles of the specified size.
+    - If the size_in_MB parameter is not specified or if the size_in_Mb < 0, the raster will only be split if it exceeds Integer.MAX_VALUE. The split will be at a threshold of 64MB in this case.
 
 ..
 
@@ -662,18 +660,18 @@ rst_fromfile
 
 .. function:: rst_fromfile(path, <size_in_MB>)
 
-    Returns a tile tile from a file path.
+    Returns a raster tile from a file path.
 
-    :param path: A column containing the path to a tile file.
+    :param path: A column containing the path to a raster file.
     :type path: Column (StringType)
-    :param size_in_MB: Optional parameter to specify the size of the tile tile in MB. Default is not to split the input.
+    :param size_in_MB: Optional parameter to specify the size of the raster tile in MB. Default is not to split the input.
     :type size_in_MB: Column (IntegerType)
     :rtype: Column: RasterTileType
 
 .. note::
   **Notes**
     - The file path must be a string.
-    - The file path must be a valid path to a tile file.
+    - The file path must be a valid path to a raster file.
     - The file path must be a path to a file that GDAL can read.
     - If the size_in_MB parameter is specified, the tile will be split into tiles of the specified size.
     - If the size_in_MB parameter is not specified or if the size_in_Mb < 0, the tile will only be split if it exceeds Integer.MAX_VALUE. The split will be at a threshold of 64MB in this case.
@@ -725,7 +723,7 @@ rst_georeference
 
 .. function:: rst_georeference(raster_tile)
 
-    Returns GeoTransform of the tile tile as a GT array of doubles. The output takes the form of a MapType with the following keys:
+    Returns GeoTransform of the raster tile as a GT array of doubles. The output takes the form of a MapType with the following keys:
 
     - :code:`GT(0)` x-coordinate of the upper-left corner of the upper-left pixel.
     - :code:`GT(1)` w-e pixel resolution / pixel width.
@@ -734,7 +732,7 @@ rst_georeference
     - :code:`GT(4)` column rotation (typically zero).
     - :code:`GT(5)` n-s pixel resolution / pixel height (negative value for a north-up image).
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: MapType(StringType, DoubleType)
 
@@ -776,9 +774,9 @@ rst_getnodata
 
 .. function:: rst_getnodata(tile)
 
-    Returns the nodata value of the tile tile bands.
+    Returns the nodata value of the raster tile bands.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: ArrayType(DoubleType)
 
@@ -817,9 +815,9 @@ rst_getsubdataset
 
 .. function:: rst_getsubdataset(tile, name)
 
-    Returns the subdataset of the tile tile with a given name.
+    Returns the subdataset of the raster tile with a given name.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param name: A column containing the name of the subdataset to return.
     :type name: Column (StringType)
@@ -828,7 +826,7 @@ rst_getsubdataset
 .. note::
   **Notes**
     - :code:`name` should be the last identifier in the standard GDAL subdataset path: :code:`DRIVER:PATH:NAME`.
-    - :code:`name` must be a valid subdataset name for the tile, i.e. it must exist within the tile.
+    - :code:`name` must be a valid subdataset name for the raster, i.e. it must exist within the raster.
 ..
 
     :example:
@@ -866,9 +864,9 @@ rst_height
 
 .. function:: rst_height(tile)
 
-    Returns the height of the tile tile in pixels.
+    Returns the height of the raster tile in pixels.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: IntegerType
 
@@ -910,18 +908,18 @@ rst_initnodata
 
 .. function:: rst_initnodata(tile)
 
-    Initializes the nodata value of the tile tile bands.
+    Initializes the nodata value of the raster tile bands.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: RasterTileType
 
 .. note::
   **Notes**
     - The nodata value will be set to a default sentinel values according to the pixel data type of the tile bands.
-    - The output tile will have the same extent as the input tile.
+    - The output tile will have the same extent as the input raster tile.
 
-    .. list-table:: Default nodata values for tile data types
+    .. list-table:: Default nodata values for raster data types
       :widths: 25 25 50
       :header-rows: 1
 
@@ -987,9 +985,9 @@ rst_isempty
 
 .. function:: rst_isempty(tile)
 
-    Returns true if the tile tile is empty.
+    Returns true if the raster tile is empty.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: BooleanType
 
@@ -1031,11 +1029,11 @@ rst_maketiles
 
 .. function:: rst_maketiles(input, driver, size, with_checkpoint)
 
-    Tiles the tile into tiles of the given size, optionally writing them to disk in the process.
+    Tiles the raster into tiles of the given size, optionally writing them to disk in the process.
 
     :param input: path (StringType) or content (BinaryType)
     :type input: Column
-    :param driver: The driver to use for reading the tile.
+    :param driver: The driver to use for reading the raster.
     :type driver: Column(StringType)
     :param size_in_mb: The size of the tiles in MB. 
     :type size_in_mb: Column(IntegerType)
@@ -1047,8 +1045,8 @@ rst_maketiles
   **Notes**
 
   :code:`input`
-    - If the tile is stored on disk, :code:`input` should be the path to the tile, similar to :ref:`rst_fromfile`.
-    - If the tile is stored in memory, :code:`input` should be the byte array representation of the tile, similar to :ref:`rst_fromcontent`.
+    - If the raster is stored on disk, :code:`input` should be the path to the raster, similar to :ref:`rst_fromfile`.
+    - If the raster is stored in memory, :code:`input` should be the byte array representation of the raster, similar to :ref:`rst_fromcontent`.
 
   :code:`driver`
     - If not specified, :code:`driver` is inferred from the file extension
@@ -1107,15 +1105,15 @@ rst_mapalgebra
 
 .. function:: rst_mapalgebra(tile, json_spec)
 
-    Performs map algebra on the tile tile.
+    Performs map algebra on the raster tile.
 
-    Employs the :code:`gdal_calc` command line tile calculator with standard numpy syntax.
+    Employs the :code:`gdal_calc` command line raster calculator with standard numpy syntax.
     Use any basic arithmetic supported by numpy arrays (such as \+, \-, \*, and /) along with
     logical operators (such as >, <, =).
 
     For this distributed implementation, all rasters must have the same dimensions and no projection checking is performed.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param json_spec: A column containing the map algebra operation specification.
     :type json_spec: Column (StringType)
@@ -1181,7 +1179,7 @@ rst_max
 
     Returns an array containing maximum values for each band.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: ArrayType(DoubleType)
 
@@ -1222,7 +1220,7 @@ rst_median
 
     Returns an array containing median values for each band.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: ArrayType(DoubleType)
 
@@ -1261,9 +1259,9 @@ rst_memsize
 
 .. function:: rst_memsize(tile)
 
-    Returns size of the tile tile in bytes.
+    Returns size of the raster tile in bytes.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: LongType
 
@@ -1305,9 +1303,9 @@ rst_merge
 
 .. function:: rst_merge(tiles)
 
-    Combines a collection of tile tiles into a single tile.
+    Combines a collection of raster tiles into a single tile.
 
-    :param tiles: A column containing an array of tile tiles.
+    :param tiles: A column containing an array of raster tiles.
     :type tiles: Column (ArrayType(RasterTileType))
     :rtype: Column: RasterTileType
 
@@ -1369,10 +1367,10 @@ rst_metadata
 
 .. function:: rst_metadata(tile)
 
-    Extract the metadata describing the tile tile.
+    Extract the metadata describing the raster tile.
     Metadata is return as a map of key value pairs.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: MapType(StringType, StringType)
 
@@ -1440,7 +1438,7 @@ rst_min
 
     Returns an array containing minimum values for each band.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: ArrayType(DoubleType)
 
@@ -1481,7 +1479,7 @@ rst_ndvi
 
     Calculates the Normalized Difference Vegetation Index (NDVI) for a tile.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param red_band_num: A column containing the band number of the red band.
     :type red_band_num: Column (IntegerType)
@@ -1494,7 +1492,7 @@ rst_ndvi
 
   NDVI is calculated using the formula: (NIR - RED) / (NIR + RED).
 
-  The output tile tiles will have:
+  The output raster tiles will have:
     - the same extent as the input tile.
     - a single band.
     - a pixel data type of float64.
@@ -1536,9 +1534,9 @@ rst_numbands
 
 .. function:: rst_numbands(tile)
 
-    Returns number of bands in the tile tile.
+    Returns number of bands in the raster tile.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: IntegerType
 
@@ -1582,7 +1580,7 @@ rst_pixelcount
 
     Returns an array containing pixel count values for each band; default excludes mask and nodata pixels.
     
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param count_nodata: A column to specify whether to count nodata pixels.
     :type count_nodata: Column (BooleanType)
@@ -1640,9 +1638,9 @@ rst_pixelheight
 
 .. function:: rst_pixelheight(tile)
 
-    Returns the height of the pixel in the tile tile derived via GeoTransform.
+    Returns the height of the pixel in the raster tile derived via GeoTransform.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -1684,9 +1682,9 @@ rst_pixelwidth
 
 .. function:: rst_pixelwidth(tile)
 
-    Returns the width of the pixel in the tile tile derived via GeoTransform.
+    Returns the width of the pixel in the raster tile derived via GeoTransform.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -1733,7 +1731,7 @@ rst_rastertogridavg
 
     The result is a 2D array of cells, where each cell is a struct of (:code:`cellID`, :code:`value`).
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param resolution: A resolution of the grid index system.
     :type resolution: Column (IntegerType)
@@ -1808,7 +1806,7 @@ rst_rastertogridcount
 
     The result is a 2D array of cells, where each cell is a struct of (:code:`cellID`, :code:`value`).
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param resolution: A resolution of the grid index system.
     :type resolution: Column (IntegerType)
@@ -1883,7 +1881,7 @@ rst_rastertogridmax
 
     The result is a 2D array of cells, where each cell is a struct of (:code:`cellID`, :code:`value`).
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param resolution: A resolution of the grid index system.
     :type resolution: Column (IntegerType)
@@ -1958,7 +1956,7 @@ rst_rastertogridmedian
 
     The result is a 2D array of cells, where each cell is a struct of (:code:`cellID`, :code:`value`).
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param resolution: A resolution of the grid index system.
     :type resolution: Column (IntegerType)
@@ -2033,7 +2031,7 @@ rst_rastertogridmin
 
     The result is a 2D array of cells, where each cell is a struct of (:code:`cellID`, :code:`value`).
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param resolution: A resolution of the grid index system.
     :type resolution: Column (IntegerType)
@@ -2104,9 +2102,9 @@ rst_rastertoworldcoord
 
 .. function:: rst_rastertoworldcoord(tile, x, y)
 
-    Computes the world coordinates of the tile tile at the given x and y pixel coordinates.
+    Computes the world coordinates of the raster tile at the given x and y pixel coordinates.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param x: x coordinate of the pixel.
     :type x: Column (IntegerType)
@@ -2117,7 +2115,7 @@ rst_rastertoworldcoord
 .. note::
   **Notes**
     - The result is a WKT point geometry.
-    - The coordinates are computed using the GeoTransform of the tile to respect the projection.
+    - The coordinates are computed using the GeoTransform of the raster to respect the projection.
 ..
 
     :example:
@@ -2155,12 +2153,12 @@ rst_rastertoworldcoordx
 
 .. function:: rst_rastertoworldcoordx(tile, x, y)
 
-    Computes the world coordinates of the tile tile at the given x and y pixel coordinates.
+    Computes the world coordinates of the raster tile at the given x and y pixel coordinates.
 
-    The result is the X coordinate of the point after applying the GeoTransform of the tile.
+    The result is the X coordinate of the point after applying the GeoTransform of the raster.
 
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param x: x coordinate of the pixel.
     :type x: Column (IntegerType)
@@ -2203,11 +2201,11 @@ rst_rastertoworldcoordy
 
 .. function:: rst_rastertoworldcoordy(tile, x, y)
 
-    Computes the world coordinates of the tile tile at the given x and y pixel coordinates.
+    Computes the world coordinates of the raster tile at the given x and y pixel coordinates.
 
-    The result is the Y coordinate of the point after applying the GeoTransform of the tile.
+    The result is the Y coordinate of the point after applying the GeoTransform of the raster.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param x: x coordinate of the pixel.
     :type x: Column (IntegerType)
@@ -2250,9 +2248,9 @@ rst_retile
 
 .. function:: rst_retile(tile, width, height)
 
-    Retiles the tile tile to the given size. The result is a collection of new tile tiles.
+    Retiles the raster tile to the given size. The result is a collection of new raster tiles.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param width: The width of the tiles.
     :type width: Column (IntegerType)
@@ -2298,10 +2296,10 @@ rst_rotation
 
 .. function:: rst_rotation(tile)
 
-    Computes the angle of rotation between the X axis of the tile tile and geographic North in degrees
-    using the GeoTransform of the tile.
+    Computes the angle of rotation between the X axis of the raster tile and geographic North in degrees
+    using the GeoTransform of the raster.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -2343,9 +2341,9 @@ rst_scalex
 
 .. function:: rst_scalex(tile)
 
-    Computes the scale of the tile tile in the X direction.
+    Computes the scale of the raster tile in the X direction.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -2384,9 +2382,9 @@ rst_scaley
 
 .. function:: rst_scaley(tile)
 
-    Computes the scale of the tile tile in the Y direction.
+    Computes the scale of the raster tile in the Y direction.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -2428,7 +2426,7 @@ rst_separatebands
     Returns a set of new single-band rasters, one for each band in the input tile. The result set will contain one row
     per input band for each :code:`tile` provided.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: (RasterTileType)
 
@@ -2474,13 +2472,13 @@ rst_separatebands
     +--------------------------------------------------------------------------------------------------------------------------------+
 
 rst_setnodata
-**********************
+*************
 
 .. function:: rst_setnodata(tile, nodata)
 
-    Returns a new tile tile with the nodata value set to :code:`nodata`.
+    Returns a new raster tile with the nodata value set to :code:`nodata`.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param nodata: The nodata value to set.
     :type nodata: Column (DoubleType) / ArrayType(DoubleType)
@@ -2527,13 +2525,13 @@ rst_setnodata
      +------------------------------------------------------------------------------------------------------------------+
 
 rst_setsrid
-********
+***********
 
 .. function:: rst_setsrid(tile, srid)
 
-    Set the SRID of the tile tile as an EPSG code.
+    Set the SRID of the raster tile as an EPSG code.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param srid: The SRID to set
     :type srid: Column (IntegerType)
@@ -2574,9 +2572,9 @@ rst_skewx
 
 .. function:: rst_skewx(tile)
 
-    Computes the skew of the tile tile in the X direction.
+    Computes the skew of the raster tile in the X direction.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -2615,9 +2613,9 @@ rst_skewy
 
 .. function:: rst_skewy(tile)
 
-    Computes the skew of the tile tile in the Y direction.
+    Computes the skew of the raster tile in the Y direction.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -2656,11 +2654,11 @@ rst_srid
 
 .. function:: rst_srid(tile)
 
-    Returns the SRID of the tile tile as an EPSG code.
+    Returns the SRID of the raster tile as an EPSG code.
 
     .. note:: For complex CRS definition the EPSG code may default to 0.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -2695,15 +2693,15 @@ rst_srid
     +------------------------------------------------------------------------------------------------------------------+
 
 rst_subdatasets
-**********************
+***************
 
 .. function:: rst_subdatasets(tile)
 
-    Returns the subdatasets of the tile tile as a set of paths in the standard GDAL format.
+    Returns the subdatasets of the raster tile as a set of paths in the standard GDAL format.
 
     The result is a map of the subdataset path to the subdatasets and the description of the subdatasets.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: MapType(StringType, StringType)
 
@@ -2751,9 +2749,9 @@ rst_subdivide
 
 .. function:: rst_subdivide(tile, sizeInMB)
 
-    Subdivides the tile tile to the given tile size in MB. The result is a collection of new tile tiles.
+    Subdivides the raster tile to the given tile size in MB. The result is a collection of new raster tiles.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param size_in_MB: The size of the tiles in MB.
     :type size_in_MB: Column (IntegerType)
@@ -2806,12 +2804,12 @@ rst_summary
 
 .. function:: rst_summary(tile)
 
-    Returns a summary description of the tile tile including metadata and statistics in JSON format.
+    Returns a summary description of the raster tile including metadata and statistics in JSON format.
 
     Values returned here are produced by the :code:`gdalinfo` procedure.
 
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: MapType(StringType, StringType)
 
@@ -2862,12 +2860,12 @@ rst_tessellate
 
 .. function:: rst_tessellate(tile, resolution)
 
-    Divides the tile tile into tessellating chips for the given resolution of the supported grid (H3, BNG, Custom).
-    The result is a collection of new tile tiles.
+    Divides the raster tile into tessellating chips for the given resolution of the supported grid (H3, BNG, Custom).
+    The result is a collection of new raster tiles.
 
     Each tile in the tile set corresponds to an index cell intersecting the bounding box of :code:`tile`.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param resolution: The resolution of the supported grid.
     :type resolution: Column (IntegerType)
@@ -2917,13 +2915,13 @@ rst_tooverlappingtiles
 
 .. function:: rst_tooverlappingtiles(tile, width, height, overlap)
 
-    Splits each :code:`tile` into a collection of new tile tiles of the given width and height,
+    Splits each :code:`tile` into a collection of new raster tiles of the given width and height,
     with an overlap of :code:`overlap` percent.
 
     The result set is automatically exploded into a row-per-subtile.
 
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param width: The width of the tiles in pixels.
     :type width: Column (IntegerType)
@@ -2972,13 +2970,13 @@ rst_tooverlappingtiles
      +------------------------------------------------------------------------------------------------------------------+
 
 rst_transform
-**********************
+*************
 
 .. function:: rst_transform(tile,srid)
 
     Transforms the tile to the given SRID.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param srid: EPSG authority code for the file's projection.
     :type srid: Column (IntegerType)
@@ -3022,13 +3020,13 @@ rst_transform
 
 
 rst_tryopen
-**********************
+***********
 
 .. function:: rst_tryopen(tile)
 
-    Tries to open the tile tile. If the tile cannot be opened the result is false and if the tile can be opened the result is true.
+    Tries to open the raster tile. If the tile cannot be opened the result is false and if the tile can be opened the result is true.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: BooleanType
 
@@ -3063,13 +3061,13 @@ rst_tryopen
      +------------------------------------------------------------------------------------------------------------------+
 
 rst_upperleftx
-**********************
+**************
 
 .. function:: rst_upperleftx(tile)
 
     Computes the upper left X coordinate of :code:`tile` based its GeoTransform.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -3104,13 +3102,13 @@ rst_upperleftx
     +------------------------------------------------------------------------------------------------------------------+
 
 rst_upperlefty
-**********************
+**************
 
 .. function:: rst_upperlefty(tile)
 
     Computes the upper left Y coordinate of :code:`tile` based its GeoTransform.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: DoubleType
 
@@ -3145,14 +3143,14 @@ rst_upperlefty
     +------------------------------------------------------------------------------------------------------------------+
 
 rst_width
-**********************
+*********
 
 .. function:: rst_width(tile)
 
-    Computes the width of the tile tile in pixels.
+    Computes the width of the raster tile in pixels.
 
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: IntegerType
 
@@ -3194,7 +3192,7 @@ rst_worldtorastercoord
     Computes the (j, i) pixel coordinates of :code:`xworld` and :code:`yworld` within :code:`tile`
     using the CRS of :code:`tile`.
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param xworld: X world coordinate.
     :type xworld: Column (DoubleType)
@@ -3241,7 +3239,7 @@ rst_worldtorastercoordx
     using the CRS of :code:`tile`.
 
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param xworld: X world coordinate.
     :type xworld: Column (DoubleType)
@@ -3288,7 +3286,7 @@ rst_worldtorastercoordy
     using the CRS of :code:`tile`.
 
 
-    :param tile: A column containing the tile tile.
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param xworld: X world coordinate.
     :type xworld: Column (DoubleType)
@@ -3331,11 +3329,11 @@ rst_write
 
 .. function:: rst_write(input, dir)
 
-    Writes tile tiles from the input column to a specified directory.
+    Writes raster tiles from the input column to a specified directory.
 
-    :param input: A column containing the tile tile.
+    :param input: A column containing the raster tile.
     :type input: Column
-    :param dir: The directory, e.g. fuse, to write the tile's tile.
+    :param dir: The directory, e.g. fuse, to write the tile's raster as file.
     :type dir: Column(StringType)
     :rtype: Column: RasterTileType
 

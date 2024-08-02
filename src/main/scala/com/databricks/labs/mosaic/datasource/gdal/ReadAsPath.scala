@@ -133,7 +133,8 @@ object ReadAsPath extends ReadStrategy {
             case LENGTH            => raster.getMemSize
             case other             => throw new RuntimeException(s"Unsupported field name: $other")
         }
-        // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
+
+        // Serialize to configured fuse directory
         val row = Utils.createRow(fields ++ Seq(
             tile.formatCellId(indexSystem).serialize(tileDataType, doDestroy = true, exprConfigOpt)))
 

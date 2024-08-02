@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
-import com.databricks.labs.mosaic.{RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.{RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
@@ -94,10 +94,10 @@ object ReTileOnRead extends ReadStrategy {
                          indexSystem: IndexSystem,
                          exprConfigOpt: Option[ExprConfig]
     ): Iterator[InternalRow] = {
+        //scalastyle:off println
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
         val sizeInMB = options.getOrElse("sizeInMB", "16").toInt
-        //scalastyle:off println
         val uriDeepCheck = Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
         val uriGdalOpt = PathUtils.parseGdalUriOpt(inPath, uriDeepCheck)
         val driverName = options.get("driverName") match {
@@ -109,15 +109,15 @@ object ReTileOnRead extends ReadStrategy {
                 //println(s"... ReTileOnRead - driverName '$dn' from ext")
                 dn
         }
-        //scalastyle:on println
         val tmpPath = PathUtils.copyCleanPathToTmpWithRetry(inPath, exprConfigOpt, retries = 5)
         val createInfo = Map(
             RASTER_PATH_KEY -> tmpPath,
             RASTER_PARENT_PATH_KEY -> inPath,
-            RASTER_DRIVER_KEY -> driverName
+            RASTER_DRIVER_KEY -> driverName,
+            RASTER_SUBDATASET_NAME_KEY -> options.getOrElse("subdatasetName", "")
         )
-
         val tiles = localSubdivide(createInfo, sizeInMB, exprConfigOpt)
+        //println(s"ReTileOnRead - number of tiles - ${tiles.length}")
 
         val rows = tiles.map(tile => {
             val raster = tile.raster
@@ -143,6 +143,7 @@ object ReTileOnRead extends ReadStrategy {
 
             row
         })
+        //scalastyle:on println
 
         rows.iterator
     }
@@ -164,6 +165,9 @@ object ReTileOnRead extends ReadStrategy {
                           sizeInMB: Int,
                           exprConfigOpt: Option[ExprConfig]
                       ): Seq[RasterTile] = {
+        //scalastyle:off println
+        //println(s"ReTileOnRead - localSubdivide - sizeInMB? $sizeInMB | config? $createInfo")
+        //scalastyle:on println
 
         var raster = RasterGDAL(createInfo, exprConfigOpt)
         var inTile = new RasterTile(null, raster, tileDataType)

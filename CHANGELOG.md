@@ -24,8 +24,8 @@
 - Added `RST_Write` to save a generated 'tile' to a specified directory (e.g. fuse) location using its GDAL driver and 
   tile data / path; useful for formalizing the path when writing a Lakehouse table (allowing removal of interim
   checkpointed data)
-- Improved `raster_to_grid` reader performance by using checkpointing for interim steps and adjusting repartitioning;
-  default read strategy for this reader and its underlying `.format("gdal")` reader is "as_path" instead of "in_memory"
+- Improved `raster_to_grid` reader performance by using fuse checkpointing for interim steps;
+  this reader and its underlying `.format("gdal")` reader now uses the fuse-based checkpointing
 - Built-in readers now support option "uriDeepCheck" to handle (mostly strip out) file path URI parts beyond "file:", "dbfs:", 
   and various common GDAL formats, see `FormatLookup` for lists; also new config `spark.databricks.labs.mosaic.uri.deep.check`
   allows global handling outside of readers, default is `false`.

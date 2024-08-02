@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.JTS
 import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO
-import com.databricks.labs.mosaic.functions.{ExprConfig, MosaicContext}
+import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import com.databricks.labs.mosaic.utils.PathUtils.VSI_ZIP_TOKEN
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
@@ -18,88 +18,88 @@ import java.util.{Vector => JVector}
 
 class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSessionGDAL {
 
-//    test("Read netcdf with Raster As Grid Reader") {
-//        assume(System.getProperty("os.name") == "Linux")
-//        val netcdf = "/binary/netcdf-coral/"
-//        val filePath = getClass.getResource(netcdf).getPath
-//
-//        val sc = this.spark
-//        import sc.implicits._
-//        sc.sparkContext.setLogLevel("ERROR")
-//
-//        // init
-//        val mc = MosaicContext.build(H3IndexSystem, JTS)
-//        mc.register(sc)
-//        import mc.functions._
-//
-//        info(s"checkpoint dir? ${GDAL.getCheckpointDir}")
-//
-//        noException should be thrownBy MosaicContext.read
-//            .format("raster_to_grid")
-//            .option("subdatasetName", "bleaching_alert_area")
-//            .option("nPartitions", "10")
-//            .option("extensions", "nc")
-//            .option("resolution", "5")
-//            .option("kRingInterpolate", "3")
-//            .load(filePath)
-//            .select("measure")
-//            .queryExecution
-//            .executedPlan
-//
-//    }
-//
-//    test("Read grib with Raster As Grid Reader") {
-//        assume(System.getProperty("os.name") == "Linux")
-//        val grib = "/binary/grib-cams/"
-//        val filePath = getClass.getResource(grib).getPath
-//
-//        val sc = this.spark
-//        import sc.implicits._
-//        sc.sparkContext.setLogLevel("ERROR")
-//
-//        // init
-//        val mc = MosaicContext.build(H3IndexSystem, JTS)
-//        mc.register(sc)
-//        import mc.functions._
-//
-//        noException should be thrownBy MosaicContext.read
-//            .format("raster_to_grid")
-//            .option("nPartitions", "10")
-//            .option("extensions", "grb")
-//            .option("combiner", "min")
-//            .option("kRingInterpolate", "3")
-//            .load(filePath)
-//            .select("measure")
-//            .take(1)
-//
-//    }
-//
-//    test("Read tif with Raster As Grid Reader") {
-//        assume(System.getProperty("os.name") == "Linux")
-//        val tif = "/modis/"
-//        val filePath = getClass.getResource(tif).getPath
-//
-//        val sc = this.spark
-//        import sc.implicits._
-//        sc.sparkContext.setLogLevel("ERROR")
-//
-//        // init
-//        val mc = MosaicContext.build(H3IndexSystem, JTS)
-//        mc.register(sc)
-//        import mc.functions._
-//
-//        noException should be thrownBy MosaicContext.read
-//            .format("raster_to_grid")
-//            .option("nPartitions", "10")
-//            .option("extensions", "tif")
-//            .option("combiner", "max")
-//            .option("resolution", "4")
-//            .option("kRingInterpolate", "3")
-//            .load(filePath)
-//            .select("measure")
-//            .take(1)
-//
-//    }
+    test("Read netcdf with Raster As Grid Reader") {
+        assume(System.getProperty("os.name") == "Linux")
+        val netcdf = "/binary/netcdf-coral/"
+        val filePath = getClass.getResource(netcdf).getPath
+
+        val sc = this.spark
+        import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
+
+        // init
+        val mc = MosaicContext.build(H3IndexSystem, JTS)
+        mc.register(sc)
+        import mc.functions._
+
+        info(s"checkpoint dir? ${GDAL.getCheckpointDir}")
+        //CleanUpManager.setCleanThreadDelayMinutes(300)
+
+        noException should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("subdatasetName", "bleaching_alert_area")
+            .option("nPartitions", "10")
+            .option("extensions", "nc")
+            .option("resolution", "0")
+            .option("kRingInterpolate", "1")
+            .load(s"$filePath/ct5km_baa-max-7d_v3.1_20220101.nc")
+            .select("measure")
+            .take(1)
+
+    }
+
+    test("Read grib with Raster As Grid Reader") {
+        assume(System.getProperty("os.name") == "Linux")
+        val grib = "/binary/grib-cams/"
+        val filePath = getClass.getResource(grib).getPath
+
+        val sc = this.spark
+        import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
+
+        // init
+        val mc = MosaicContext.build(H3IndexSystem, JTS)
+        mc.register(sc)
+        import mc.functions._
+
+        noException should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("nPartitions", "10")
+            .option("extensions", "grb")
+            .option("combiner", "min")
+            .option("kRingInterpolate", "3")
+            .load(filePath)
+            .select("measure")
+            .take(1)
+
+    }
+
+    test("Read tif with Raster As Grid Reader") {
+        assume(System.getProperty("os.name") == "Linux")
+        val tif = "/modis/"
+        val filePath = getClass.getResource(tif).getPath
+
+        val sc = this.spark
+        import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
+
+        // init
+        val mc = MosaicContext.build(H3IndexSystem, JTS)
+        mc.register(sc)
+        import mc.functions._
+
+        noException should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("nPartitions", "10")
+            .option("extensions", "tif")
+            .option("combiner", "max")
+            .option("resolution", "4")
+            .option("kRingInterpolate", "3")
+            .load(filePath)
+            .select("measure")
+            .take(1)
+
+    }
 
     test("Read zarr with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
@@ -155,74 +155,76 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .select("measure")
             .take(1)
         info("... after median combiner")
-//
-//        noException should be thrownBy MosaicContext.read
-//            .format("raster_to_grid")
-//            .option("driverName", "Zarr") // <- needed?
-//            .option("nPartitions", "10")
-//            .option("subdatasetName", "/group_with_attrs/F_order_array")
-//            .option("combiner", "count")
-//            .option("vsizip", "true")
-//            .load(filePath)
-//            .select("measure")
-//            .take(1)
-//        info("... after count combiner")
-//
-//        noException should be thrownBy MosaicContext.read
-//            .format("raster_to_grid")
-//            .option("driverName", "Zarr") // <- needed?
-//            .option("nPartitions", "10")
-//            .option("subdatasetName", "/group_with_attrs/F_order_array")
-//            .option("combiner", "average")
-//            .option("vsizip", "true")
-//            .load(filePath)
-//            .select("measure")
-//            .take(1)
-//        info("... after average combiner")
-//
-//        noException should be thrownBy MosaicContext.read
-//            .format("raster_to_grid")
-//            .option("driverName", "Zarr") // <- needed?
-//            .option("nPartitions", "10")
-//            .option("subdatasetName", "/group_with_attrs/F_order_array")
-//            .option("combiner", "avg")
-//            .option("vsizip", "true")
-//            .load(filePath)
-//            .select("measure")
-//            .take(1)
-//        info("... after avg combiner")
-//
-//        val paths = Files.list(Paths.get(filePath)).toArray.map(_.toString)
-//
-//        an[Error] should be thrownBy MosaicContext.read
-//            .format("raster_to_grid")
-//            .option("driverName", "Zarr") // <- needed?
-//            .option("nPartitions", "10")
-//            .option("combiner", "count_+")
-//            .option("vsizip", "true")
-//            .load(paths: _*)
-//            .select("measure")
-//            .take(1)
-//        info("... after count_+ combiner (exception)")
-//
-//        an[Error] should be thrownBy MosaicContext.read
-//            .format("invalid")
-//            .load(paths: _*)
-//        info("... after invalid paths format (exception)")
-//
-//        an[Error] should be thrownBy MosaicContext.read
-//            .format("invalid")
-//            .load(filePath)
-//        info("... after invalid path format (exception)")
-//
-//        noException should be thrownBy MosaicContext.read
-//            .format("raster_to_grid")
-//            .option("driverName", "Zarr") // <- needed?
-//            .option("nPartitions", "10")
-//            .option("subdatasetName", "/group_with_attrs/F_order_array")
-//            .option("kRingInterpolate", "3")
-//            .load(filePath)
-//        info("... after subdataset + kring interpolate")
+
+        noException should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("driverName", "Zarr") // <- needed?
+            .option("nPartitions", "10")
+            .option("subdatasetName", "/group_with_attrs/F_order_array")
+            .option("combiner", "count")
+            .option("vsizip", "true")
+            .load(filePath)
+            .select("measure")
+            .take(1)
+        info("... after count combiner")
+
+        noException should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("driverName", "Zarr") // <- needed?
+            .option("nPartitions", "10")
+            .option("subdatasetName", "/group_with_attrs/F_order_array")
+            .option("combiner", "average")
+            .option("vsizip", "true")
+            .load(filePath)
+            .select("measure")
+            .take(1)
+        info("... after average combiner")
+
+        noException should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("driverName", "Zarr") // <- needed?
+            .option("nPartitions", "10")
+            .option("subdatasetName", "/group_with_attrs/F_order_array")
+            .option("combiner", "avg")
+            .option("vsizip", "true")
+            .load(filePath)
+            .select("measure")
+            .take(1)
+        info("... after avg combiner")
+
+        val paths = Files.list(Paths.get(filePath)).toArray.map(_.toString)
+
+        an[Error] should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("driverName", "Zarr") // <- needed?
+            .option("nPartitions", "10")
+            .option("combiner", "count_+")
+            .option("vsizip", "true")
+            .load(paths: _*)
+            .select("measure")
+            .take(1)
+        info("... after count_+ combiner (exception)")
+
+        an[Error] should be thrownBy MosaicContext.read
+            .format("invalid")
+            .load(paths: _*)
+        info("... after invalid paths format (exception)")
+
+        an[Error] should be thrownBy MosaicContext.read
+            .format("invalid")
+            .load(filePath)
+        info("... after invalid path format (exception)")
+
+        noException should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("driverName", "Zarr") // <- needed?
+            .option("nPartitions", "10")
+            .option("subdatasetName", "/group_with_attrs/F_order_array")
+            .option("kRingInterpolate", "3")
+            .load(filePath)
+            .select("measure") // <- added
+            .take(1)  // <- added
+        info("... after subdataset + kring interpolate")
 
     }
 

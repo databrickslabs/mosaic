@@ -1,6 +1,13 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
-import com.databricks.labs.mosaic.{RASTER_ALL_PARENTS_KEY, RASTER_DRIVER_KEY, RASTER_LAST_CMD_KEY, RASTER_LAST_ERR_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.{
+    RASTER_ALL_PARENTS_KEY,
+    RASTER_DRIVER_KEY,
+    RASTER_LAST_CMD_KEY,
+    RASTER_LAST_ERR_KEY,
+    RASTER_PARENT_PATH_KEY,
+    RASTER_PATH_KEY
+}
 import com.databricks.labs.mosaic.core.raster.gdal.{RasterGDAL, RasterWriteOptions}
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.flushAndDestroy
 import com.databricks.labs.mosaic.functions.ExprConfig
@@ -28,27 +35,40 @@ object GDALBuildVRT {
         val effectiveCommand = OperatorOptions.appendOptions(command, RasterWriteOptions.VRT)
         val vrtOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
         val vrtOptions = new BuildVRTOptions(vrtOptionsVec)
-        val vrtResult = gdal.BuildVRT(outputPath, rasters.map(_.withDatasetHydratedOpt().get).toArray, vrtOptions)
-        val errorMsg = gdal.GetLastErrorMsg
-
-//        if (errorMsg.nonEmpty) {
-//            // scalastyle:off println
-//            println(s"... GDALBuildVRT (last_error) - '$errorMsg' for '$outputPath'")
-//            // scalastyle:on println
-//        }
-
+        // filter empty rasters
+        val vrtResult = gdal.BuildVRT(
+            outputPath,
+            rasters
+                .filter(!_.isEmptyRasterGDAL)
+                .filter(!_.isEmpty)
+                .map(_.withDatasetHydratedOpt().get)
+                .toArray,
+            vrtOptions
+        )
         flushAndDestroy(vrtResult)
 
-        val createInfo = Map(
-          RASTER_PATH_KEY -> outputPath,
-          RASTER_PARENT_PATH_KEY -> rasters.head.getRawParentPath,
-          RASTER_DRIVER_KEY -> "VRT",
-          RASTER_LAST_CMD_KEY -> effectiveCommand,
-          RASTER_LAST_ERR_KEY -> errorMsg,
-          RASTER_ALL_PARENTS_KEY -> rasters.map(_.getRawParentPath).mkString(";")
-        )
+        val errorMsg = gdal.GetLastErrorMsg
+        if (errorMsg.nonEmpty) {
+            // scalastyle:off println
+            //println(s"... GDALBuildVRT (last_error) - '$errorMsg' for '$outputPath'")
+            // scalastyle:on println
+            val result = RasterGDAL()
+            result.updateCreateInfoLastCmd(effectiveCommand)
+            result.updateCreateInfoError(errorMsg)
 
-        RasterGDAL(createInfo, exprConfigOpt)
+            result
+        } else {
+            val createInfo = Map(
+                RASTER_PATH_KEY -> outputPath,
+                RASTER_PARENT_PATH_KEY -> rasters.head.getRawParentPath,
+                RASTER_DRIVER_KEY -> "VRT",
+                RASTER_LAST_CMD_KEY -> effectiveCommand,
+                RASTER_LAST_ERR_KEY -> errorMsg,
+                RASTER_ALL_PARENTS_KEY -> rasters.map(_.getRawParentPath).mkString(";")
+            )
+
+            RasterGDAL(createInfo, exprConfigOpt)
+        }
     }
 
 }

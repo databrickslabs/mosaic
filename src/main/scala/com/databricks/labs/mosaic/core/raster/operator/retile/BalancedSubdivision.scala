@@ -31,7 +31,12 @@ object BalancedSubdivision {
             else 0L
         }
         var n = 1
-        val destSizeBytes: Long = destSize * 1000L * 1000L
+        // additional logic for destSize < 1
+        val destSizeBytes: Long = {
+            if (destSize > 0) destSize * 1000L * 1000L               // <- destSize
+            else if (destSize < 0 && size <= Integer.MAX_VALUE) size // <- size
+            else 64 * 1000L * 1000L                                  // <- 64MB default
+        }
         if (size > 0 && size > destSizeBytes) {
             while (true) {
                 n *= 4
@@ -74,6 +79,7 @@ object BalancedSubdivision {
         // if the ratio is not maintained, split one more time
         // 0.1 is an arbitrary threshold to account for rounding errors
         if (Math.abs(originRatio - ratio) > 0.1) tile = split(tile)
+
         tile
     }
 
@@ -85,7 +91,7 @@ object BalancedSubdivision {
       *
       * @param tile
       *   The tile to split.
-      * @param sizeInMb
+      * @param sizeInMB
       *   The desired size of the split rasters in MB.
       * @param exprConfigOpt
       *   Option [[ExprConfig]]
@@ -94,15 +100,25 @@ object BalancedSubdivision {
       */
     def splitRaster(
         tile: RasterTile,
-        sizeInMb: Int,
+        sizeInMB: Int,
         exprConfigOpt: Option[ExprConfig]
     ): Seq[RasterTile] = {
         val raster = tile.raster
-        val numSplits = getNumSplits(raster, sizeInMb)
+        val numSplits = getNumSplits(raster, sizeInMB)
         val (x, y) = raster.getDimensions
         val (tileX, tileY) = getTileSize(x, y, numSplits)
 
-        ReTile.reTile(tile, tileX, tileY, exprConfigOpt)
+        //scalastyle:off println
+        //println(
+        //    s"BalancedSubdivision - splitRaster - numSplits? $numSplits |" +
+        //        s" x? $x | y? $y | tileX? $tileX | tileY? $tileY | sizeInMB? $sizeInMB"
+        //)
+        //scalastyle:on println
+        if (numSplits > 1) {
+            ReTile.reTile(tile, tileX, tileY, exprConfigOpt)
+        } else {
+            Seq(tile) // <- return the provided raster
+        }
     }
 
 }

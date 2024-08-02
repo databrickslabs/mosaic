@@ -25,9 +25,12 @@ object MergeBands {
       */
     def merge(rasters: Seq[RasterGDAL], resampling: String, exprConfigOpt: Option[ExprConfig]): RasterGDAL = {
         val outOptions = rasters.head.getWriteOptions
-
         val vrtPath = PathUtils.createTmpFilePath("vrt", exprConfigOpt)
         val rasterPath = PathUtils.createTmpFilePath(outOptions.extension, exprConfigOpt)
+
+        //scalastyle:off println
+        //println(s"MergeBands - merge - rasterPath? $rasterPath")
+        //scalastyle:on println
 
         val vrtRaster = GDALBuildVRT.executeVRT(
             vrtPath,
@@ -36,17 +39,22 @@ object MergeBands {
             exprConfigOpt
         )
 
-        val result = GDALTranslate.executeTranslate(
-            rasterPath,
-            vrtRaster,
-            command = s"gdal_translate -r $resampling",
-            outOptions,
-            exprConfigOpt
-        )
+        if (vrtRaster.isEmptyRasterGDAL) {
+            vrtRaster
+        } else {
 
-        vrtRaster.flushAndDestroy()
+            val result = GDALTranslate.executeTranslate(
+                rasterPath,
+                vrtRaster,
+                command = s"gdal_translate -r $resampling",
+                outOptions,
+                exprConfigOpt
+            )
 
-        result
+            vrtRaster.flushAndDestroy()
+
+            result
+        }
     }
 
     /**
