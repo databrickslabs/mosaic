@@ -85,7 +85,7 @@ trait ST_LengthBehaviors extends MosaicSpatialQueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stLength = ST_Length(lit(1).expr, mc.expressionConfig)
+        val stLength = ST_Length(lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stLength.genCode(ctx)
     }
@@ -95,7 +95,7 @@ trait ST_LengthBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register(spark)
 
-        val stLength = ST_Length(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, mc.expressionConfig)
+        val stLength = ST_Length(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, mc.exprConfig)
 
         stLength.child shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr
         stLength.dataType shouldEqual DoubleType

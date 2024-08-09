@@ -2,43 +2,49 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.merge.MergeRasters
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpressionSerialization
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, UnsafeProjection, UnsafeRow}
 import org.apache.spark.sql.catalyst.trees.UnaryLike
 import org.apache.spark.sql.catalyst.util.GenericArrayData
-import org.apache.spark.sql.types.{ArrayType, BinaryType, DataType}
+import org.apache.spark.sql.types.{ArrayType, DataType}
 
 import scala.collection.mutable.ArrayBuffer
 
-/** Merges rasters into a single raster. */
+/** Merges rasters into a single tile. */
 //noinspection DuplicatedCode
 case class RST_MergeAgg(
-    tileExpr: Expression,
-    expressionConfig: MosaicExpressionConfig,
-    mutableAggBufferOffset: Int = 0,
-    inputAggBufferOffset: Int = 0
+                           rastersExpr: Expression,
+                           exprConfig: ExprConfig,
+                           mutableAggBufferOffset: Int = 0,
+                           inputAggBufferOffset: Int = 0
 ) extends TypedImperativeAggregate[ArrayBuffer[Any]]
       with UnaryLike[Expression]
       with RasterExpressionSerialization {
 
+    GDAL.enable(exprConfig)
+
     override lazy val deterministic: Boolean = true
-    override val child: Expression = tileExpr
+
+    override val child: Expression = rastersExpr
+
     override val nullable: Boolean = false
+
+    // serialize data type
     override lazy val dataType: DataType = {
-        GDAL.enable(expressionConfig)
-        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(exprConfig.getCellIdType, rastersExpr, exprConfig.isRasterUseCheckpoint)
     }
-    override def prettyName: String = "rst_merge_agg"
 
     private lazy val projection = UnsafeProjection.create(Array[DataType](ArrayType(elementType = dataType, containsNull = false)))
+
     private lazy val row = new UnsafeRow(1)
+
+    override def prettyName: String = "rst_merge_agg"
 
     def update(buffer: ArrayBuffer[Any], input: InternalRow): ArrayBuffer[Any] = {
         val value = child.eval(input)
@@ -59,7 +65,7 @@ case class RST_MergeAgg(
         copy(mutableAggBufferOffset = newMutableAggBufferOffset)
 
     override def eval(buffer: ArrayBuffer[Any]): Any = {
-        GDAL.enable(expressionConfig)
+        GDAL.enable(exprConfig)
 
         if (buffer.isEmpty) {
             null
@@ -69,32 +75,31 @@ case class RST_MergeAgg(
 
             // This is a trick to get the rasters sorted by their parent path to ensure more consistent results
             // when merging rasters with large overlaps
-            val rasterType = RasterTileType(tileExpr, expressionConfig.isRasterUseCheckpoint).rasterType
             var tiles = buffer
                 .map(row =>
-                    MosaicRasterTile.deserialize(
-                      row.asInstanceOf[InternalRow],
-                      expressionConfig.getCellIdType,
-                      rasterType
+                    RasterTile.deserialize(
+                        row.asInstanceOf[InternalRow],
+                        exprConfig.getCellIdType,
+                        Option(exprConfig)  // <- 0.4.3 infer type
                     )
                 )
-                .sortBy(_.getParentPath)
+                .sortBy(_.raster.getRawParentPath)
 
             // If merging multiple index rasters, the index value is dropped
-            val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-            var merged = MergeRasters.merge(tiles.map(_.getRaster)).flushCache()
+            val idx = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
+            var merged = MergeRasters.merge(tiles.map(_.raster), Option(exprConfig))
 
-            val result = MosaicRasterTile(idx, merged)
-                .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(BinaryType)
+            val resultType = RasterTile.getRasterType(dataType)
+            var result = RasterTile(idx, merged, resultType).formatCellId(
+                IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem))
+            val serialized = result.serialize(resultType, doDestroy = true, Option(exprConfig))
 
-            tiles.foreach(RasterCleaner.dispose(_))
-            RasterCleaner.dispose(merged)
-
+            tiles.foreach(_.flushAndDestroy())
             tiles = null
             merged = null
+            result = null
 
-            result
+            serialized
         }
     }
 
@@ -110,7 +115,7 @@ case class RST_MergeAgg(
         buffer
     }
 
-    override protected def withNewChildInternal(newChild: Expression): RST_MergeAgg = copy(tileExpr = newChild)
+    override protected def withNewChildInternal(newChild: Expression): RST_MergeAgg = copy(rastersExpr = newChild)
 
 }
 
@@ -123,13 +128,13 @@ object RST_MergeAgg {
           db.orNull,
           "rst_merge_agg",
           """
-            |    _FUNC_(tiles)) - Aggregate merge of raster tiles.
+            |    _FUNC_(tiles)) - Aggregate merge of tile tiles.
             """.stripMargin,
           "",
           """
             |    Examples:
             |      > SELECT _FUNC_(raster_tile);
-            |        {index_id, raster, parent_path, driver}
+            |        {index_id, tile, parent_path, driver}
             |  """.stripMargin,
           "",
           "agg_funcs",

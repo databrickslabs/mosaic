@@ -64,7 +64,7 @@ trait ST_ConvexHullBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stConvexHull = ST_ConvexHull(lit(1).expr, mc.expressionConfig)
+        val stConvexHull = ST_ConvexHull(lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stConvexHull.genCode(ctx)
     }
@@ -74,7 +74,7 @@ trait ST_ConvexHullBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
-        val stConvexHull = ST_ConvexHull(lit("MULTIPOINT (-70 35, -80 45, -70 45, -80 35)").expr, mc.expressionConfig)
+        val stConvexHull = ST_ConvexHull(lit("MULTIPOINT (-70 35, -80 45, -70 45, -80 35)").expr, mc.exprConfig)
 
         stConvexHull.child shouldEqual lit("MULTIPOINT (-70 35, -80 45, -70 45, -80 35)").expr
         stConvexHull.dataType shouldEqual lit("MULTIPOINT (-70 35, -80 45, -70 45, -80 35)").expr.dataType

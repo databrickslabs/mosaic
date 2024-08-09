@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVectorExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
@@ -14,14 +14,14 @@ import org.apache.spark.sql.types.{DataType, DoubleType}
   *
   * @param inputGeom
   *   Expression containing the geometry.
-  * @param expressionConfig
+  * @param exprConfig
   *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
   *   arguments for the expression (expressionConfigs).
   */
 case class ST_Z(
-    inputGeom: Expression,
-    expressionConfig: MosaicExpressionConfig
-) extends UnaryVectorExpression[ST_Z](inputGeom, returnsGeometry = false, expressionConfig) {
+                   inputGeom: Expression,
+                   exprConfig: ExprConfig
+) extends UnaryVectorExpression[ST_Z](inputGeom, returnsGeometry = false, exprConfig) {
 
     override def dataType: DataType = DoubleType
 
@@ -50,8 +50,8 @@ object ST_Z extends WithExpressionInfo {
           |        12.3
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_Z](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_Z](1, exprConfig)
     }
 
 }

@@ -67,7 +67,7 @@ trait ST_UpdateSRIDBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register(spark)
 
-        val stUpdateSRID = ST_UpdateSRID(lit("POINT (1 1)").expr, lit(4326).expr, lit(27700).expr, mc.expressionConfig)
+        val stUpdateSRID = ST_UpdateSRID(lit("POINT (1 1)").expr, lit(4326).expr, lit(27700).expr, mc.exprConfig)
 
         stUpdateSRID.first shouldEqual lit("POINT (1 1)").expr
         stUpdateSRID.second shouldEqual lit(4326).expr

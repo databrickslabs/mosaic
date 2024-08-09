@@ -10,19 +10,19 @@ import org.scalatest.matchers.should.Matchers._
 trait RST_BandMetadataBehaviors extends QueryTest {
 
     def bandMetadataBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        val sc = spark
-        spark.sparkContext.setLogLevel("ERROR")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
+
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
 
         noException should be thrownBy MosaicContext.geometryAPI
 
         val rastersInMemory = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
             .load("src/test/resources/binary/netcdf-coral")
 
         val rasterDfWithBandMetadata = rastersInMemory

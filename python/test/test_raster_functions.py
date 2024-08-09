@@ -34,6 +34,10 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
                 "rst_combineavg",
                 api.rst_combineavg(array(col("tile"), col("rst_clip"))),
             )
+            .withColumn("rst_avg", api.rst_avg("tile"))
+            .withColumn("rst_max", api.rst_max("tile"))
+            .withColumn("rst_median", api.rst_median("tile"))
+            .withColumn("rst_min", api.rst_min("tile"))
             .withColumn("rst_frombands", api.rst_frombands(array("tile", "tile")))
             .withColumn("tile_from_file", api.rst_fromfile("path", lit(-1)))
             .withColumn("rst_georeference", api.rst_georeference("tile"))
@@ -48,6 +52,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .withColumn("rst_metadata", api.rst_metadata("tile"))
             .withColumn("rst_ndvi", api.rst_ndvi("tile", lit(1), lit(1)))
             .withColumn("rst_numbands", api.rst_numbands("tile"))
+            .withColumn("rst_pixelcount", api.rst_pixelcount("tile"))
             .withColumn("rst_pixelheight", api.rst_pixelheight("tile"))
             .withColumn("rst_pixelwidth", api.rst_pixelwidth("tile"))
             .withColumn("rst_rastertogridavg", api.rst_rastertogridavg("tile", lit(9)))
@@ -120,8 +125,8 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         overlap_result = (
             self.generate_singleband_raster_df()
             .withColumn(
-                "rst_to_overlapping_tiles",
-                api.rst_to_overlapping_tiles("tile", lit(200), lit(200), lit(10)),
+                "rst_tooverlappingtiles",
+                api.rst_tooverlappingtiles("tile", lit(200), lit(200), lit(10)),
             )
             .withColumn("rst_subdatasets", api.rst_subdatasets("tile"))
         )
@@ -134,8 +139,8 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             self.generate_singleband_raster_df()
             .withColumn("extent", api.st_astext(api.rst_boundingbox("tile")))
             .withColumn(
-                "rst_to_overlapping_tiles",
-                api.rst_to_overlapping_tiles("tile", lit(200), lit(200), lit(10)),
+                "rst_tooverlappingtiles",
+                api.rst_tooverlappingtiles("tile", lit(200), lit(200), lit(10)),
             )
         )
 
@@ -184,6 +189,8 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             )
             .select(*region_keys, "chip.*")
         )
+        # print(f"...census_df count? {census_df.count()}")
+        self.assertEqual(census_df.count(), 2)
 
         df = (
             self.spark.read.format("gdal")
@@ -202,10 +209,14 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .withColumn("tile", api.rst_setsrid("tile", lit(4326)))
             .where(col("timestep") == 21)
             .withColumn(
-                "tile", api.rst_to_overlapping_tiles("tile", lit(20), lit(20), lit(10))
+                "tile", api.rst_tooverlappingtiles("tile", lit(20), lit(20), lit(10))
             )
             .repartition(self.spark.sparkContext.defaultParallelism)
         )
+        print(f"...df count? {df.count()}")
+        print(f"...df tile? {df.select('tile').first()[0]}")
+        #print(f"""... metadata -> {df.select(api.rst_metadata("tile")).first()[0]}""")
+        print(f"""... timesteps -> {[r[0] for r in df.select("timestep").distinct().collect()]}""")
 
         prh_bands_indexed = df.withColumn(
             "tile", api.rst_tessellate("tile", lit(target_resolution))

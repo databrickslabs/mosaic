@@ -51,7 +51,7 @@ trait ST_BufferLoopBehaviors extends MosaicSpatialQueryTest {
         val (_, code) = codeGenStage.doCodeGen()
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stEnvelope = ST_Envelope(lit(1).expr, mc.expressionConfig)
+        val stEnvelope = ST_Envelope(lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stEnvelope.genCode(ctx)
     }
@@ -64,7 +64,7 @@ trait ST_BufferLoopBehaviors extends MosaicSpatialQueryTest {
 
         val input = "POLYGON (10 10, 20 10, 15 20, 10 10)"
 
-        val stBufferLoop =  ST_BufferLoop(lit(input).expr, lit(0.1).expr, lit(0.2).expr, mc.expressionConfig)
+        val stBufferLoop =  ST_BufferLoop(lit(input).expr, lit(0.1).expr, lit(0.2).expr, mc.exprConfig)
         stBufferLoop.first shouldEqual lit(input).expr
         stBufferLoop.second shouldEqual lit(0.1).expr
         stBufferLoop.third shouldEqual lit(0.2).expr

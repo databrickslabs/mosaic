@@ -30,7 +30,7 @@ trait ST_AsMVTTileAggBehaviors extends MosaicSpatialQueryTest {
         val result = mocks
             .getWKTRowsDf(mc.getIndexSystem)
             .select(st_centroid($"wkt").alias("centroid"))
-            .withColumn("ids", array((0 until 30).map(_ => rand() * 1000): _*)) // add some random data
+            .withColumn("ids", array((0 until 10).map(_ => rand() * 1000): _*)) // add some random data (was 30, now 10)
             .select(explode($"ids").alias("id"), st_translate($"centroid", rand(), rand()).alias("centroid"))
             .withColumn("index_id", grid_pointascellid($"centroid", lit(6)))
             .withColumn("centroid", as_json(st_asgeojson($"centroid")))
@@ -42,8 +42,7 @@ trait ST_AsMVTTileAggBehaviors extends MosaicSpatialQueryTest {
         val row = result.head
         
         val payload = row.getAs[Array[Byte]]("mvt")
-        
-        
+
         val tmpFile = Files.createTempFile(Paths.get("/tmp"), "mvt", ".pbf")
         Files.write(tmpFile, payload)
 

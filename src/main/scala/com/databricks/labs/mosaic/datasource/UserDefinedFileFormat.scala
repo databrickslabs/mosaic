@@ -22,8 +22,10 @@ class UserDefinedFileFormat extends FileFormat with DataSourceRegister with Seri
         files: Seq[FileStatus]
     ): Option[StructType] = {
         val readerClass = options("readerClass")
+        // scalastyle:off classforname
         val reader = Class.forName(readerClass).newInstance().asInstanceOf[UserDefinedReader]
         reader.inferSchema(sparkSession, options, files)
+        // scalastyle:on classforname
     }
 
     override def isSplitable(sparkSession: SparkSession, options: Map[String, String], path: Path): Boolean = {
@@ -49,8 +51,10 @@ class UserDefinedFileFormat extends FileFormat with DataSourceRegister with Seri
         hadoopConf: Configuration
     ): PartitionedFile => Iterator[InternalRow] = {
         val readerClass = options("readerClass")
+        // scalastyle:off classforname
         val reader = Class.forName(readerClass).newInstance().asInstanceOf[UserDefinedReader]
         reader.buildReader(sparkSession, dataSchema, partitionSchema, requiredSchema, filters, options, hadoopConf)
+        // scalastyle:on classforname
     }
 
 }

@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 
@@ -19,15 +19,15 @@ import scala.reflect.ClassTag
   *   The expression for the geometry.
   * @param returnsGeometry
   *   Whether the expression returns a geometry or not.
-  * @param expressionConfig
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
   *   The type of the extending class.
   */
 abstract class UnaryVectorExpression[T <: Expression: ClassTag](
-    geometryExpr: Expression,
-    returnsGeometry: Boolean,
-    expressionConfig: MosaicExpressionConfig
+                                                                   geometryExpr: Expression,
+                                                                   returnsGeometry: Boolean,
+                                                                   exprConfig: ExprConfig
 ) extends UnaryExpression
       with VectorExpression
       with NullIntolerant
@@ -35,7 +35,7 @@ abstract class UnaryVectorExpression[T <: Expression: ClassTag](
 
     override def child: Expression = geometryExpr
 
-    override def geometryAPI: GeometryAPI = getGeometryAPI(expressionConfig)
+    override def geometryAPI: GeometryAPI = getGeometryAPI(exprConfig)
 
     /**
       * The function to be overriden by the extending class. It is called when
@@ -76,7 +76,7 @@ abstract class UnaryVectorExpression[T <: Expression: ClassTag](
       */
     def geometryCodeGen(mosaicGeometryRef: String, ctx: CodegenContext): (String, String)
 
-    override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 1, expressionConfig)
+    override def makeCopy(newArgs: Array[AnyRef]): Expression = GenericExpressionFactory.makeCopyImpl[T](this, newArgs, 1, exprConfig)
 
     override def withNewChildInternal(
         newFirst: Expression

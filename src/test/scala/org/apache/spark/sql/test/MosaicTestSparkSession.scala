@@ -1,5 +1,6 @@
 package org.apache.spark.sql.test
 
+import com.databricks.labs.mosaic.MOSAIC_TEST_MODE
 import org.apache.spark.{SparkConf, SparkContext}
 
 class MosaicTestSparkSession(sc: SparkContext) extends TestSparkSession(sc) {
@@ -15,7 +16,7 @@ class MosaicTestSparkSession(sc: SparkContext) extends TestSparkSession(sc) {
                 .set("spark.driver.memory", "32g")
                 .set("spark.executor.memory", "32g")
                 .set("spark.sql.shuffle.partitions", "8")
-                .set("spark.sql.testkey", "true")
+                .set(MOSAIC_TEST_MODE, "true")
           )
         )
     }

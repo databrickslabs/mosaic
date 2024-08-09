@@ -11,13 +11,14 @@ import org.scalatest.matchers.should.Matchers._
 trait GridRingNeighboursBehaviors extends MosaicSpatialQueryTest {
 
     def leftTransform(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
+        // init
         val mc = mosaicContext
+        mc.register(sc)
         import mc.functions._
-        mc.register()
 
         val (resolution, distanceThreshold) = mc.getIndexSystem match {
             case H3IndexSystem  => (7, 0.1)
@@ -81,13 +82,14 @@ trait GridRingNeighboursBehaviors extends MosaicSpatialQueryTest {
     }
 
     def resultTransform(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
-        val sc = spark
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
+        // init
         val mc = mosaicContext
+        mc.register(sc)
         import mc.functions._
-        mc.register()
 
         val resolution = mc.getIndexSystem match {
             case H3IndexSystem  => 5
@@ -150,13 +152,14 @@ trait GridRingNeighboursBehaviors extends MosaicSpatialQueryTest {
     }
 
     def transform(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
-        val sc = spark
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
+        // init
         val mc = mosaicContext
+        mc.register(sc)
         import mc.functions._
-        mc.register()
 
         val (resolution, iteration) = mc.getIndexSystem match {
             case H3IndexSystem  => (5, 4)

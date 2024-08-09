@@ -58,7 +58,7 @@ trait ST_NumPointsBehaviors extends MosaicSpatialQueryTest {
         val (_, code) = codeGenStage.doCodeGen()
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stEnvelope = ST_NumPoints(lit(1).expr, mc.expressionConfig)
+        val stEnvelope = ST_NumPoints(lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stEnvelope.genCode(ctx)
     }
@@ -68,7 +68,7 @@ trait ST_NumPointsBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register(spark)
 
-        val stNumPoints = ST_NumPoints(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, mc.expressionConfig)
+        val stNumPoints = ST_NumPoints(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, mc.exprConfig)
 
         stNumPoints.child shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr
         stNumPoints.dataType shouldEqual IntegerType

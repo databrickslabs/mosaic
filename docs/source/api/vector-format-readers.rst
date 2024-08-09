@@ -9,19 +9,19 @@ Mosaic provides spark readers for vector files supported by GDAL OGR drivers.
 Only the drivers that are built by default are supported.
 Here are some common useful file formats:
 
-    * `GeoJSON <https://gdal.org/drivers/vector/geojson.html>`_ (also `ESRIJSON <https://gdal.org/drivers/vector/esrijson.html>`_,
-      `TopoJSON  <https://gdal.org/drivers/vector/topojson.html>`_)
-    * `FileGDB <https://gdal.org/drivers/vector/filegdb.html>`_ (ESRI File Geodatabase) and `OpenFileGDB <https://gdal.org/drivers/vector/openfilegdb.html>`_ (ESRI File Geodatabase vector) - Mosaic implements named reader :ref:`spark.read.format("geo_db")` (described in this doc).
-    * `ESRI Shapefile <https://gdal.org/drivers/vector/shapefile.html>`_ (ESRI Shapefile / DBF) - Mosaic implements named reader :ref:`spark.read.format("shapefile")` (described in this doc).
-    * `netCDF <https://gdal.org/drivers/raster/netcdf.html>`_ (Network Common Data Form) - Mosaic supports GDAL netCDF raster reader also.
-    * `XLSX <https://gdal.org/drivers/vector/xlsx.html>`_, `XLS <https://gdal.org/drivers/vector/xls.html>`_, `ODS <https://gdal.org/drivers/vector/ods.html>`_ spreadsheets
-    * `TIGER <https://gdal.org/drivers/vector/tiger.html>`_ (U.S. Census TIGER/Line)
-    * `PGDump <https://gdal.org/drivers/vector/pgdump.html>`_ (PostgreSQL Dump)
-    * `KML <https://gdal.org/drivers/vector/kml.html>`_ (Keyhole Markup Language)
-    * `GML <https://gdal.org/drivers/vector/gml.html>`_ (Geography Markup Language)
-    * `GRASS <https://gdal.org/drivers/vector/grass.html>`_ - option for Linear Referencing Systems (LRS)
+    * `GeoJSON <https://gdal.org/drivers/vector/geojson.html>`__ (also `ESRIJSON <https://gdal.org/drivers/vector/esrijson.html>`__,
+      `TopoJSON  <https://gdal.org/drivers/vector/topojson.html>`__)
+    * `FileGDB <https://gdal.org/drivers/vector/filegdb.html>`__ (ESRI File Geodatabase) and `OpenFileGDB <https://gdal.org/drivers/vector/openfilegdb.html>`__ (ESRI File Geodatabase vector) - Mosaic implements named reader :ref:`spark.read.format("geo_db")` (described in this doc).
+    * `ESRI Shapefile <https://gdal.org/drivers/vector/shapefile.html>`__ (ESRI Shapefile / DBF) - Mosaic implements named reader :ref:`spark.read.format("shapefile")` (described in this doc).
+    * `netCDF <https://gdal.org/drivers/raster/netcdf.html>`__ (Network Common Data Form) - Mosaic supports GDAL netCDF raster reader also.
+    * `XLSX <https://gdal.org/drivers/vector/xlsx.html>`__, `XLS <https://gdal.org/drivers/vector/xls.html>`__, `ODS <https://gdal.org/drivers/vector/ods.html>`__ spreadsheets
+    * `TIGER <https://gdal.org/drivers/vector/tiger.html>`__ (U.S. Census TIGER/Line)
+    * `PGDump <https://gdal.org/drivers/vector/pgdump.html>`__ (PostgreSQL Dump)
+    * `KML <https://gdal.org/drivers/vector/kml.html>`__ (Keyhole Markup Language)
+    * `GML <https://gdal.org/drivers/vector/gml.html>`__ (Geography Markup Language)
+    * `GRASS <https://gdal.org/drivers/vector/grass.html>`__ - option for Linear Referencing Systems (LRS)
 
-For more information please refer to gdal `vector driver <https://gdal.org/drivers/vector/index.html>`_ documentation.
+For more information please refer to gdal `vector driver <https://gdal.org/drivers/vector/index.html>`__ documentation.
 
 
 Mosaic provides two flavors of the general readers:
@@ -295,7 +295,7 @@ Vector File UDFs
 ################
 
 It can be of use to perform various exploratory operations on vector file formats to help with processing.
-The following UDFs use `fiona <https://fiona.readthedocs.io/en/stable/index.html>`_ which is already provided
+The following UDFs use `fiona <https://fiona.readthedocs.io/en/stable/index.html>`__ which is already provided
 as part of the dependencies of Mosaic python bindings.
 
 We are showing the zipped variation for a larger (800MB) shapefile.
@@ -519,4 +519,4 @@ We can call the UDF, e.g.
 
 Though not shown here, you can then handle unzipping the "double" zips that return `True` by extending
 :code:`test_double_zip` UDF to perform unzips (with a provided out_dir) or through an additional UDF, e.g. using ZipFile
-`extractall <https://docs.python.org/3/library/zipfile.html#zipfile.ZipFile.extractall>`_ function.
+`extractall <https://docs.python.org/3/library/zipfile.html#zipfile.ZipFile.extractall>`__ function.

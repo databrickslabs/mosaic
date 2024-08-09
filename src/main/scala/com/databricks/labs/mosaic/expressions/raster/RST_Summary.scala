@@ -1,9 +1,9 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -14,22 +14,25 @@ import org.gdal.gdal.gdal.GDALInfo
 
 import java.util.{Vector => JVector}
 
-/** Returns the summary info the raster. */
-case class RST_Summary(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_Summary](raster, returnsRaster = false, expressionConfig: MosaicExpressionConfig)
+/** Returns the summary info the tile. */
+case class RST_Summary(raster: Expression, exprConfig: ExprConfig)
+    extends RasterExpression[RST_Summary](raster, returnsRaster = false, exprConfig: ExprConfig)
       with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = StringType
 
-    /** Returns the summary info the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
+    /** Returns the summary info the tile. */
+    override def rasterTransform(tile: RasterTile): Any = {
         val vector = new JVector[String]()
         // For other flags check the way gdalinfo.py script is called, InfoOptions expects a collection of same flags.
         // https://gdal.org/programs/gdalinfo.html
         vector.add("-json")
         val infoOptions = new InfoOptions(vector)
-        val gdalInfo = GDALInfo(tile.getRaster.getRaster, infoOptions)
+        val gdalInfo = tile.raster.getDatasetOpt() match {
+            case Some(dataset) => GDALInfo(dataset, infoOptions)
+            case _ => ""
+        }
         UTF8String.fromString(gdalInfo)
     }
 
@@ -40,7 +43,7 @@ object RST_Summary extends WithExpressionInfo {
 
     override def name: String = "rst_summary"
 
-    override def usage: String = "_FUNC_(expr1) - Generates GDAL summary for the raster tile."
+    override def usage: String = "_FUNC_(expr1) - Generates GDAL summary for the tile tile."
 
     override def example: String =
         """
@@ -57,8 +60,8 @@ object RST_Summary extends WithExpressionInfo {
           |        }
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_Summary](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_Summary](1, exprConfig)
     }
 
 }

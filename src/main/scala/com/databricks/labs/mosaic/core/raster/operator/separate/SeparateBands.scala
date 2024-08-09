@@ -1,56 +1,63 @@
 package com.databricks.labs.mosaic.core.raster.operator.separate
 
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.createTmpFileFromDriver
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.core.types.model.RasterTile
+import com.databricks.labs.mosaic.functions.ExprConfig
+import org.apache.spark.sql.types.{DataType, StringType}
 
 /**
   * ReTile is a helper object for splitting multi-band rasters into
   * single-band-per-row.
+  * -
   */
 object SeparateBands {
 
+    val tileDataType: DataType = StringType // always use checkpoint
+
     /**
-      * Separates raster bands into separate rasters. Empty bands are discarded.
+      * Separates tile bands into separate rasters. Empty bands are discarded.
       *
       * @param tile
-      *   The raster to retile.
+      *   The tile to retile.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
       *   A sequence of MosaicRasterTile objects.
       */
     def separate(
-        tile: => MosaicRasterTile
-    ): Seq[MosaicRasterTile] = {
-        val raster = tile.getRaster
+                    tile: => RasterTile,
+                    exprConfigOpt: Option[ExprConfig]
+    ): Seq[RasterTile] = {
+        val raster = tile.raster
         val tiles = for (i <- 0 until raster.numBands) yield {
-            val fileExtension = raster.getRasterFileExtension
-            val rasterPath = PathUtils.createTmpFilePath(fileExtension)
-            val shortDriver = raster.getDriversShortName
+            val driverShortName = raster.getDriverName()
+            val rasterPath = createTmpFileFromDriver(driverShortName, exprConfigOpt)
             val outOptions = raster.getWriteOptions
 
             val result = GDALTranslate.executeTranslate(
-              rasterPath,
-              raster,
-              command = s"gdal_translate -of $shortDriver -b ${i + 1}",
-              writeOptions = outOptions
-            )
+                rasterPath,
+                raster,
+                command = s"gdal_translate -of $driverShortName -b ${i + 1}",
+                writeOptions = outOptions,
+                exprConfigOpt
+            ).tryInitAndHydrate() // <- required
 
-            val isEmpty = result.isEmpty
+            if (!result.isEmpty) {
+                // update the band index
+                // both the variable and the metadata
+                val bandVal = (i + 1)
+                result.updateBandIdx(bandVal)
+                (true, result)
 
-            result.raster.SetMetadataItem("MOSAIC_BAND_INDEX", (i + 1).toString)
-            result.raster.GetDriver().CreateCopy(result.path, result.raster)
-
-            if (isEmpty) dispose(result)
-
-            (isEmpty, result.copy(createInfo = result.createInfo ++ Map("bandIndex" -> (i + 1).toString)), i)
-
+            } else {
+                result.flushAndDestroy() // destroy inline for performance
+                (false, result) // empty result
+            }
         }
 
-        val (_, valid) = tiles.partition(_._1)
-
-        valid.map(t => new MosaicRasterTile(null, t._2))
-
+        val (result, _) = tiles.partition(_._1)
+        result.map(t => new RasterTile(null, t._2, tileDataType))
     }
 
 }

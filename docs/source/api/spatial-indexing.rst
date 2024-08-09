@@ -195,8 +195,8 @@ grid_polyfill
 
     Returns the set of grid indices of which centroid is contained in the input :code:`geometry` at :code:`resolution`.
 
-    When using `H3 <https://h3geo.org/>`_ index system, this is equivalent to the
-    `H3 polyfill <https://h3geo.org/docs/api/regions/#polyfill>`_ method
+    When using `H3 <https://h3geo.org/>`__ index system, this is equivalent to the
+    `H3 polyfill <https://h3geo.org/docs/api/regions/#polyfill>`__ method
 
     :param geometry: Geometry
     :type geometry: Column
@@ -850,7 +850,7 @@ grid_cellkringexplode
    </div>
 
 grid_cell_intersection
-**************
+**********************
 
 .. function:: grid_cell_intersection(left_chip, right_chip)
 
@@ -906,7 +906,7 @@ grid_cell_intersection
     +--------------------------------------------------------+
 
 grid_cell_union
-**************
+***************
 
 .. function:: grid_cell_union(left_chip, right_chip)
 

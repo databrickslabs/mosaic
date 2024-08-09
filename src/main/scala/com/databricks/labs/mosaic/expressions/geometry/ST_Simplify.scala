@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector1ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
@@ -16,19 +16,19 @@ import org.apache.spark.sql.types.DataType
   *   Expression containing the geometry.
   * @param toleranceExpr
   *   The tolerance of the simplification.
-  * @param expressionConfig
+  * @param exprConfig
   *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
   *   arguments for the expression (expressionConfigs).
   */
 case class ST_Simplify(
-    inputGeom: Expression,
-    toleranceExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                          inputGeom: Expression,
+                          toleranceExpr: Expression,
+                          exprConfig: ExprConfig
 ) extends UnaryVector1ArgExpression[ST_Simplify](
       inputGeom,
       toleranceExpr,
       returnsGeometry = true,
-      expressionConfig
+      exprConfig
     ) {
 
     override def dataType: DataType = inputGeom.dataType
@@ -59,8 +59,8 @@ object ST_Simplify extends WithExpressionInfo {
           |        POLYGON (...)
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_Simplify](2, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_Simplify](2, exprConfig)
     }
 
 }

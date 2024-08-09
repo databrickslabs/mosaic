@@ -343,7 +343,6 @@ package object test {
             val inFile = getClass.getResource(resourcePath)
             Paths.get(inFile.getPath).toAbsolutePath.toString
         }
-
     }
 
     // noinspection NotImplementedCode, ScalaStyle

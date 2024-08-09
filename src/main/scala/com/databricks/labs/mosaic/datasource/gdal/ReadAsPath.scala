@@ -1,23 +1,26 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
+import com.databricks.labs.mosaic.{RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 
-import java.nio.file.{Files, Paths}
+import scala.util.Try
 
 /** An object defining the retiling read strategy for the GDAL file format. */
 object ReadAsPath extends ReadStrategy {
 
+    //serialize data type
     val tileDataType: DataType = StringType
 
     // noinspection DuplicatedCode
@@ -67,6 +70,7 @@ object ReadAsPath extends ReadStrategy {
 
     /**
       * Reads the content of the file.
+ *
       * @param status
       *   File status.
       * @param fs
@@ -77,46 +81,63 @@ object ReadAsPath extends ReadStrategy {
       *   Options passed to the reader.
       * @param indexSystem
       *   Index system.
-      *
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]].
       * @return
       *   Iterator of internal rows.
       */
     override def read(
-        status: FileStatus,
-        fs: FileSystem,
-        requiredSchema: StructType,
-        options: Map[String, String],
-        indexSystem: IndexSystem
+                         status: FileStatus,
+                         fs: FileSystem,
+                         requiredSchema: StructType,
+                         options: Map[String, String],
+                         indexSystem: IndexSystem,
+                         exprConfigOpt: Option[ExprConfig]
     ): Iterator[InternalRow] = {
+        //scalastyle:off println
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
-
-        val tmpPath = PathUtils.copyToTmp(inPath)
-        val createInfo = Map("path" -> tmpPath, "parentPath" -> inPath)
-        val raster = MosaicRasterGDAL.readRaster(createInfo)
-        val tile = MosaicRasterTile(null, raster)
-        
+        val tmpPath = PathUtils.copyToTmp(inPath, exprConfigOpt)
+        val uriDeepCheck = Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
+        val uriGdalOpt = PathUtils.parseGdalUriOpt(inPath, uriDeepCheck)
+        val driverName = options.get("driverName") match {
+            case Some(name) if name.nonEmpty =>
+                //println(s"... ReadAsPath - driverName '$name' from options")
+                name
+            case _ =>
+                val dn = identifyDriverNameFromRawPath(inPath, uriGdalOpt)
+                //println(s"... ReadAsPath - driverName '$dn' from ext")
+                dn
+        }
+        val createInfo = Map(
+            RASTER_PATH_KEY -> tmpPath,
+            RASTER_PARENT_PATH_KEY -> inPath,
+            RASTER_DRIVER_KEY -> driverName,
+            RASTER_SUBDATASET_NAME_KEY -> options.getOrElse(RASTER_SUBDATASET_NAME_KEY, "")
+        )
+        val raster = RasterGDAL(createInfo, exprConfigOpt).tryInitAndHydrate()
+        //println(s"ReadAsPath - raster isHydrated? ${raster.isDatasetHydrated}, isSubdataset? ${raster.isSubdataset}, srid? ${raster.getSpatialReference.toString}")
+        val tile = RasterTile(null, raster, tileDataType)
         val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
         val fields = trimmedSchema.fieldNames.map {
             case PATH              => status.getPath.toString
             case MODIFICATION_TIME => status.getModificationTime
             case UUID              => uuid
-            case X_SIZE            => tile.getRaster.xSize
-            case Y_SIZE            => tile.getRaster.ySize
-            case BAND_COUNT        => tile.getRaster.numBands
-            case METADATA          => tile.getRaster.metadata
-            case SUBDATASETS       => tile.getRaster.subdatasets
-            case SRID              => tile.getRaster.SRID
-            case LENGTH            => tile.getRaster.getMemSize
+            case X_SIZE            => raster.xSize
+            case Y_SIZE            => raster.ySize
+            case BAND_COUNT        => raster.numBands
+            case METADATA          => raster.metadata
+            case SUBDATASETS       => raster.subdatasets
+            case SRID              => raster.SRID
+            case LENGTH            => raster.getMemSize
             case other             => throw new RuntimeException(s"Unsupported field name: $other")
         }
-        // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
-        val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(tileDataType)))
-        RasterCleaner.dispose(tile)
-        
-        val rows = Seq(row)
 
-        Files.deleteIfExists(Paths.get(tmpPath))
+        // Serialize to configured fuse directory
+        val row = Utils.createRow(fields ++ Seq(
+            tile.formatCellId(indexSystem).serialize(tileDataType, doDestroy = true, exprConfigOpt)))
+        val rows = Seq(row)
+        //scalastyle:on println
 
         rows.iterator
     }

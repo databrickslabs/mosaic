@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVectorExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
@@ -16,14 +16,14 @@ import scala.util.Try
   * SQL Expression that returns true if the geometry is valid.
   * @param inputGeom
   *   Expression that represents the geometry.
-  * @param expressionConfig
+  * @param exprConfig
   *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
   *   arguments for the expression (expressionConfigs).
   */
 case class ST_IsValid(
-    inputGeom: Expression,
-    expressionConfig: MosaicExpressionConfig
-) extends UnaryVectorExpression[ST_IsValid](inputGeom, returnsGeometry = false, expressionConfig) {
+                         inputGeom: Expression,
+                         exprConfig: ExprConfig
+) extends UnaryVectorExpression[ST_IsValid](inputGeom, returnsGeometry = false, exprConfig) {
 
     override def dataType: DataType = BooleanType
 
@@ -80,8 +80,8 @@ object ST_IsValid extends WithExpressionInfo {
           |        true/false
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_IsValid](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_IsValid](1, exprConfig)
     }
 
 }

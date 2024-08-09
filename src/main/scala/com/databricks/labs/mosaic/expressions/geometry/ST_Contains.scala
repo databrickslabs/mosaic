@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.geometry.base.BinaryVectorExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
@@ -15,18 +15,18 @@ import org.apache.spark.sql.types.{BooleanType, DataType}
   *   The left geometry.
   * @param rightGeom
   *   The right geometry.
-  * @param expressionConfig
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   */
 case class ST_Contains(
-    leftGeom: Expression,
-    rightGeom: Expression,
-    expressionConfig: MosaicExpressionConfig
+                          leftGeom: Expression,
+                          rightGeom: Expression,
+                          exprConfig: ExprConfig
 ) extends BinaryVectorExpression[ST_Contains](
       leftGeom,
       rightGeom,
       returnsGeometry = false,
-      expressionConfig
+      exprConfig
     ) {
 
     override def dataType: DataType = BooleanType
@@ -57,8 +57,8 @@ object ST_Contains extends WithExpressionInfo {
           |        true
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_Contains](2, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_Contains](2, exprConfig)
     }
 
 }

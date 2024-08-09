@@ -9,7 +9,7 @@ Spark APIs to expose Mosaic's large scale geospatial data processing functions.
 
 ### Requirements
 The only requirement to start using Mosaic is a Databricks cluster running 
-Databricks Runtime 10.0 (or later) with the Mosaic Scala JAR attached and the
+Databricks Runtime (13.3 LTS for 0.4.x series) with the Mosaic Scala JAR attached and the
 relevant R mosaic package installed.
 
 It is recommended to install the Scala JAR suffixed "with-dependencies" for the 

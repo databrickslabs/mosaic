@@ -81,7 +81,7 @@ trait ST_DistanceBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stDistance = ST_Distance(lit(1).expr, lit("POINT (2 2)").expr, mc.expressionConfig)
+        val stDistance = ST_Distance(lit(1).expr, lit("POINT (2 2)").expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stDistance.genCode(ctx)
     }
@@ -91,7 +91,7 @@ trait ST_DistanceBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
-        val stDistance = ST_Distance(lit("POINT (1 1)").expr, lit("POINT (2 2) ").expr, mc.expressionConfig)
+        val stDistance = ST_Distance(lit("POINT (1 1)").expr, lit("POINT (2 2) ").expr, mc.exprConfig)
 
         stDistance.left shouldEqual lit("POINT (1 1)").expr
         stDistance.right shouldEqual lit("POINT (2 2) ").expr

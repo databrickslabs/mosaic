@@ -14,14 +14,14 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 trait MosaicRegistryBehaviors extends SharedSparkSession {
 
     def mosaicRegistry(): Unit = {
-        val expressionConfig = mosaicContext.expressionConfig
+        val exprConfig = mosaicContext.exprConfig
         val registry = spark.sessionState.functionRegistry
         val mosaicRegistry = MosaicRegistry(registry)
 
-        mosaicRegistry.registerExpression[RST_MetaData](expressionConfig)
-        mosaicRegistry.registerExpression[RST_MetaData]("rst_metadata_2", expressionConfig)
-        mosaicRegistry.registerExpression[RST_MetaData]("rst_metadata_3", RST_MetaData.builder(expressionConfig), expressionConfig)
-        mosaicRegistry.registerExpression[RST_MetaData](RST_MetaData.builder(expressionConfig), expressionConfig)
+        mosaicRegistry.registerExpression[RST_MetaData](exprConfig)
+        mosaicRegistry.registerExpression[RST_MetaData]("rst_metadata_2", exprConfig)
+        mosaicRegistry.registerExpression[RST_MetaData]("rst_metadata_3", RST_MetaData.builder(exprConfig), exprConfig)
+        mosaicRegistry.registerExpression[RST_MetaData](RST_MetaData.builder(exprConfig), exprConfig)
 
         spark.sessionState.functionRegistry.functionExists(FunctionIdentifier("rst_metadata")) shouldBe true
         spark.sessionState.functionRegistry.functionExists(FunctionIdentifier("rst_metadata_2")) shouldBe true

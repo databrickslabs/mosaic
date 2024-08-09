@@ -74,7 +74,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stSimplify = ST_Simplify(lit(1).expr, lit(1).expr, mc.expressionConfig)
+        val stSimplify = ST_Simplify(lit(1).expr, lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stSimplify.genCode(ctx)
     }
@@ -87,7 +87,7 @@ trait ST_SimplifyBehaviors extends QueryTest {
 
         val df = getWKTRowsDf()
 
-        val stSimplify = ST_Simplify(df.col("wkt").expr, lit(1).expr, mc.expressionConfig)
+        val stSimplify = ST_Simplify(df.col("wkt").expr, lit(1).expr, mc.exprConfig)
 
         stSimplify.left shouldEqual df.col("wkt").expr
         stSimplify.right shouldEqual lit(1).expr

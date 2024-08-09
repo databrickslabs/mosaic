@@ -73,7 +73,7 @@ trait ST_GeometryTypeBehaviors extends MosaicSpatialQueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stGeometryType = ST_GeometryType(lit(1).expr, mc.expressionConfig)
+        val stGeometryType = ST_GeometryType(lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stGeometryType.genCode(ctx)
     }
@@ -147,7 +147,7 @@ trait ST_GeometryTypeBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register(spark)
 
-        val stGeometryType = ST_GeometryType(lit("POINT (1 1)").expr, mc.expressionConfig)
+        val stGeometryType = ST_GeometryType(lit("POINT (1 1)").expr, mc.exprConfig)
 
         stGeometryType.child shouldEqual lit("POINT (1 1)").expr
         stGeometryType.dataType shouldEqual StringType

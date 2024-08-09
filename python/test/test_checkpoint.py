@@ -17,12 +17,12 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
 
         # - path
         self.assertEqual(
-            self.get_context().get_checkpoint_path(), self.check_dir,
-            "checkpoint path should equal dir.")
+            self.get_context().get_checkpoint_dir(), self.check_dir,
+            "checkpoint directory should equal dir.")
         self.assertEqual(
-            self.get_context().get_checkpoint_path(),
+            self.get_context().get_checkpoint_dir(),
             self.spark.conf.get("spark.databricks.labs.mosaic.raster.checkpoint"),
-            "checkpoint path should equal spark conf.")
+            "checkpoint directory should equal spark conf.")
 
         # - checkpoint on
         api.gdal.set_checkpoint_on(self.spark) # <- important to call from api.gdal
@@ -36,12 +36,12 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         self.assertEqual(result.count(), 1)
         tile = result.select("tile").first()[0]
         raster = tile['raster']
-        self.assertIsInstance(raster, str, "raster type should be string.")
+        self.assertIsInstance(raster, str, "tile type should be string.")
 
         # - update path
-        api.gdal.update_checkpoint_path(self.spark, self.new_check_dir) # <- important to call from api.gdal
+        api.gdal.update_checkpoint_dir(self.spark, self.new_check_dir) # <- important to call from api.gdal
         self.assertEqual(
-            self.get_context().get_checkpoint_path(), self.new_check_dir,
+            self.get_context().get_checkpoint_dir(), self.new_check_dir,
             "context should be configured on.")
         self.assertTrue(os.path.exists(self.new_check_dir), "new check dir should exist.")
         result = (
@@ -53,7 +53,7 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         self.assertEqual(result.count(), 1)
         tile = result.select("tile").first()[0]
         raster = tile['raster']
-        self.assertIsInstance(raster, str, "raster type should be string.")
+        self.assertIsInstance(raster, str, "tile type should be string.")
 
         # - checkpoint off
         api.gdal.set_checkpoint_off(self.spark) # <- important to call from api.gdal
@@ -67,14 +67,14 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         self.assertEqual(result.count(), 1)
         tile = result.select("tile").first()[0]
         raster = tile['raster']
-        self.assertNotIsInstance(raster, str, "raster type should be binary (not string).")
+        self.assertNotIsInstance(raster, str, "tile type should be binary (not string).")
 
         # - reset
         api.gdal.reset_checkpoint(self.spark)
         self.assertFalse(self.get_context().is_use_checkpoint(), "context should be configured off.")
         self.assertEqual(
-            self.get_context().get_checkpoint_path(), api.gdal.get_checkpoint_path_default(),
-            f"checkpoint path should equal default '{api.gdal.get_checkpoint_path_default()}'."
+            self.get_context().get_checkpoint_dir(), api.gdal.get_checkpoint_dir_default(),
+            f"checkpoint directory should equal default '{api.gdal.get_checkpoint_dir_default()}'."
         )
         result = (
             self.generate_singleband_raster_df()
@@ -85,4 +85,4 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         self.assertEqual(result.count(), 1)
         tile = result.select("tile").first()[0]
         raster = tile['raster']
-        self.assertNotIsInstance(raster, str, "raster type should be binary (not string).")
+        self.assertNotIsInstance(raster, str, "tile type should be binary (not string).")

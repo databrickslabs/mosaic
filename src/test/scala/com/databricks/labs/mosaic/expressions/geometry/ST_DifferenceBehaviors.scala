@@ -49,7 +49,7 @@ trait ST_DifferenceBehaviors extends MosaicSpatialQueryTest {
         noException should be thrownBy CodeGenerator.compile(code)
 
         // Check if invalid code fails code generation
-        val stUnion = ST_Difference(lit(1).expr, lit(1).expr, mc.expressionConfig)
+        val stUnion = ST_Difference(lit(1).expr, lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stUnion.genCode(ctx)
     }
@@ -63,7 +63,7 @@ trait ST_DifferenceBehaviors extends MosaicSpatialQueryTest {
         val stDifference = ST_Difference(
           lit("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))").expr,
           lit("POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))").expr,
-          mc.expressionConfig
+          mc.exprConfig
         )
 
         stDifference.left shouldEqual lit("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))").expr

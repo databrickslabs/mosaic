@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.DataType
 
@@ -16,9 +16,9 @@ import org.apache.spark.sql.types.DataType
   */
 trait VectorExpression {
 
-    def getIndexSystem(expressionConfig: MosaicExpressionConfig): IndexSystem =
-        IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
-    def getGeometryAPI(expressionConfig: MosaicExpressionConfig): GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
+    def getIndexSystem(exprConfig: ExprConfig): IndexSystem =
+        IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem)
+    def getGeometryAPI(exprConfig: ExprConfig): GeometryAPI = GeometryAPI(exprConfig.getGeometryAPI)
 
     def geometryAPI: GeometryAPI
 

@@ -102,7 +102,7 @@ The python bindings can be tested using [unittest](https://docs.python.org/3/lib
 - Move to the `python/` directory and install the project and its dependencies:
     `pip install . && pip install pyspark==<project_spark_version>`
   (where 'project_spark_version' corresponds to the version of Spark 
-  used for the target Databricks Runtime, e.g. `3.2.1`.
+  used for the target Databricks Runtime, e.g. `3.4.1` for DBR 13.3 LTS.
 - Run the tests using `unittest`: `python -m unittest`
 
 The project wheel file can be built with [build](https://pypa-build.readthedocs.io/en/stable/).
@@ -116,11 +116,13 @@ The documentation has been produced using [Sphinx](https://www.sphinx-doc.org/en
 
 To build the docs:
 - Install the pandoc library (follow the instructions for your platform [here](https://pandoc.org/installing.html)).
+- You can run `docs/mosaic-docs.sh` or do the manual steps that follow.
 - Install the python requirements from `docs/docs-requirements.txt`.
 - Build the HTML documentation by running `make html` from `docs/`.
   - For nbconvert you may have to symlink your jupyter share folder, 
     e.g. `sudo ln -s /opt/homebrew/share/jupyter /usr/local/share`. 
-- You can locally host the docs by running the `reload.py` script in the `docs/source/` directory.
+- You can locally host the docs by running the `reload.py` script in the `docs/source/` directory; 
+  recommend running `reload.py` through IntelliJ for auto-refresh features.
 
 ## Style
 

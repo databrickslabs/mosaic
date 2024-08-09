@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.expressions.base
 
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 
@@ -25,7 +25,7 @@ object GenericExpressionFactory {
       * @param nChildren
       *   The number of children expressions the expression has in the logical
       *   tree.
-      * @param expressionConfig
+      * @param exprConfig
       *   Additional arguments for the expression (expressionConfigs).
       * @tparam T
       *   The type of the expression.
@@ -33,12 +33,12 @@ object GenericExpressionFactory {
       *   A copy of the expression.
       */
     def makeCopyImpl[T <: Expression: ClassTag](
-        toCopy: Expression,
-        newArgs: Array[AnyRef],
-        nChildren: Int,
-        expressionConfig: MosaicExpressionConfig
+                                                   toCopy: Expression,
+                                                   newArgs: Array[AnyRef],
+                                                   nChildren: Int,
+                                                   exprConfig: ExprConfig
     ): Expression = {
-        val newInstance = construct[T](newArgs.take(nChildren).map(_.asInstanceOf[Expression]), expressionConfig)
+        val newInstance = construct[T](newArgs.take(nChildren).map(_.asInstanceOf[Expression]), exprConfig)
         newInstance.copyTagsFrom(toCopy)
         newInstance
     }
@@ -48,16 +48,16 @@ object GenericExpressionFactory {
       * correct constructor to be used.
       * @param args
       *   The arguments for the expression.
-      * @param expressionConfig
+      * @param exprConfig
       *   Additional arguments for the expression (expressionConfigs).
       * @tparam T
       *   The type of the expression.
       * @return
       *   An instance of the expression.
       */
-    def construct[T <: Expression: ClassTag](args: Array[_ <: Expression], expressionConfig: MosaicExpressionConfig): Expression = {
+    def construct[T <: Expression: ClassTag](args: Array[_ <: Expression], exprConfig: ExprConfig): Expression = {
         val clazz = implicitly[ClassTag[T]].runtimeClass
-        val allArgs = args ++ Seq(expressionConfig)
+        val allArgs = args ++ Seq(exprConfig)
         val constructors = clazz.getConstructors
 
         constructors
@@ -82,14 +82,16 @@ object GenericExpressionFactory {
     /**
       * Creates a function builder for a given expression. It identifies the
       * correct constructor to be used.
-      * @param expressionConfig
+      * @param nChildren
+      *   Number of children.
+      * @param exprConfig
       *   Additional arguments for the expression (expressionConfigs).
       * @tparam T
       *   The type of the expression.
       * @return
       *   A function builder for the expression.
       */
-    def getBaseBuilder[T <: Expression: ClassTag](nChildren: Int, expressionConfig: MosaicExpressionConfig): FunctionBuilder =
-        (children: Seq[Expression]) => GenericExpressionFactory.construct[T](children.take(nChildren).toArray, expressionConfig)
+    def getBaseBuilder[T <: Expression: ClassTag](nChildren: Int, exprConfig: ExprConfig): FunctionBuilder =
+        (children: Seq[Expression]) => GenericExpressionFactory.construct[T](children.take(nChildren).toArray, exprConfig)
 
 }

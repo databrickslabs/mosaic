@@ -13,8 +13,9 @@ object SysUtils {
         val stderrWriter = new PrintWriter(stderrStream)
         val exitValue =
             try {
-                // noinspection ScalaStyle
+                // scalastyle:off println
                 cmd.!!(ProcessLogger(stdoutWriter.println, stderrWriter.println))
+                // scalastyle:on println
             } catch {
                 case e: Exception => s"ERROR: ${e.getMessage}"
             } finally {

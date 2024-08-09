@@ -1,0 +1,10 @@
+name: upload mosaic scala artefacts
+description: upload mosaic scala artefacts
+runs:
+  using: "composite"
+  steps:
+    - name: upload scala artefacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: artefacts
+        path: staging/*.jar

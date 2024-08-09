@@ -1,25 +1,28 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-/** Returns the skew y of the raster. */
-case class RST_SkewY(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_SkewY](raster, returnsRaster = false, expressionConfig)
+/** Returns the skew y of the tile. */
+case class RST_SkewY(raster: Expression, exprConfig: ExprConfig)
+    extends RasterExpression[RST_SkewY](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = DoubleType
 
-    /** Returns the skew y of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        tile.getRaster.getRaster.GetGeoTransform()(4)
+    /** Returns the skew y of the tile, default 0. */
+    override def rasterTransform(tile: RasterTile): Any = {
+        tile.raster.getDatasetOpt() match {
+            case Some(dataset) => dataset.GetGeoTransform()(4)
+            case _ => 0d // double
+        }
     }
 
 }
@@ -31,7 +34,7 @@ object RST_SkewY extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns skew Y in the raster tile.
+          |_FUNC_(expr1) - Returns skew Y in the tile tile.
           |""".stripMargin
 
     override def example: String =
@@ -41,8 +44,8 @@ object RST_SkewY extends WithExpressionInfo {
           |        1.123
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_SkewY](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_SkewY](1, exprConfig)
     }
 
 }

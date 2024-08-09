@@ -17,8 +17,8 @@ class RST_MaxTest extends QueryTest with SharedSparkSessionGDAL with RST_MaxBeha
           SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString
         ) _
 
-    // Hotfix for SharedSparkSession afterAll cleanup.
-    override def afterAll(): Unit = Try(super.afterAll())
+//    // Hotfix for SharedSparkSession afterAll cleanup.
+//    override def afterAll(): Unit = Try(super.afterAll())
 
     // These tests are not index system nor geometry API specific.
     // Only testing one pairing is sufficient.

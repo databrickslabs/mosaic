@@ -2,7 +2,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.expressions.geometry.base.AsTileExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.{PathUtils, SysUtils}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
@@ -16,17 +16,17 @@ import java.nio.file.{Files, Paths}
 import scala.collection.mutable
 
 case class ST_AsMVTTileAgg(
-    geometryExpr: Expression,
-    attributesExpr: Expression,
-    zxyIDExpr: Expression,
-    expressionConfig: MosaicExpressionConfig,
-    mutableAggBufferOffset: Int,
-    inputAggBufferOffset: Int
+                              geometryExpr: Expression,
+                              attributesExpr: Expression,
+                              zxyIDExpr: Expression,
+                              exprConfig: ExprConfig,
+                              mutableAggBufferOffset: Int,
+                              inputAggBufferOffset: Int
 ) extends TypedImperativeAggregate[mutable.ArrayBuffer[Any]]
       with TernaryLike[Expression]
       with AsTileExpression {
 
-    val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
+    val geometryAPI: GeometryAPI = GeometryAPI.apply(exprConfig.getGeometryAPI)
     override lazy val deterministic: Boolean = true
     override val first: Expression = geometryExpr
     override val second: Expression = attributesExpr
@@ -71,7 +71,7 @@ case class ST_AsMVTTileAgg(
         val zxyID = buffer.head.asInstanceOf[InternalRow].get(2, zxyIDExpr.dataType).toString
         val zoom = zxyID.split("/")(0).toInt
         val driver = ogr.GetDriverByName("MVT")
-        val tmpName = PathUtils.createTmpFilePath("mvt")
+        val tmpName = PathUtils.createTmpFilePath("mvt", Option(exprConfig))
 
         val srs = getSRS(buffer.head, geometryExpr, geometryAPI)
         val tilingScheme = srs.GetAttrValue("PROJCS", 0) match {

@@ -1,0 +1,10 @@
+name: upload mosaic r artefacts
+description: upload mosaic r artefacts
+runs:
+  using: "composite"
+  steps:
+    - name: upload r artefacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: artefacts
+        path: staging/spark*.tar.gz

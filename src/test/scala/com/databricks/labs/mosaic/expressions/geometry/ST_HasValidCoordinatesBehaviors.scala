@@ -134,7 +134,7 @@ trait ST_HasValidCoordinatesBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register(spark)
 
-        val stHasValidCoords = ST_HasValidCoordinates(lit("POINT (1 1)").expr, lit("EPSG:4326").expr, lit("bounds").expr, mc.expressionConfig)
+        val stHasValidCoords = ST_HasValidCoordinates(lit("POINT (1 1)").expr, lit("EPSG:4326").expr, lit("bounds").expr, mc.exprConfig)
 
         stHasValidCoords.first shouldEqual lit("POINT (1 1)").expr
         stHasValidCoords.second shouldEqual lit("EPSG:4326").expr

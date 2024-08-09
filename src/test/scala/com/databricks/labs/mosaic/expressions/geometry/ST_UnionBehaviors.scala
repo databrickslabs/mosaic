@@ -99,7 +99,7 @@ trait ST_UnionBehaviors extends QueryTest {
         noException should be thrownBy CodeGenerator.compile(code)
 
         // Check if invalid code fails code generation
-        val stUnion = ST_Union(lit(1).expr, lit(1).expr, mc.expressionConfig)
+        val stUnion = ST_Union(lit(1).expr, lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stUnion.genCode(ctx)
     }
@@ -112,7 +112,7 @@ trait ST_UnionBehaviors extends QueryTest {
         val stUnion = ST_Union(
           lit("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))").expr,
           lit("POLYGON ((15 15, 25 15, 25 25, 15 25, 15 15))").expr,
-          mc.expressionConfig
+          mc.exprConfig
         )
 
         stUnion.left shouldEqual lit("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))").expr

@@ -12,7 +12,7 @@ with a geospatial middleware component such as [Geoserver](https://geoserver.org
 
 .. warning::
     Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Spark Expressions), but not Shared Access due
-    to `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ API changes, more `here <https://docs.databricks.com/en/udf/index.html>`_.
+    to `Unity Catalog <https://www.databricks.com/product/unity-catalog>`__ API changes, more `here <https://docs.databricks.com/en/udf/index.html>`__.
 
 Pre-requisites
 **************
@@ -20,13 +20,13 @@ Pre-requisites
 In order to use Mosaic, you must have access to a Databricks cluster running
 Databricks Runtime 13. If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
-`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`_.
+`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`__.
 
 You will also need "Can Manage" permissions on this cluster in order to attach init script
 to your cluster. A workspace administrator will be able to grant
 these permissions and more information about cluster permissions can be found 
 in our documentation
-`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`_.
+`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`__.
 
 Installation
 ************
@@ -59,9 +59,9 @@ To install Mosaic on your Databricks cluster, take the following steps:
 
         EOF
 
-#. Configure the init script for the cluster following the instructions `here <https://docs.databricks.com/clusters/init-scripts.html#configure-a-cluster-scoped-init-script>`_.
+#. Configure the init script for the cluster following the instructions `here <https://docs.databricks.com/clusters/init-scripts.html#configure-a-cluster-scoped-init-script>`__.
 
-#. Add the following spark configuration values for your cluster following the instructions `here <https://docs.databricks.com/clusters/configure.html#spark-configuration>`_.
+#. Add the following spark configuration values for your cluster following the instructions `here <https://docs.databricks.com/clusters/configure.html#spark-configuration>`__.
 
     .. code-block:: bash
 

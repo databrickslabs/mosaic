@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector2ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
@@ -22,21 +22,21 @@ import java.util.Locale
   *   The input crs code expression.
   * @param which
   *   The input which expression, either bounds or reprojected_bounds .
-  * @param expressionConfig
+  * @param exprConfig
   *   Mosaic execution context, e.g. the geometry API, index system, etc.
   *   Additional arguments for the expression (expressionConfigs).
   */
 case class ST_HasValidCoordinates(
-    inputGeom: Expression,
-    crsCode: Expression,
-    which: Expression,
-    expressionConfig: MosaicExpressionConfig
+                                     inputGeom: Expression,
+                                     crsCode: Expression,
+                                     which: Expression,
+                                     exprConfig: ExprConfig
 ) extends UnaryVector2ArgExpression[ST_HasValidCoordinates](
       inputGeom,
       crsCode,
       which,
       returnsGeometry = false,
-      expressionConfig
+      exprConfig
     ) {
 
     @transient
@@ -88,8 +88,8 @@ object ST_HasValidCoordinates extends WithExpressionInfo {
         true
     """
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_HasValidCoordinates](3, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_HasValidCoordinates](3, exprConfig)
     }
 
 }

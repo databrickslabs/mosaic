@@ -1,32 +1,34 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
-/** Returns the pixel width of the raster. */
-case class RST_PixelWidth(raster: Expression, expressionConfig: MosaicExpressionConfig)
-    extends RasterExpression[RST_PixelWidth](raster, returnsRaster = false, expressionConfig)
+/** Returns the pixel width of the tile. */
+case class RST_PixelWidth(raster: Expression, exprConfig: ExprConfig)
+    extends RasterExpression[RST_PixelWidth](raster, returnsRaster = false, exprConfig)
       with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = DoubleType
 
-    /** Returns the pixel width of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        val gt = tile.getRaster.getGeoTransform
-        val scaleX = gt(1)
-        val skewY = gt(4)
-        // when there is no skew width is scaleX, but we cant assume 0-only skew
-        // skew is not to be confused with rotation
-        // TODO check if this is correct
-        val result = math.sqrt(scaleX * scaleX + skewY * skewY)
-        result
+    /** Returns the pixel width of the tile. */
+    override def rasterTransform(tile: RasterTile): Any = {
+        tile.raster.getGeoTransformOpt match {
+            case Some(gt) =>
+                val scaleX = gt (1)
+                val skewY = gt (4)
+                // when there is no skew width is scaleX, but we cant assume 0-only skew
+                // skew is not to be confused with rotation
+                // TODO check if this is correct
+                math.sqrt (scaleX * scaleX + skewY * skewY)
+            case _ => 0d // double
+        }
     }
 
 }
@@ -38,7 +40,7 @@ object RST_PixelWidth extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns pixel width in the raster tile.
+          |_FUNC_(expr1) - Returns pixel width in the tile tile.
           |The width is a hypotenuse of a right triangle formed by scaleX and skewY.
           |""".stripMargin
 
@@ -49,8 +51,8 @@ object RST_PixelWidth extends WithExpressionInfo {
           |        1.123
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_PixelWidth](2, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_PixelWidth](2, exprConfig)
     }
 
 }

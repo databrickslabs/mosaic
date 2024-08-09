@@ -86,7 +86,7 @@ trait ST_CentroidBehaviors extends MosaicSpatialQueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stCentroid = ST_Centroid(lit(1).expr, mc.expressionConfig)
+        val stCentroid = ST_Centroid(lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stCentroid.genCode(ctx)
     }
@@ -96,7 +96,7 @@ trait ST_CentroidBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register(spark)
 
-        val stCentroid = ST_Centroid(lit("POLYGON (1 1, 2 2, 3 3, 1 1)").expr, mc.expressionConfig)
+        val stCentroid = ST_Centroid(lit("POLYGON (1 1, 2 2, 3 3, 1 1)").expr, mc.exprConfig)
 
         stCentroid.child shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 1 1)").expr
         stCentroid.dataType shouldEqual StringType

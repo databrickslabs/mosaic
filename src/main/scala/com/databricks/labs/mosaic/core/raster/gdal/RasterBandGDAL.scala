@@ -7,8 +7,8 @@ import org.gdal.gdalconst.gdalconstConstants
 import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util._
 
-/** GDAL implementation of the MosaicRasterBand trait. */
-case class MosaicRasterBandGDAL(band: Band, id: Int) {
+/** GDAL implementation of the RasterBand trait. */
+case class RasterBandGDAL(band: Band, id: Int) {
 
     def getBand: Band = band
 
@@ -20,7 +20,7 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
 
     /**
       * @return
-      *   The band's description.
+      *   The band's description, defaults to an empty string.
       */
     def description: String = coerceNull(Try(band.GetDescription))
 
@@ -40,7 +40,7 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
       * Get the band's metadata as a Map.
       *
       * @return
-      *   A Map of the band's metadata.
+      *   A Map of the band's metadata, defaults to an empty Map.
       */
     def metadata: Map[String, String] =
         Option(band.GetMetadata_Dict)
@@ -49,7 +49,7 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
 
     /**
       * @return
-      *   Returns band's unity type.
+      *   Returns band's unit type, defaults to "".
       */
     def units: String = coerceNull(Try(band.GetUnitType))
 
@@ -58,27 +58,27 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
       * @param tryVal
       *   The Try value to coerce.
       * @return
-      *   The value of the Try or an empty string.
+      *   The value as the result of Try or an empty string.
       */
     def coerceNull(tryVal: Try[String]): String = tryVal.filter(_ != null).getOrElse("")
 
     /**
       * @return
-      *   Returns the band's data type.
+      *   Returns the band's data type, defaults to -1.
       */
-    def dataType: Int = Try(band.getDataType).getOrElse(0)
+    def dataType: Int = Try(band.getDataType).getOrElse(-1)
 
     /**
       * @return
-      *   Returns the band's x size.
+      *   Returns the band's x size, defaults to -1.
       */
-    def xSize: Int = Try(band.GetXSize).getOrElse(0)
+    def xSize: Int = Try(band.GetXSize).getOrElse(-1)
 
     /**
       * @return
-      *   Returns the band's y size.
+      *   Returns the band's y size, defaults to -1.
       */
-    def ySize: Int = Try(band.GetYSize).getOrElse(0)
+    def ySize: Int = Try(band.GetYSize).getOrElse(-1)
 
     /**
       * @return
@@ -94,7 +94,7 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
 
     /**
       * @return
-      *   Returns the band's min and max pixel values.
+      *   Returns the band's min and max pixel values, defaults to Seq(Double.NaN, Double.NaN).
       */
     def computeMinMax: Seq[Double] = {
         val minMaxVals = Array.fill[Double](2)(0)
@@ -125,17 +125,18 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
       * @param ySize
       *   The number of pixels to read in the y direction.
       * @return
-      *   A 2D array of pixels from the band.
+      *   A 2D array of pixels from the band, defaults to empty array.
       */
-    def values(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] = {
-        val flatArray = Array.ofDim[Double](xSize * ySize)
-        (xSize, ySize) match {
-            case (0, 0) => Array.empty[Double]
-            case _      =>
-                band.ReadRaster(xOffset, yOffset, xSize, ySize, xSize, ySize, gdalconstConstants.GDT_Float64, flatArray, 0, 0)
-                flatArray
-        }
-    }
+    def values(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] =
+        Try {
+            val flatArray = Array.ofDim[Double](xSize * ySize)
+            (xSize, ySize) match {
+                case (0, 0) => Array.empty[Double]
+                case _      =>
+                    band.ReadRaster(xOffset, yOffset, xSize, ySize, xSize, ySize, gdalconstConstants.GDT_Float64, flatArray, 0, 0)
+                    flatArray
+            }
+        }.getOrElse(Array.empty[Double])
 
     /**
       * Get the band's pixels as a 1D array.
@@ -149,22 +150,23 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
       * @param ySize
       *   The number of pixels to read in the y direction.
       * @return
-      *   A 2D array of pixels from the band.
+      *   A 2D array of pixels from the band, defaults to empty array.
       */
-    def maskValues(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] = {
-        val flatArray = Array.ofDim[Double](xSize * ySize)
-        val maskBand = band.GetMaskBand
-        (xSize, ySize) match {
-            case (0, 0) => Array.empty[Double]
-            case _      =>
-                maskBand.ReadRaster(xOffset, yOffset, xSize, ySize, xSize, ySize, gdalconstConstants.GDT_Float64, flatArray, 0, 0)
-                flatArray
-        }
-    }
+    def maskValues(xOffset: Int, yOffset: Int, xSize: Int, ySize: Int): Array[Double] =
+        Try {
+            val flatArray = Array.ofDim[Double](xSize * ySize)
+            val maskBand = band.GetMaskBand
+            (xSize, ySize) match {
+                case (0, 0) => Array.empty[Double]
+                case _      =>
+                    maskBand.ReadRaster(xOffset, yOffset, xSize, ySize, xSize, ySize, gdalconstConstants.GDT_Float64, flatArray, 0, 0)
+                    flatArray
+            }
+        }.getOrElse(Array.empty[Double])
 
     /**
       * @return
-      *   Returns the band's pixel value with scale and offset applied.
+      *   Returns the band's pixel value with scale and offset applied, defaults to 0.0.
       */
     def pixelValueToUnitValue(pixelValue: Double): Double = (pixelValue * pixelValueScale) + pixelValueOffset
 
@@ -177,7 +179,7 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
 
     /**
       * @return
-      *   Returns the band's pixel value scale.
+      *   Returns the band's pixel value scale, defaults to 0.0.
       */
     def pixelValueOffset: Double = {
         val offset = Array.fill[java.lang.Double](1)(0)
@@ -223,25 +225,36 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
     /**
       * Counts the number of pixels in the band. The mask is used to determine
       * if a pixel is valid. If pixel value is noData or mask value is 0.0, the
-      * pixel is not counted.
-      *
+      * pixel is not counted by default.
+      * @param countNoData
+      *   If specified as true, include the noData (default is false).
+      * @param countAll
+      *   If specified as true, simply return bandX * bandY (default is false).
       * @return
       *   Returns the band's pixel count.
       */
-    def pixelCount: Int = {
-        val line = Array.ofDim[Double](band.GetXSize())
-        val maskLine = Array.ofDim[Double](band.GetXSize())
-        var count = 0
-        for (y <- 0 until band.GetYSize()) {
-            band.ReadRaster(0, y, band.GetXSize(), 1, line)
-            val maskRead = band.GetMaskBand().ReadRaster(0, y, band.GetXSize(), 1, maskLine)
-            if (maskRead != gdalconstConstants.CE_None) {
-                count = count + line.count(_ != noDataValue)
-            } else {
-                count = count + line.zip(maskLine).count { case (pixel, mask) => pixel != noDataValue && mask != 0.0 }
+    def pixelCount(countNoData: Boolean = false, countAll: Boolean = false): Int = {
+        if (countAll) {
+            // all pixels returned
+            band.GetXSize() * band.GetYSize()
+        } else {
+            // nodata not included (default)
+            val line = Array.ofDim[Double](band.GetXSize())
+            var count = 0
+            for (y <- 0 until band.GetYSize()) {
+                band.ReadRaster(0, y, band.GetXSize(), 1, line)
+                val maskLine = Array.ofDim[Double](band.GetXSize())
+                val maskRead = band.GetMaskBand().ReadRaster(0, y, band.GetXSize(), 1, maskLine)
+                if (maskRead != gdalconstConstants.CE_None) {
+                    count = count + line.count(pixel => countNoData || pixel != noDataValue)
+                } else {
+                    count = count + line.zip(maskLine).count {
+                        case (pixel, mask) => mask != 0.0 && (countNoData || pixel != noDataValue)
+                    }
+                }
             }
+            count
         }
-        count
     }
 
     /**

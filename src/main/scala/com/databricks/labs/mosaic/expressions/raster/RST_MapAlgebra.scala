@@ -1,13 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.{createTmpFileFromDriver, identifyExtFromDriver}
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALCalc
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterArray1ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -16,43 +15,45 @@ import org.apache.spark.unsafe.types.UTF8String
 
 /** The expression for map algebra. */
 case class RST_MapAlgebra(
-    tileExpr: Expression,
-    jsonSpecExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                             rasterExpr: Expression,
+                             jsonSpecExpr: Expression,
+                             exprConfig: ExprConfig
 ) extends RasterArray1ArgExpression[RST_MapAlgebra](
-      tileExpr,
+      rasterExpr,
       jsonSpecExpr,
       returnsRaster = true,
-      expressionConfig = expressionConfig
+      exprConfig = exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
 
+    // serialize data type
     override def dataType: DataType = {
-        GDAL.enable(expressionConfig)
-        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(exprConfig.getCellIdType, rasterExpr, exprConfig.isRasterUseCheckpoint)
     }
 
     /**
       * Map Algebra.
       * @param tiles
-      *   The raster to be used.
+      *   The tile to be used.
       * @param arg1
       *   The red band index.
       * @return
-      *   The raster (tile) from the calculation.
+      *   The tile (tile) from the calculation.
       */
-    override def rasterTransform(tiles: Seq[MosaicRasterTile], arg1: Any): Any = {
+    override def rasterTransform(tiles: Seq[RasterTile], arg1: Any): Any = {
         val jsonSpec = arg1.asInstanceOf[UTF8String].toString
-        val extension = GDAL.getExtension(tiles.head.getDriver)
-        val resultPath = PathUtils.createTmpFilePath(extension)
+        val driverShortName = tiles.head.raster.getDriverName()
+        val resultPath = createTmpFileFromDriver(driverShortName, Option(exprConfig))
+
         val command = parseSpec(jsonSpec, resultPath, tiles)
-        val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-        val result = GDALCalc.executeCalc(command, resultPath)
-        MosaicRasterTile(index, result)
+        val index = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
+        val result = GDALCalc.executeCalc(command, resultPath, Option(exprConfig))
+        val resultType = RasterTile.getRasterType(dataType)
+        RasterTile(index, result, resultType)
     }
 
-    def parseSpec(jsonSpec: String, resultPath: String, tiles: Seq[MosaicRasterTile]): String = {
+    def parseSpec(jsonSpec: String, resultPath: String, tiles: Seq[RasterTile]): String = {
         import org.json4s._
         import org.json4s.jackson.JsonMethods._
         implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
@@ -65,10 +66,10 @@ case class RST_MapAlgebra(
             .map(raster => (raster, (json \ raster).toOption))
             .filter(_._2.isDefined)
             .map(raster => (raster._1, raster._2.get.extract[Int]))
-            .map { case (raster, index) => (raster, tiles(index).getRaster.getPath) }
+            .map { case (raster, index) => (raster, tiles(index).raster.getRawPath) }
 
         val paramRasters = (if (namedRasters.isEmpty) {
-                                tiles.zipWithIndex.map { case (tile, index) => (s"${('A' + index).toChar}", tile.getRaster.getPath) }
+                                tiles.zipWithIndex.map { case (tile, index) => (s"${('A' + index).toChar}", tile.raster.getRawPath) }
                             } else {
                                 namedRasters
                             })
@@ -104,19 +105,19 @@ object RST_MapAlgebra extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2) - Performs map algebra on the raster tiles.
+          |_FUNC_(expr1, expr2) - Performs map algebra on the tile tiles.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
           |      > SELECT _FUNC_(raster_tiles, "{calc: 'A+B', A_index: 0, B_index: 1}");
-          |        {index_id, raster, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_MapAlgebra](2, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_MapAlgebra](2, exprConfig)
     }
 
 }

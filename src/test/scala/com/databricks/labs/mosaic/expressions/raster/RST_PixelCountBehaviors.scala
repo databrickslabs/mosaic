@@ -10,16 +10,26 @@ import org.scalatest.matchers.should.Matchers._
 trait RST_PixelCountBehaviors extends QueryTest {
 
     def behavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
+
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
 
         val rastersInMemory = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
+            .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
+        //info(s"row -> ${rastersInMemory.first().toSeq.toString()}")
+
+        val dfPix = rastersInMemory
+            .select(rst_pixelcount($"tile"))
+        info(s"pixelcount (prior to tessellate) -> ${dfPix.first().toSeq.toString()}")
+
+        // this should work after rst_tessellate
 
         val df = rastersInMemory
             .withColumn("tile", rst_tessellate($"tile", lit(3)))
@@ -27,12 +37,16 @@ trait RST_PixelCountBehaviors extends QueryTest {
             .select("result")
             .select(explode($"result").as("result"))
 
+        //info(df.first().toSeq.toString())
+
+
         rastersInMemory
             .withColumn("tile", rst_tessellate($"tile", lit(3)))
             .createOrReplaceTempView("source")
 
+        // TODO: modified to 3 args... should this be revisited?
         noException should be thrownBy spark.sql("""
-                                                   |select rst_pixelcount(tile) from source
+                                                   |select rst_pixelcount(tile,false,false) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory

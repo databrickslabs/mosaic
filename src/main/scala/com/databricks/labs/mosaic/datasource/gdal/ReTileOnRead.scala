@@ -1,20 +1,22 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
+import com.databricks.labs.mosaic.{RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
 import com.databricks.labs.mosaic.core.raster.operator.retile.BalancedSubdivision
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 
-import java.nio.file.{Files, Paths}
+import scala.util.Try
 
 /** An object defining the retiling read strategy for the GDAL file format. */
 object ReTileOnRead extends ReadStrategy {
@@ -68,6 +70,7 @@ object ReTileOnRead extends ReadStrategy {
 
     /**
       * Reads the content of the file.
+ *
       * @param status
       *   File status.
       * @param fs
@@ -78,68 +81,106 @@ object ReTileOnRead extends ReadStrategy {
       *   Options passed to the reader.
       * @param indexSystem
       *   Index system.
-      *
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]].
       * @return
       *   Iterator of internal rows.
       */
     override def read(
-        status: FileStatus,
-        fs: FileSystem,
-        requiredSchema: StructType,
-        options: Map[String, String],
-        indexSystem: IndexSystem
+                         status: FileStatus,
+                         fs: FileSystem,
+                         requiredSchema: StructType,
+                         options: Map[String, String],
+                         indexSystem: IndexSystem,
+                         exprConfigOpt: Option[ExprConfig]
     ): Iterator[InternalRow] = {
+        //scalastyle:off println
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
         val sizeInMB = options.getOrElse("sizeInMB", "16").toInt
-
-        var tmpPath = PathUtils.copyToTmpWithRetry(inPath, 5)
-        val tiles = localSubdivide(tmpPath, inPath, sizeInMB)
-
+        val uriDeepCheck = Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
+        val uriGdalOpt = PathUtils.parseGdalUriOpt(inPath, uriDeepCheck)
+        val driverName = options.get("driverName") match {
+            case Some(name) if name.nonEmpty =>
+                //println(s"... ReTileOnRead - driverName '$name' from options")
+                name
+            case _ =>
+                val dn = identifyDriverNameFromRawPath(inPath, uriGdalOpt)
+                //println(s"... ReTileOnRead - driverName '$dn' from ext")
+                dn
+        }
+        val tmpPath = PathUtils.copyCleanPathToTmpWithRetry(inPath, exprConfigOpt, retries = 5)
+        val createInfo = Map(
+            RASTER_PATH_KEY -> tmpPath,
+            RASTER_PARENT_PATH_KEY -> inPath,
+            RASTER_DRIVER_KEY -> driverName,
+            //RASTER_SUBDATASET_NAME_KEY -> options.getOrElse("subdatasetName", "") // <- NO SUBDATASET HERE (PRE)!
+        )
+        val tiles = localSubdivide(createInfo, sizeInMB, exprConfigOpt)
+        //println(s"ReTileOnRead - number of tiles - ${tiles.length}")
         val rows = tiles.map(tile => {
+            val raster = tile.raster
+            // TODO: REVALIDATE ADDING SUBDATASET (POST)
+            // Clear out subset name on retile (subdivide)
+            // - this is important to allow future loads to not try the path
+            // - while subdivide should not be allowed for zips, testing just in case
+            //raster.updateSubsetName(options.getOrElse("subdatasetName", "")) // <- SUBDATASET HERE (POST)!
+
             val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
             val fields = trimmedSchema.fieldNames.map {
+
                 case PATH              => status.getPath.toString
                 case MODIFICATION_TIME => status.getModificationTime
                 case UUID              => uuid
-                case X_SIZE            => tile.getRaster.xSize
-                case Y_SIZE            => tile.getRaster.ySize
-                case BAND_COUNT        => tile.getRaster.numBands
-                case METADATA          => tile.getRaster.metadata
-                case SUBDATASETS       => tile.getRaster.subdatasets
-                case SRID              => tile.getRaster.SRID
-                case LENGTH            => tile.getRaster.getMemSize
+                case X_SIZE            => raster.xSize
+                case Y_SIZE            => raster.ySize
+                case BAND_COUNT        => raster.numBands
+                case METADATA          => raster.metadata
+                case SUBDATASETS       => raster.subdatasets
+                case SRID              => raster.SRID
+                case LENGTH            => raster.getMemSize
                 case other             => throw new RuntimeException(s"Unsupported field name: $other")
             }
+            raster.flushAndDestroy()
             // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
-            val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(tileDataType)))
-            RasterCleaner.dispose(tile)
+            val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem)
+                .serialize(tileDataType, doDestroy = true, exprConfigOpt)))
+
             row
         })
-
-        Files.deleteIfExists(Paths.get(tmpPath))
+        //scalastyle:on println
 
         rows.iterator
     }
 
     /**
-      * Subdivides a raster into tiles of a given size.
-      * @param inPath
-      *   Path to the raster.
+      * Subdivides a tile into tiles of a given size.
+      *
+      * @param createInfo
+      *   Map with various KVs
       * @param sizeInMB
       *   Size of the tiles in MB.
-      *
+      * @param exprConfig
+      *   Option [[ExprConfig]].
       * @return
-      *   A tuple of the raster and the tiles.
+      *  A tuple of the tile and the tiles.
       */
-    def localSubdivide(inPath: String, parentPath: String, sizeInMB: Int): Seq[MosaicRasterTile] = {
-        val cleanPath = PathUtils.getCleanPath(inPath)
-        val createInfo = Map("path" -> cleanPath, "parentPath" -> parentPath)
-        val raster = MosaicRasterGDAL.readRaster(createInfo)
-        val inTile = new MosaicRasterTile(null, raster)
-        val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB)
-        RasterCleaner.dispose(raster)
-        RasterCleaner.dispose(inTile)
+    def localSubdivide(
+                          createInfo: Map[String, String],
+                          sizeInMB: Int,
+                          exprConfigOpt: Option[ExprConfig]
+                      ): Seq[RasterTile] = {
+        //scalastyle:off println
+        var raster = RasterGDAL(createInfo, exprConfigOpt).tryInitAndHydrate()
+        var inTile = new RasterTile(null, raster, tileDataType)
+        //println(s"ReTileOnRead - localSubdivide - sizeInMB? $sizeInMB | config? $createInfo")
+        //println(s"ReTileOnRead - localSubdivide - raster isHydrated? ${raster.isDatasetHydrated}, isSubdataset? ${raster.isSubdataset}, srid? ${raster.getSpatialReference.toString}")
+        val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB, exprConfigOpt)
+
+        inTile.flushAndDestroy()
+        inTile = null
+        raster = null
+        //scalastyle:on println
         tiles
     }
 

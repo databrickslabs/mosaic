@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.WithExpressionInfo
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector2ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -22,16 +22,16 @@ import org.apache.spark.sql.functions._
   *   'quad_segs=# endcap=round|flat|square' where "#" is the number of line
   *   segments used to approximate a quarter circle (default is 8); and endcap
   *   style for line features is one of listed (default="round")
-  * @param expressionConfig
+  * @param exprConfig
   *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
   *   arguments for the expression (expressionConfigs).
   */
 case class ST_Buffer(
-    inputGeom: Expression,
-    radiusExpr: Expression,
-    bufferStyleParametersExpr: Expression = lit("").expr,
-    expressionConfig: MosaicExpressionConfig
-) extends UnaryVector2ArgExpression[ST_Buffer](inputGeom, radiusExpr, bufferStyleParametersExpr, returnsGeometry = true, expressionConfig) {
+                        inputGeom: Expression,
+                        radiusExpr: Expression,
+                        bufferStyleParametersExpr: Expression = lit("").expr,
+                        exprConfig: ExprConfig
+) extends UnaryVector2ArgExpression[ST_Buffer](inputGeom, radiusExpr, bufferStyleParametersExpr, returnsGeometry = true, exprConfig) {
 
     override def dataType: DataType = inputGeom.dataType
 
@@ -63,11 +63,11 @@ object ST_Buffer extends WithExpressionInfo {
           |        POLYGON (...)
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = { (children: Seq[Expression]) =>
         if (children.size == 2) {
-            ST_Buffer(children.head, Column(children(1)).cast("double").expr, lit("").expr, expressionConfig)
+            ST_Buffer(children.head, Column(children(1)).cast("double").expr, lit("").expr, exprConfig)
         } else if (children.size == 3) {
-            ST_Buffer(children.head, Column(children(1)).cast("double").expr, Column(children(2)).cast("string").expr, expressionConfig)
+            ST_Buffer(children.head, Column(children(1)).cast("double").expr, Column(children(2)).cast("string").expr, exprConfig)
         } else throw new Exception("unexpected number of arguments")
     }
 
