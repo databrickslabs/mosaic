@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
-import com.databricks.labs.mosaic.{RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.{RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
@@ -94,11 +94,10 @@ object ReadAsPath extends ReadStrategy {
                          indexSystem: IndexSystem,
                          exprConfigOpt: Option[ExprConfig]
     ): Iterator[InternalRow] = {
+        //scalastyle:off println
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
-
         val tmpPath = PathUtils.copyToTmp(inPath, exprConfigOpt)
-        //scalastyle:off println
         val uriDeepCheck = Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
         val uriGdalOpt = PathUtils.parseGdalUriOpt(inPath, uriDeepCheck)
         val driverName = options.get("driverName") match {
@@ -110,14 +109,14 @@ object ReadAsPath extends ReadStrategy {
                 //println(s"... ReadAsPath - driverName '$dn' from ext")
                 dn
         }
-        //scalastyle:on println
-
         val createInfo = Map(
             RASTER_PATH_KEY -> tmpPath,
             RASTER_PARENT_PATH_KEY -> inPath,
-            RASTER_DRIVER_KEY -> driverName
+            RASTER_DRIVER_KEY -> driverName,
+            RASTER_SUBDATASET_NAME_KEY -> options.getOrElse(RASTER_SUBDATASET_NAME_KEY, "")
         )
-        val raster = RasterGDAL(createInfo, exprConfigOpt) // unhydrated
+        val raster = RasterGDAL(createInfo, exprConfigOpt).tryInitAndHydrate()
+        //println(s"ReadAsPath - raster isHydrated? ${raster.isDatasetHydrated}, isSubdataset? ${raster.isSubdataset}, srid? ${raster.getSpatialReference.toString}")
         val tile = RasterTile(null, raster, tileDataType)
         val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
         val fields = trimmedSchema.fieldNames.map {
@@ -137,8 +136,9 @@ object ReadAsPath extends ReadStrategy {
         // Serialize to configured fuse directory
         val row = Utils.createRow(fields ++ Seq(
             tile.formatCellId(indexSystem).serialize(tileDataType, doDestroy = true, exprConfigOpt)))
-
         val rows = Seq(row)
+        //scalastyle:on println
+
         rows.iterator
     }
 

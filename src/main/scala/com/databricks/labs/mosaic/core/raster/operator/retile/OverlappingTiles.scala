@@ -1,7 +1,5 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
-import com.databricks.labs.mosaic.{NO_PATH_STRING, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
-import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
 import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.functions.ExprConfig
@@ -59,7 +57,7 @@ object OverlappingTiles {
                     command = s"gdal_translate -srcwin $xOff $yOff $width $height",
                     outOptions,
                     exprConfigOpt
-                ).initAndHydrate() // <- required
+                ).tryInitAndHydrate() // <- required
 
                 if (!result.isEmpty) {
                     (true, result)

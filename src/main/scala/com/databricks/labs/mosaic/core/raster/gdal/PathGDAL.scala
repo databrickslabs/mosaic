@@ -13,21 +13,29 @@ import scala.util.Try
   *   - 'path' is a var, meaning it can be updated.
   *   - 'path' defaults to [[NO_PATH_STRING]].
   *   - 'uriDeepCheck' defaults to false.
+  *
   * @param path
+  *   var option path from which parts will be parsed, default [[NO_PATH_STRING]].
   * @param uriDeepCheck
+  *   var option for using deep GDAL uri checking, default false.
+  * @param subNameOpt
+  *   var option to specify the subdataset to use, default None.
   */
-case class PathGDAL(var path: String = NO_PATH_STRING, var uriDeepCheck: Boolean = false) {
+case class PathGDAL(
+                       var path: String = NO_PATH_STRING,
+                       var uriDeepCheck: Boolean = false,
+                       var subNameOpt: Option[String] = None
+                   ) {
 
     // these are parsed 1x on init, and as needed after.
     // and then only as path changes,
     // since they are more expensive (and can be repetitive)
     private var isFuse: Boolean = false
-    private var driverNameOpt: Option[String] = None
+    private var driverNamePathOpt: Option[String] = None
     private var extOpt: Option[String] = None
     private var fsPathOpt: Option[String] = None
-    private var gdalPathOpt: Option[String] = None
-    private var subNameOpt: Option[String] = None
-    private var uriGdalOpt: Option[String] = None
+    private var rawPathSubNameOpt: Option[String] = None // as found in path
+    private var rawUriGdalOpt: Option[String] = None
 
     // track when refresh is needed
     // - doubles as an init flag
@@ -68,10 +76,31 @@ case class PathGDAL(var path: String = NO_PATH_STRING, var uriDeepCheck: Boolean
     /** @return the filename from the filesystem */
     def getFilename: String = this.asJavaPath.getFileName.toString
 
-    /** @return the parsed uriGdalOpt, if any. */
-    def getUriGdalOpt: Option[String] = {
+    /** @return the parsed uriGdalOpt from the path, if any. */
+    def getRawUriGdalOpt: Option[String]= {
         this.refreshParts()
-        uriGdalOpt
+        rawUriGdalOpt
+    }
+
+    /**
+     * Private function that handles rules for providing a URI to prepend to `asGDALPath*` functions:
+     * - [1] If this is a zip don't return a uri
+     * - [2] If the uri was found in the path, use that
+     * - [3] Otherwise, use from the driver.
+     *
+     * @param cleanPath
+     *   Should have already been generated in one of the `asGDALPath*` functions.
+     * @param driverNameOpt
+     *   Option to override the path driver; if populated it is used.
+     * @return the uri to use in Gdal path (default "").
+     */
+    private def handleGDALUriForCleanPath(cleanPath: String, driverNameOpt: Option[String]): String = {
+        this.refreshParts()
+        if (!this.isPathZip && rawUriGdalOpt.isEmpty) {
+            if (driverNameOpt.isDefined) s"${driverNameOpt.get}:$cleanPath"          // <- prepend the override driver name
+            else if (this.hasPathDriverName) s"${this.getPathDriverName}:$cleanPath" // <- prepend the path driver name
+            else cleanPath                                                           // <- use clean path as-is (fallback)
+        } else cleanPath                                                             // <- use clean path as-is (all good)
     }
 
     /** @return whether the file system path is a directory. */
@@ -98,15 +127,54 @@ case class PathGDAL(var path: String = NO_PATH_STRING, var uriDeepCheck: Boolean
     //   including subdatasets
     // //////////////////////////////////////////////////////////////
 
-    def asGDALPathOpt: Option[String] = {
+    /** @return option of gdal path with subdataset name (if present). */
+    def asGDALPathOpt(driverNameOpt: Option[String]): Option[String] = {
         this.refreshParts()
-        gdalPathOpt
+        this.getPathOpt match {
+            case Some(p) =>
+                if (this.isSubdataset) {
+                    // handle subsets
+                    val sName = this.getSubsetName
+                    val result = {
+                        if (this.isPathZip) {
+                            // for zips, don't want a gdal uri
+                            // - strip uri then get clean path
+                            val noUriPath = PathUtils.stripGdalUriPart(p, rawUriGdalOpt)
+                            val cleanPath = PathUtils.getCleanPath(noUriPath, addVsiZipToken = this.isPathZip, uriGdalOpt = None)
+                            if (sName.startsWith("/")) s"$cleanPath$sName" // <- ".zip/.." pattern
+                            else s"$cleanPath/$sName"
+                        } else {
+                            // for subsets -> return with gdal uri handled based on various rules
+                            // - start with the clean path
+                            val cleanPath = PathUtils.getCleanPath(p, addVsiZipToken = this.isPathZip, rawUriGdalOpt)
+                            val handlePath = this.handleGDALUriForCleanPath(cleanPath, driverNameOpt)
+                            s"$handlePath:$sName"
+                        }
+                    }
+                    Some(result)
+                } else this.asGDALPathOptNoSubName(driverNameOpt)
+            case _ => None
+        }
+    }
+
+    /** @return option of gdal path without subdataset name (if present). */
+    def asGDALPathOptNoSubName(driverNameOpt: Option[String]): Option[String] = {
+        this.refreshParts()
+        this.getPathOpt match {
+            case Some(p) =>
+                // just get the clean path
+                // - strip the rawUri part
+                val noUriPath = PathUtils.stripGdalUriPart(p, rawUriGdalOpt)
+                val cleanPath = PathUtils.getCleanPath(noUriPath, addVsiZipToken = this.isPathZip, uriGdalOpt = None)
+                Some(cleanPath)
+            case _ => None
+        }
     }
 
     /** @return a driver if known from path extension, default [[NO_DRIVER]]. */
     def getPathDriverName: String = {
         this.refreshParts()
-        driverNameOpt match {
+        driverNamePathOpt match {
             case Some(d) => d
             case _ => NO_DRIVER
         }
@@ -115,22 +183,35 @@ case class PathGDAL(var path: String = NO_PATH_STRING, var uriDeepCheck: Boolean
     /** @return a driver option, not allowing [[NO_DRIVER]]. */
     def getPathDriverNameOpt: Option[String] = {
         this.refreshParts()
-        driverNameOpt
+        driverNamePathOpt
     }
 
     def hasPathDriverName: Boolean = {
         this.refreshParts()
-        driverNameOpt.isDefined
+        driverNamePathOpt.isDefined
     }
 
-    /** @return option for subdataset name. */
-    def getPathSubdatasetNameOpt: Option[String] = {
+    /** @return option for subdataset name (as found in path only). */
+    def getRawPathSubNameOpt: Option[String] = {
         this.refreshParts()
-        subNameOpt
+        rawPathSubNameOpt
     }
 
-    /** @return whether pathutils ids the path as a subdataset. */
-    def isSubdatasetPath: Boolean = {
+    /** @return option for subdataset name as set (including found in path). */
+    def getSubNameOpt: Option[String] = {
+        this.refreshParts()
+        this.subNameOpt
+    }
+
+    /** @return option for subdataset name as set (including found in path). */
+    def getSubsetName: String = {
+        getSubNameOpt.getOrElse("")
+    }
+
+    /**
+     * @return whether subdataset option is defined (including one set on the object).
+     */
+    def isSubdataset: Boolean = {
         this.refreshParts()
         subNameOpt.isDefined
     }
@@ -154,7 +235,6 @@ case class PathGDAL(var path: String = NO_PATH_STRING, var uriDeepCheck: Boolean
       */
     def isPathSetAndExists: Boolean = this.isPathSet && this.existsOnFileSystem
 
-    //scalastyle:off println
     /**
      * Writes a tile to a specified file system path.
      *
@@ -167,6 +247,7 @@ case class PathGDAL(var path: String = NO_PATH_STRING, var uriDeepCheck: Boolean
      */
     def rawPathWildcardCopyToDir(toDir: String, skipUpdatePath: Boolean): Option[String] =
         Try {
+            //scalastyle:off println
             Files.createDirectories(Paths.get(toDir)) // <- ok exists
             //println("::: PathGDAL - rawPathWildcardCopyToDir :::")
             val thisDir = this.asJavaPath.getParent.toString
@@ -218,13 +299,14 @@ case class PathGDAL(var path: String = NO_PATH_STRING, var uriDeepCheck: Boolean
         }.getOrElse {
             // (4) unable to act on the file, does it exist?
             //println(s"PathGDAL - Exception - does raw path: '$path' exist?")
+            //scalastyle:on println
             None
         }
-    //scalastyle:on println
 
     /**
      * Refresh the various parts of the path.
      * - This is to avoid recalculating, except when path changes.
+     * - If subNameOpt not externally defined / set, will set it to rawPathSubNameOpt.
      *
      * @param forceRefresh
      *   Whether to force the refresh.
@@ -239,28 +321,27 @@ case class PathGDAL(var path: String = NO_PATH_STRING, var uriDeepCheck: Boolean
                     case Some(p) =>
                         // handle `uriGdalOpt` first
                         // - then pass it to others to avoid recompute
-                        uriGdalOpt = PathUtils.parseGdalUriOpt(p, this.uriDeepCheck)
-                        extOpt = PathUtils.getExtOptFromPath(p, uriGdalOpt)
-                        driverNameOpt =  RasterIO.identifyDriverNameFromExtOpt(extOpt) match {
+                        rawUriGdalOpt = PathUtils.parseGdalUriOpt(p, this.uriDeepCheck)
+                        extOpt = PathUtils.getExtOptFromPath(p, rawUriGdalOpt)
+                        driverNamePathOpt =  RasterIO.identifyDriverNameFromExtOpt(extOpt) match {
                             case d if d != NO_DRIVER => Some(d)
                             case _ => None
                         }
-                        fsPathOpt = PathUtils.asFileSystemPathOpt(p, uriGdalOpt)
-                        gdalPathOpt = PathUtils.asGdalPathOpt(p, uriGdalOpt)
+                        fsPathOpt = PathUtils.asFileSystemPathOpt(p, rawUriGdalOpt)
                         isFuse = fsPathOpt match {
-                            case Some(fsPath) => PathUtils.isFusePathOrDir(fsPath, uriGdalOpt)
+                            case Some(fsPath) => PathUtils.isFusePathOrDir(fsPath, rawUriGdalOpt)
                             case _ => false
                         }
-                        subNameOpt = PathUtils.getSubdatasetNameOpt(p, uriGdalOpt)
+                        rawPathSubNameOpt = PathUtils.getSubdatasetNameOpt(p, rawUriGdalOpt)
+                        if (subNameOpt.isEmpty && rawPathSubNameOpt.isDefined) subNameOpt = Some(rawPathSubNameOpt.get)
                     case _ =>
                         // all get reset
                         isFuse = false
-                        driverNameOpt = None
+                        driverNamePathOpt = None
                         extOpt = None
                         fsPathOpt = None
-                        gdalPathOpt = None
-                        subNameOpt = None
-                        uriGdalOpt = None
+                        rawPathSubNameOpt = None
+                        rawUriGdalOpt = None
                 }
             }
             this // <- fluent
@@ -287,6 +368,36 @@ case class PathGDAL(var path: String = NO_PATH_STRING, var uriDeepCheck: Boolean
     def updatePath(path: String): PathGDAL = {
         this.path = path
         this.refreshParts(forceRefresh = true)
+        this
+    }
+
+    /**
+     * Set the object's path and subdataset name.
+     *
+     * @param path
+     *   To set.
+     * @param subsetName
+     *   Subdataset.
+     * @return
+     *   `this` [[PathGDAL]] (fluent).
+     */
+    def updatePathAndSubset(path: String, subsetName: String): PathGDAL = {
+        this.updatePath(path)
+        this.updateSubsetName(subsetName)
+        this
+    }
+
+    /**
+     * Set the object's subdataset name.
+     *
+     * @param subsetName
+     *   Subdataset.
+     * @return
+     *   `this` [[PathGDAL]] (fluent).
+     */
+    def updateSubsetName(subsetName: String): PathGDAL = {
+        if (subsetName.nonEmpty) this.subNameOpt = Some(subsetName)
+        else this.subNameOpt = None
         this
     }
 

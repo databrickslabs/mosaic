@@ -33,7 +33,7 @@ case class RST_PixelCount(
         val countNoData = arg1.asInstanceOf[Boolean]
         val countAll = arg2.asInstanceOf[Boolean]
         val raster = tile.raster
-        raster.withDatasetHydratedOpt() match {
+        raster.getDatasetOpt() match {
             case Some(dataset) =>
                 val bandCount = dataset.GetRasterCount()
                 val pixelCount = (1 to bandCount).map (

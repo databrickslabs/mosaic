@@ -47,7 +47,7 @@ object PixelCombineRasters {
         )
 
         addPixelFunction(vrtPath, pythonFunc, pythonFuncName)
-        val vrtModRaster = RasterGDAL(vrtRaster.getCreateInfo, exprConfigOpt)
+        val vrtModRaster = RasterGDAL(vrtRaster.getCreateInfo(includeExtras = true), exprConfigOpt)
 
         val result = GDALTranslate.executeTranslate(
             rasterPath,

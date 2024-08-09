@@ -71,9 +71,9 @@ class PathUtilsTest extends SharedSparkSessionGDAL {
         pathGDAL.asFileSystemPathOpt should be(Some(myFsPath))
         pathGDAL.existsOnFileSystem should be(false)
 
-        pathGDAL.isSubdatasetPath should be(false)
-        pathGDAL.asGDALPathOpt should be(Some(myFsPath))
-        pathGDAL.getPathSubdatasetNameOpt should be(None)
+        pathGDAL.isSubdataset should be(false)
+        pathGDAL.asGDALPathOpt(driverNameOpt = None) should be(Some(myFsPath))
+        pathGDAL.getSubNameOpt should be(None)
 
         pathGDAL.isFusePath should be(false)
         pathGDAL.isPathSet should be(true)
@@ -95,9 +95,9 @@ class PathUtilsTest extends SharedSparkSessionGDAL {
         pathGDAL.asFileSystemPathOpt should be(Some(myFsPath))
         pathGDAL.existsOnFileSystem should be(false)
 
-        pathGDAL.isSubdatasetPath should be(false)
-        pathGDAL.asGDALPathOpt should be(Some(s"$VSI_ZIP_TOKEN$myFsPath"))
-        pathGDAL.getPathSubdatasetNameOpt should be(None)
+        pathGDAL.isSubdataset should be(false)
+        pathGDAL.asGDALPathOpt(driverNameOpt = None) should be(Some(s"$VSI_ZIP_TOKEN$myFsPath"))
+        pathGDAL.getSubNameOpt should be(None)
 
         pathGDAL.isFusePath should be(false)
         pathGDAL.isPathSet should be(true)
@@ -229,9 +229,9 @@ class PathUtilsTest extends SharedSparkSessionGDAL {
         pathGDAL.asFileSystemPathOpt should be(Some(myFS))
         pathGDAL.existsOnFileSystem should be(false)
 
-        pathGDAL.isSubdatasetPath should be(true)
-        pathGDAL.asGDALPathOpt should be(Some(mySub))
-        pathGDAL.getPathSubdatasetNameOpt should be(Some("sdname"))
+        pathGDAL.isSubdataset should be(true)
+        pathGDAL.asGDALPathOpt(driverNameOpt = None) should be(Some(mySub))
+        pathGDAL.getSubNameOpt should be(Some("sdname"))
 
         pathGDAL.isFusePath should be(false)
         pathGDAL.isPathSet should be(true)
@@ -259,9 +259,9 @@ class PathUtilsTest extends SharedSparkSessionGDAL {
         pathGDAL.asFileSystemPathOpt should be(Some(myFS))
         pathGDAL.existsOnFileSystem should be(false)
 
-        pathGDAL.isSubdatasetPath should be(true)
-        pathGDAL.asGDALPathOpt should be(Some(mySub))
-        pathGDAL.getPathSubdatasetNameOpt should be(Some("sdname"))
+        pathGDAL.isSubdataset should be(true)
+        pathGDAL.asGDALPathOpt(driverNameOpt = None) should be(Some(mySub))
+        pathGDAL.getSubNameOpt should be(Some("sdname"))
 
         pathGDAL.isFusePath should be(true)
         pathGDAL.isPathSet should be(true)
@@ -289,9 +289,9 @@ class PathUtilsTest extends SharedSparkSessionGDAL {
         pathGDAL.asFileSystemPathOpt should be(Some(myFS))
         pathGDAL.existsOnFileSystem should be(false)
 
-        pathGDAL.isSubdatasetPath should be(true)
-        pathGDAL.asGDALPathOpt should be(Some(mySub))
-        pathGDAL.getPathSubdatasetNameOpt should be(Some("sdname"))
+        pathGDAL.isSubdataset should be(true)
+        pathGDAL.asGDALPathOpt(driverNameOpt = None) should be(Some(mySub))
+        pathGDAL.getSubNameOpt should be(Some("sdname"))
 
         pathGDAL.isFusePath should be(true)
         pathGDAL.isPathSet should be(true)
@@ -322,9 +322,9 @@ class PathUtilsTest extends SharedSparkSessionGDAL {
         pathGDAL.asFileSystemPathOpt should be(Some(myFS))
         pathGDAL.existsOnFileSystem should be(false)
 
-        pathGDAL.isSubdatasetPath should be(true)
-        pathGDAL.asGDALPathOpt should be(Some(mySub))
-        pathGDAL.getPathSubdatasetNameOpt should be(Some("sdname"))
+        pathGDAL.isSubdataset should be(true)
+        pathGDAL.asGDALPathOpt(driverNameOpt = None) should be(Some(mySub))
+        pathGDAL.getSubNameOpt should be(Some("sdname"))
 
         pathGDAL.isFusePath should be(false)
         pathGDAL.isPathSet should be(true)
@@ -352,9 +352,9 @@ class PathUtilsTest extends SharedSparkSessionGDAL {
         pathGDAL.asFileSystemPathOpt should be(Some(myFS))
         pathGDAL.existsOnFileSystem should be(false)
 
-        pathGDAL.isSubdatasetPath should be(true)
-        pathGDAL.asGDALPathOpt should be(Some(mySub))
-        pathGDAL.getPathSubdatasetNameOpt should be(Some("sdname"))
+        pathGDAL.isSubdataset should be(true)
+        pathGDAL.asGDALPathOpt(driverNameOpt = None) should be(Some(mySub))
+        pathGDAL.getSubNameOpt should be(Some("sdname"))
 
         pathGDAL.isFusePath should be(true)
         pathGDAL.isPathSet should be(true)
@@ -382,9 +382,9 @@ class PathUtilsTest extends SharedSparkSessionGDAL {
         pathGDAL.asFileSystemPathOpt should be(Some(myFS))
         pathGDAL.existsOnFileSystem should be(false)
 
-        pathGDAL.isSubdatasetPath should be(true)
-        pathGDAL.asGDALPathOpt should be(Some(mySub))
-        pathGDAL.getPathSubdatasetNameOpt should be(Some("sdname"))
+        pathGDAL.isSubdataset should be(true)
+        pathGDAL.asGDALPathOpt(driverNameOpt = None) should be(Some(mySub))
+        pathGDAL.getSubNameOpt should be(Some("sdname"))
 
         pathGDAL.isFusePath should be(true)
         pathGDAL.isPathSet should be(true)
@@ -396,60 +396,52 @@ class PathUtilsTest extends SharedSparkSessionGDAL {
     test("PathUtils handles actual non-zip paths.") {
 
         val p = filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
-        val pathGDAL = PathGDAL(p)
-
-        // tif
-        pathGDAL.isSubdatasetPath should be(false)
-        pathGDAL.existsOnFileSystem should be(true)
+        var pathGDAL = PathGDAL()
 
         // tif uri
-        pathGDAL.updatePath(s"file:$p")
-        pathGDAL.isSubdatasetPath should be(false)
+        pathGDAL = PathGDAL(s"file:$p")
+        pathGDAL.isSubdataset should be(false)
         pathGDAL.existsOnFileSystem should be(true)
 
         // tif subdataset uri
-        pathGDAL.updatePath(s"file:$p:sdname")
-        pathGDAL.isSubdatasetPath should be(true)
+        pathGDAL = PathGDAL(s"file:$p:sdname")
+        pathGDAL.isSubdataset should be(true)
         pathGDAL.existsOnFileSystem should be(true)
 
         // tif posix
-        pathGDAL.updatePath(s"file:$p")
-        pathGDAL.isSubdatasetPath should be(false)
+        pathGDAL = PathGDAL(p)
+        pathGDAL.isSubdataset should be(false)
         pathGDAL.existsOnFileSystem should be(true)
 
         // tif subdataset posix
-        pathGDAL.updatePath(s"$p:sdname")
-        pathGDAL.isSubdatasetPath should be(true)
+        pathGDAL = PathGDAL(s"$p:sdname")
+        pathGDAL.isSubdataset should be(true)
         pathGDAL.existsOnFileSystem should be(true)
     }
 
     test("PathUtils handles zip paths.") {
 
         val p = filePath("/binary/zarr-example/zarr_test_data.zip")
-        val pathGDAL = PathGDAL(p)
-
-        // zip
-        pathGDAL.isSubdatasetPath should be(false)
-        pathGDAL.existsOnFileSystem should be(true)
+        var pathGDAL = PathGDAL()
 
         // zip uri
-        pathGDAL.updatePath(s"file:$p")
-        pathGDAL.isSubdatasetPath should be(false)
+        pathGDAL = PathGDAL(s"file:$p")
+        pathGDAL.isSubdataset should be(false)
         pathGDAL.existsOnFileSystem should be(true)
 
         // zip subdataset uri
-        pathGDAL.updatePath(s"file:$p:sdname")
-        pathGDAL.isSubdatasetPath should be(true)
+        pathGDAL = PathGDAL(s"file:$p:sdname")
+        pathGDAL.isSubdataset should be(true)
         pathGDAL.existsOnFileSystem should be(true)
 
         // zip posix
-        pathGDAL.updatePath(s"file:$p")
-        pathGDAL.isSubdatasetPath should be(false)
+        pathGDAL = PathGDAL(p)
+        pathGDAL.isSubdataset should be(false)
         pathGDAL.existsOnFileSystem should be(true)
 
         // zip subdataset posix
-        pathGDAL.updatePath(s"$p:sdname")
-        pathGDAL.isSubdatasetPath should be(true)
+        pathGDAL = PathGDAL(s"$p:sdname")
+        pathGDAL.isSubdataset should be(true)
         pathGDAL.existsOnFileSystem should be(true)
     }
 

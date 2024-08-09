@@ -194,3 +194,5 @@ docker/.m2/
 /scripts/docker/m2/xml-apis/
 /scripts/docker/m2/xmlpull/
 /checkpoint_table_knn/
+/src/test/resources/binary/zarr-air-unzip/day0_air_temp.zarr/.zgroup
+/src/test/resources/binary/zarr-air-unzip/day0_air_temp.zarr/.zmetadata

@@ -65,7 +65,7 @@ private class CleanUpManager extends Thread {
 object CleanUpManager {
 
     private val THREAD_NAME = "Mosaic-CleanUp-Manager"
-    private val delayMinutesAtomic = new AtomicInteger(5)
+    private val delayMinutesAtomic = new AtomicInteger(5) // <- default test every 5 minutes (different than age value)
     private val interruptAtomic = new AtomicBoolean(false)
     val USE_SUDO = FileUtils.withSudo
 

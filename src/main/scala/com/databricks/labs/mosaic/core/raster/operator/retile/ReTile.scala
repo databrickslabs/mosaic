@@ -55,7 +55,7 @@ object ReTile {
                 command = s"gdal_translate -srcwin $xMin $yMin $xOffset $yOffset",
                 outOptions,
                 exprConfigOpt
-            ).initAndHydrate() // <- required
+            ).tryInitAndHydrate() // <- required
 
             if (!result.isEmpty) {
                 (true, result)

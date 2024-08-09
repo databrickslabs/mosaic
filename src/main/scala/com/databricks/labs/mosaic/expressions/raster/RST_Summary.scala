@@ -29,7 +29,7 @@ case class RST_Summary(raster: Expression, exprConfig: ExprConfig)
         // https://gdal.org/programs/gdalinfo.html
         vector.add("-json")
         val infoOptions = new InfoOptions(vector)
-        val gdalInfo = tile.raster.withDatasetHydratedOpt() match {
+        val gdalInfo = tile.raster.getDatasetOpt() match {
             case Some(dataset) => GDALInfo(dataset, infoOptions)
             case _ => ""
         }

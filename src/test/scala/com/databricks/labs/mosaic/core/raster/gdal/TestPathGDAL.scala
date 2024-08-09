@@ -14,7 +14,7 @@ class TestPathGDAL extends SharedSparkSessionGDAL {
     test("PathGDAL handles empty paths (rest are in PathUtilsTest)") {
 
         val pathGDAL = PathGDAL() // <- calls to PathUtils
-        info(s"sub name -> ${pathGDAL.getPathSubdatasetNameOpt}")
+        info(s"sub name -> ${pathGDAL.getSubsetName}")
 
         pathGDAL.path should be(NO_PATH_STRING)
         pathGDAL.getPathOpt should be(None)
@@ -24,9 +24,9 @@ class TestPathGDAL extends SharedSparkSessionGDAL {
         pathGDAL.asFileSystemPathOpt should be(None)
         pathGDAL.existsOnFileSystem should be(false)
 
-        pathGDAL.isSubdatasetPath should be(false)
-        pathGDAL.asGDALPathOpt should be(None)
-        pathGDAL.getPathSubdatasetNameOpt should be(None)
+        pathGDAL.isSubdataset should be(false)
+        pathGDAL.asGDALPathOpt(driverNameOpt = None) should be(None)
+        pathGDAL.getSubNameOpt should be(None)
 
         pathGDAL.isFusePath should be(false)
         pathGDAL.isPathSet should be(false)

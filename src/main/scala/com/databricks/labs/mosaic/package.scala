@@ -47,12 +47,20 @@ package object mosaic {
     val MOSAIC_TEST_MODE = "spark.databricks.labs.mosaic.test.mode"
     val MOSAIC_MANUAL_CLEANUP_MODE = "spark.databricks.labs.mosaic.manual.cleanup.mode"
 
-    // processing keys
+    // core processing keys
     val RASTER_BAND_INDEX_KEY      = "bandIndex"
     val RASTER_DRIVER_KEY          = "driver"
     val RASTER_PARENT_PATH_KEY     = "parentPath"
     val RASTER_PATH_KEY            = "path"
     val RASTER_SUBDATASET_NAME_KEY = "subdatasetName"
+
+    val RASTER_CORE_KEYS = Seq(
+        RASTER_PATH_KEY,
+        RASTER_PARENT_PATH_KEY,
+        RASTER_DRIVER_KEY,
+        RASTER_SUBDATASET_NAME_KEY,
+        RASTER_BAND_INDEX_KEY
+    )
 
     // informational keys
     val RASTER_ALL_PARENTS_KEY     = "all_parents"

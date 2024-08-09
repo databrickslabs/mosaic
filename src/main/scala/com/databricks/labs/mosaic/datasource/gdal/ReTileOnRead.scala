@@ -114,13 +114,18 @@ object ReTileOnRead extends ReadStrategy {
             RASTER_PATH_KEY -> tmpPath,
             RASTER_PARENT_PATH_KEY -> inPath,
             RASTER_DRIVER_KEY -> driverName,
-            RASTER_SUBDATASET_NAME_KEY -> options.getOrElse("subdatasetName", "")
+            //RASTER_SUBDATASET_NAME_KEY -> options.getOrElse("subdatasetName", "") // <- NO SUBDATASET HERE (PRE)!
         )
         val tiles = localSubdivide(createInfo, sizeInMB, exprConfigOpt)
         //println(s"ReTileOnRead - number of tiles - ${tiles.length}")
-
         val rows = tiles.map(tile => {
             val raster = tile.raster
+            // TODO: REVALIDATE ADDING SUBDATASET (POST)
+            // Clear out subset name on retile (subdivide)
+            // - this is important to allow future loads to not try the path
+            // - while subdivide should not be allowed for zips, testing just in case
+            //raster.updateSubsetName(options.getOrElse("subdatasetName", "")) // <- SUBDATASET HERE (POST)!
+
             val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
             val fields = trimmedSchema.fieldNames.map {
 
@@ -152,7 +157,7 @@ object ReTileOnRead extends ReadStrategy {
       * Subdivides a tile into tiles of a given size.
       *
       * @param createInfo
-      *   Map with [[RASTER_PATH_KEY]], [[RASTER_PARENT_PATH_KEY]], and [[RASTER_DRIVER_KEY]]
+      *   Map with various KVs
       * @param sizeInMB
       *   Size of the tiles in MB.
       * @param exprConfig
@@ -166,17 +171,16 @@ object ReTileOnRead extends ReadStrategy {
                           exprConfigOpt: Option[ExprConfig]
                       ): Seq[RasterTile] = {
         //scalastyle:off println
-        //println(s"ReTileOnRead - localSubdivide - sizeInMB? $sizeInMB | config? $createInfo")
-        //scalastyle:on println
-
-        var raster = RasterGDAL(createInfo, exprConfigOpt)
+        var raster = RasterGDAL(createInfo, exprConfigOpt).tryInitAndHydrate()
         var inTile = new RasterTile(null, raster, tileDataType)
+        //println(s"ReTileOnRead - localSubdivide - sizeInMB? $sizeInMB | config? $createInfo")
+        //println(s"ReTileOnRead - localSubdivide - raster isHydrated? ${raster.isDatasetHydrated}, isSubdataset? ${raster.isSubdataset}, srid? ${raster.getSpatialReference.toString}")
         val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB, exprConfigOpt)
 
         inTile.flushAndDestroy()
         inTile = null
         raster = null
-
+        //scalastyle:on println
         tiles
     }
 

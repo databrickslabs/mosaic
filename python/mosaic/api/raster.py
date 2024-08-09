@@ -1249,7 +1249,7 @@ def rst_summary(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Column:
+def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName, skip_project: Any = False) -> Column:
     """
     Clip the tile into tile tiles where each tile is a grid tile for the given resolution.
     The tile set union forms the original tile.
@@ -1260,6 +1260,9 @@ def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Colum
         Mosaic tile tile struct column.
     resolution : Column (IntegerType)
         The resolution of the tiles.
+    skip_project: Column (BooleanType)
+        Whether to skip attempt to project the raster into the index SRS,
+        e.g. when raster doesn't have SRS support but is already in the index SRS (see Zarr tests).
 
     Returns
     -------
@@ -1267,10 +1270,14 @@ def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Colum
         A struct containing the tiles of the tile.
 
     """
+    if type(skip_project) == bool:
+        skip_project = lit(skip_project)
+
     return config.mosaic_context.invoke_function(
         "rst_tessellate",
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(resolution),
+        pyspark_to_java_column(skip_project)
     )
 
 

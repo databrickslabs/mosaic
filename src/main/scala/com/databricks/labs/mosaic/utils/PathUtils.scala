@@ -107,7 +107,11 @@ object PathUtils {
                                 // - note the change to '.zip/<subdataset>' (instead of '.zip:')
                                 // - note the addition of [[VSI_ZIP_TOKEN]]
                                 // - note the dropping of the `uriSchema`
-                                s"$VSI_ZIP_TOKEN$filePath/$subdataset"
+                                val subsetToken = {
+                                    if (subdataset.startsWith("/")) subdataset
+                                    else s"/$subdataset"
+                                }
+                                s"$VSI_ZIP_TOKEN$filePath$subsetToken"
                             } else {
                                 // (4a2) essentially provide back `rawPathMod`
                                 s"$uriSchema:$filePath:$subdataset"

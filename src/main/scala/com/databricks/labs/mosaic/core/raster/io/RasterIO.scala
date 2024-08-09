@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core.raster.io
 
-import com.databricks.labs.mosaic.{NO_DRIVER, NO_EXT, NO_PATH_STRING, RASTER_DRIVER_KEY, RASTER_MEM_SIZE_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.{NO_DRIVER, NO_EXT, NO_PATH_STRING, RASTER_BAND_INDEX_KEY, RASTER_DRIVER_KEY, RASTER_MEM_SIZE_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.core.raster.api.{FormatLookup, GDAL}
 import com.databricks.labs.mosaic.core.raster.gdal.{DatasetGDAL, PathGDAL, RasterBandGDAL, RasterGDAL}
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.{identifyDriverNameFromDataset, identifyDriverNameFromRawPath, identifyExtFromDriver}
@@ -44,29 +44,10 @@ trait RasterIO {
       * set path. (3) pathFlag - need to load dataset and write to fuse (path
       * then replaced in createInfo).
       *
-      * @param forceInit
-      *   Whether to init no matter if previously have done so, default false.
       * @return
       *   [[RasterGDAL]] `this` (fluent).
       */
-    def initAndHydrate(forceInit: Boolean = false): RasterGDAL
-
-    /**
-      * This is the main call for getting a hydrated dataset.
-      *   - Since it can be null, using an option pattern.
-      *   - The goal is to simplify the API surface for the end user, so Impl
-      *     will handle flags based on various conventions to identify what is
-      *     needed to hydrate.
-      *   - NOTE: have to be really careful about cyclic dependencies. Search
-      *     "cyclic" here and in [[RasterIO]] for any functions that cannot
-      *     themselves call `withDatasetHydratedOpt` as they are invoked from
-      *     within handle flags function(s) (same for calling `_datasetHydrated`
-      *     in Impl).
-      *
-      * @return
-      *   Option Dataset
-      */
-    def withDatasetHydratedOpt(): Option[Dataset]
+    def tryInitAndHydrate(): RasterGDAL
 
     // ////////////////////////////////////////////////////////////
     // STATE FUNCTIONS
@@ -87,8 +68,11 @@ trait RasterIO {
       */
     def getDriverNameOpt: Option[String]
 
-    /** The dataset option, simple getter. */
-    def getDatasetOpt: Option[Dataset]
+    /** The dataset option with hydration attempted as needed. */
+    def getDatasetOpt(): Option[Dataset]
+
+    /** The [[Dataset]] after hydration attempted or null. */
+    def getDatasetOrNull(): Dataset = getDatasetOpt().orNull
 
     /**
       * This is a simple Getter.
@@ -112,9 +96,6 @@ trait RasterIO {
 
     /** @return current state of GDAL tile dataset object. */
     def isDatasetHydrated: Boolean
-
-    /** @return whether GDAL tile is flagged to be refreshed. */
-    def isDatasetRefreshFlag: Boolean
 
     /** @return whether this object is intentionally empty (not the dataset). */
     def isEmptyRasterGDAL: Boolean
@@ -193,9 +174,9 @@ trait RasterIO {
       * @return
       *   Option [[Driver]] from hydrated [[Dataset]].
       */
-    def tryGetDriverHydrated(): Option[Driver] =
+    def tryGetDriverFromDataset(): Option[Driver] =
         Try {
-            this.withDatasetHydratedOpt().get.GetDriver()
+            this.getDatasetOpt().get.GetDriver()
         }.toOption
 
     /**
@@ -216,8 +197,9 @@ trait RasterIO {
         Try {
             if (tryDatasetAndPathsAlso && this.isDatasetHydrated) {
                 // (1) try the dataset's driver (if available)
-                identifyDriverNameFromDataset(this.getDatasetOpt.get)
+                identifyDriverNameFromDataset(this.getDatasetOrNull())
             } else {
+                // driver name from consolidated logic under `datasetGDAL`
                 this.getDriverNameOpt match {
                     case Some(driverName) if driverName != NO_DRIVER =>
                         // (2) try the configured "driver" in createInfo
@@ -425,19 +407,20 @@ object RasterIO {
                 driverName = pathGDAL.getPathDriverName
                 hasDriver = driverName != NO_DRIVER
             }
-            val hasGDALPath = pathGDAL.asGDALPathOpt.isDefined
-            val hasSubPath = pathGDAL.isSubdatasetPath
+            val gdalPathOpt = pathGDAL.asGDALPathOpt(Some(driverName))
+            val hasGDALPath = gdalPathOpt.isDefined
+            val hasSubset = pathGDAL.isSubdataset
 
             // fallback path (no subdataset with this)
             val fsPath = pathGDAL.asFileSystemPath
             var gdalExSuccess = false
-            //println(s"fsPath? '$fsPath' | gdalPath? '${pathGDAL.asGdalPathOpt}' | driver? '$driverName'")
+            //println(s"fsPath? '$fsPath' | gdalPath (generated)? '${gdalPathOpt}' | rawGdalUriPart? '${pathGDAL.getRawUriGdalOpt}' driver? '$driverName'")
 
             var dsOpt = {
                 if (hasDriver && hasGDALPath) {
                     // use the provided driver and coerced gdal path
                     try {
-                        val gdalPath = pathGDAL.asGDALPathOpt.get
+                        val gdalPath = gdalPathOpt.get
                         //println(s"RasterIO - rawPathAsDatasetOpt - `gdal.OpenEx` gdalPath? '$gdalPath' (driver? '$driverName')")
                         val drivers = new JVector[String]() // java.util.Vector
                         drivers.add(driverName)
@@ -459,7 +442,7 @@ object RasterIO {
             }
 
             //println(s"dsOpt -> ${dsOpt.toString}")
-            if (dsOpt.isDefined && hasSubPath && !gdalExSuccess) {
+            if (dsOpt.isDefined && hasSubset && !gdalExSuccess) {
                 // try to load the subdataset from the dataset
                 // - we got here because the subdataset failed to load,
                 //   but the full dataset loaded.
@@ -467,9 +450,9 @@ object RasterIO {
                 val dsGDAL = DatasetGDAL()
                 try {
                     dsGDAL.updateDataset(dsOpt.get, doUpdateDriver = true)
-                    pathGDAL.getPathSubdatasetNameOpt match {
+                    pathGDAL.getSubNameOpt match {
                         case Some(subName) =>
-                            val gdalPath = pathGDAL.asGDALPathOpt.get
+                            val gdalPath = gdalPathOpt.get
                             dsOpt = dsGDAL.getSubdatasetObj(gdalPath, subName, exprConfigOpt).getDatasetOpt // <- subdataset
                         case _ =>
                             dsOpt = None // <- no subdataset
@@ -492,6 +475,8 @@ object RasterIO {
       *
       * @param rawPath
       *   The path to the tile file.
+      * @param subNameOpt
+      *   Option for a subdataset to include.
       * @param driverNameOpt
       *   The driver short name to use. If None or NO_DRIVER, GDAL will try to
       *   identify the driver from the file extension.
@@ -500,9 +485,15 @@ object RasterIO {
       * @return
       *   A GDAL [[Dataset]] object.
       */
-    def rawPathAsDatasetOpt(rawPath: String, driverNameOpt: Option[String], exprConfigOpt: Option[ExprConfig]): Option[Dataset] = {
+    def rawPathAsDatasetOpt(rawPath: String, subNameOpt: Option[String], driverNameOpt: Option[String], exprConfigOpt: Option[ExprConfig]): Option[Dataset] = {
         val uriDeepCheck = Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
         val pathGDAL = PathGDAL(path = rawPath, uriDeepCheck)
+        subNameOpt match {
+            case Some(sub) if sub.nonEmpty =>
+                // update subdataset
+                pathGDAL.updateSubsetName(sub)
+            case _ => ()
+        }
         rawPathAsDatasetOpt(pathGDAL, driverNameOpt, exprConfigOpt)
     }
     //scalastyle:on println
@@ -608,7 +599,7 @@ object RasterIO {
         ) {
             // (1) handle explicitly empty conditions
             val result = RasterGDAL()
-            result.updateCreateInfoError(
+            result.updateError(
               "readRasterUniversalContent - explicitly empty conditions",
               fullMsg = "check tile is non-empty and 'driver' name provided."
             )
@@ -620,11 +611,16 @@ object RasterIO {
             Files.write(Paths.get(tmpPath), rasterArr)
 
             // (3) Try reading as a tmp file, if that fails, rename as a zipped file
-            val dataset = RasterIO.rawPathAsDatasetOpt(tmpPath, Option(driverName), exprConfigOpt).orNull // <- allow null
+            // - use subdataset if in createInfo
+            val subName = createInfo.getOrElse(RASTER_SUBDATASET_NAME_KEY, "")
+            val subNameOpt =
+                if (subName.nonEmpty) Some(subName)
+                else None
+            val dataset = RasterIO.rawPathAsDatasetOpt(tmpPath, subNameOpt, Option(driverName), exprConfigOpt).orNull // <- allow null
             if (dataset == null) {
                 val zippedPath = s"$tmpPath.zip"
                 Files.move(Paths.get(tmpPath), Paths.get(zippedPath), StandardCopyOption.REPLACE_EXISTING)
-                val ds1 = RasterIO.rawPathAsDatasetOpt(zippedPath, Option(driverName), exprConfigOpt).orNull // <- allow null
+                val ds1 = RasterIO.rawPathAsDatasetOpt(zippedPath, subNameOpt, Option(driverName), exprConfigOpt).orNull // <- allow null
                 if (ds1 == null) {
                     // the way we zip using uuid is not compatible with GDAL
                     // we need to unzip and read the file if it was zipped by us
@@ -636,12 +632,12 @@ object RasterIO {
                     val ext = GDAL.getExtension(driverName)
                     val lastExtracted = SysUtils.getLastOutputLine(prompt)
                     val unzippedPath = PathUtils.parseUnzippedPathFromExtracted(lastExtracted, ext)
-                    val ds2 = RasterIO.rawPathAsDatasetOpt(unzippedPath, Option(driverName), exprConfigOpt).orNull // <- allow null
+                    val ds2 = RasterIO.rawPathAsDatasetOpt(unzippedPath, subNameOpt, Option(driverName), exprConfigOpt).orNull // <- allow null
                     if (ds2 == null) {
                         // (3d) handle error with bytes
                         // - explicitly empty conditions
                         val result = RasterGDAL()
-                        result.updateCreateInfoError(
+                        result.updateError(
                           "readRasterUniversalContent - Error reading tile from bytes",
                           fullMsg = prompt._3
                         )
@@ -705,6 +701,7 @@ object RasterIO {
         // - construct a [[PathGDAL]] to assist
         val uriDeepCheck = Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
         val inPathGDAL = PathGDAL(createInfo.getOrElse(RASTER_PATH_KEY, NO_PATH_STRING), uriDeepCheck)
+        inPathGDAL.updateSubsetName(createInfo.getOrElse(RASTER_SUBDATASET_NAME_KEY, "")) // <- important to set subset
         val driverNameOpt = createInfo.get(RASTER_DRIVER_KEY)
 
         if (!inPathGDAL.isPathSetAndExists) {
@@ -713,7 +710,7 @@ object RasterIO {
             // - also, file not present on file system (via `asFileSystemPath` check),
             //   so don't worry about stripping back a path to "clean" ect... handled by the object
             val result = RasterGDAL()
-            result.updateCreateInfoError(
+            result.updateError(
                 "readRasterUniversalPath - explicitly empty conditions",
                 fullMsg = "check 'path' value provided (does it exist?)."
             )
@@ -727,13 +724,17 @@ object RasterIO {
                     RasterGDAL(
                         dataset,
                         exprConfigOpt,
-                        createInfo + (RASTER_DRIVER_KEY -> this.identifyDriverNameFromDataset(dataset))
+                        createInfo + (
+                            RASTER_DRIVER_KEY -> this.identifyDriverNameFromDataset(dataset),
+                            RASTER_PARENT_PATH_KEY -> createInfo.getOrElse(RASTER_PARENT_PATH_KEY, NO_PATH_STRING),
+                            RASTER_BAND_INDEX_KEY -> createInfo.getOrElse(RASTER_BAND_INDEX_KEY, "-1")
+                            )
                     )
                 case _ =>
                     // (4b) dataset was unsuccessful
                     // - create empty object
                     val result = RasterGDAL()
-                    result.updateCreateInfoError(
+                    result.updateError(
                         "readRasterUniversalPath - issue generating dataset from subdataset or filesystem path",
                         fullMsg =
                             s"""

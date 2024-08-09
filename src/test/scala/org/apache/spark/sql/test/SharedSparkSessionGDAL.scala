@@ -45,7 +45,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         sc.conf.set(MOSAIC_GDAL_NATIVE, "true")
         sc.conf.set(MOSAIC_TEST_MODE, "true")
         sc.conf.set(MOSAIC_MANUAL_CLEANUP_MODE, "false")
-        sc.conf.set(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, "5") // manual is -1 (default is 30)
+        sc.conf.set(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, "-1") // manual is -1 (default is 30)
         sc.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, "true") // default is "false"
         sc.conf.set(MOSAIC_RASTER_CHECKPOINT, mosaicCheckpointRootDir)
         sc.conf.set(MOSAIC_RASTER_TMP_PREFIX, MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
@@ -62,15 +62,12 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
             uriGdalOpt = None
         )
         PathUtils.cleanUpPAMFiles("src/test/resources/modis/", uriGdalOpt = None)
-    }
 
-    override def afterEach(): Unit = {
-        super.afterEach()
-
-        // option: clean checkpoint files (for testing)
-        // - this specifies to remove fuse mount files which are mocked for development
-        GDAL.cleanUpManualDir(ageMinutes = 5, getCheckpointRootDir, keepRoot = true, allowFuseDelete = true) match {
-            case Some(msg) => info(s"cleanup mosaic tmp dir msg -> '$msg'")
+        // option: clean this session's tmp dir (from any previous tests in this suite)
+        // - just this session, can be more restrictive
+        val sessionAge = 2
+        GDAL.cleanUpManualDir(ageMinutes = sessionAge, MosaicContext.getTmpSessionDir(exprConfigOpt), keepRoot = true) match {
+            case Some(msg) => info(s"cleanup local session dir (older than $sessionAge minutes) msg -> '$msg'")
             case _ => ()
         }
     }
@@ -80,10 +77,19 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         // - super.afterAll stops spark
         Try(super.afterAll())
 
-        // option: clean up configured MosaicContex Session Dir
-        // - this is separate from the managed process
-        GDAL.cleanUpManualDir(ageMinutes = 0, MosaicContext.getTmpSessionDir(getExprConfigOpt), keepRoot = true) match {
-            case Some(msg) => info(s"cleanup mosaic tmp dir msg -> '$msg'")
+        // option: clean checkpoint files (for testing)
+        // - this specifies to remove fuse mount files which are mocked for development
+        val checkAge = 3
+        GDAL.cleanUpManualDir(ageMinutes = checkAge, getMosaicCheckpointRootDir, keepRoot = true, allowFuseDelete = true) match {
+            case Some(msg) => info(s"cleanup mosaic checkpoint dir (older than $checkAge minutes msg -> '$msg'")
+            case _ => ()
+        }
+
+        // option: clean local tmp dir (from any previous tests in this suite)
+        // - this is for repeat local testing on docker (before CleanUpManager 10 minute policy kicks in)
+        val localAge = 3
+        GDAL.cleanUpManualDir(ageMinutes = localAge, getMosaicTmpRootDir, keepRoot = true) match {
+            case Some(msg) => info(s"cleanup mosaic local dir (older than $localAge minutes) msg -> '$msg'")
             case _ => ()
         }
     }

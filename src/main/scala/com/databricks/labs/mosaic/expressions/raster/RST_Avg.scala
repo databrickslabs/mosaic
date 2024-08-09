@@ -11,6 +11,8 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
+import scala.util.Try
+
 
 /** Returns the avg value per band of the tile. */
 case class RST_Avg(tileExpr: Expression, exprConfig: ExprConfig)
@@ -28,8 +30,18 @@ case class RST_Avg(tileExpr: Expression, exprConfig: ExprConfig)
 
         val command = s"gdalinfo -stats -json -mm -nogcp -nomd -norat -noct"
         val gdalInfo = GDALInfo.executeInfo(tile.raster, command)
+
         // parse json from gdalinfo
-        val json = parse(gdalInfo).extract[Map[String, Any]]
+        // - can print out during debugging
+        // - essentially if this doesn't parse
+        //   then will throw an exception down below
+        val json = Try(parse(gdalInfo).extract[Map[String, Any]]).getOrElse(
+            //scalastyle:off println
+            //println(s"RST_Avg - ERROR: GDALInfo -> '$gdalInfo'")
+            //scalastyle:on println
+            null
+        )
+        // if the above failed, this block will throw an exception
         val meanValues = json("bands").asInstanceOf[List[Map[String, Any]]].map { band =>
             band("mean").asInstanceOf[Double]
         }

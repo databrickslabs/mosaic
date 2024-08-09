@@ -69,8 +69,8 @@ object GDALCalc {
             RasterGDAL(createInfo, exprConfigOpt)
         }.getOrElse {
             val result = RasterGDAL() // <- empty raster
-            result.updateCreateInfoLastCmd(effectiveCommand)
-            result.updateCreateInfoError("GDAL Calc command threw exception")
+            result.updateLastCmd(effectiveCommand)
+            result.updateError("GDAL Calc command threw exception")
             result
         }
     }

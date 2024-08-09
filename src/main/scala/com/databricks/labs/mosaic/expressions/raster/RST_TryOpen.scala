@@ -19,7 +19,7 @@ case class RST_TryOpen(raster: Expression, exprConfig: ExprConfig)
 
     /** Returns true if the tile can be opened. */
     override def rasterTransform(tile: RasterTile): Any = {
-        tile.raster.withDatasetHydratedOpt().isDefined
+        tile.raster.tryInitAndHydrate().isDatasetHydrated
     }
 
 }

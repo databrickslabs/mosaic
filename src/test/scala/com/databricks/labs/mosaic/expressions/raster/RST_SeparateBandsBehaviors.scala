@@ -32,7 +32,7 @@ trait RST_SeparateBandsBehaviors extends QueryTest {
         val r = df.first().asInstanceOf[GenericRowWithSchema].get(0)
         val createInfo = r.asInstanceOf[GenericRowWithSchema].getAs[Map[String, String]](2)
         val path = createInfo(RASTER_PATH_KEY)
-        val dsOpt = RasterIO.rawPathAsDatasetOpt(path, driverNameOpt = None, Some(ExprConfig(sc)))
+        val dsOpt = RasterIO.rawPathAsDatasetOpt(path, subNameOpt = None, driverNameOpt = None, Some(ExprConfig(sc)))
         info(s"separate bands result -> $createInfo")
         //info(s"ds metadata -> ${dsOpt.get.GetMetadata_Dict()}")
         val metaKey = s"NC_GLOBAL#$BAND_META_GET_KEY"

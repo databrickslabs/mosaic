@@ -3,9 +3,9 @@
   various enhancements relating to our productized geospatial APIs):
   - Significant streamlining of internal GDAL `Dataset` handling to include "hydrating" (loading the object) more lazily
   - Dropped "Mosaic" from the serialized internal objects: `MosaicRasterTile`, `MosaicRasterGDAL`, and `MosaicRasterBandGDAL`
-  - All newly generated `RasterTile` objects store the tile payload (`BinaryType` | `StringType` | GDAL `Dataset`) to
+  - All newly generated `RasterTile` objects can store the tile payload (`BinaryType` | `StringType` | GDAL `Dataset`) to
     the configured fuse checkpoint dir (see below); RasterTiles generated in 0.4.1 and 0.4.2 can be loaded as-is 
-    (structure was different prior to that)
+    (structure was different prior to 0.4.1)
 - Due to release of numpy 2.0 which has breaking changes with GDAL, numpy now limited to "<2.0,>=1.21.5" to match DBR minimum
 - Pyspark requirement removed from python setup.cfg as it is supplied by DBR
 - Python version limited to "<3.11,>=3.10" for DBR
@@ -24,8 +24,8 @@
 - Added `RST_Write` to save a generated 'tile' to a specified directory (e.g. fuse) location using its GDAL driver and 
   tile data / path; useful for formalizing the path when writing a Lakehouse table (allowing removal of interim
   checkpointed data)
-- Improved `raster_to_grid` reader performance by using fuse checkpointing for interim steps;
-  this reader and its underlying `.format("gdal")` reader now uses the fuse-based checkpointing
+- Improved `raster_to_grid` (as well as `gdal`) reader uses fuse checkpointing for interim steps as well as additional
+  performance improvements.
 - Built-in readers now support option "uriDeepCheck" to handle (mostly strip out) file path URI parts beyond "file:", "dbfs:", 
   and various common GDAL formats, see `FormatLookup` for lists; also new config `spark.databricks.labs.mosaic.uri.deep.check`
   allows global handling outside of readers, default is `false`.

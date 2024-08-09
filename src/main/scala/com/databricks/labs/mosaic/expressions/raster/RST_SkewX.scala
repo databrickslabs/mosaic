@@ -19,7 +19,7 @@ case class RST_SkewX(raster: Expression, exprConfig: ExprConfig)
 
     /** Returns the skew x of the tile, default 0. */
     override def rasterTransform(tile: RasterTile): Any = {
-        tile.raster.withDatasetHydratedOpt() match {
+        tile.raster.getDatasetOpt() match {
             case Some(dataset) => dataset.GetGeoTransform()(2)
             case _ => 0d // double
         }

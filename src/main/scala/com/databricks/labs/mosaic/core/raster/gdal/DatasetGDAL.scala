@@ -1,8 +1,20 @@
 package com.databricks.labs.mosaic.core.raster.gdal
 
-import com.databricks.labs.mosaic.{BAND_META_GET_KEY, BAND_META_SET_KEY, NO_DRIVER, NO_PATH_STRING, RASTER_BAND_INDEX_KEY, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
+import com.databricks.labs.mosaic.{
+    BAND_META_GET_KEY,
+    BAND_META_SET_KEY,
+    NO_DRIVER,
+    NO_PATH_STRING,
+    RASTER_BAND_INDEX_KEY,
+    RASTER_CORE_KEYS,
+    RASTER_DRIVER_KEY,
+    RASTER_PARENT_PATH_KEY,
+    RASTER_PATH_KEY,
+    RASTER_SUBDATASET_NAME_KEY
+}
 import com.databricks.labs.mosaic.core.raster.io.RasterIO
 import com.databricks.labs.mosaic.functions.ExprConfig
+import com.databricks.labs.mosaic.utils.PathUtils
 import org.gdal.gdal.Dataset
 
 import java.nio.file.{Files, Paths}
@@ -32,25 +44,34 @@ case class DatasetGDAL() {
     // set by `updateBandIdx`, access directly.
     var bandIdxOpt: Option[Int] = None
 
-    // set by updateSubdatasetName, access directly.
-    var subdatasetNameOpt: Option[String] = None
-
     var dsErrFlag = false
 
     /** @return Has the Dataset ever been hydrated? */
     private var everHydratedFlag: Boolean = false
     def everHydrated: Boolean = everHydratedFlag
 
-    /** @return `createInfo` populated (doesn't set parent path). */
-    def asCreateInfo: Map[String, String] = {
-        Map(
-            RASTER_PATH_KEY -> pathGDAL.path, // <- pathGDAL
-            RASTER_PARENT_PATH_KEY -> parentPathGDAL.path, // <- parentPathGDAL
-            RASTER_DRIVER_KEY -> driverNameOpt.getOrElse(NO_DRIVER),
-            RASTER_SUBDATASET_NAME_KEY -> this.subdatasetNameOpt.getOrElse(""),
-            RASTER_BAND_INDEX_KEY -> bandIdxOpt.getOrElse(-1).toString
+    /**
+     * Blends from pathGDAL, parentPathGDAL, and `this` DatasetGDAL.
+     * - The master view of createInfo.
+     *
+     * @param includeExtras
+     *   Whether to include the createInfoExtras.
+     *   If true, the base keys are added second to ensure they are used over extras.
+     * @return blended `createInfo` Map populated; optionally include extras.
+     */
+    def asCreateInfo(includeExtras: Boolean): Map[String, String] = {
+        val baseMap = Map(
+            RASTER_PATH_KEY -> pathGDAL.path,                 // <- pathGDAL (path as set)
+            RASTER_PARENT_PATH_KEY -> parentPathGDAL.path,    // <- parentPathGDAL (path as set)
+            RASTER_DRIVER_KEY -> this.getDriverName,          // <- driverName (Dataset, path, + parent path tested)
+            RASTER_SUBDATASET_NAME_KEY -> this.getSubsetName, // <- ultimately stored in pathGDAL (set or path)
+            RASTER_BAND_INDEX_KEY ->
+                bandIdxOpt.getOrElse(-1).toString             // <- stored in `this`
         )
+        if (includeExtras) this.createInfoExtras ++ baseMap   // <- second overrides first
+        else baseMap
     }
+    private var createInfoExtras = Map.empty[String, String]
 
     /**
      * Flush and destroy this dataset, if it exists.
@@ -64,17 +85,41 @@ case class DatasetGDAL() {
         this
     }
 
+    /** Getter, may be an empty Map. */
+    def getCreateInfoExtras: Map[String, String] = this.createInfoExtras
+
     /** Getter, None if null. */
     def getDatasetOpt: Option[Dataset] = Option(this.dataset)
 
     /** Getter, defaults to [[NO_DRIVER]]. */
-    def getDriverName: String = driverNameOpt.getOrElse(NO_DRIVER)
+    def getDriverName: String = {
+        driverNameOpt match {
+            case Some(d) => d
+            case _ =>
+                if (pathGDAL.hasPathDriverName) pathGDAL.getPathDriverName
+                else if (parentPathGDAL.hasPathDriverName) parentPathGDAL.getPathDriverName
+                else NO_DRIVER
+        }
+    }
+
+    /** Getter for option, defaults to None. */
+    def getDriverNameOpt: Option[String] = {
+        val dn = getDriverName
+        if (dn != NO_DRIVER) Some(dn)
+        else None
+    }
 
     /** Getter, defaults to [[NO_PATH_STRING]]. */
     def getPath: String = pathGDAL.getPathOpt.getOrElse(NO_PATH_STRING)
 
     /** Getter, defaults to [[NO_PATH_STRING]]. */
     def getParentPath: String = parentPathGDAL.getPathOpt.getOrElse(NO_PATH_STRING)
+
+    /** @return get subdataset name (stored in pathGDAL, default is ""). */
+    def getSubsetName: String = pathGDAL.getSubsetName
+
+    /** @return get subdataset name option (stored in pathGDAL, default is None). */
+    def getSubNameOpt: Option[String] = pathGDAL.getSubNameOpt
 
     /**
      * `flushAndDestroy` sets to null.
@@ -85,6 +130,9 @@ case class DatasetGDAL() {
         if (!everHydratedFlag && result) everHydratedFlag = true
         result
     }
+
+    /** @return whether subdataset has been set (stored in pathGDAL). */
+    def isSubdataset: Boolean = pathGDAL.isSubdataset
 
     //scalastyle:off println
     /**
@@ -107,9 +155,9 @@ case class DatasetGDAL() {
             Files.createDirectories(Paths.get(newDir)) // <- (just in case)
             //println(s"... pathGDAL isPathZip? ${pathGDAL.isPathZip}")
             val newPathOpt: Option[String] = this.getDatasetOpt match {
-                case Some(_) if !pathGDAL.isSubdatasetPath && !pathGDAL.isPathZip =>
+                case Some(_) if !pathGDAL.isSubdataset && !pathGDAL.isPathZip =>
                     // (1a) try copy from dataset to a new path
-                    val ext = RasterIO.identifyExtFromDriver(getDriverName)
+                    val ext = RasterIO.identifyExtFromDriver(this.getDriverName)
                     val newFN = this.pathGDAL.getFilename
                     val newPath = s"$newDir/$newFN"
                     //println(s"... DatasetGDAL - attempting dataset copy for newDir '$newPath'")
@@ -142,6 +190,7 @@ case class DatasetGDAL() {
                     case _ => ()
                 }
             }
+            //scalastyle:on println
 
             newPathOpt
         }.getOrElse{
@@ -149,9 +198,7 @@ case class DatasetGDAL() {
             dsErrFlag = true
             None // <- unsuccessful
         }
-    //scalastyle:on println
 
-    //scalastyle:off println
     /**
      * Writes (via driver copy) a tile to a specified file system path.
      *   - Use this for non-subdataaset rasters with dataset hydrated.
@@ -169,6 +216,7 @@ case class DatasetGDAL() {
      */
     def datasetCopyToPath(newPath: String, doDestroy: Boolean, skipUpdatePath: Boolean): Boolean =
         Try {
+            //scalastyle:off println
             //println("::: datasetCopyToPath :::")
             val success = this.getDatasetOpt match {
                 case Some(ds) =>
@@ -203,13 +251,14 @@ case class DatasetGDAL() {
             if (!skipUpdatePath) {
                 this.updatePath(newPath)
             }
+            //scalastyle:on println
 
             success
         }.getOrElse{
             dsErrFlag = true
             false // <- unsuccessful
         }
-    //scalastyle:on println
+
 
     /**
      * Get a particular subdataset by name.
@@ -223,32 +272,66 @@ case class DatasetGDAL() {
      *   New [[DatasetGDAL]].
      */
     def getSubdatasetObj(aPathGDAL: PathGDAL, subsetName: String, exprConfigOpt: Option[ExprConfig]): DatasetGDAL = {
+        //scalastyle:off println
+        //println(s"DatasetGDAL - getSubdatasetObj -> aPathGDAL? '$aPathGDAL' | subsetName? '$subsetName'")
 
-        Try(subdatasets(aPathGDAL)(s"${subsetName}_tmp")).toOption match {
-            case Some(sPathRaw) =>
-                // (1) found the subdataset
-                RasterIO.rawPathAsDatasetOpt(sPathRaw, driverNameOpt, exprConfigOpt) match {
-                    case Some(ds) =>
-                        // (2) was able to load the subdataset
-                        val result = DatasetGDAL()
-                        result.updatePath(sPathRaw)
-                        result.updateSubdatasetName(subsetName)
-                        result.updateDataset(ds, doUpdateDriver = true)
-                        result
-                    case _ =>
-                        // (3) wasn't able to load the subdataset
-                        val result = DatasetGDAL()
-                        result.dsErrFlag = true
-                        result.updatePath(sPathRaw)
-                        result.updateDriverName(getDriverName)
-                        result
+        if (aPathGDAL.isSubdataset && aPathGDAL.getSubsetName == subsetName) {
+            // this already is the subdataset
+            // copy considered, but not clear that is needed
+            //println(s"DatasetGDAL - getSubdatasetObj -> returning `this`")
+            this
+        } else {
+            // not already the subset asked for
+            val basePathGDAL =
+                if (!aPathGDAL.isSubdataset) {
+                    //println(s"DatasetGDAL - getSubdatasetObj -> attempting with `aPathGDAL` (as provided)")
+                    aPathGDAL
+                } else {
+                    // make sure we are using the base path, not the subdataset path
+                    //println(s"DatasetGDAL - getSubdatasetObj -> attempting with new `basePathGDAL` (had dataset)")
+                    val p = PathUtils.getCleanPath(
+                        aPathGDAL.path,
+                        addVsiZipToken = aPathGDAL.isPathZip,
+                        uriGdalOpt = aPathGDAL.getRawUriGdalOpt
+                    )
+                    PathGDAL(p)
                 }
-            case _ =>
-                // (4) didn't find the subdataset
-                val result = DatasetGDAL()
-                result.dsErrFlag = true
-                result
+
+            Try(subdatasets(basePathGDAL)(s"${subsetName}_tmp")).toOption match {
+                case Some(sPathRaw) =>
+                    // (1) found the subdataset in the metadata
+                    // - need to clean that up though to actually load
+                    val loadPathGDAL = PathGDAL(sPathRaw)
+                    val loadPath = loadPathGDAL.asGDALPathOpt(getDriverNameOpt).get
+                    //println(s"DatasetGDAL - getSubdatasetObj -> loadPath? '$loadPath' | sPathRaw? '$sPathRaw'")
+                    // (2) use the subdataset in the path vs the option
+                    RasterIO.rawPathAsDatasetOpt(loadPath, subNameOpt = None, getDriverNameOpt, exprConfigOpt) match {
+                        case Some(ds) =>
+                            // (3) subset loaded
+                            //println("DatasetGDAL - getSubdatasetObj -> loaded subdataset")
+                            val result = DatasetGDAL()
+                            result.updatePath(sPathRaw)
+                            result.updateSubsetName(subsetName)
+                            result.updateDataset(ds, doUpdateDriver = true)
+                            result
+                        case _ =>
+                            // (4) subset not loaded
+                            //println("DatasetGDAL - getSubdatasetObj -> subdataset not loaded")
+                            val result = DatasetGDAL()
+                            result.dsErrFlag = true
+                            result.updatePath(sPathRaw)
+                            result.updateDriverName(getDriverName)
+                            result
+                    }
+                case _ =>
+                    // (5) subset not found
+                    //println("DatasetGDAL - getSubdatasetObj -> subdataset not found")
+                    val result = DatasetGDAL()
+                    result.dsErrFlag = true
+                    result
+            }
         }
+        //scalastyle:on println
     }
 
     /**
@@ -296,7 +379,9 @@ case class DatasetGDAL() {
             .getOrElse(Map.empty[String, String])
         val keys = subdatasetsMap.keySet
 
-        val gdalPath = aPathGDAL.asGDALPathOpt.get
+        // get the path (no subdataset)
+        // TODO - REVIEW PATH HANDLING
+        val gdalPath = aPathGDAL.asGDALPathOptNoSubName(driverNameOpt).get
 
         keys.flatMap(key =>
             if (key.toUpperCase(Locale.ROOT).contains("NAME")) {
@@ -353,6 +438,16 @@ case class DatasetGDAL() {
             this
         }.getOrElse(this)
 
+    /////////////////////////////////
+    // CREATE INFO UPDATE FUNCTIONS
+    /////////////////////////////////
+
+    /** createInfo "Extras" Map back to empty, return `this` (fluent). */
+    def resetCreateInfoExtras: DatasetGDAL = {
+        createInfoExtras = Map.empty[String, String]
+        this
+    }
+
     /**
      * Set the dataset, update the driver if directed.
      * - may be null but recommend `flushAndDestroy` for that.
@@ -402,12 +497,39 @@ case class DatasetGDAL() {
         this
     }
 
-    /** fluent update, return [[DatasetGDAL]] this, (simple setter, only stores the value). */
-    def updateSubdatasetName(subsetName: String): DatasetGDAL = {
-        subdatasetNameOpt = Option(subsetName)
+    /** fluent update, return [[DatasetGDAL]] this, (stores the value in pathGDAL). */
+    def updateSubsetName(subsetName: String): DatasetGDAL = {
+        pathGDAL.updateSubsetName(subsetName)
         this
     }
 
+    /** fluent update, return [[DatasetGDAL]] this, (stores the values). */
+    def updateCreateInfo(createInfo: Map[String, String], extrasOnly: Boolean = false): DatasetGDAL = {
+        this.resetCreateInfoExtras
+        for ((key, value) <- createInfo) {
+            this.updateCreateInfoEntry(key, value, extrasOnly = extrasOnly)
+        }
+        this
+    }
+
+    /** fluent update, return [[DatasetGDAL]] this, (stores the key / value). */
+    def updateCreateInfoEntry(key: String, value: String, extrasOnly: Boolean): DatasetGDAL = {
+        val isCoreKey = RASTER_CORE_KEYS.contains(key)
+        if (isCoreKey && !extrasOnly) {
+            // update core key
+            if (key == RASTER_PATH_KEY) this.updatePath(value)
+            else if (key == RASTER_PARENT_PATH_KEY) this.updateParentPath(value)
+            else if (key == RASTER_DRIVER_KEY) this.updateDriverName(value)
+            else if (key == RASTER_SUBDATASET_NAME_KEY) this.updateSubsetName(value)
+            else if (key == RASTER_BAND_INDEX_KEY) this.updateBandIdx(Try(value.toInt).getOrElse(-1))
+        } else if (!isCoreKey) {
+            // update "extra" key
+            // - could be last cmd, error, memsize, all parents
+            // - could be other ad-hoc keys as well
+            this.createInfoExtras += (key -> value)
+        }
+        this
+    }
 }
 
 object DatasetGDAL {
@@ -424,9 +546,7 @@ object DatasetGDAL {
     def apply(path: String, driverName: String): DatasetGDAL = {
         val result = DatasetGDAL()
         result.updatePath(path)
-        if (driverName != NO_DRIVER) result.updateDriverName(driverName)
-        else result.updateDriverName(result.pathGDAL.getPathDriverName)
-
+        result.updateDriverName(driverName)
 
         result
     }
@@ -441,7 +561,20 @@ object DatasetGDAL {
     def apply(path: String): DatasetGDAL = {
         val result = DatasetGDAL()
         result.updatePath(path)
-        result.updateDriverName(result.pathGDAL.getPathDriverName)
+
+        result
+    }
+
+    /**
+     * Constructor for un-hydrated (no [[Dataset]] initially.
+     * - Uses the provided createInfo.
+     *
+     * @param createInfo
+     * @return [[DatasetGDAL]]
+     */
+    def apply(createInfo: Map[String, String]): DatasetGDAL = {
+        val result = DatasetGDAL()
+        result.updateCreateInfo(createInfo, extrasOnly = false)
 
         result
     }

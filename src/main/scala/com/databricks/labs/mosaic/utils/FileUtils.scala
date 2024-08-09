@@ -2,10 +2,13 @@ package com.databricks.labs.mosaic.utils
 
 import com.databricks.labs.mosaic.MOSAIC_RASTER_TMP_PREFIX_DEFAULT
 import com.databricks.labs.mosaic.core.raster.io.CleanUpManager
+import com.databricks.labs.mosaic.utils.FileUtils.isPathModTimeGTMillis
 
 import java.io.{BufferedInputStream, File, FileInputStream, IOException}
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor}
+import java.util.Objects
+import java.util.concurrent.atomic.AtomicInteger
 import scala.sys.process._
 import scala.util.Try
 
@@ -54,17 +57,17 @@ object FileUtils {
 
     /** Delete provided path (only deletes empty dirs). */
     def tryDeleteFileOrDir(path: Path): Boolean = {
-        if (!CleanUpManager.USE_SUDO) Try(Files.delete(path)).isSuccess
-        else {
-            val err = new StringBuilder()
-            val procLogger = ProcessLogger(_ => (), err append _)
-            val filePath = path.toString
-            //scalastyle:off println
-            //println(s"FileUtils - tryDeleteFileOrDir -> '$filePath'")
-            //scalastyle:on println
-            s"sudo rm -f $filePath" ! procLogger
-            err.length() == 0
-        }
+            if (!CleanUpManager.USE_SUDO) Try(Files.delete(path)).isSuccess
+            else {
+                val err = new StringBuilder()
+                val procLogger = ProcessLogger(_ => (), err append _)
+                val filePath = path.toString
+                //scalastyle:off println
+                //println(s"FileUtils - tryDeleteFileOrDir -> '$filePath'")
+                //scalastyle:on println
+                s"sudo rm -f $filePath" ! procLogger
+                err.length() == 0
+            }
     }
 
     /**
@@ -78,7 +81,22 @@ object FileUtils {
     def deleteRecursively(root: Path, keepRoot: Boolean): Unit = {
 
         Files.walkFileTree(root, new SimpleFileVisitor[Path] {
+
+            val handles = new AtomicInteger(0)
+
             override def visitFile(file: Path, attributes: BasicFileAttributes): FileVisitResult = {
+                synchronized {
+                    val numHandles = handles.incrementAndGet()
+                    if (numHandles >= 100000) {
+                        //scalastyle:off println
+                        println(s"FileUtils - deleteRecursively -> attempting gc at next 100K+ handles detected ($numHandles) ...")
+                        handles.set(0)
+                        Try(System.gc())
+                        println(s"FileUtils - deleteRecursively -> gc complete ...")
+                        //scalastyle:on println
+                    }
+                }
+
                 tryDeleteFileOrDir(file)
                 FileVisitResult.CONTINUE
             }
@@ -120,17 +138,27 @@ object FileUtils {
             val ageMillis = ageMinutes * MINUTE_IN_MILLIS
 
             Files.walkFileTree(root, new SimpleFileVisitor[Path] {
+
+                val handles = new AtomicInteger(0)
+
                 override def visitFile(file: Path, attributes: BasicFileAttributes): FileVisitResult = {
+                    synchronized {
+                        val numHandles = handles.incrementAndGet()
+                        if (numHandles >= 100000) {
+                            //scalastyle:off println
+                            println(s"FileUtils - deleteRecursivelyOlderThan -> attempting gc at next 100K+ handles detected ($numHandles) ...")
+                            handles.set(0)
+                            Try(System.gc())
+                            println(s"FileUtils - deleteRecursivelyOlderThan -> gc complete ...")
+                            //scalastyle:on println
+                        }
+                    }
 
                     if (isPathModTimeGTMillis(file, ageMillis)) {
                         // file or dir that is older than age
                         tryDeleteFileOrDir(file)
                         FileVisitResult.CONTINUE
                     } else if (Files.isDirectory(file) && !Files.isSameFile(root, file)) {
-                        //scalastyle:off println
-                        //println(s"DELETE -> skipping subtree under dir '${file.toString}'")
-                        //scalastyle:on println
-
                         // dir that is newer than age
                         FileVisitResult.SKIP_SUBTREE
                     } else {
@@ -138,6 +166,17 @@ object FileUtils {
                         FileVisitResult.CONTINUE
                     }
 
+                }
+
+                override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
+                    if (isPathModTimeGTMillis(dir, ageMillis)) {
+                        FileVisitResult.CONTINUE
+                    } else if (Files.isDirectory(dir) && !Files.isSameFile(root, dir)) {
+                        // dir that is newer than age
+                        FileVisitResult.SKIP_SUBTREE
+                    } else {
+                        FileVisitResult.CONTINUE
+                    }
                 }
 
                 override def postVisitDirectory(dir: Path, exception: IOException): FileVisitResult = {

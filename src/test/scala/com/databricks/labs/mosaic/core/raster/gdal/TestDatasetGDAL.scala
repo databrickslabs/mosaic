@@ -37,8 +37,20 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
         val p = filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
         info(s"path -> '$p'")
 
+//        val drivers = new JVector[String]() // java.util.Vector
+//        drivers.add("GTiff")
+//        // tif requires without "GTiff:"
+//        val result = gdal.OpenEx(
+//            "/root/mosaic/target/test-classes/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF",
+//            GA_ReadOnly,
+//            drivers
+//        )
+//        result != null should be(true)
+//        info(s"description -> '${result.GetDescription()}'")
+//        info(s"metadata -> '${result.GetMetadata_Dict()}'")
+
         // load the dataset
-        val dsOpt = RasterIO.rawPathAsDatasetOpt(p, None, getExprConfigOpt)
+        val dsOpt = RasterIO.rawPathAsDatasetOpt(p, subNameOpt = None, driverNameOpt = None, getExprConfigOpt)
         dsOpt.isDefined should be(true)
 
         val dsGDAL = DatasetGDAL()
@@ -49,14 +61,14 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
             dsGDAL.isHydrated should be(true)
             info(s"dataset description -> '${dsGDAL.dataset.GetDescription()}'")
 
-            val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo)
-            raster.updateCreateInfoRawPath(p, skipFlag = true)
-            raster.finalizeRaster(toFuse = true)
+            val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo(includeExtras = true))
+            raster.updateRawPath(p)
+            raster.finalizeRaster(toFuse = true) // <- specify fuse
 
             val outFusePath = raster.getRawPath
             info(s"out fuse path -> '$outFusePath'")
-            info(s"...dsGDAL createInfo: ${dsGDAL.asCreateInfo}")
-            info(s"...finalizeRaster - createInfo: ${raster.getCreateInfo}")
+            info(s"...dsGDAL createInfo: ${dsGDAL.asCreateInfo(includeExtras = true)}")
+            info(s"...finalizeRaster - createInfo: ${raster.getCreateInfo(includeExtras = true)}")
 
             // set the path for use outside this block
             dsGDAL.updatePath(outFusePath)
@@ -66,15 +78,28 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
         }
 
         // reload the written dataset
-        RasterIO.rawPathAsDatasetOpt(dsGDAL.getPath, driverNameOpt = None, getExprConfigOpt).isDefined should be(true)
+        RasterIO.rawPathAsDatasetOpt(dsGDAL.getPath, subNameOpt = None, driverNameOpt = None, getExprConfigOpt)
+            .isDefined should be(true)
     }
 
     test("Dataset loads for netcdf") {
         val p = filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc")
         info(s"path -> '$p'")
 
+//        val drivers = new JVector[String]() // java.util.Vector
+//        drivers.add("netCDF")
+//        // NETCDF without Subset likes "NETCDF:" (or without)
+//        val result = gdal.OpenEx(
+//            "/root/mosaic/target/test-classes/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc",
+//            GA_ReadOnly,
+//            drivers
+//        )
+//        result != null should be(true)
+//        info(s"description -> '${result.GetDescription()}'")
+//        info(s"metadata -> '${result.GetMetadata_Dict()}'")
+
         // load the dataset
-        val dsOpt = RasterIO.rawPathAsDatasetOpt(p, None, getExprConfigOpt)
+        val dsOpt = RasterIO.rawPathAsDatasetOpt(p, subNameOpt = None, driverNameOpt = None, getExprConfigOpt)
         dsOpt.isDefined should be(true)
 
         val dsGDAL = DatasetGDAL()
@@ -86,14 +111,14 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
             info(s"dataset description -> '${dsGDAL.dataset.GetDescription()}'")
             info(s"subdatasets -> ${dsGDAL.subdatasets(dsGDAL.pathGDAL)}")
 
-            val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo)
-            raster.updateCreateInfoRawPath(p, skipFlag = true)
+            val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo(includeExtras = true))
+            raster.updateRawPath(p)
             raster.finalizeRaster(toFuse = true)
 
             val outFusePath = raster.getRawPath
             info(s"out fuse path -> '$outFusePath'")
-            info(s"...dsGDAL createInfo: ${dsGDAL.asCreateInfo}")
-            info(s"...finalizeRaster - createInfo: ${raster.getCreateInfo}")
+            info(s"...dsGDAL createInfo: ${dsGDAL.asCreateInfo(includeExtras = true)}")
+            info(s"...finalizeRaster - createInfo: ${raster.getCreateInfo(includeExtras = true)}")
 
             // set the path for use outside this block
             dsGDAL.updatePath(outFusePath)
@@ -103,7 +128,8 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
         }
 
         // reload the written dataset
-        RasterIO.rawPathAsDatasetOpt(dsGDAL.getPath, None, getExprConfigOpt).isDefined should be(true)
+        RasterIO.rawPathAsDatasetOpt(dsGDAL.getPath, subNameOpt = None, driverNameOpt = None, getExprConfigOpt)
+            .isDefined should be(true)
     }
 
     test("Dataset loads for netcdf subdataset") {
@@ -113,6 +139,7 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
 
 //        val drivers = new JVector[String]() // java.util.Vector
 //        drivers.add("netCDF")
+//        // NETCDF with Subset requires "NETCDF:"
 //        val result = gdal.OpenEx(
 //            "NETCDF:/root/mosaic/target/test-classes/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc:bleaching_alert_area",
 //            GA_ReadOnly,
@@ -120,14 +147,15 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
 //        )
 //        result != null should be(true)
 //        info(s"description -> '${result.GetDescription()}'")
-        //info(s"metadata -> '${result.GetMetadata_Dict()}'")
+//        info(s"metadata -> '${result.GetMetadata_Dict()}'")
 
         // (1) load the subdataset
         val sp = s"$p:$sdName"
-        val dsOpt = RasterIO.rawPathAsDatasetOpt(sp, None, getExprConfigOpt)
+        val dsOpt = RasterIO.rawPathAsDatasetOpt(sp, subNameOpt = Some(sdName), driverNameOpt = None, getExprConfigOpt)
         dsOpt.isDefined should be(true)
 
         val dsGDAL = DatasetGDAL()
+        info(s"createInfo? ${dsGDAL.asCreateInfo(includeExtras = true)}")
         try {
             // set on dsGDAL
             dsGDAL.updateDataset(dsOpt.get, doUpdateDriver = true)
@@ -135,17 +163,17 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
             dsGDAL.isHydrated should be(true)
 
             info(s"subdatasets -> ${dsGDAL.subdatasets(dsGDAL.pathGDAL)}")
-            dsGDAL.updateSubdatasetName("bleaching_alert_area")
+            dsGDAL.updateSubsetName("bleaching_alert_area")
             info(s"dataset description -> '${dsGDAL.dataset.GetDescription()}'")
 
-            val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo)
-            raster.updateCreateInfoRawPath(sp, skipFlag = true)
+            val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo(includeExtras = true))
+            raster.updateRawPath(sp)
             raster.finalizeRaster(toFuse = true)
 
             val outFusePath = raster.getRawPath
             info(s"out fuse path -> '$outFusePath'")
-            info(s"...dsGDAL createInfo: ${dsGDAL.asCreateInfo}")
-            info(s"...finalizeRaster - createInfo: ${raster.getCreateInfo}")
+            info(s"...dsGDAL createInfo: ${dsGDAL.asCreateInfo(includeExtras = true)}")
+            info(s"...finalizeRaster - createInfo: ${raster.getCreateInfo(includeExtras = true)}")
 
             // set the path for use outside this block
             dsGDAL.updatePath(outFusePath)
@@ -155,7 +183,7 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
         }
 
         // (2) reload the written subdataset
-        RasterIO.rawPathAsDatasetOpt(dsGDAL.getPath, None, getExprConfigOpt).isDefined should be(true)
+        RasterIO.rawPathAsDatasetOpt(dsGDAL.getPath, subNameOpt = None, driverNameOpt = None, getExprConfigOpt).isDefined should be(true)
 
     }
 
@@ -165,7 +193,7 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
 
         // load the dataset
         // ZIP FILES REQUIRE A DRIVER NAME
-        val dsOpt = RasterIO.rawPathAsDatasetOpt(p, Some("Zarr"), getExprConfigOpt)
+        val dsOpt = RasterIO.rawPathAsDatasetOpt(p, subNameOpt = None, Some("Zarr"), getExprConfigOpt)
         dsOpt.isDefined should be(true)
 
         val dsGDAL = DatasetGDAL()
@@ -178,14 +206,14 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
             info(s"subdatasets -> ${dsGDAL.subdatasets(dsGDAL.pathGDAL)}")
             info(s"metadata -> ${dsGDAL.metadata}")
 
-            val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo)
-            raster.updateCreateInfoRawPath(p, skipFlag = true)
+            val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo(includeExtras = true))
+            raster.updateRawPath(p)
             raster.finalizeRaster(toFuse = true)
 
             val outFusePath = raster.getRawPath
             info(s"out fuse path -> '$outFusePath'")
-            info(s"...dsGDAL createInfo: ${dsGDAL.asCreateInfo}")
-            info(s"...finalizeRaster - createInfo: ${raster.getCreateInfo}")
+            info(s"...dsGDAL createInfo: ${dsGDAL.asCreateInfo(includeExtras = true)}")
+            info(s"...finalizeRaster - createInfo: ${raster.getCreateInfo(includeExtras = true)}")
 
             // set the path for use outside this block
             dsGDAL.updatePath(outFusePath)
@@ -195,15 +223,30 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
         }
 
         // reload the written dataset
-        RasterIO.rawPathAsDatasetOpt(dsGDAL.getPath, dsGDAL.driverNameOpt, getExprConfigOpt).isDefined should be(true)
+        RasterIO.rawPathAsDatasetOpt(dsGDAL.getPath, subNameOpt = None, dsGDAL.driverNameOpt, getExprConfigOpt)
+            .isDefined should be(true)
     }
 
     test("Dataset loads for grib") {
         val p = filePath("/binary/grib-cams/adaptor.mars.internal-1650626950.0440469-3609-11-041ac051-015d-49b0-95df-b5daa7084c7e.grb")
         info(s"path -> '$p'")
 
+//        val drivers = new JVector[String]() // java.util.Vector
+//        drivers.add("GRIB")
+//        // Doesn't like "GRIB:" pattern with URL
+//        val result = gdal.OpenEx(
+//            p,
+//            GA_ReadOnly,
+//            drivers
+//        )
+//        result != null should be(true)
+//        info(s"description -> '${result.GetDescription()}'")
+//        info(s"metadata -> '${result.GetMetadata_Dict()}'")
+//        info(s"geo transform -> ${result.GetGeoTransform().toList}")
+//        info(s"bands? -> ${result.GetRasterCount()}")
+
         // load the dataset
-        val dsOpt = RasterIO.rawPathAsDatasetOpt(p, None, getExprConfigOpt)
+        val dsOpt = RasterIO.rawPathAsDatasetOpt(p, subNameOpt = None, driverNameOpt = None, getExprConfigOpt)
         dsOpt.isDefined should be(true)
 
         val dsGDAL = DatasetGDAL()
@@ -216,14 +259,14 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
             info(s"subdatasets -> ${dsGDAL.subdatasets(dsGDAL.pathGDAL)}")
             info(s"metadata -> ${dsGDAL.metadata}")
 
-            val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo)
-            raster.updateCreateInfoRawPath(p, skipFlag = true)
+            val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo(includeExtras = true))
+            raster.updateRawPath(p)
             raster.finalizeRaster(toFuse = true)
 
             val outFusePath = raster.getRawPath
             info(s"out fuse path -> '$outFusePath'")
-            info(s"...dsGDAL createInfo: ${dsGDAL.asCreateInfo}")
-            info(s"...finalizeRaster - createInfo: ${raster.getCreateInfo}")
+            info(s"...dsGDAL createInfo: ${dsGDAL.asCreateInfo(includeExtras = true)}")
+            info(s"...finalizeRaster - createInfo: ${raster.getCreateInfo(includeExtras = true)}")
 
             // set the path for use outside this block
             dsGDAL.updatePath(outFusePath)
@@ -233,7 +276,8 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
         }
 
         // reload the written dataset
-        RasterIO.rawPathAsDatasetOpt(dsGDAL.getPath, None, getExprConfigOpt).isDefined should be(true)
+        RasterIO.rawPathAsDatasetOpt(dsGDAL.getPath, subNameOpt = None, driverNameOpt = None, getExprConfigOpt)
+            .isDefined should be(true)
     }
 
 }

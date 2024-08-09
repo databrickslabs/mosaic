@@ -72,6 +72,7 @@ object VectorClipper {
                        ): String = {
         val shapePath = getShapefilePath(exprConfigOpt)
         val shpDataSource: DataSource = getShapefile(shapePath) // note: not a Dataset
+        // handle skipProject
         val projectedGeom = geometry.osrTransformCRS(srcCrs, dstCrs, geometryAPI)
         val geom = ogr.CreateGeometryFromWkb(projectedGeom.toWKB)
 

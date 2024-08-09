@@ -1,6 +1,17 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
-import com.databricks.labs.mosaic.{NO_PATH_STRING, RASTER_ALL_PARENTS_KEY, RASTER_BAND_INDEX_KEY, RASTER_DRIVER_KEY, RASTER_LAST_CMD_KEY, RASTER_LAST_ERR_KEY, RASTER_MEM_SIZE_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
+import com.databricks.labs.mosaic.{
+    NO_PATH_STRING,
+    RASTER_ALL_PARENTS_KEY,
+    RASTER_BAND_INDEX_KEY,
+    RASTER_DRIVER_KEY,
+    RASTER_LAST_CMD_KEY,
+    RASTER_LAST_ERR_KEY,
+    RASTER_MEM_SIZE_KEY,
+    RASTER_PARENT_PATH_KEY,
+    RASTER_PATH_KEY,
+    RASTER_SUBDATASET_NAME_KEY
+}
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.flushAndDestroy
 import com.databricks.labs.mosaic.functions.ExprConfig
@@ -33,7 +44,7 @@ object GDALWarp {
         Try {
             val warpOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
             val warpOptions = new WarpOptions(warpOptionsVec)
-            val warpResult = gdal.Warp(outputPath, rasters.map(_.withDatasetHydratedOpt().get).toArray, warpOptions)
+            val warpResult = gdal.Warp(outputPath, rasters.map(_.getDatasetOrNull()).toArray, warpOptions)
             // Format will always be the same as the first tile
             val errorMsg = gdal.GetLastErrorMsg
 
@@ -50,8 +61,8 @@ object GDALWarp {
                 RASTER_PATH_KEY -> outputPath,
                 RASTER_PARENT_PATH_KEY -> rasters.head.identifyPseudoPathOpt().getOrElse(NO_PATH_STRING),
                 RASTER_DRIVER_KEY -> rasters.head.getWriteOptions.format,
-                RASTER_SUBDATASET_NAME_KEY -> rasters.head.getCreateInfoSubdatasetNameOpt.getOrElse(""),
-                RASTER_BAND_INDEX_KEY -> rasters.head.getCreateInfoBandIndexOpt.getOrElse(-1).toString,
+                RASTER_SUBDATASET_NAME_KEY -> rasters.head.getSubsetName,
+                RASTER_BAND_INDEX_KEY -> rasters.head.getBandIdxOpt.getOrElse(-1).toString,
                 RASTER_MEM_SIZE_KEY -> size.toString,
                 RASTER_LAST_CMD_KEY -> effectiveCommand,
                 RASTER_LAST_ERR_KEY -> errorMsg,
@@ -61,8 +72,8 @@ object GDALWarp {
             RasterGDAL(createInfo, exprConfigOpt)
         }.getOrElse {
             val result = RasterGDAL() // <- empty raster
-            result.updateCreateInfoLastCmd(effectiveCommand)
-            result.updateCreateInfoError("GDAL Warp command threw exception")
+            result.updateLastCmd(effectiveCommand)
+            result.updateError("GDAL Warp command threw exception")
             result
         }
     }

@@ -1,14 +1,12 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
-import com.databricks.labs.mosaic.{RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.{RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
-import com.databricks.labs.mosaic.datasource.gdal.ReadAsPath.tileDataType
 import com.databricks.labs.mosaic.expressions.raster.buildMapString
 import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
@@ -88,6 +86,7 @@ object ReadInMemory extends ReadStrategy {
                          indexSystem: IndexSystem,
                          exprConfigOpt: Option[ExprConfig]
     ): Iterator[InternalRow] = {
+        //scalastyle:off println
         val inPath = status.getPath.toString
 
         val uriDeepCheck = {
@@ -99,11 +98,11 @@ object ReadInMemory extends ReadStrategy {
             case Some(name) if name.nonEmpty => name
             case _ => identifyDriverNameFromRawPath(inPath, uriGdalOpt)
         }
-
         val createInfo = Map(
             RASTER_PATH_KEY -> inPath,
             RASTER_PARENT_PATH_KEY -> inPath,
-            RASTER_DRIVER_KEY -> driverName
+            RASTER_DRIVER_KEY -> driverName,
+            RASTER_SUBDATASET_NAME_KEY -> options.getOrElse(RASTER_SUBDATASET_NAME_KEY, "")
         )
         val raster = RasterGDAL(createInfo, exprConfigOpt)
         val uuid = getUUID(status)
@@ -123,12 +122,13 @@ object ReadInMemory extends ReadStrategy {
         }
 
         val contentBytes: Array[Byte] = readContent(fs, status)
-        val mapData = buildMapString(raster.getCreateInfo)
+        val mapData = buildMapString(raster.getCreateInfo(includeExtras = true))
         val rasterTileSer = InternalRow.fromSeq(Seq(null, contentBytes, mapData))
         val row = Utils.createRow(fields ++ Seq(rasterTileSer))
         val rows = Seq(row)
 
         raster.flushAndDestroy()
+        //scalastyle:on println
 
         rows.iterator
 

@@ -19,7 +19,7 @@ case class RST_SkewY(raster: Expression, exprConfig: ExprConfig)
 
     /** Returns the skew y of the tile, default 0. */
     override def rasterTransform(tile: RasterTile): Any = {
-        tile.raster.withDatasetHydratedOpt() match {
+        tile.raster.getDatasetOpt() match {
             case Some(dataset) => dataset.GetGeoTransform()(4)
             case _ => 0d // double
         }

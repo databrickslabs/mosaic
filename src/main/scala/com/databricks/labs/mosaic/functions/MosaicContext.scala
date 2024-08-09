@@ -781,11 +781,15 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_setsrid(raster: Column, srid: Column): Column = ColumnAdapter(RST_SetSRID(raster.expr, srid.expr, exprConfig))
         def rst_subdatasets(raster: Column): Column = ColumnAdapter(RST_Subdatasets(raster.expr, exprConfig))
         def rst_summary(raster: Column): Column = ColumnAdapter(RST_Summary(raster.expr, exprConfig))
-        def rst_tessellate(raster: Column, resolution: Column): Column =
-            ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, exprConfig))
         def rst_transform(raster: Column, srid: Column): Column = ColumnAdapter(RST_Transform(raster.expr, srid.expr, exprConfig))
+        def rst_tessellate(raster: Column, resolution: Column): Column =
+            ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, lit(false).expr, exprConfig))
         def rst_tessellate(raster: Column, resolution: Int): Column =
-            ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, exprConfig))
+            ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, lit(false).expr, exprConfig))
+        def rst_tessellate(raster: Column, resolution: Int, skipProject: Boolean): Column =
+            ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, lit(skipProject).expr, exprConfig))
+        def rst_tessellate(raster: Column, resolution: Column, skipProject: Column): Column =
+            ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, skipProject.expr, exprConfig))
         def rst_fromcontent(raster: Column, driver: Column): Column =
             ColumnAdapter(RST_FromContent(raster.expr, driver.expr, lit(-1).expr, exprConfig))
         def rst_fromcontent(raster: Column, driver: Column, sizeInMB: Column): Column =

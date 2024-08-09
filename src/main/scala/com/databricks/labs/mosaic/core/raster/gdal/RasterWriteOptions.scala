@@ -34,7 +34,7 @@ object RasterWriteOptions {
     val GTiff: RasterWriteOptions = RasterWriteOptions()
 
     def noGPCsNoTransform(raster: RasterGDAL): Boolean = Try {
-        val dataset = raster.withDatasetHydratedOpt().get
+        val dataset = raster.getDatasetOrNull()
         val noGPCs = dataset.GetGCPCount == 0
         val noGeoTransform = dataset.GetGeoTransform() == null ||
         (dataset.GetGeoTransform() sameElements Array (0.0, 1.0, 0.0, 0.0, 0.0, 1.0) )
@@ -53,7 +53,7 @@ object RasterWriteOptions {
             case _ =>
                 val d = raster.getDriverName(
                     tryDatasetAndPathsAlso = true,
-                    uriPartOpt = raster.getPathGDAL.getUriGdalOpt
+                    uriPartOpt = raster.getPathGDAL.getRawUriGdalOpt
                 )
                 //println(s"... driver (deeper check)? '$d'")
                 d

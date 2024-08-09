@@ -41,7 +41,7 @@ object GDALBuildVRT {
             rasters
                 .filter(!_.isEmptyRasterGDAL)
                 .filter(!_.isEmpty)
-                .map(_.withDatasetHydratedOpt().get)
+                .map(_.getDatasetOrNull())
                 .toArray,
             vrtOptions
         )
@@ -53,8 +53,8 @@ object GDALBuildVRT {
             //println(s"... GDALBuildVRT (last_error) - '$errorMsg' for '$outputPath'")
             // scalastyle:on println
             val result = RasterGDAL()
-            result.updateCreateInfoLastCmd(effectiveCommand)
-            result.updateCreateInfoError(errorMsg)
+            result.updateLastCmd(effectiveCommand)
+            result.updateError(errorMsg)
 
             result
         } else {

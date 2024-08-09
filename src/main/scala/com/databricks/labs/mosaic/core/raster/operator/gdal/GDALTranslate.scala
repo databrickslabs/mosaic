@@ -54,9 +54,8 @@ object GDALTranslate {
         Try {
             val translateOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
             val translateOptions = new TranslateOptions(translateOptionsVec)
-            val transResult = gdal.Translate(outputPath, raster.withDatasetHydratedOpt().get, translateOptions)
+            val transResult = gdal.Translate(outputPath, raster.getDatasetOrNull(), translateOptions)
             val errorMsg = gdal.GetLastErrorMsg
-
             //        if (errorMsg.nonEmpty) {
             //            println(s"... GDALTranslate (last_error) - '$errorMsg' for '$outputPath'")
             //        }
@@ -68,8 +67,8 @@ object GDALTranslate {
                     RASTER_PATH_KEY -> outputPath,
                     RASTER_PARENT_PATH_KEY -> raster.identifyPseudoPathOpt().getOrElse(NO_PATH_STRING),
                     RASTER_DRIVER_KEY -> writeOptions.format,
-                    RASTER_SUBDATASET_NAME_KEY -> raster.getCreateInfoSubdatasetNameOpt.getOrElse(""),
-                    RASTER_BAND_INDEX_KEY -> raster.getCreateInfoBandIndexOpt.getOrElse(-1).toString,
+                    RASTER_SUBDATASET_NAME_KEY -> raster.getSubsetName,
+                    RASTER_BAND_INDEX_KEY -> raster.getBandIdxOpt.getOrElse(-1).toString,
                     RASTER_LAST_CMD_KEY -> effectiveCommand,
                     RASTER_LAST_ERR_KEY -> errorMsg,
                     RASTER_ALL_PARENTS_KEY -> raster.getRawParentPath
@@ -78,8 +77,8 @@ object GDALTranslate {
             )
         }.getOrElse {
             val result = RasterGDAL() // <- empty raster
-            result.updateCreateInfoLastCmd(effectiveCommand)
-            result.updateCreateInfoError("GDAL Translate command threw exception")
+            result.updateLastCmd(effectiveCommand)
+            result.updateError("GDAL Translate command threw exception")
             result
         }
         // scalastyle:on println

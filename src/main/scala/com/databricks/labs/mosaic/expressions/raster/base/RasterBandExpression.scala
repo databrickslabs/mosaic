@@ -81,7 +81,7 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
         )
         val bandIndex = inputBand.asInstanceOf[Int]
 
-        tile.initAndHydrateTile() // <- required
+        tile.tryInitAndHydrateTile() // <- required
 
         val band = tile.raster.getBand(bandIndex)
         var result = bandTransform(tile, band)

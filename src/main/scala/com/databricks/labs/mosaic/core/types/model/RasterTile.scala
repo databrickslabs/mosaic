@@ -36,7 +36,9 @@ case class RasterTile(
       * @return
       *   True if the tile is present, false otherwise.
       */
-    def isEmpty: Boolean = Option(raster).forall(_.isEmpty)
+    def isEmpty: Boolean = {
+        raster.isEmptyRasterGDAL || raster.isEmpty
+    }
 
     /**
      * Finalize the tile.
@@ -91,15 +93,11 @@ case class RasterTile(
      * Attempt to initialize and hydrate the tile.
      * - essentially calls `tile.initAndHydrate()`.
      *
-     * @param forceInit
-     *   Whether to force an init, regardless of internal state of tile.
      * @return
      *   [[RasterTile]] `this` (fluent).
      */
-    def initAndHydrateTile(forceInit: Boolean = false): RasterTile = {
-        Try{
-            this.raster.initAndHydrate(forceInit = forceInit)
-        }
+    def tryInitAndHydrateTile(): RasterTile = {
+        Try(this.raster.tryInitAndHydrate())
         this
     }
 
@@ -172,7 +170,7 @@ case class RasterTile(
         // (3) update createInfo
         // - safety net for parent path
         val parentPath = this.raster.identifyPseudoPathOpt().getOrElse(NO_PATH_STRING)
-        val newCreateInfo = raster.getCreateInfo + (RASTER_PATH_KEY -> path, RASTER_PARENT_PATH_KEY -> parentPath)
+        val newCreateInfo = raster.getCreateInfo(includeExtras = true) + (RASTER_PATH_KEY -> path, RASTER_PARENT_PATH_KEY -> parentPath)
 
         // scalastyle:off println
         //println(s"rasterTile - serialize - toFuse? $toFuse | newCreateInfo? $newCreateInfo")

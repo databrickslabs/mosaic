@@ -70,7 +70,7 @@ case class RST_Write(
         // - from createInfo of existing
         val inRaster = inTile.raster
         val result = RasterGDAL(
-          createInfoInit = inRaster.getCreateInfo,
+          createInfoInit = inRaster.getCreateInfo(includeExtras = true),
             exprConfigOpt = Option(exprConfig)
         )
         // (2) just update the FuseDirOpt

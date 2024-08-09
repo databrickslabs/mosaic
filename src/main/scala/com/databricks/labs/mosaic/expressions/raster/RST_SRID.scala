@@ -22,7 +22,7 @@ case class RST_SRID(raster: Expression, exprConfig: ExprConfig)
 
     /** Returns the SRID of the tile. */
     override def rasterTransform(tile: RasterTile): Any = {
-        tile.raster.withDatasetHydratedOpt() match {
+        tile.raster.getDatasetOpt() match {
             case Some(dataset) =>
                 // Reference: https://gis.stackexchange.com/questions/267321/extracting-epsg-from-a-raster-using-gdal-bindings-in-python
                 val proj = new SpatialReference (dataset.GetProjection())

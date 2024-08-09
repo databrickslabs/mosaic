@@ -37,7 +37,7 @@ case class RST_Median(rasterExpr: Expression, exprConfig: ExprConfig)
         )
 
         // Max pixel is a hack since we get a 1x1 tile back
-        val nBands = raster.withDatasetHydratedOpt().get.GetRasterCount()
+        val nBands = raster.getDatasetOrNull().GetRasterCount()
         val maxValues = (1 to nBands).map(medRaster.getBand(_).maxPixelValue)
         ArrayData.toArrayData(maxValues.toArray)
     }.getOrElse(ArrayData.toArrayData(Array.empty[Double]))

@@ -22,7 +22,7 @@ case class RST_Min(raster: Expression, exprConfig: ExprConfig)
     /** Returns the min value per band of the tile. */
     override def rasterTransform(tile: RasterTile): Any = {
         val raster = tile.raster
-        raster.withDatasetHydratedOpt() match {
+        raster.getDatasetOpt() match {
             case Some(dataset) =>
                 val nBands = dataset.GetRasterCount()
                 val minValues = (1 to nBands).map(raster.getBand (_).minPixelValue)

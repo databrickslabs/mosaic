@@ -82,7 +82,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-8895604.157333, 1111950.519667, -7783653.637667, 2223901.039333)
-        testRaster.withDatasetHydratedOpt().get.GetProjection()
+        testRaster.getDatasetOrNull().GetProjection()
         noException should be thrownBy testRaster.getSpatialReference
         an[Exception] should be thrownBy testRaster.getBand(-1)
         an[Exception] should be thrownBy testRaster.getBand(Int.MaxValue)

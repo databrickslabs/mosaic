@@ -24,7 +24,7 @@ case class RST_Max(raster: Expression, exprConfig: ExprConfig)
     /** Returns the max value per band of the tile. */
     override def rasterTransform(tile: RasterTile): Any = Try {
         val raster = tile.raster
-        val nBands = raster.withDatasetHydratedOpt().get.GetRasterCount()
+        val nBands = raster.getDatasetOrNull().GetRasterCount()
         val maxValues = (1 to nBands).map(raster.getBand(_).maxPixelValue)
         ArrayData.toArrayData(maxValues.toArray)
     }.getOrElse(ArrayData.toArrayData(Array.empty[Double]))
