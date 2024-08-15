@@ -8,7 +8,8 @@
 # [3] if you want to run tests within the container shell
 # - [a] might need to `unset JAVA_TOOL_OPTIONS` is needed to execute JVM tests (if using `mosaic-docker-java-tool-options.sh`)
 # - [b] then can test e.g. `mvn -X test -DskipTests=false -Dsuites=com.databricks.labs.mosaic.core.raster.TestRasterGDAL`
-#       and `python3 -m unittest mosaic test/test_fuse_install.py` from ./python dir
+#       and `python3 -m unittest mosaic test/test_fuse_install.py` from ./python dir;
+#       can also test scalastyle with `mvn org.scalastyle:scalastyle-maven-plugin:1.0.0:check`
 # - [c] you may need to run `mvn clean` occasionally, especially around initial setup as intellij is JDK 11
 #       and docker is JDK 8.
 # ... don't need to specify -PskipCoverage (see settings.xml)

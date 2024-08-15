@@ -69,7 +69,7 @@ case class ST_AsGeojsonTileAgg(
 
         ds.FlushCache()
         ds.delete()
-        
+
         val source = scala.io.Source.fromFile(tmpName)
         val result = source.getLines().collect { case x => x }.mkString("\n")
         UTF8String.fromString(result)

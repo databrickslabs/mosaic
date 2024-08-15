@@ -75,9 +75,9 @@ case class ExprConfig(configs: Map[String, String]) {
     def getCellIdType: DataType = IndexSystemFactory.getIndexSystem(getIndexSystem).cellIdType
 
     def getIndexSystem: String = configs.getOrElse(MOSAIC_INDEX_SYSTEM, H3.name)
-    
+
     def getRasterBlockSize: Int = configs.getOrElse(MOSAIC_RASTER_BLOCKSIZE, MOSAIC_RASTER_BLOCKSIZE_DEFAULT).toInt
-    
+
     def getTmpPrefix: String = configs.getOrElse(MOSAIC_RASTER_TMP_PREFIX, MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
 
     def getCleanUpAgeLimitMinutes: Int = configs.getOrElse(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT).toInt
@@ -109,7 +109,7 @@ case class ExprConfig(configs: Map[String, String]) {
     def setRasterUseCheckpoint(checkpoint: String): ExprConfig = {
         ExprConfig(configs + (MOSAIC_RASTER_USE_CHECKPOINT -> checkpoint))
     }
-    
+
     def setTmpPrefix(prefix: String): ExprConfig = {
         ExprConfig(configs + (MOSAIC_RASTER_TMP_PREFIX -> prefix))
     }

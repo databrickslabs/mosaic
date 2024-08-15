@@ -41,7 +41,7 @@ object SysUtils {
         stderrStream.close()
         (s"$exitValue", stdinOutput, stderrOutput)
     }
-    
+
     def getLastOutputLine(prompt: (String, String, String)): String = {
         val (_, stdout, _) = prompt
         val lines = stdout.split("\n")

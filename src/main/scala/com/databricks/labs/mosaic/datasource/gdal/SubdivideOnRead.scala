@@ -25,32 +25,32 @@ object SubdivideOnRead extends ReadStrategy {
 
     // noinspection DuplicatedCode
     /**
-      * Returns the schema of the GDAL file format.
-      * @note
-      *   Different read strategies can have different schemas. This is because
-      *   the schema is defined by the read strategy. For retiling we always use
-      *   checkpoint location. In this case rasters are stored off spark rows.
-      *   If you need the tiles in memory please load them from path stored in
-      *   the tile returned by the reader.
-      *
-      * @param options
-      *   Options passed to the reader.
-      * @param files
-      *   List of files to read.
-      * @param parentSchema
-      *   Parent schema.
-      * @param sparkSession
-      *   Spark session.
-      *
-      * @return
-      *   Schema of the GDAL file format.
-      */
+     * Returns the schema of the GDAL file format.
+     * @note
+     *   Different read strategies can have different schemas. This is because
+     *   the schema is defined by the read strategy. For retiling we always use
+     *   checkpoint location. In this case rasters are stored off spark rows.
+     *   If you need the tiles in memory please load them from path stored in
+     *   the tile returned by the reader.
+     *
+     * @param options
+     *   Options passed to the reader.
+     * @param files
+     *   List of files to read.
+     * @param parentSchema
+     *   Parent schema.
+     * @param sparkSession
+     *   Spark session.
+     *
+     * @return
+     *   Schema of the GDAL file format.
+     */
     override def getSchema(
-        options: Map[String, String],
-        files: Seq[FileStatus],
-        parentSchema: StructType,
-        sparkSession: SparkSession
-    ): StructType = {
+                              options: Map[String, String],
+                              files: Seq[FileStatus],
+                              parentSchema: StructType,
+                              sparkSession: SparkSession
+                          ): StructType = {
         val trimmedSchema = parentSchema.filter(field => field.name != CONTENT && field.name != LENGTH)
         val indexSystem = IndexSystemFactory.getIndexSystem(sparkSession)
         StructType(trimmedSchema)
@@ -69,23 +69,23 @@ object SubdivideOnRead extends ReadStrategy {
     }
 
     /**
-      * Reads the content of the file.
- *
-      * @param status
-      *   File status.
-      * @param fs
-      *   File system.
-      * @param requiredSchema
-      *   Required schema.
-      * @param options
-      *   Options passed to the reader.
-      * @param indexSystem
-      *   Index system.
-      * @param exprConfigOpt
-      *   Option [[ExprConfig]].
-      * @return
-      *   Iterator of internal rows.
-      */
+     * Reads the content of the file.
+     *
+     * @param status
+     *   File status.
+     * @param fs
+     *   File system.
+     * @param requiredSchema
+     *   Required schema.
+     * @param options
+     *   Options passed to the reader.
+     * @param indexSystem
+     *   Index system.
+     * @param exprConfigOpt
+     *   Option [[ExprConfig]].
+     * @return
+     *   Iterator of internal rows.
+     */
     override def read(
                          status: FileStatus,
                          fs: FileSystem,
@@ -93,7 +93,7 @@ object SubdivideOnRead extends ReadStrategy {
                          options: Map[String, String],
                          indexSystem: IndexSystem,
                          exprConfigOpt: Option[ExprConfig]
-    ): Iterator[InternalRow] = {
+                     ): Iterator[InternalRow] = {
 
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
@@ -112,7 +112,7 @@ object SubdivideOnRead extends ReadStrategy {
         val createInfo = Map(
             RASTER_PATH_KEY -> tmpPath,
             RASTER_PARENT_PATH_KEY -> inPath,
-            RASTER_DRIVER_KEY -> driverName,
+            RASTER_DRIVER_KEY -> driverName
             //RASTER_SUBDATASET_NAME_KEY -> options.getOrElse("subdatasetName", "") // <- SUBDATASET HERE (PRE)!
         )
         val tiles = localSubdivide(createInfo, sizeInMB, exprConfigOpt)
@@ -123,10 +123,8 @@ object SubdivideOnRead extends ReadStrategy {
             // - this is important to allow future loads to not try the path
             // - while subdivide should not be allowed for zips, testing just in case
             //raster.updateSubsetName(options.getOrElse("subdatasetName", "")) // <- SUBDATASET HERE (POST)!
-
             val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
             val fields = trimmedSchema.fieldNames.map {
-
                 case PATH              => status.getPath.toString
                 case MODIFICATION_TIME => status.getModificationTime
                 case UUID              => uuid
@@ -151,17 +149,17 @@ object SubdivideOnRead extends ReadStrategy {
     }
 
     /**
-      * Subdivides a tile into tiles of a given size.
-      *
-      * @param createInfo
-      *   Map with various KVs
-      * @param sizeInMB
-      *   Size of the tiles in MB.
-      * @param exprConfig
-      *   Option [[ExprConfig]].
-      * @return
-      *  A tuple of the tile and the tiles.
-      */
+     * Subdivides a tile into tiles of a given size.
+     *
+     * @param createInfo
+     *   Map with various KVs
+     * @param sizeInMB
+     *   Size of the tiles in MB.
+     * @param exprConfigOpt
+     *   Option [[ExprConfig]].
+     * @return
+     *  A tuple of the tile and the tiles.
+     */
     def localSubdivide(
                           createInfo: Map[String, String],
                           sizeInMB: Int,
