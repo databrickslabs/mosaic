@@ -120,6 +120,7 @@ The reader supports the following options:
       a glob filter to ignore other files in the directory, e.g. sidecar files
     * :code:`kRingInterpolate` (default 0) - if the raster pixels are larger than the grid cells, use k_ring
       interpolation with n = kRingInterpolate (IntegerType)
+    * :code:`limitTessellate` (default 0) - limits the number of rows during / after tessellate; useful for sampling or testing (IntegerType)
     * :code:`nPartitions` (default <spark.conf.get("spark.sql.shuffle.partitions")>) - you can specify the
       starting number of partitions, will grow (x10 up to 10K) for retile and/or tessellate (IntegerType)
     * :code:`resolution` (default 0) - resolution of the output grid (IntegerType)

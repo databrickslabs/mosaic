@@ -44,6 +44,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         nPartitions = config("nPartitions").toInt
         val resolution = config("resolution").toInt
         val verboseLevel = config("verboseLevel").toInt
+        val limitTessellate = config("limitTessellate").toInt
 
         sparkSession.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "false")
         if (verboseLevel > 0) println(s"raster_to_grid -> 'spark.sql.adaptive.coalescePartitions.enabled' set to false")
@@ -136,7 +137,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         if (verboseLevel > 1) println(s"\nraster_to_grid - readOptions? $readOptions\n")
 
         // <<< PERFORM READ >>>
-        val rasterToGridCombiner = getRasterToGridFunc(config("combiner"))
+        val rasterToGridCombiner = getRasterToGridFunc(config("combiner")) // <- want to fail early
         var pathsDf: DataFrame = null
         var resolvedDf: DataFrame = null
         var sridDf: DataFrame = null
@@ -194,7 +195,11 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                     "tile",
                     rst_tessellate(col("tile"), lit(0), lit(skipProject))
                 )
-                .cache()
+            if (limitTessellate > 0) {
+                // handle optional limit (for testing)
+                tessellatedDf = tessellatedDf.limit(limitTessellate)
+            }
+            tessellatedDf = tessellatedDf.cache()
             var tessellatedDfCnt = tessellatedDf.count()
             Try(retiledDf.unpersist()) // <- let go of prior caching
             if (verboseLevel > 0) println(s"... tessellated at resolution 0 - count? $tessellatedDfCnt " +
@@ -211,7 +216,11 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                         .drop("tile")
                         .filter(col(s"tile_$res").isNotNull)
                         .withColumnRenamed(s"tile_$res", "tile")
-                        .cache()                                // <- cache tmp
+                    if (limitTessellate > 0) {
+                        // handle optional limit (for testing)
+                        tmpTessellatedDf = tmpTessellatedDf.limit(limitTessellate)
+                    }
+                    tmpTessellatedDf = tmpTessellatedDf.cache() // <- cache tmp
                     tessellatedDfCnt = tmpTessellatedDf.count() // <- count tmp (before unpersist)
                     FileUtils.deleteDfTilePathDirs(tessellatedDf, verboseLevel = verboseLevel, msg = s"tessellatedDf (res=$res)")
                     Try(tessellatedDf.unpersist())              // <- uncache existing tessellatedDf
@@ -473,6 +482,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             "driverName" -> this.extraOptions.getOrElse("driverName", ""),
             "extensions" -> this.extraOptions.getOrElse("extensions", "*"),
             "kRingInterpolate" -> this.extraOptions.getOrElse("kRingInterpolate", "0"),
+            "limitTessellate" -> this.extraOptions.getOrElse("limitTessellate", "0"),
             "nPartitions" -> this.extraOptions.getOrElse("nPartitions", sparkSession.conf.get("spark.sql.shuffle.partitions")),
             "resolution" -> this.extraOptions.getOrElse("resolution", "0"),
             "retile" -> this.extraOptions.getOrElse("retile", "false"),

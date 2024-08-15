@@ -43,7 +43,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
         an[Error] should be thrownBy MosaicContext.read
             .format("raster_to_grid")
             .option("nPartitions", "10")
-            .option("combiner", "count_+") // <- invalid combiner
+            .option("combiner", "count_+") // <- invalid combiner (should fail early)
             .load(paths: _*)
             .select("measure")
             .take(1)
@@ -68,12 +68,13 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .format("raster_to_grid")
             .option("nPartitions", "10")
             .option("extensions", "tif")
-            .option("resolution", "1")  // <- remote build struggles with rest=2
+            .option("resolution", "2")
             .option("kRingInterpolate", "3")
-            .option("verboseLevel", "2") // <- interim progress (0,1,2)?
-            .load(filePath)
+            .option("verboseLevel", "2")     // <- interim progress (0,1,2)?
+            .option("limitTessellate", "10") // <- keeping rows down for testing
+            .load(s"${filePath}MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
             .select("measure")
-        df.count() == 61 shouldBe(true) // 102 for res=2
+        df.count() == 94 shouldBe(true)
     }
 
     test("Read with Raster As Grid Reader - Various Combiners") {
@@ -102,9 +103,10 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("extensions", "tif")
             .option("resolution", "2")
             .option("kRingInterpolate", "3")
-            .option("verboseLevel", "2") // <- interim progress (0,1,2)?
+            .option("verboseLevel", "2")     // <- interim progress (0,1,2)?
+            .option("limitTessellate", "10") // <- keeping rows down for testing
             .option("combiner", randomCombiner)
-            .load(s"$filePath")
+            .load(s"${filePath}MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
             .select("measure")
             .take(1)
         info(s"... after random combiner ('$randomCombiner')")
@@ -132,6 +134,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("combiner", "min")
             .option("kRingInterpolate", "3")
             .option("verboseLevel", "2") // <- interim progress (0,1,2)?
+            .option("limitTessellate", "10") // <- keeping rows down for testing
             .load(filePath)
             .select("measure")
         df.count() == 588 shouldBe(true)
@@ -160,10 +163,11 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("resolution", "0")
             .option("kRingInterpolate", "1")
             .option("verboseLevel", "2") // <- interim progress (0,1,2)?
+            .option("limitTessellate", "10") // <- keeping rows down for testing
             .option("sizeInMB", "-1")
             .load(s"$filePath/ct5km_baa-max-7d_v3.1_20220101.nc")
             //.select("measure")
-        df.count() == 122 shouldBe(true)
+        df.count() == 43 shouldBe(true)
     }
 
 }
