@@ -68,12 +68,12 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .format("raster_to_grid")
             .option("nPartitions", "10")
             .option("extensions", "tif")
-            .option("resolution", "2")
+            .option("resolution", "1")  // <- remote build struggles with rest=2
             .option("kRingInterpolate", "3")
             .option("verboseLevel", "2") // <- interim progress (0,1,2)?
             .load(filePath)
             .select("measure")
-        df.count() == 102 shouldBe(true)
+        df.count() == 61 shouldBe(true) // 102 for res=2
     }
 
     test("Read with Raster As Grid Reader - Various Combiners") {

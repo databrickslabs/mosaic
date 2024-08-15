@@ -504,7 +504,7 @@ class PathUtilsTest extends SharedSparkSessionGDAL {
         val toDir = MosaicContext.createTmpContextDir(getExprConfigOpt)
 
         PathUtils.wildcardCopy(thisDir, toDir, patternOpt = None)
-        Files.list(Paths.get(toDir)).forEach(f => info(s"... file '${f.toString}'"))
+        //Files.list(Paths.get(toDir)).forEach(f => info(s"... file '${f.toString}'"))
         Files.list(Paths.get(toDir)).count() should be(6)
     }
 
