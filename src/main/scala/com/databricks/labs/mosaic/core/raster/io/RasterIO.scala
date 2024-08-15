@@ -9,6 +9,7 @@ import com.databricks.labs.mosaic.utils.{PathUtils, SysUtils}
 import org.gdal.gdal.{Dataset, Driver, gdal}
 import org.gdal.gdalconst.gdalconstConstants.GA_ReadOnly
 import org.gdal.ogr.DataSource
+import org.gdal.osr
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import java.util.{Vector => JVector}
@@ -378,7 +379,6 @@ object RasterIO {
     // DATASET
     // ////////////////////////////////////////////////////////
 
-    //scalastyle:off println
     /**
      * Opens a tile from a file system path with a given driver.
      *   - Use the raw path for subdatasets and /vsi* paths.
@@ -400,10 +400,8 @@ object RasterIO {
             var driverName = NO_DRIVER
             var hasDriver = driverNameOpt.isDefined && driverNameOpt.get != NO_DRIVER
             if (hasDriver) {
-                //println(s"RasterIO - rawPathAsDatasetOpt - driver passed")
                 driverName = driverNameOpt.get
             } else {
-                //println(s"RasterIO - rawPathAsDatasetOpt - path ext (used in driver)? '${pathGDAL.getExtOpt}', path driver? '${pathGDAL.getPathDriverName}'")
                 driverName = pathGDAL.getPathDriverName
                 hasDriver = driverName != NO_DRIVER
             }
@@ -414,14 +412,12 @@ object RasterIO {
             // fallback path (no subdataset with this)
             val fsPath = pathGDAL.asFileSystemPath
             var gdalExSuccess = false
-            //println(s"fsPath? '$fsPath' | gdalPath (generated)? '${gdalPathOpt}' | rawGdalUriPart? '${pathGDAL.getRawUriGdalOpt}' driver? '$driverName'")
 
             var dsOpt = {
                 if (hasDriver && hasGDALPath) {
                     // use the provided driver and coerced gdal path
                     try {
                         val gdalPath = gdalPathOpt.get
-                        //println(s"RasterIO - rawPathAsDatasetOpt - `gdal.OpenEx` gdalPath? '$gdalPath' (driver? '$driverName')")
                         val drivers = new JVector[String]() // java.util.Vector
                         drivers.add(driverName)
                         val result = gdal.OpenEx(gdalPath, GA_ReadOnly, drivers)
@@ -429,24 +425,20 @@ object RasterIO {
                         Option(result)
                     } catch {
                         case _: Throwable =>
-                            //println(s"RasterIO - rawPathAsDatasetOpt - `gdal.Open` fsPath? '$fsPath'")
                             val result = gdal.Open(fsPath, GA_ReadOnly)
                             Option(result)
                     }
                 } else {
                     // just start from the file system path
-                    //println(s"RasterIO - rawPathAsDatasetOpt - `gdal.Open` fsPath? '$fsPath'")
                     val result = gdal.Open(fsPath, GA_ReadOnly)
                     Option(result)
                 }
             }
 
-            //println(s"dsOpt -> ${dsOpt.toString}")
             if (dsOpt.isDefined && hasSubset && !gdalExSuccess) {
                 // try to load the subdataset from the dataset
                 // - we got here because the subdataset failed to load,
                 //   but the full dataset loaded.
-                //println(s"RasterIO - rawPathAsDatasetOpt - subdataset load")
                 val dsGDAL = DatasetGDAL()
                 try {
                     dsGDAL.updateDataset(dsOpt.get, doUpdateDriver = true)
@@ -463,11 +455,18 @@ object RasterIO {
                 }
             }
 
+            if (dsOpt.isDefined && Try(dsOpt.get.GetSpatialRef()).isFailure || dsOpt.get.GetSpatialRef() == null) {
+                // if SRS not set, try to set it to WGS84
+                Try{
+                    val srs = new osr.SpatialReference()
+                    srs.ImportFromEPSG(4326)
+                    dsOpt.get.SetSpatialRef(srs)
+                }
+            }
+
             dsOpt
         }.getOrElse(None)
-    //scalastyle:on println
 
-    //scalastyle:off println
     /**
       * Opens a tile from a file system path with a given driver.
       *   - Use the raw path for subdatasets and /vsi* paths.
@@ -496,7 +495,6 @@ object RasterIO {
         }
         rawPathAsDatasetOpt(pathGDAL, driverNameOpt, exprConfigOpt)
     }
-    //scalastyle:on println
 
     // ////////////////////////////////////////////////////////
     // CLEAN
@@ -526,9 +524,6 @@ object RasterIO {
                 // Release any "/vsi*" links.
                 fileList.forEach {
                     case f if f.toString.startsWith("/vsi") =>
-                        // scalastyle:off println
-                        // println(s"... deleting vsi path '$f'")
-                        // scalastyle:on println
                         Try(driver.Delete(f.toString))
                     case _                                  => ()
                 }

@@ -10,6 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
+import scala.util.Try
+
 /** Returns an array containing valid pixel count values for each band. */
 case class RST_PixelCount(
                              rasterExpr: Expression,
@@ -29,20 +31,17 @@ case class RST_PixelCount(
       * - if countAll specified as true, simply return bandX * bandY in the count (default is false). countAll ignores
       *   countNodData
       */
-    override def rasterTransform(tile: RasterTile, arg1: Any, arg2: Any): Any = {
-        val countNoData = arg1.asInstanceOf[Boolean]
-        val countAll = arg2.asInstanceOf[Boolean]
-        val raster = tile.raster
-        raster.getDatasetOpt() match {
-            case Some(dataset) =>
-                val bandCount = dataset.GetRasterCount()
-                val pixelCount = (1 to bandCount).map (
-                    raster.getBand (_).pixelCount (countNoData, countAll)
-                )
-                ArrayData.toArrayData(pixelCount.toArray)
-            case _ => ArrayData.toArrayData(Array.empty[Int])
-        }
-    }
+    override def rasterTransform(tile: RasterTile, arg1: Any, arg2: Any): Any =
+        Try{
+            val countNoData = arg1.asInstanceOf[Boolean]
+            val countAll = arg2.asInstanceOf[Boolean]
+            val raster = tile.raster
+            val nBands = raster.getDatasetOrNull().GetRasterCount()
+            val values = (1 to nBands).map (
+                raster.getBand (_).pixelCount (countNoData, countAll) // <- pixelCount
+            )
+            ArrayData.toArrayData(values.toArray)
+        }.getOrElse(ArrayData.toArrayData(Array.empty[Int]))
 
 }
 

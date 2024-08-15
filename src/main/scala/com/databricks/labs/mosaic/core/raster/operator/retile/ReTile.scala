@@ -29,13 +29,8 @@ object ReTile {
         tileHeight: Int,
         exprConfigOpt: Option[ExprConfig]
     ): Seq[RasterTile] = {
+
         val raster = tile.raster
-
-        //scalastyle:off println
-        //println(s"is tile hydrated? ${tile.isDatasetHydrated}")
-        //println(s"createInfo -> ${tile.createInfo}")
-        //scalastyle:on println
-
         val (xR, yR) = raster.getDimensions
         val xTiles = Math.ceil(xR / tileWidth).toInt
         val yTiles = Math.ceil(yR / tileHeight).toInt
@@ -66,7 +61,7 @@ object ReTile {
         }
 
         val (result, invalid) = tiles.partition(_._1) // true goes to result
-//        invalid.flatMap(t => Option(t._2)).foreach(_.destroy()) // destroy invalids
+
         result.map(t => RasterTile(null, t._2, tileDataType)) // return valid tiles
     }
 

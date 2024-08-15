@@ -41,16 +41,17 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
     GDAL.enable(exprConfig)
 
     override def dataType: DataType = {
-        RasterTileType(exprConfig.getCellIdType, rasterExpr, useCheckpoint = true) // always checkpoint
+        // !!! always checkpoint !!!
+        RasterTileType(exprConfig.getCellIdType, rasterExpr, useCheckpoint = true)
     }
 
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
     protected val geometryAPI: GeometryAPI = GeometryAPI.apply(exprConfig.getGeometryAPI)
 
-    protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem)
+    protected def indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem)
 
-    protected val cellIdDataType: DataType = indexSystem.getCellIdDataType
+    protected def cellIdDataType: DataType = indexSystem.getCellIdDataType
 
     override def position: Boolean = false
 
@@ -81,15 +82,19 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
             cellIdDataType,
             Option(exprConfig)
         )
-        var genTiles = rasterGenerator(tile).map(_.formatCellId(indexSystem))
+
+        var genTiles = rasterGenerator(tile)
+            .map(_.formatCellId(indexSystem)) // <- format cellid prior to rasterType
         val resultType = RasterTile.getRasterType(dataType)
-        val rows = genTiles.map(_.serialize(resultType, doDestroy = true, Option(exprConfig)))
+        val rows = genTiles.map(tile => InternalRow.fromSeq(
+            Seq(tile.serialize(resultType, doDestroy = true, Option(exprConfig))))
+        )
 
         tile.flushAndDestroy()
         tile = null
         genTiles = null
 
-        rows.map(row => InternalRow.fromSeq(Seq(row)))
+        rows.iterator // <- want an iterator here
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression =

@@ -73,10 +73,6 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
     }
 
     override def afterAll(): Unit = {
-        // Hotfix for SharedSparkSession afterAll cleanup.
-        // - super.afterAll stops spark
-        Try(super.afterAll())
-
         // option: clean checkpoint files (for testing)
         // - this specifies to remove fuse mount files which are mocked for development
         val checkAge = 3
@@ -92,6 +88,10 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
             case Some(msg) => info(s"cleanup mosaic local dir (older than $localAge minutes) msg -> '$msg'")
             case _ => ()
         }
+
+        // Hotfix for SharedSparkSession afterAll cleanup.
+        // - super.afterAll stops spark
+        Try(super.afterAll())
     }
 
     protected def getCheckpointRootDir: String = "/dbfs/checkpoint"

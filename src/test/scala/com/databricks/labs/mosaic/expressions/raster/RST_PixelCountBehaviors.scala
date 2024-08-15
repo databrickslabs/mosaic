@@ -19,19 +19,19 @@ trait RST_PixelCountBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
-        //info(s"row -> ${rastersInMemory.first().toSeq.toString()}")
+        //info(s"row -> ${rasterDf.first().toSeq.toString()}")
 
-        val dfPix = rastersInMemory
+        val dfPix = rasterDf
             .select(rst_pixelcount($"tile"))
-        info(s"pixelcount (prior to tessellate) -> ${dfPix.first().toSeq.toString()}")
+        //info(s"pixelcount (prior to tessellate) -> ${dfPix.first().toSeq.toString()}")
 
         // this should work after rst_tessellate
 
-        val df = rastersInMemory
+        val df = rasterDf
             .withColumn("tile", rst_tessellate($"tile", lit(3)))
             .withColumn("result", rst_pixelcount($"tile"))
             .select("result")
@@ -40,16 +40,15 @@ trait RST_PixelCountBehaviors extends QueryTest {
         //info(df.first().toSeq.toString())
 
 
-        rastersInMemory
+        rasterDf
             .withColumn("tile", rst_tessellate($"tile", lit(3)))
             .createOrReplaceTempView("source")
 
-        // TODO: modified to 3 args... should this be revisited?
         noException should be thrownBy spark.sql("""
                                                    |select rst_pixelcount(tile,false,false) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("result", rst_rastertogridmax($"tile", lit(3)))
             .select("result")
 

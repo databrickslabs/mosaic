@@ -20,19 +20,19 @@ trait RST_ConvolveBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersInMemory
+        val gridTiles = rasterDf
             .withColumn("result", rst_convolve($"tile", array(array(lit(1.0), lit(2.0), lit(3.0)), array(lit(3.0), lit(2.0), lit(1.0)), array(lit(1.0), lit(3.0), lit(2.0)))))
             .select("result")
             .collect()
 
         gridTiles.length should be(7)
 
-        rastersInMemory.createOrReplaceTempView("source")
+        rasterDf.createOrReplaceTempView("source")
 
        spark
             .sql("""

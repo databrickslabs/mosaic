@@ -19,12 +19,12 @@ trait RST_BoundingBoxBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersInMemory
+        val gridTiles = rasterDf
             .withColumn("bbox", rst_boundingbox($"tile"))
             .select(st_area($"bbox").as("area"))
             .as[Double]
@@ -32,7 +32,7 @@ trait RST_BoundingBoxBehaviors extends QueryTest {
 
         gridTiles.forall(_ > 0.0) should be(true)
 
-        rastersInMemory.createOrReplaceTempView("source")
+        rasterDf.createOrReplaceTempView("source")
 
         val gridTilesSQL = spark
             .sql("""

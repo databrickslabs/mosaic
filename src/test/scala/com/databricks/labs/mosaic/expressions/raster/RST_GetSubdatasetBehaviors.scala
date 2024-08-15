@@ -20,15 +20,15 @@ trait RST_GetSubdatasetBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .load("src/test/resources/binary/netcdf-coral")
 
-        val geoReferenceDf = rastersInMemory
+        val geoReferenceDf = rasterDf
             .withColumn("subdataset", rst_getsubdataset($"tile", lit("bleaching_alert_area")))
             .select(rst_georeference($"subdataset"))
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""

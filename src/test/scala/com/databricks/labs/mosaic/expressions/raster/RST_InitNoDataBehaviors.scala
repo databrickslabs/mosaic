@@ -19,16 +19,17 @@ trait RST_InitNoDataBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
+            .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis/")
 
-        val noDataVals = rastersInMemory
+        val noDataVals = rasterDf
             .withColumn("tile", rst_initnodata($"tile"))
             .withColumn("no_data", rst_getnodata($"tile"))
             .select("no_data")
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql(
@@ -36,7 +37,7 @@ trait RST_InitNoDataBehaviors extends QueryTest {
               |select rst_getnodata(rst_initnodata(tile)) from source
               |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("tile", rst_initnodata($"tile"))
             .withColumn("no_data", rst_getnodata($"tile"))
             .select("no_data")

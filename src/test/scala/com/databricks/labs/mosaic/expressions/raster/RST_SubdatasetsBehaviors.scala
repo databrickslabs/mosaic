@@ -18,11 +18,11 @@ trait RST_SubdatasetsBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .load("src/test/resources/binary/netcdf-coral")
 
-        val rasterDfWithSubdatasets = rastersInMemory
+        val rasterDfWithSubdatasets = rasterDf
             .select(
               rst_subdatasets($"tile")
                   .alias("subdatasets")
@@ -30,7 +30,7 @@ trait RST_SubdatasetsBehaviors extends QueryTest {
 
         val result = rasterDfWithSubdatasets.as[Map[String, String]].collect()
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
@@ -42,7 +42,7 @@ trait RST_SubdatasetsBehaviors extends QueryTest {
                                                      |""".stripMargin)
 
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .select(
               rst_subdatasets($"tile")
                   .alias("subdatasets")

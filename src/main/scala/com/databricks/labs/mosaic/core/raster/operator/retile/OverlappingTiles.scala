@@ -10,8 +10,8 @@ import scala.collection.immutable
 /** OverlappingTiles is a helper object for retiling rasters. */
 object OverlappingTiles {
 
-    //serialize data type
-    val tileDataType: DataType = StringType // always use checkpoint
+    //serialize data type (always use checkpoint)
+    val tileDataType: DataType = StringType
 
     /**
       * Retiles a tile into overlapping tiles.
@@ -51,7 +51,7 @@ object OverlappingTiles {
                 val rasterPath = raster.createTmpFileFromDriver(exprConfigOpt)
                 val outOptions = raster.getWriteOptions
 
-                val result = GDALTranslate.executeTranslate(
+                val interim = GDALTranslate.executeTranslate(
                     rasterPath,
                     raster,
                     command = s"gdal_translate -srcwin $xOff $yOff $width $height",
@@ -59,22 +59,18 @@ object OverlappingTiles {
                     exprConfigOpt
                 ).tryInitAndHydrate() // <- required
 
-                if (!result.isEmpty) {
-                    (true, result)
+                if (interim.isEmptyRasterGDAL || interim.isEmpty) {
+                    interim.flushAndDestroy() // destroy inline for performance
+                    (false, interim)
                 } else {
-                    result.flushAndDestroy() // destroy inline for performance
-                    (false, result) // empty result
+                    (true, interim) // <- valid result
                 }
             }
         }
 
         val (result, invalid) = tiles.flatten.partition(_._1) // true goes to result
-        //        invalid.flatMap(t => Option(t._2)).foreach(_.destroy()) // destroy invalids
-        //scalastyle:off println
-        //println(s"OverlappingTiles - tiles # ${tiles.length}, results # ${result.length}, invalids # ${invalid.length}")
-        //scalastyle:on println
-        result.map(t => RasterTile(null, t._2, tileDataType)) // return valid tiles
 
+        result.map(t => RasterTile(null, t._2, tileDataType)) // return valid tiles
     }
 
 }

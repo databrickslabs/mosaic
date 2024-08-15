@@ -134,7 +134,7 @@ class GDALFileFormat extends BinaryFileFormat {
             val path = new Path(new URI(file.filePath.toString()))
             val fs = path.getFileSystem(broadcastedHadoopConf.value.value)
             val status = fs.getFileStatus(path)
-            //println(s"GDALFileFormat - reading path '${path.toString}'")
+
             if (supportedExtensions.contains("*") || supportedExtensions.exists(status.getPath.getName.toLowerCase(Locale.ROOT).endsWith)) {
                 if (filterFuncs.forall(_.apply(status)) && isAllowedExtension(status, options)) {
                     reader.read(status, fs, requiredSchema, options, indexSystem, exprConfig)

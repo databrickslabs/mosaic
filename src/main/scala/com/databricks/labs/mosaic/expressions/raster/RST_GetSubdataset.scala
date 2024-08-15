@@ -33,9 +33,8 @@ case class RST_GetSubdataset(
     override def rasterTransform(tile: RasterTile, arg1: Any): Any = {
         val subsetName = arg1.asInstanceOf[UTF8String].toString
         val subRaster = tile.raster.getSubdataset(subsetName)
-        //println(s"RST_GetSubdataset - subRaster createInfo? ${subRaster.getCreateInfo}")
         val result = tile.copy(raster = subRaster)
-        //println(s"RST_GetSubdataset - result createInfo? ${result.raster.getCreateInfo}")
+
         result
     }
 

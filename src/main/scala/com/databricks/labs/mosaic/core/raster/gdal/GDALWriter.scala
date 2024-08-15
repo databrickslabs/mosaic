@@ -27,10 +27,6 @@ trait GDALWriter {
      *   Whether to destroy the internal object after serializing.
      * @param exprConfigOpt
      *   Option [[ExprConfig]]
-     * @param overrideDirOpt
-     *   Option String, default is None.
-     *   - if provided, where to write the tile.
-     *   - only used with rasterDT of [[StringType]]
      * @return
      *   Returns the paths of the written rasters.
      */
@@ -38,8 +34,7 @@ trait GDALWriter {
                         rasters: Seq[RasterGDAL],
                         rasterDT: DataType,
                         doDestroy: Boolean,
-                        exprConfigOpt: Option[ExprConfig],
-                        overrideDirOpt: Option[String]
+                        exprConfigOpt: Option[ExprConfig]
                     ): Seq[Any]
 
 
@@ -87,24 +82,24 @@ trait GDALWriter {
      *   [[RasterGDAL]]
      * @param doDestroy
      *   Whether to destroy `tile` after write.
-     * @param overrideDirOpt
-     *   Option to override the dir to write to, defaults to checkpoint.
      * @return
      *   Return [[UTF8String]]
      */
     def writeRasterAsStringType(
                                    raster: RasterGDAL,
-                                   doDestroy: Boolean,
-                                   overrideDirOpt: Option[String]
+                                   doDestroy: Boolean
                                ): UTF8String = {
-
-        // (1) all the logic here
+        // (1) StringType means we are writing to fuse
+        // - override fuse dir would have already been set
+        //   on the raster (or not)
         raster.finalizeRaster(toFuse = true)
+
         // (2) either path or null
         val outPath = raster.getPathOpt match {
             case Some(path) => path
             case _ => null
         }
+
         // (3) serialize (can handle null)
         UTF8String.fromString(outPath)
     }

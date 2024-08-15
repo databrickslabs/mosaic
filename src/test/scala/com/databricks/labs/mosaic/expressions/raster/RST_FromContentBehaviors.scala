@@ -19,12 +19,12 @@ trait RST_FromContentBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("binaryFile")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersInMemory
+        val gridTiles = rasterDf
             .withColumn("tile", rst_fromcontent($"content", "GTiff"))
             .withColumn("bbox", rst_boundingbox($"tile"))
             .withColumn("cent", st_centroid($"bbox"))
@@ -38,7 +38,7 @@ trait RST_FromContentBehaviors extends QueryTest {
 
         gridTiles.forall(identity) should be(true)
 
-        rastersInMemory.createOrReplaceTempView("source")
+        rasterDf.createOrReplaceTempView("source")
 
         val gridTilesSQL = spark
             .sql("""

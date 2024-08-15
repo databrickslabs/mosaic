@@ -19,12 +19,12 @@ trait RST_MergeAggBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*_B01.TIF") // B01
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersInMemory
+        val gridTiles = rasterDf
             .withColumn("tiles", rst_tessellate($"tile", 3))
             .select("path", "tiles")
             .groupBy("path")
@@ -33,7 +33,7 @@ trait RST_MergeAggBehaviors extends QueryTest {
             )
             .select("tiles")
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         spark.sql("""
@@ -45,7 +45,7 @@ trait RST_MergeAggBehaviors extends QueryTest {
                     |group by path
                     |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("tiles", rst_tessellate($"tile", 3))
             .select("path", "tiles")
             .groupBy("path")
@@ -56,7 +56,7 @@ trait RST_MergeAggBehaviors extends QueryTest {
 
         val result = gridTiles.collect()
 
-        result.length should be(rastersInMemory.count())
+        result.length should be(rasterDf.count())
 
     }
 

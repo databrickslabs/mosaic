@@ -39,7 +39,8 @@ case class RST_DerivedBandAgg(
 
     override val nullable: Boolean = false
 
-    override lazy val dataType: DataType = {
+    // serialize data type (keep as def)
+    override def dataType: DataType = {
         RasterTileType(exprConfig.getCellIdType, rastersExpr, exprConfig.isRasterUseCheckpoint)
     }
 

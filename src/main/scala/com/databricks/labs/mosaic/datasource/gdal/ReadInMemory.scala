@@ -86,9 +86,8 @@ object ReadInMemory extends ReadStrategy {
                          indexSystem: IndexSystem,
                          exprConfigOpt: Option[ExprConfig]
     ): Iterator[InternalRow] = {
-        //scalastyle:off println
-        val inPath = status.getPath.toString
 
+        val inPath = status.getPath.toString
         val uriDeepCheck = {
             if (options.contains("uriDeepCheck")) options("uriDeepCheck").toBoolean
             else Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
@@ -128,10 +127,8 @@ object ReadInMemory extends ReadStrategy {
         val rows = Seq(row)
 
         raster.flushAndDestroy()
-        //scalastyle:on println
 
         rows.iterator
-
     }
 
 }

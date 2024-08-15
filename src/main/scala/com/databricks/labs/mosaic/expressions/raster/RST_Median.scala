@@ -23,24 +23,25 @@ case class RST_Median(rasterExpr: Expression, exprConfig: ExprConfig)
     override def dataType: DataType = ArrayType(DoubleType)
 
     /** Returns the median value per band of the tile. */
-    override def rasterTransform(tile: RasterTile): Any = Try {
-        val raster = tile.raster
-        val width = raster.xSize * raster.pixelXSize
-        val height = raster.ySize * raster.pixelYSize
-        val driverShortName = raster.getDriverName()
-        val resultFileName = createTmpFileFromDriver(driverShortName, Option(exprConfig))
-        val medRaster = GDALWarp.executeWarp(
-            resultFileName,
-            Seq(raster),
-            command = s"gdalwarp -r med -tr $width $height -of $driverShortName",
-            Option(exprConfig)
-        )
+    override def rasterTransform(tile: RasterTile): Any =
+        Try {
+            val raster = tile.raster
+            val width = raster.xSize * raster.pixelXSize
+            val height = raster.ySize * raster.pixelYSize
+            val driverShortName = raster.getDriverName()
+            val resultFileName = createTmpFileFromDriver(driverShortName, Option(exprConfig))
+            val medRaster = GDALWarp.executeWarp(
+                resultFileName,
+                Seq(raster),
+                command = s"gdalwarp -r med -tr $width $height -of $driverShortName",
+                Option(exprConfig)
+            )
 
-        // Max pixel is a hack since we get a 1x1 tile back
-        val nBands = raster.getDatasetOrNull().GetRasterCount()
-        val maxValues = (1 to nBands).map(medRaster.getBand(_).maxPixelValue)
-        ArrayData.toArrayData(maxValues.toArray)
-    }.getOrElse(ArrayData.toArrayData(Array.empty[Double]))
+            // Max pixel is a hack since we get a 1x1 tile back
+            val nBands = raster.getDatasetOrNull().GetRasterCount()
+            val values = (1 to nBands).map(medRaster.getBand(_).maxPixelValue) // <- max from median 1x1 result
+            ArrayData.toArrayData(values.toArray)
+        }.getOrElse(ArrayData.toArrayData(Array.empty[Double]))
 
 }
 

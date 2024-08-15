@@ -19,7 +19,7 @@ import org.apache.spark.sql.types._
 import scala.util.Try
 
 /** An object defining the retiling read strategy for the GDAL file format. */
-object ReTileOnRead extends ReadStrategy {
+object SubdivideOnRead extends ReadStrategy {
 
     val tileDataType: DataType = StringType
 
@@ -94,33 +94,31 @@ object ReTileOnRead extends ReadStrategy {
                          indexSystem: IndexSystem,
                          exprConfigOpt: Option[ExprConfig]
     ): Iterator[InternalRow] = {
-        //scalastyle:off println
+
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
         val sizeInMB = options.getOrElse("sizeInMB", "16").toInt
         val uriDeepCheck = Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
         val uriGdalOpt = PathUtils.parseGdalUriOpt(inPath, uriDeepCheck)
         val driverName = options.get("driverName") match {
-            case Some(name) if name.nonEmpty =>
-                //println(s"... ReTileOnRead - driverName '$name' from options")
-                name
-            case _ =>
-                val dn = identifyDriverNameFromRawPath(inPath, uriGdalOpt)
-                //println(s"... ReTileOnRead - driverName '$dn' from ext")
-                dn
+            case Some(name) if name.nonEmpty => name
+            case _ => identifyDriverNameFromRawPath(inPath, uriGdalOpt)
         }
         val tmpPath = PathUtils.copyCleanPathToTmpWithRetry(inPath, exprConfigOpt, retries = 5)
+        // 13 AUG 2024 - 0.4.3
+        // - For now, not handling subdatasets with retile (subdivide)
+        // - subdataset is handled after, e.g. with 'raster_to_grid'
+        // - TODO: REVALIDATE SUBDATASET HANDLING (PRE)
         val createInfo = Map(
             RASTER_PATH_KEY -> tmpPath,
             RASTER_PARENT_PATH_KEY -> inPath,
             RASTER_DRIVER_KEY -> driverName,
-            //RASTER_SUBDATASET_NAME_KEY -> options.getOrElse("subdatasetName", "") // <- NO SUBDATASET HERE (PRE)!
+            //RASTER_SUBDATASET_NAME_KEY -> options.getOrElse("subdatasetName", "") // <- SUBDATASET HERE (PRE)!
         )
         val tiles = localSubdivide(createInfo, sizeInMB, exprConfigOpt)
-        //println(s"ReTileOnRead - number of tiles - ${tiles.length}")
         val rows = tiles.map(tile => {
             val raster = tile.raster
-            // TODO: REVALIDATE ADDING SUBDATASET (POST)
+            // TODO: REVALIDATE SUBDATASET HANDLING (POST)
             // Clear out subset name on retile (subdivide)
             // - this is important to allow future loads to not try the path
             // - while subdivide should not be allowed for zips, testing just in case
@@ -148,7 +146,6 @@ object ReTileOnRead extends ReadStrategy {
 
             row
         })
-        //scalastyle:on println
 
         rows.iterator
     }
@@ -170,17 +167,15 @@ object ReTileOnRead extends ReadStrategy {
                           sizeInMB: Int,
                           exprConfigOpt: Option[ExprConfig]
                       ): Seq[RasterTile] = {
-        //scalastyle:off println
+
         var raster = RasterGDAL(createInfo, exprConfigOpt).tryInitAndHydrate()
         var inTile = new RasterTile(null, raster, tileDataType)
-        //println(s"ReTileOnRead - localSubdivide - sizeInMB? $sizeInMB | config? $createInfo")
-        //println(s"ReTileOnRead - localSubdivide - raster isHydrated? ${raster.isDatasetHydrated}, isSubdataset? ${raster.isSubdataset}, srid? ${raster.getSpatialReference.toString}")
         val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB, exprConfigOpt)
 
         inTile.flushAndDestroy()
         inTile = null
         raster = null
-        //scalastyle:on println
+
         tiles
     }
 

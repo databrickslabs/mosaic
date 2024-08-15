@@ -21,11 +21,11 @@ trait RST_BandMetadataBehaviors extends QueryTest {
 
         noException should be thrownBy MosaicContext.geometryAPI
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .load("src/test/resources/binary/netcdf-coral")
 
-        val rasterDfWithBandMetadata = rastersInMemory
+        val rasterDfWithBandMetadata = rasterDf
             .withColumn("subdatasets", rst_subdatasets($"tile"))
             .withColumn("tile", rst_getsubdataset($"tile", lit("bleaching_alert_area")))
             .withColumn("tile", rst_subdivide($"tile", 100))
@@ -34,7 +34,7 @@ trait RST_BandMetadataBehaviors extends QueryTest {
                   .alias("metadata")
             )
 
-        rastersInMemory
+        rasterDf
             .withColumn("subdatasets", rst_subdatasets($"tile"))
             .withColumn("tile", rst_getsubdataset($"tile", lit("bleaching_alert_area")))
             .createOrReplaceTempView("source")
@@ -43,7 +43,7 @@ trait RST_BandMetadataBehaviors extends QueryTest {
                                                    |select rst_bandmetadata(tile, 1) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("subdatasets", rst_subdatasets($"tile"))
             .withColumn("tile", rst_getsubdataset($"tile", lit("bleaching_alert_area")))
             .select(

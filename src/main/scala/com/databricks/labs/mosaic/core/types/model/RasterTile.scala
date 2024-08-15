@@ -11,7 +11,8 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{BinaryType, DataType, LongType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 
-import scala.util.{Failure, Success, Try}
+import scala.util.control.Exception.allCatch
+import scala.util.Try
 
 /**
   * A case class modeling an instance of a mosaic tile tile.
@@ -141,26 +142,19 @@ case class RasterTile(
       *   Whether to destroy the internal object after serializing.
       * @param exprConfigOpt
       *   Option [[ExprConfig]]
-      * @param overrideFuseDirOpt
-      *   Option to override where to write [[StringType]], default is None (checkpoint dir).
       * @return
       *   An instance of [[InternalRow]].
       */
     def serialize(
                      rasterDT: DataType,
                      doDestroy: Boolean,
-                     exprConfigOpt: Option[ExprConfig],
-                     overrideFuseDirOpt: Option[String] = None
+                     exprConfigOpt: Option[ExprConfig]
                  ): InternalRow = {
 
-        // (1) finalize the tile's tile
+        // (1) serialize the tile according to the specified serialization type
         // - write to fuse if [[StringType]]
-        val toFuse = rasterDT == StringType
-        this.finalizeTile(toFuse, overrideFuseDirOpt = overrideFuseDirOpt)
-
-        // (2) serialize the tile according to the specified serialization type
         val encodedRaster = GDAL.writeRasters(
-            Seq(raster), rasterDT, doDestroy, exprConfigOpt, overrideFuseDirOpt).head
+            Seq(raster), rasterDT, doDestroy, exprConfigOpt).head
 
         val path = encodedRaster match {
                 case uStr: UTF8String => uStr.toString
@@ -171,10 +165,6 @@ case class RasterTile(
         // - safety net for parent path
         val parentPath = this.raster.identifyPseudoPathOpt().getOrElse(NO_PATH_STRING)
         val newCreateInfo = raster.getCreateInfo(includeExtras = true) + (RASTER_PATH_KEY -> path, RASTER_PARENT_PATH_KEY -> parentPath)
-
-        // scalastyle:off println
-        //println(s"rasterTile - serialize - toFuse? $toFuse | newCreateInfo? $newCreateInfo")
-        // scalastyle:on println
 
         // (4) actual serialization
         val mapData = buildMapString(newCreateInfo)
@@ -211,16 +201,18 @@ object RasterTile {
      *   An instance of [[RasterTile]].
      */
     def deserialize(row: InternalRow, idDataType: DataType, exprConfigOpt: Option[ExprConfig]): RasterTile = {
-        val index = row.get(0, idDataType)
-        val rawRaster = Try(row.get(1, StringType)) match {
-            case Success(value) => value
-            case Failure(_) => row.get(1, BinaryType)
-        }
-        val rawRasterDataType = rawRaster match {
-            case _: UTF8String => StringType
-            case _ => BinaryType
-        }
 
+        val index = row.get(0, idDataType)
+        var rawRaster: Any = null
+        val rawRasterDataType =
+            allCatch.opt(row.get(1, StringType)) match {
+                case Some(value) =>
+                    rawRaster = value
+                    StringType
+                case _ =>
+                    rawRaster = row.get(1, BinaryType)
+                    BinaryType
+            }
         val createInfo = extractMap(row.getMap(2))
         val raster = GDAL.readRasterExpr(rawRaster, createInfo, rawRasterDataType, exprConfigOpt)
 
@@ -243,5 +235,7 @@ object RasterTile {
             case _ => dataType
         }
     }
+
+
 
 }

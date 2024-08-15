@@ -39,7 +39,7 @@ package object mosaic {
     val MOSAIC_RASTER_READ_STRATEGY = "raster.read.strategy"
     val MOSAIC_RASTER_READ_IN_MEMORY = "in_memory"
     val MOSAIC_RASTER_READ_AS_PATH = "as_path"
-    val MOSAIC_RASTER_RE_TILE_ON_READ = "retile_on_read"
+    val MOSAIC_RASTER_SUBDIVIDE_ON_READ = "subdivide_on_read" // <- more clear than "retile_on_read"
 
     val NO_PATH_STRING = "no_path"
     val NO_EXT = "ukn"

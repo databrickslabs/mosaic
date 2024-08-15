@@ -411,12 +411,6 @@ object OGRFileFormat extends Serializable {
         val uriDeepCheck = options.getOrElse("uriDeepCheck", "false").toBoolean
 
         val dataset = getDataSource(driverName, path, uriDeepCheck)
-
-        //scalastyle:off println
-        //println(s"layer count? ${dataset.GetLayerCount()}")
-        //println(s"layer 0? ${dataset.GetLayer(0).GetName()}")
-        //scalastyle:on println
-
         val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
         val layer = dataset.GetLayer(resolvedLayerName)
         layer.ResetReading()

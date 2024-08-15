@@ -20,23 +20,23 @@ trait RST_ReTileBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val df = rastersInMemory
+        val df = rasterDf
             .withColumn("result", rst_retile($"tile", lit(400), lit(400)))
             .select("result")
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
                                                    |select rst_retile(tile, 400, 400) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("result", rst_retile($"tile", 400, 400))
             .withColumn("result", rst_retile($"tile", 400, 400))
             .select("result")

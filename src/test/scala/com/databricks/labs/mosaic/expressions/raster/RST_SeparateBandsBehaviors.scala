@@ -21,11 +21,11 @@ trait RST_SeparateBandsBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .load("src/test/resources/binary/netcdf-CMIP5/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc")
 
-        val df = rastersInMemory
+        val df = rasterDf
             .withColumn("result", rst_separatebands($"tile"))
             .select("result")
 
@@ -33,19 +33,19 @@ trait RST_SeparateBandsBehaviors extends QueryTest {
         val createInfo = r.asInstanceOf[GenericRowWithSchema].getAs[Map[String, String]](2)
         val path = createInfo(RASTER_PATH_KEY)
         val dsOpt = RasterIO.rawPathAsDatasetOpt(path, subNameOpt = None, driverNameOpt = None, Some(ExprConfig(sc)))
-        info(s"separate bands result -> $createInfo")
+        //info(s"separate bands result -> $createInfo")
         //info(s"ds metadata -> ${dsOpt.get.GetMetadata_Dict()}")
         val metaKey = s"NC_GLOBAL#$BAND_META_GET_KEY"
         info(s"band idx (from metadata)? ${dsOpt.get.GetMetadataItem(metaKey)}")
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
                                                    |select rst_separatebands(tile) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("result", rst_separatebands($"tile"))
             .withColumn("result", rst_separatebands($"tile"))
             .select("result")

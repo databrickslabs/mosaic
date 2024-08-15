@@ -41,11 +41,6 @@ case class RST_FromBands(
       *   The stacked and resampled tile.
       */
     override def rasterTransform(rasters: Seq[RasterTile]): Any = {
-        //scalastyle:off println
-        //println(s"RST_FromBands - rasters length? ${rasters.length}")
-        //println(s"RST_FromBands - head createInfo: ${rasters.head.raster.getCreateInfo}")
-        //println(s"RST_FromBands - is head empty? ${rasters.head.raster.isEmptyRasterGDAL}")
-        //scalastyle:on println
         rasters.head.copy(
             raster = MergeBands.merge(
                 rasters.map(_.raster), "bilinear", Option(exprConfig)

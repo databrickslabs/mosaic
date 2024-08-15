@@ -7,7 +7,7 @@ import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.{createTmpFileFromDriver, identifyDriverNameFromRawPath}
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.RasterTile
-import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
+import com.databricks.labs.mosaic.datasource.gdal.SubdivideOnRead
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
@@ -174,7 +174,7 @@ case class RST_MakeTiles(
                     tmpPath
                 }
             val size = if (targetSize <= 0) 64 else targetSize
-            var results = ReTileOnRead
+            var results = SubdivideOnRead
                 .localSubdivide(
                     createInfo + (RASTER_PATH_KEY -> readPath, RASTER_PARENT_PATH_KEY -> path),
                     size,

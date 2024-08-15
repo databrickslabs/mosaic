@@ -42,13 +42,6 @@ object GDALCalc {
             val toRun = effectiveCommand.replace("gdal_calc", gdal_calc)
             val commandRes = SysUtils.runCommand(s"python3 $toRun")
             val errorMsg = gdal.GetLastErrorMsg
-
-            //        if (errorMsg.nonEmpty) {
-            //            // scalastyle:off println
-            //            println(s"... GDALCalc (last_error) - '$errorMsg' for '$resultPath'")
-            //            // scalastyle:on println
-            //        }
-
             val createInfo = Map(
                 RASTER_PATH_KEY -> resultPath,
                 RASTER_PARENT_PATH_KEY -> resultPath,

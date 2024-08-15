@@ -19,22 +19,22 @@ trait RST_WorldToRasterCoordBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .load("src/test/resources/binary/netcdf-coral")
 
-        val df = rastersInMemory
+        val df = rasterDf
             .withColumn("result", rst_worldtorastercoord($"tile", 0, 0))
             .select($"result".getItem("x").as("x"), $"result".getItem("y").as("y"))
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
                                                    |select rst_worldtorastercoord(tile, 1, 1) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("result", rst_worldtorastercoord($"tile", 0, 0))
             .withColumn("result", rst_worldtorastercoord($"tile", lit(0), lit(0)))
             .select("result")

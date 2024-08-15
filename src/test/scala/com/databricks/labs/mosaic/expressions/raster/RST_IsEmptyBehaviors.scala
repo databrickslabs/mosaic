@@ -19,27 +19,27 @@ trait RST_IsEmptyBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .load("src/test/resources/binary/netcdf-coral")
 
-        val df = rastersInMemory
+        val df = rasterDf
             .withColumn("result", rst_isempty($"tile"))
             .select("result")
 
-        val df2 = rastersInMemory
+        val df2 = rasterDf
             .withColumn("tile", rst_getsubdataset($"tile", "bleaching_alert_area"))
             .withColumn("result", rst_isempty($"tile"))
             .select("result")
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
                                                    |select rst_isempty(tile) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("result", rst_isempty($"tile"))
             .select("result")
 

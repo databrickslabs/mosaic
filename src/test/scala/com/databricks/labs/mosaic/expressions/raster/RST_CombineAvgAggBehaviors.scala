@@ -19,12 +19,12 @@ trait RST_CombineAvgAggBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersInMemory.union(rastersInMemory)
+        val gridTiles = rasterDf.union(rasterDf)
             .withColumn("tiles", rst_tessellate($"tile", 2))
             .select("path", "tiles")
             .groupBy("path")
@@ -33,7 +33,7 @@ trait RST_CombineAvgAggBehaviors extends QueryTest {
             )
             .select("tiles")
 
-        rastersInMemory.union(rastersInMemory)
+        rasterDf.union(rasterDf)
             .createOrReplaceTempView("source")
 
         spark.sql("""
@@ -45,7 +45,7 @@ trait RST_CombineAvgAggBehaviors extends QueryTest {
                     |group by path
                     |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("tiles", rst_tessellate($"tile", 2))
             .select("path", "tiles")
             .groupBy("path")
@@ -56,7 +56,7 @@ trait RST_CombineAvgAggBehaviors extends QueryTest {
 
         val result = gridTiles.collect()
 
-        result.length should be(rastersInMemory.count())
+        result.length should be(rasterDf.count())
 
     }
 

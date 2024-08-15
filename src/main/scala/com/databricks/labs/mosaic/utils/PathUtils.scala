@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.{NO_DRIVER, NO_PATH_STRING}
 import com.databricks.labs.mosaic.core.raster.api.FormatLookup
 import com.databricks.labs.mosaic.core.raster.io.RasterIO
 import com.databricks.labs.mosaic.functions.{ExprConfig, MosaicContext}
+import org.apache.spark.sql.DataFrame
 
 import java.nio.file.{Files, Path, Paths}
 import java.util.{Locale, UUID}
@@ -56,7 +57,6 @@ object PathUtils {
         else Option(asFileSystemPath(rawPath, uriGdalOpt))
     }
 
-    //scalastyle:off println
     /**
      * Get subdataset GDAL path.
      * - these raw paths end with ":subdataset".
@@ -91,11 +91,9 @@ object PathUtils {
             val result = {
                 if (!isSubdataset(rawPathMod, uriGdalOpt)) {
                     // (3) not a sub path
-                    //println(s"PathUtils - asSubdatasetGdalPathOpt - rawPathMod '$rawPathMod' not a subdataset")
                     None
                 } else {
                     // (4) is a sub path
-                    //println(s"PathUtils - asSubdatasetGdalPathOpt - rawPathMod '$rawPathMod' is a subdataset")
                     val subTokens = getSubdatasetTokenList(rawPathMod)
                     if (uriGdalOpt.isDefined && subTokens.length == 3) {
                         // (4a) 3 tokens
@@ -117,7 +115,6 @@ object PathUtils {
                                 s"$uriSchema:$filePath:$subdataset"
                             }
                         }
-                        //println(s"PathUtils - asSubdatasetGdalPathOpt - subPath (parsed from 3 tokens)? '$subPath'")
                         Some(subPath)
                     } else {
                         // (4b) assumed 2 tokens (since is a subdataset)
@@ -138,14 +135,12 @@ object PathUtils {
                                 s"$uriSchema$filePath:$subdataset"
                             }
                         }
-                        //println(s"PathUtils - asSubdatasetGdalPathOpt - subPath (parsed from 2 tokens)? '$subPath'")
                         Some(subPath)
                     }
                 }
             }
             result
         }.getOrElse(None)
-    //scalastyle:on println
 
     /**
      * Get GDAL path.
@@ -196,7 +191,6 @@ object PathUtils {
         Try(Files.deleteIfExists(Paths.get(pamFilePath)))
     }
 
-    // scalastyle:off println
     /**
      * Explicit deletion of PAM (aux.xml) files, if found.
      * - Can pass a directory or a file path
@@ -208,19 +202,16 @@ object PathUtils {
      */
     def cleanUpPAMFiles(rawPathOrDir: String, uriGdalOpt: Option[String]): Unit = {
         if (isSubdataset(rawPathOrDir, uriGdalOpt)) {
-            // println(s"... subdataset path detected '$path'")
             Try(Files.deleteIfExists(
                 Paths.get(s"${asFileSystemPath(rawPathOrDir, uriGdalOpt)}.aux.xml"))
             )
         } else {
             val cleanPathObj = Paths.get(getCleanPath(rawPathOrDir, addVsiZipToken = false, uriGdalOpt))
             if (Files.isDirectory(cleanPathObj)) {
-                // println(s"... directory path detected '$cleanPathObj'")
                 cleanPathObj.toFile.listFiles()
                     .filter(f => f.isDirectory || f.toString.endsWith(".aux.xml"))
                     .foreach(f => cleanUpPAMFiles(f.toString, uriGdalOpt))
             } else {
-                // println(s"... path detected '$cleanPathObj'")
                 if (cleanPathObj.toString.endsWith(".aux.xml")) {
                     Try(Files.deleteIfExists(cleanPathObj))
                 } else {
@@ -229,7 +220,6 @@ object PathUtils {
             }
         }
     }
-    // scalastyle:on println
 
     /**
       * Copy provided path to tmp.
@@ -248,10 +238,6 @@ object PathUtils {
         val inPathDir = Paths.get(copyFromPath).getParent.toString
         val fullFileName = copyFromPath.split("/").last
         val stemRegexOpt = Option(getStemRegex(inRawPath))
-//        scalastyle:off println
-//        println(s"... `copyToTmp` copyFromPath? '$copyFromPath', inPathDir? '$inPathDir', " +
-//            s"fullFileName? '$fullFileName', stemRegex? '$stemRegex'")
-//        scalastyle:on println
         val toDir = dirOpt match {
             case Some(dir) => dir
             case _ => MosaicContext.createTmpContextDir(exprConfigOpt)
@@ -416,7 +402,6 @@ object PathUtils {
         val result = {
             if (isSubdataset(rawPath, uriGdalOpt)) {
                 // (1) GDAL path for subdataset - without name
-                //println(s"PathUtils - getCleanPath -> getWithoutSubdatasetName for rawPath '$rawPath'")
                 getWithoutSubdatasetName(rawPath, addVsiZipToken, uriGdalOpt)
             } else if (rawPath.endsWith(".zip")) {
                 // (2a) normal zip (not a subdataset)
@@ -567,7 +552,6 @@ object PathUtils {
         ).isDefined
     }
 
-    //scalastyle:off println
     /**
      * For GDAL URIs, e.g. 'ZARR', 'NETCDF', 'COG', 'GTIFF', and 'GRIB':
      * - Not for file system URIs, i.e. 'file:' or 'dbfs:'.
@@ -641,7 +625,6 @@ object PathUtils {
         }
     }
 
-    //scalastyle:off println
     /**
       * Perform a wildcard copy.
       * - This is pure file system based operation,
@@ -683,7 +666,6 @@ object PathUtils {
             }
         }
     }
-    //scalastyle:on println
 
     /** private for handling needed by other functions in PathUtils only. */
     private def getWithoutSubdatasetName(

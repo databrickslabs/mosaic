@@ -43,8 +43,8 @@ case class RST_CombineAvgAgg(
 
     protected val cellIdDataType: DataType = indexSystem.getCellIdDataType
 
-    // serialize data type
-    override lazy val dataType: DataType = {
+    // serialize data type (keep as def)
+    override def dataType: DataType = {
         RasterTileType(rasterExpr, exprConfig.isRasterUseCheckpoint)
     }
 

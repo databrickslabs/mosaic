@@ -20,25 +20,25 @@ trait RST_TransformBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersInMemory
+        val gridTiles = rasterDf
             .withColumn("tile", rst_transform($"tile", lit(27700)))
             .withColumn("bbox", st_aswkt(rst_boundingbox($"tile")))
             .select("bbox", "path", "tile")
             .withColumn("avg", rst_avg($"tile"))
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
                                                    |select rst_transform(tile, 27700) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("tile", rst_transform($"tile", lit(27700)))
             .select("tile")
 

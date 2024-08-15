@@ -30,31 +30,41 @@ object SeparateBands {
                     exprConfigOpt: Option[ExprConfig]
     ): Seq[RasterTile] = {
         val raster = tile.raster
-        val tiles = for (i <- 0 until raster.numBands) yield {
-            val driverShortName = raster.getDriverName()
-            val rasterPath = createTmpFileFromDriver(driverShortName, exprConfigOpt)
-            val outOptions = raster.getWriteOptions
 
-            val result = GDALTranslate.executeTranslate(
-                rasterPath,
-                raster,
-                command = s"gdal_translate -of $driverShortName -b ${i + 1}",
-                writeOptions = outOptions,
-                exprConfigOpt
-            ).tryInitAndHydrate() // <- required
+        val numBands = raster.numBands
 
-            if (!result.isEmpty) {
-                // update the band index
-                // both the variable and the metadata
-                val bandVal = (i + 1)
-                result.updateBandIdx(bandVal)
-                (true, result)
+        val tiles =
+            if (numBands > 0) {
+                // separate bands
+                for (i <- 0 until raster.numBands) yield {
+                    val driverShortName = raster.getDriverName()
+                    val rasterPath = createTmpFileFromDriver(driverShortName, exprConfigOpt)
+                    val outOptions = raster.getWriteOptions
 
+                    val result = GDALTranslate.executeTranslate(
+                        rasterPath,
+                        raster,
+                        command = s"gdal_translate -of $driverShortName -b ${i + 1}",
+                        writeOptions = outOptions,
+                        exprConfigOpt
+                    ).tryInitAndHydrate() // <- required
+
+                    if (!result.isEmpty) {
+                        // update the band index
+                        // both the variable and the metadata
+                        val bandVal = (i + 1)
+                        result.updateBandIdx(bandVal)
+                        (true, result)
+
+                    } else {
+                        result.flushAndDestroy() // destroy inline for performance
+                        (false, result) // empty result
+                    }
+                }
             } else {
-                result.flushAndDestroy() // destroy inline for performance
-                (false, result) // empty result
+                // no bands - just return the raster
+                Seq((raster.isEmpty, raster))
             }
-        }
 
         val (result, _) = tiles.partition(_._1)
         result.map(t => new RasterTile(null, t._2, tileDataType))

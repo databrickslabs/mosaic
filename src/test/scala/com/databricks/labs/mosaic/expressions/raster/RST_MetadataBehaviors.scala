@@ -18,12 +18,12 @@ trait RST_MetadataBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val rasterDfWithMetadata = rastersInMemory
+        val rasterDfWithMetadata = rasterDf
             .select(
               rst_metadata($"tile").alias("metadata")
             )
@@ -31,7 +31,7 @@ trait RST_MetadataBehaviors extends QueryTest {
 
         val result = rasterDfWithMetadata.as[Map[String, String]].collect()
 
-       rastersInMemory
+       rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""

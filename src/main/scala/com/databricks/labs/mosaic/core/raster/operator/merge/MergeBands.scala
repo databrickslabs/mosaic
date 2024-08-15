@@ -27,11 +27,6 @@ object MergeBands {
         val outOptions = rasters.head.getWriteOptions
         val vrtPath = PathUtils.createTmpFilePath("vrt", exprConfigOpt)
         val rasterPath = PathUtils.createTmpFilePath(outOptions.extension, exprConfigOpt)
-
-        //scalastyle:off println
-        //println(s"MergeBands - merge - rasterPath? $rasterPath")
-        //scalastyle:on println
-
         val vrtRaster = GDALBuildVRT.executeVRT(
             vrtPath,
             rasters,

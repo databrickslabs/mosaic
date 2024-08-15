@@ -33,19 +33,15 @@ trait RST_ClipBehaviors extends QueryTest {
         val sc = this.spark
         import sc.implicits._
 
-        //        sc.conf.set(MOSAIC_MANUAL_CLEANUP_MODE, "true")
-        //        sc.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, "true")
-
         // init
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(sc)
         import mc.functions._
 
-        info(s"is CleanUpManager running? ${CleanUpManager.isCleanThreadAlive}")
-
-        info(s"test on? ${sc.conf.get(MOSAIC_TEST_MODE, "false")}")
-        info(s"manual cleanup on? ${sc.conf.get(MOSAIC_MANUAL_CLEANUP_MODE, "false")}")
-        info(s"cleanup minutes (config)? ${sc.conf.get(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT)}")
+        //info(s"is CleanUpManager running? ${CleanUpManager.isCleanThreadAlive}")
+        //info(s"test on? ${sc.conf.get(MOSAIC_TEST_MODE, "false")}")
+        //info(s"manual cleanup on? ${sc.conf.get(MOSAIC_MANUAL_CLEANUP_MODE, "false")}")
+        //info(s"cleanup minutes (config)? ${sc.conf.get(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT)}")
 
 //        val checkDir = MosaicGDAL.getCheckpointPath
 //        info(s"configured checkpoint dir? $checkDir")
@@ -86,12 +82,12 @@ trait RST_ClipBehaviors extends QueryTest {
         val ph = base.get(4).asInstanceOf[Double]
         val pw = base.get(5).asInstanceOf[Double]
 //        val content = base.get(6)
-        info(s"tile -> $tile (${tile.getClass.getName})")
-        info(s"size -> $sz")
-        info(s"pixels -> $p")
-        info(s"srid -> $srid (${srid.getClass.getName})")
-        info(s"pixel_height -> $ph")
-        info(s"pixel_width -> $pw")
+        //info(s"tile -> $tile (${tile.getClass.getName})")
+        //info(s"size -> $sz")
+        //info(s"pixels -> $p")
+        //info(s"srid -> $srid (${srid.getClass.getName})")
+        //info(s"pixel_height -> $ph")
+        //info(s"pixel_width -> $pw")
 
         info("\n::: clipper :::")
         val ftMeters = 0.3 // ~0.3 ft in meter
@@ -107,8 +103,8 @@ trait RST_ClipBehaviors extends QueryTest {
             .first
         val regionWKB = clipper.get(0)
         val clipSRID = clipper.get(1)
-        info(s"buffVal -> $buffVal")
-        info(s"clip-srid -> $clipSRID")
+        //info(s"buffVal -> $buffVal")
+        //info(s"clip-srid -> $clipSRID")
         clipSRID == 0 should be(true)
 
         val gRegion = geometryAPI.geometry(regionWKB, BinaryType)
@@ -116,7 +112,6 @@ trait RST_ClipBehaviors extends QueryTest {
         val wkbRegion4326 = gRegion.transformCRSXY(4326).toWKB
 
         info("\n::: clip tests :::")
-
         // WKB that will produce same pixel outputs
         val h3WKB = {
             List(wkbRegion4326).toDF("wkb")
@@ -131,7 +126,7 @@ trait RST_ClipBehaviors extends QueryTest {
         val gH3 = geometryAPI.geometry(h3WKB, BinaryType)
         gH3.setSpatialReference(4326)
         val gH3Trans = gH3.transformCRSXY(srid)
-        info(s"gH3Trans area -> ${gH3Trans.getArea}")
+        //info(s"gH3Trans area -> ${gH3Trans.getArea}")
         val clipWKB = gH3Trans.toWKB
 
         val r1 = df
@@ -151,7 +146,7 @@ trait RST_ClipBehaviors extends QueryTest {
         //        Paths.get(path1).toFile.exists should be(true)
 
         val p1 = r1.getAs[mutable.WrappedArray[Long]](1)(0)
-        info(s"clip-touches-pixels -> $p1")
+        //info(s"clip-touches-pixels -> $p1")
 
         val r2 = df
             .withColumn("clip", rst_clip($"tile", lit(clipWKB), lit(false))) // <- half-in
@@ -170,7 +165,7 @@ trait RST_ClipBehaviors extends QueryTest {
 //                Paths.get(path2).toFile.exists should be(true)
 
         val p2 = r2.getAs[mutable.WrappedArray[Long]](1)(0)
-        info(s"clip-half-pixels -> $p2")
+        //info(s"clip-half-pixels -> $p2")
 
         p == p1 should be(false)
         p == p2 should be(false)

@@ -94,21 +94,19 @@ object ReadAsPath extends ReadStrategy {
                          indexSystem: IndexSystem,
                          exprConfigOpt: Option[ExprConfig]
     ): Iterator[InternalRow] = {
-        //scalastyle:off println
+
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
         val tmpPath = PathUtils.copyToTmp(inPath, exprConfigOpt)
         val uriDeepCheck = Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
         val uriGdalOpt = PathUtils.parseGdalUriOpt(inPath, uriDeepCheck)
         val driverName = options.get("driverName") match {
-            case Some(name) if name.nonEmpty =>
-                //println(s"... ReadAsPath - driverName '$name' from options")
-                name
-            case _ =>
-                val dn = identifyDriverNameFromRawPath(inPath, uriGdalOpt)
-                //println(s"... ReadAsPath - driverName '$dn' from ext")
-                dn
+            case Some(name) if name.nonEmpty => name
+            case _ => identifyDriverNameFromRawPath(inPath, uriGdalOpt)
         }
+
+        // Allow subdataset for read as path
+        // - this is important also for Zarr with groups
         val createInfo = Map(
             RASTER_PATH_KEY -> tmpPath,
             RASTER_PARENT_PATH_KEY -> inPath,
@@ -116,7 +114,6 @@ object ReadAsPath extends ReadStrategy {
             RASTER_SUBDATASET_NAME_KEY -> options.getOrElse(RASTER_SUBDATASET_NAME_KEY, "")
         )
         val raster = RasterGDAL(createInfo, exprConfigOpt).tryInitAndHydrate()
-        //println(s"ReadAsPath - raster isHydrated? ${raster.isDatasetHydrated}, isSubdataset? ${raster.isSubdataset}, srid? ${raster.getSpatialReference.toString}")
         val tile = RasterTile(null, raster, tileDataType)
         val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
         val fields = trimmedSchema.fieldNames.map {
@@ -137,7 +134,6 @@ object ReadAsPath extends ReadStrategy {
         val row = Utils.createRow(fields ++ Seq(
             tile.formatCellId(indexSystem).serialize(tileDataType, doDestroy = true, exprConfigOpt)))
         val rows = Seq(row)
-        //scalastyle:on println
 
         rows.iterator
     }

@@ -21,12 +21,12 @@ trait RST_SetSRIDBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val df = rastersInMemory
+        val df = rasterDf
             .withColumn("result", rst_setsrid($"tile", lit(4326)))
             .select("result")
 
@@ -42,14 +42,14 @@ trait RST_SetSRIDBehaviors extends QueryTest {
         sridRaster.SRID should be(4326)
         sridRaster.flushAndDestroy() // clean-up
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
                                                    |select rst_setsrid(tile, 4326) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("result", rst_setsrid($"tile", lit(4326)))
             .select("result")
 

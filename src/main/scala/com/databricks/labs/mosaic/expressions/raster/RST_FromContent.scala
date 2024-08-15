@@ -8,7 +8,7 @@ import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.{createTmpFileFromDriver, readRasterHydratedFromContent}
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.RasterTile
-import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
+import com.databricks.labs.mosaic.datasource.gdal.SubdivideOnRead
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.InternalRow
@@ -99,7 +99,7 @@ case class RST_FromContent(
             Files.write(Paths.get(tmpPath), rasterArr)
 
             // split to tiles up to specified threshold
-            var results = ReTileOnRead
+            var results = SubdivideOnRead
                 .localSubdivide(
                     Map(
                         RASTER_PATH_KEY -> tmpPath,

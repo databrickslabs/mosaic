@@ -10,6 +10,8 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
+import scala.util.Try
+
 
 /** Returns the min value per band of the tile. */
 case class RST_Min(raster: Expression, exprConfig: ExprConfig)
@@ -20,16 +22,13 @@ case class RST_Min(raster: Expression, exprConfig: ExprConfig)
     override def dataType: DataType = ArrayType(DoubleType)
 
     /** Returns the min value per band of the tile. */
-    override def rasterTransform(tile: RasterTile): Any = {
-        val raster = tile.raster
-        raster.getDatasetOpt() match {
-            case Some(dataset) =>
-                val nBands = dataset.GetRasterCount()
-                val minValues = (1 to nBands).map(raster.getBand (_).minPixelValue)
-                ArrayData.toArrayData(minValues.toArray)
-            case _ => ArrayData.toArrayData(Array.empty[Double])
-        }
-    }
+    override def rasterTransform(tile: RasterTile): Any =
+        Try {
+            val raster = tile.raster
+            val nBands = raster.getDatasetOrNull().GetRasterCount()
+            val values = (1 to nBands).map(raster.getBand(_).minPixelValue) // <- min
+            ArrayData.toArrayData(values.toArray)
+        }.getOrElse(ArrayData.toArrayData(Array.empty[Double]))
 
 }
 

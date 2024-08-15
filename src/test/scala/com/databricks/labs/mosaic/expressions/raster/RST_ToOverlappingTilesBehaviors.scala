@@ -20,20 +20,18 @@ trait RST_ToOverlappingTilesBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
+        //info(s"load -> ${rasterDf.first().toSeq.toString()}")
 
-        //info(s"load -> ${rastersInMemory.first().toSeq.toString()}")
-
-        val gridTiles = rastersInMemory
+        val gridTiles = rasterDf
             .withColumn("tile", rst_tooverlappingtiles($"tile", lit(500), lit(500), lit(10)))
             .select("tile")
+        //info(s"gridTiles -> ${gridTiles.first().toSeq.toString()}")
 
-        info(s"load -> ${gridTiles.first().toSeq.toString()}")
-
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql(
@@ -45,7 +43,7 @@ trait RST_ToOverlappingTilesBehaviors extends QueryTest {
 
         val result = gridTiles.collect()
 
-        result.length > rastersInMemory.count() should be(true)
+        result.length > rasterDf.count() should be(true)
 
     }
 

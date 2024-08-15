@@ -45,20 +45,13 @@ object RasterWriteOptions {
 
     def apply(raster: RasterGDAL): RasterWriteOptions = {
         val compression = raster.getCompression
-        //scalastyle:off println
         val driverShortName = raster.getDriverNameOpt match {
-            case Some(d) =>
-                //println(s"... driver (createInfo)? '$d'")
-                d
-            case _ =>
-                val d = raster.getDriverName(
+            case Some(d) => d
+            case _ => raster.getDriverName(
                     tryDatasetAndPathsAlso = true,
                     uriPartOpt = raster.getPathGDAL.getRawUriGdalOpt
-                )
-                //println(s"... driver (deeper check)? '$d'")
-                d
+            )
         }
-        //scalastyle:on println
         val extension = identifyExtFromDriver(driverShortName)
         val resampling = "nearest"
         val pixelSize = None

@@ -56,7 +56,6 @@ object GDAL extends RasterTransform
         enable(exprConfig)
     }
 
-    //scalastyle:off println
     /** @inheritdoc */
     override def readRasterExpr(
                       inputRaster: Any,
@@ -71,14 +70,12 @@ object GDAL extends RasterTransform
                 case _: StringType =>
                     // ::: STRING TYPE :::
                     try {
-                        //println("GDAL - readRasterExpr - attempting deserialize from path...")
                         RasterIO.readRasterHydratedFromPath(
                             createInfo,
                             exprConfigOpt
                         ) // <- (2a) from path
                     } catch {
                         case _: Throwable =>
-                            //println(s"GDAL - readRasterExpr - exception with path, try as bytes...")
                             RasterIO.readRasterHydratedFromContent(
                                 inputRaster.asInstanceOf[Array[Byte]],
                                 createInfo,
@@ -88,7 +85,6 @@ object GDAL extends RasterTransform
                 case _: BinaryType =>
                     // ::: BINARY TYPE :::
                     try {
-                        //println("GDAL - readRasterExpr - attempting deserialize from bytes...")
                         RasterIO.readRasterHydratedFromContent(
                             inputRaster.asInstanceOf[Array[Byte]],
                             createInfo,
@@ -96,7 +92,6 @@ object GDAL extends RasterTransform
                         ) // <- (3a) from bytes
                     } catch {
                         case _: Throwable =>
-                            //println(s"GDAL - readRasterExpr - exception with bytes, try as path...")
                             RasterIO.readRasterHydratedFromPath(
                                 createInfo,
                                 exprConfigOpt
@@ -106,21 +101,21 @@ object GDAL extends RasterTransform
             }
         }
     }
-    //scalastyle:on println
 
     /** @inheritdoc */
     override def writeRasters(
                         rasters: Seq[RasterGDAL],
                         rasterDT: DataType,
                         doDestroy: Boolean,
-                        exprConfigOpt: Option[ExprConfig],
-                        overrideDirOpt: Option[String]
+                        exprConfigOpt: Option[ExprConfig]
     ): Seq[Any] = {
         rasters.map(raster =>
             if (raster != null && !raster.isEmptyRasterGDAL) {
                 rasterDT match {
-                    case StringType => writeRasterAsStringType(raster, doDestroy, overrideDirOpt)
-                    case BinaryType => writeRasterAsBinaryType(raster, doDestroy, exprConfigOpt)
+                    case StringType =>
+                        writeRasterAsStringType(raster, doDestroy)
+                    case BinaryType =>
+                        writeRasterAsBinaryType(raster, doDestroy, exprConfigOpt)
                 }
             } else {
                 null

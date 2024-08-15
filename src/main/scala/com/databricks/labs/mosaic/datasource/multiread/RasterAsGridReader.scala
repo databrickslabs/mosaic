@@ -3,11 +3,11 @@ package com.databricks.labs.mosaic.datasource.multiread
 import com.databricks.labs.mosaic.{
     MOSAIC_RASTER_READ_AS_PATH,
     MOSAIC_RASTER_READ_STRATEGY,
-    MOSAIC_RASTER_RE_TILE_ON_READ,
+    MOSAIC_RASTER_SUBDIVIDE_ON_READ,
     NO_EXT
 }
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
@@ -109,15 +109,15 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         // <<< GDAL READER OPTIONS >>>
         val readStrat = {
             // have to go out of way to specify "-1"
-            // don't use subdivide strategy with zips (AKA MOSAIC_RASTER_RE_TILE_ON_READ)
+            // don't use subdivide strategy with zips (AKA MOSAIC_RASTER_SUBDIVIDE_ON_READ)
             if (config("sizeInMB").toInt < 0 || config("vsizip").toBoolean) MOSAIC_RASTER_READ_AS_PATH
-            else MOSAIC_RASTER_RE_TILE_ON_READ
+            else MOSAIC_RASTER_SUBDIVIDE_ON_READ
         }
 
         if (verboseLevel > 0) println(
             s"raster_to_grid -> nestedHandling? $nestedHandling | nPartitions? $nPartitions | read strat? $readStrat"
         )
-        if (verboseLevel > 1) println(s"\nraster_to_grid - config (after any mods)? $config\n")
+        if (verboseLevel > 1) println(s"\nraster_to_grid - config (after any reader mods)? $config\n")
 
         val baseOptions = Map(
             "extensions" -> config("extensions"),
@@ -126,12 +126,12 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             MOSAIC_RASTER_READ_STRATEGY -> readStrat
         )
         val readOptions =
-            if (driverName.nonEmpty && readStrat == MOSAIC_RASTER_RE_TILE_ON_READ) {
+            if (driverName.nonEmpty && readStrat == MOSAIC_RASTER_SUBDIVIDE_ON_READ) {
                 baseOptions +
                     ("driverName" -> driverName, "sizeInMB" -> config("sizeInMB"))
             }
             else if (driverName.nonEmpty) baseOptions + ("driverName" -> driverName)
-            else if (readStrat == MOSAIC_RASTER_RE_TILE_ON_READ) baseOptions + ("sizeInMB" -> config("sizeInMB"))
+            else if (readStrat == MOSAIC_RASTER_SUBDIVIDE_ON_READ) baseOptions + ("sizeInMB" -> config("sizeInMB"))
             else baseOptions
         if (verboseLevel > 1) println(s"\nraster_to_grid - readOptions? $readOptions\n")
 
@@ -213,6 +213,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                         .withColumnRenamed(s"tile_$res", "tile")
                         .cache()                                // <- cache tmp
                     tessellatedDfCnt = tmpTessellatedDf.count() // <- count tmp (before unpersist)
+                    FileUtils.deleteDfTilePathDirs(tessellatedDf, verboseLevel = verboseLevel, msg = s"tessellatedDf (res=$res)")
                     Try(tessellatedDf.unpersist())              // <- uncache existing tessellatedDf
                     tessellatedDf = tmpTessellatedDf            // <- assign tessellatedDf
                     if (verboseLevel > 0) println(s"... tessellated at resolution $res - count? $tessellatedDfCnt " +
@@ -240,11 +241,12 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                     )
                     .cache()
                 val combinedDfCnt = combinedDf.count()
+                FileUtils.deleteDfTilePathDirs(tessellatedDf, verboseLevel = verboseLevel, msg = "tessellatedDf")
                 Try(tessellatedDf.unpersist())
                 println(s"::: combined (${config("combiner")}) - count? $combinedDfCnt :::")
                 if (verboseLevel > 1) combinedDf.limit(1).show()
 
-                // (8) band exploded
+                // (8) band exploded (after combined)
                 validDf = combinedDf
                     .filter(size(col("grid_measures")) > lit(0))
                     .select(
@@ -293,7 +295,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             Try(resolvedDf.unpersist())
             Try(sridDf.unpersist())
             Try(retiledDf.unpersist())
-            //Try(tessellatedDf.unpersist())
+            if (!config("stopAtTessellate").toBoolean) Try(tessellatedDf.unpersist())
             Try(combinedDf.unpersist())
             Try(bandDf.unpersist())
             Try(validDf.unpersist())
@@ -325,6 +327,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                 .cache()
             val cnt = result.count() // <- need this to force cache
             if (verboseLevel > 0) println(s"... count? $cnt")
+            FileUtils.deleteDfTilePathDirs(df, verboseLevel = verboseLevel, msg = "df (after subdataset)")
             Try(df.unpersist())      // <- uncache df (after count)
             result
         } else {
@@ -355,6 +358,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                 .cache()
             val cnt = result.count() // <- need this to force cache
             if (verboseLevel > 0) println(s"... count? $cnt")
+            FileUtils.deleteDfTilePathDirs(df, verboseLevel = verboseLevel, msg = "df (after srid)")
             Try(df.unpersist())      // <- uncache df (after count)
             result
         } else {
@@ -388,6 +392,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                 .cache()
             val cnt = result.count() // <- need this to force cache
             if (verboseLevel > 0) println(s"... count? $cnt")
+            FileUtils.deleteDfTilePathDirs(df, verboseLevel = verboseLevel, msg = "df (after retile)")
             Try(df.unpersist())      // <- uncache df (after count)
             result
         } else {
@@ -473,8 +478,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             "retile" -> this.extraOptions.getOrElse("retile", "false"),
             "srid" -> this.extraOptions.getOrElse("srid", "0"),
             "sizeInMB" -> this.extraOptions.getOrElse("sizeInMB", "0"),
-            "skipProject" -> this.extraOptions.getOrElse("skipProject", "false"),
-            "stopAtTessellate" -> this.extraOptions.getOrElse("stopAtTessellate", "false"),
+            "skipProject" -> this.extraOptions.getOrElse("skipProject", "false"),           // <- debugging primarily
+            "stopAtTessellate" -> this.extraOptions.getOrElse("stopAtTessellate", "false"), // <- debugging primarily
             "subdatasetName" -> this.extraOptions.getOrElse("subdatasetName", ""),
             "tileSize" -> this.extraOptions.getOrElse("tileSize", "512"),
             "uriDeepCheck" -> this.extraOptions.getOrElse("uriDeepCheck", "false"),
@@ -482,6 +487,5 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             "vsizip" -> this.extraOptions.getOrElse("vsizip", "false")
         )
     }
-    // scalastyle:on println
 
 }

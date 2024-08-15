@@ -20,7 +20,7 @@ trait RST_DerivedBandAggBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
@@ -35,7 +35,7 @@ trait RST_DerivedBandAggBehaviors extends QueryTest {
                            |    out_ar[:] = np.round_(np.clip(in_ar[0] * factor,0,255))
                            |""".stripMargin
 
-        val gridTiles = rastersInMemory.union(rastersInMemory)
+        val gridTiles = rasterDf.union(rasterDf)
             .withColumn("tiles", rst_tessellate($"tile", 2))
             .select("path", "tiles")
             .groupBy("path")
@@ -44,7 +44,7 @@ trait RST_DerivedBandAggBehaviors extends QueryTest {
             )
             .select("tiles")
 
-        rastersInMemory.union(rastersInMemory)
+        rasterDf.union(rasterDf)
             .createOrReplaceTempView("source")
 
         // Do not indent the code in the SQL statement
@@ -70,7 +70,7 @@ trait RST_DerivedBandAggBehaviors extends QueryTest {
 
         val result = gridTiles.collect()
 
-        result.length should be(rastersInMemory.count())
+        result.length should be(rasterDf.count())
 
     }
 

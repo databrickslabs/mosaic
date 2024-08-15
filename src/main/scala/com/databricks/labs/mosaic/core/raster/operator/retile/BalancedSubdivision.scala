@@ -108,12 +108,6 @@ object BalancedSubdivision {
         val (x, y) = raster.getDimensions
         val (tileX, tileY) = getTileSize(x, y, numSplits)
 
-        //scalastyle:off println
-        //println(
-        //    s"BalancedSubdivision - splitRaster - numSplits? $numSplits |" +
-        //        s" x? $x | y? $y | tileX? $tileX | tileY? $tileY | sizeInMB? $sizeInMB"
-        //)
-        //scalastyle:on println
         if (numSplits > 1) {
             ReTile.reTile(tile, tileX, tileY, exprConfigOpt)
         } else {

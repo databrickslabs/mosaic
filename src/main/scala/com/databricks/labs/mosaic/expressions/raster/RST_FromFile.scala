@@ -8,7 +8,7 @@ import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.{createTmpFileFromDriver, identifyDriverNameFromRawPath}
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.RasterTile
-import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
+import com.databricks.labs.mosaic.datasource.gdal.SubdivideOnRead
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
@@ -65,7 +65,6 @@ case class RST_FromFile(
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(exprConfig)
         val resultType = RasterTile.getRasterType(dataType)
-        val toFuse = resultType == StringType
         val path = rasterPathExpr.eval(input).asInstanceOf[UTF8String].toString
         val uriGdalOpt = PathUtils.parseGdalUriOpt(path, uriDeepCheck = exprConfig.isUriDeepCheck)
         val fsPath = PathUtils.asFileSystemPath(path, uriGdalOpt) // removes fuse tokens
@@ -81,7 +80,7 @@ case class RST_FromFile(
         if (targetSize <= 0 && currentSize <= Integer.MAX_VALUE) {
             // since this will be serialized want it initialized
             var raster = RasterGDAL(createInfo, Option(exprConfig))
-            raster.finalizeRaster(toFuse) // <- this will also destroy
+            // let the serialize function do the finalizing
             var result = RasterTile(null, raster, resultType).formatCellId(indexSystem)
             val row = result.serialize(resultType, doDestroy = true, Option(exprConfig))
 
@@ -97,12 +96,13 @@ case class RST_FromFile(
             Files.copy(Paths.get(fsPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
             val size = if (targetSize <= 0) 64 else targetSize
 
-            var results = ReTileOnRead.localSubdivide(
+            var results = SubdivideOnRead.localSubdivide(
                 createInfo + (RASTER_PATH_KEY -> tmpPath),
                 size,
                 Option(exprConfig)
             ).map(_.formatCellId(indexSystem))
-            val rows = results.map(_.finalizeTile(toFuse).serialize(resultType, doDestroy = true, Option(exprConfig)))
+            // let the serialize function do the finalizing
+            val rows = results.map(_.serialize(resultType, doDestroy = true, Option(exprConfig)))
 
             results = null
 

@@ -20,17 +20,17 @@ trait RST_MapAlgebraBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*_B01.TIF") // B01
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersInMemory
+        val gridTiles = rasterDf
             .withColumn("tiles", array($"tile", $"tile", $"tile"))
             .withColumn("map_algebra", rst_mapalgebra($"tiles", lit("""{"calc": "A+B/C", "A_index": 0, "B_index": 1, "C_index": 2}""")))
             .select("tiles")
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql(
@@ -75,7 +75,7 @@ trait RST_MapAlgebraBehaviors extends QueryTest {
 
         val result = gridTiles.collect()
 
-        result.length should be(rastersInMemory.count())
+        result.length should be(rasterDf.count())
 
     }
 

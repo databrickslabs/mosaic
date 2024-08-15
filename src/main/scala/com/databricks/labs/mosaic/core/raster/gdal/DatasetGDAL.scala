@@ -134,7 +134,6 @@ case class DatasetGDAL() {
     /** @return whether subdataset has been set (stored in pathGDAL). */
     def isSubdataset: Boolean = pathGDAL.isSubdataset
 
-    //scalastyle:off println
     /**
      * Writes a tile to a specified file system directory:
      *   - if dataset hydrated and not a subdataset, then use `datasetCopyToPath`.
@@ -151,34 +150,27 @@ case class DatasetGDAL() {
      */
     def datasetOrPathCopy(newDir: String, doDestroy: Boolean, skipUpdatePath: Boolean): Option[String] =
         Try {
-            //println("::: datasetOrPathCopy :::")
             Files.createDirectories(Paths.get(newDir)) // <- (just in case)
-            //println(s"... pathGDAL isPathZip? ${pathGDAL.isPathZip}")
             val newPathOpt: Option[String] = this.getDatasetOpt match {
                 case Some(_) if !pathGDAL.isSubdataset && !pathGDAL.isPathZip =>
                     // (1a) try copy from dataset to a new path
                     val ext = RasterIO.identifyExtFromDriver(this.getDriverName)
                     val newFN = this.pathGDAL.getFilename
                     val newPath = s"$newDir/$newFN"
-                    //println(s"... DatasetGDAL - attempting dataset copy for newDir '$newPath'")
                     if (datasetCopyToPath(newPath, doDestroy = doDestroy, skipUpdatePath = true)) {
                         Some(newPath)
                     } else if (pathGDAL.isPathSetAndExists) {
                         // (1b) try file copy from path to new dir
-                        //println(s"... DatasetGDAL - after dataset - attempting wildcard copy for newDir '$newDir'")
                         pathGDAL.rawPathWildcardCopyToDir(newDir, skipUpdatePath = true)
                     } else {
                         // (1c) unsuccessful
-                        //println(s"... DatasetGDAL - UNSUCCESSFUL (after dataset and path attempt)")
                         dsErrFlag = true
                         None // <- unsuccessful
                     }
                 case _ if pathGDAL.isPathSetAndExists =>
                     // (2a) try file copy from path
-                    //println(s"... DatasetGDAL - attempting copy (+ wildcard) for newDir '$newDir'")
                     pathGDAL.rawPathWildcardCopyToDir(newDir, skipUpdatePath = true)
                 case _ =>
-                    //println(s"... DatasetGDAL - NO DATASET OR PATH TO COPY")
                     dsErrFlag = true
                     None // <- (4) unsuccessful
             }
@@ -187,14 +179,12 @@ case class DatasetGDAL() {
                 newPathOpt match {
                     case Some(newPath) =>
                         this.updatePath(newPath)
-                    case _ => ()
+                    case _ => () // <- do nothing ???
                 }
             }
-            //scalastyle:on println
 
             newPathOpt
         }.getOrElse{
-            //println(s"... DatasetGDAL - EXCEPTION - NO DATASET OR PATH TO COPY")
             dsErrFlag = true
             None // <- unsuccessful
         }
@@ -216,23 +206,16 @@ case class DatasetGDAL() {
      */
     def datasetCopyToPath(newPath: String, doDestroy: Boolean, skipUpdatePath: Boolean): Boolean =
         Try {
-            //scalastyle:off println
-            //println("::: datasetCopyToPath :::")
             val success = this.getDatasetOpt match {
                 case Some(ds) =>
                     // (1) have hydrated tile
                     val tmpDriver = ds.GetDriver()
                     try {
-                        //println(s"...driver null? ${tmpDriver == null}")
-                        //Try(println(s"...driver name? ${tmpDriver.getShortName}"))
                         val tmpDs = tmpDriver.CreateCopy(newPath, ds)
-
                         if (tmpDs == null) {
-                            //println(s"...ds null for new path '$newPath'")
                             dsErrFlag = true
                             false // <- unsuccessful
                         } else {
-                            //println(s"...ds copied to new path '$newPath'")
                             // - destroy the temp [[Dataset]]
                             // - if directed, destroy this [[Dataset]]
                             RasterIO.flushAndDestroy(tmpDs)
@@ -251,7 +234,6 @@ case class DatasetGDAL() {
             if (!skipUpdatePath) {
                 this.updatePath(newPath)
             }
-            //scalastyle:on println
 
             success
         }.getOrElse{
@@ -272,23 +254,17 @@ case class DatasetGDAL() {
      *   New [[DatasetGDAL]].
      */
     def getSubdatasetObj(aPathGDAL: PathGDAL, subsetName: String, exprConfigOpt: Option[ExprConfig]): DatasetGDAL = {
-        //scalastyle:off println
-        //println(s"DatasetGDAL - getSubdatasetObj -> aPathGDAL? '$aPathGDAL' | subsetName? '$subsetName'")
-
         if (aPathGDAL.isSubdataset && aPathGDAL.getSubsetName == subsetName) {
             // this already is the subdataset
             // copy considered, but not clear that is needed
-            //println(s"DatasetGDAL - getSubdatasetObj -> returning `this`")
             this
         } else {
             // not already the subset asked for
             val basePathGDAL =
                 if (!aPathGDAL.isSubdataset) {
-                    //println(s"DatasetGDAL - getSubdatasetObj -> attempting with `aPathGDAL` (as provided)")
                     aPathGDAL
                 } else {
                     // make sure we are using the base path, not the subdataset path
-                    //println(s"DatasetGDAL - getSubdatasetObj -> attempting with new `basePathGDAL` (had dataset)")
                     val p = PathUtils.getCleanPath(
                         aPathGDAL.path,
                         addVsiZipToken = aPathGDAL.isPathZip,
@@ -303,12 +279,10 @@ case class DatasetGDAL() {
                     // - need to clean that up though to actually load
                     val loadPathGDAL = PathGDAL(sPathRaw)
                     val loadPath = loadPathGDAL.asGDALPathOpt(getDriverNameOpt).get
-                    //println(s"DatasetGDAL - getSubdatasetObj -> loadPath? '$loadPath' | sPathRaw? '$sPathRaw'")
                     // (2) use the subdataset in the path vs the option
                     RasterIO.rawPathAsDatasetOpt(loadPath, subNameOpt = None, getDriverNameOpt, exprConfigOpt) match {
                         case Some(ds) =>
                             // (3) subset loaded
-                            //println("DatasetGDAL - getSubdatasetObj -> loaded subdataset")
                             val result = DatasetGDAL()
                             result.updatePath(sPathRaw)
                             result.updateSubsetName(subsetName)
@@ -316,7 +290,6 @@ case class DatasetGDAL() {
                             result
                         case _ =>
                             // (4) subset not loaded
-                            //println("DatasetGDAL - getSubdatasetObj -> subdataset not loaded")
                             val result = DatasetGDAL()
                             result.dsErrFlag = true
                             result.updatePath(sPathRaw)
@@ -325,13 +298,11 @@ case class DatasetGDAL() {
                     }
                 case _ =>
                     // (5) subset not found
-                    //println("DatasetGDAL - getSubdatasetObj -> subdataset not found")
                     val result = DatasetGDAL()
                     result.dsErrFlag = true
                     result
             }
         }
-        //scalastyle:on println
     }
 
     /**
@@ -380,7 +351,6 @@ case class DatasetGDAL() {
         val keys = subdatasetsMap.keySet
 
         // get the path (no subdataset)
-        // TODO - REVIEW PATH HANDLING
         val gdalPath = aPathGDAL.asGDALPathOptNoSubName(driverNameOpt).get
 
         keys.flatMap(key =>

@@ -19,18 +19,18 @@ trait RST_MedianBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val df = rastersInMemory
+        val df = rasterDf
             .withColumn("tile", rst_tessellate($"tile", lit(3)))
             .withColumn("result", rst_median($"tile"))
             .select("result")
             .select(explode($"result").as("result"))
 
-        rastersInMemory
+        rasterDf
             .withColumn("tile", rst_tessellate($"tile", lit(3)))
             .createOrReplaceTempView("source")
 
@@ -38,7 +38,7 @@ trait RST_MedianBehaviors extends QueryTest {
                                                    |select rst_median(tile) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("result", rst_rastertogridmax($"tile", lit(3)))
             .select("result")
 

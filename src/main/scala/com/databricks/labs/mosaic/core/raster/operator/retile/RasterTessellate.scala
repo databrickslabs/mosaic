@@ -40,30 +40,22 @@ object RasterTessellate {
                       geometryAPI: GeometryAPI,
                       exprConfigOpt: Option[ExprConfig]
                   ): Seq[RasterTile] = {
-        //scalastyle:off println
+
         val indexSR = indexSystem.osrSpatialRef
         val bbox = raster.bbox(geometryAPI, indexSR, skipTransform = skipProject) // <- skipTransform follows skipProject
         val cells = Mosaic.mosaicFill(bbox, resolution, keepCoreGeom = false, indexSystem, geometryAPI)
-        //println(s"RasterTessellate - bbox? ${bbox.toWKT}") // <- issue with Zarr test bounding box is empty!!!
-        //println(s"RasterTessellate - covering cells size? ${cells.length}")
-
         val tmpRaster =
-            if (!skipProject) {
+            if (!skipProject && indexSR.IsSame(raster.getSpatialReference) != 1) {
+                // '1' means equivalent Spatial Reference Systems
                 val result = RasterProject.project(raster, indexSR, exprConfigOpt)
-                //println(s"RasterTessellate - projected createInfo -> ${result.getCreateInfo(includeExtras = true)}")
                 result
-            }
-            else {
-                //println(s"RasterTessellate - skipProject = true")
-                raster
-            }
+            } else raster
 
         val chips = cells
             .map(cell => {
                 val cellID = cell.cellIdAsLong(indexSystem)
                 val isValidCell = indexSystem.isValid(cellID)
                 if (!isValidCell) {
-                    //println(s"RasterTessellate - invalid cellID $cellID")
                     (
                         false,
                         RasterTile(cell.index, RasterGDAL(), tileDataType)
@@ -71,10 +63,8 @@ object RasterTessellate {
                 } else {
                     val cellRaster = tmpRaster
                         .getRasterForCell(cellID, indexSystem, geometryAPI, skipProject = skipProject)
-                        .tryInitAndHydrate() // <- required
-                    //println(s"RasterTessellate - cellRaster createInfo -> ${cellRaster.getCreateInfo(includeExtras = true)} (hydrated? ${cellRaster.isDatasetHydrated})")
+                        //.tryInitAndHydrate() // <- required?
                     if (!cellRaster.isEmpty) {
-                        //println(s"RasterTessellate - valid tile (cellID $cellID)")
                         (
                             true, // valid result
                             RasterTile(
@@ -84,7 +74,6 @@ object RasterTessellate {
                             )
                         )
                     } else {
-                        //println(s"RasterTessellate - empty tile (cellID $cellID)")
                         (
                             false,
                             RasterTile(cell.index, cellRaster, tileDataType) // empty result
@@ -95,13 +84,11 @@ object RasterTessellate {
 
         val (result, invalid) = chips.partition(_._1) // true goes to result
         invalid.flatMap(t => Option(t._2.raster)).foreach(_.flushAndDestroy()) // destroy invalids
-        //println(s"RasterTessellate - chips # ${chips.length}, results # ${result.length}, invalids # ${invalid.length}")
 
         raster.flushAndDestroy()
         tmpRaster.flushAndDestroy()
 
         result.map(_._2) // return valid tiles
     }
-    //scalastyle:on println
 
 }

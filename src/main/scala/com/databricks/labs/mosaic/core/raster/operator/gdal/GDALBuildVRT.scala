@@ -49,9 +49,6 @@ object GDALBuildVRT {
 
         val errorMsg = gdal.GetLastErrorMsg
         if (errorMsg.nonEmpty) {
-            // scalastyle:off println
-            //println(s"... GDALBuildVRT (last_error) - '$errorMsg' for '$outputPath'")
-            // scalastyle:on println
             val result = RasterGDAL()
             result.updateLastCmd(effectiveCommand)
             result.updateError(errorMsg)

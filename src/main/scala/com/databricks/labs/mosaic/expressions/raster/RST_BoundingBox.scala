@@ -35,7 +35,7 @@ case class RST_BoundingBox(
       */
     override def rasterTransform(tile: RasterTile): Any = Try {
         val raster = tile.raster
-        val gt = raster.getGeoTransformOpt.get
+        val gt = raster.getGeoTransformOpt.orNull
         val (originX, originY) = GDAL.toWorldCoord(gt, 0, 0)
         val (endX, endY) = GDAL.toWorldCoord(gt, raster.xSize, raster.ySize)
         val geometryAPI = GeometryAPI(exprConfig.getGeometryAPI)

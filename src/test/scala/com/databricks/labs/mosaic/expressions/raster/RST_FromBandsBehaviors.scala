@@ -36,14 +36,14 @@ trait RST_FromBandsBehaviors extends QueryTest {
             .withColumn("area2", st_area($"bbox2"))
             .withColumn("result", $"area" === $"area2")
 
-        //info(gridTiles.select("area", "area2", "result", "stacked", "bbox", "bbox2").first().toString())
-        //info(gridTiles.select("tile1").first().toString())
+        info(gridTiles.select("area", "area2", "result", "stacked", "bbox", "bbox2").first().toString())
+        info(gridTiles.select("tile1").first().toString())
         val result = gridTiles
             .select("result")
             .as[Boolean]
             .collect()
 
-        //info(result.toSeq.toString())
+        info(result.toSeq.toString())
 
         result.forall(identity) should be(true)
 

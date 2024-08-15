@@ -74,10 +74,11 @@ object ReadStrategy {
         val readStrategy = options.getOrElse(MOSAIC_RASTER_READ_STRATEGY, MOSAIC_RASTER_READ_AS_PATH)
 
         readStrategy match {
-            case MOSAIC_RASTER_READ_IN_MEMORY  => ReadInMemory
-            case MOSAIC_RASTER_RE_TILE_ON_READ => ReTileOnRead
-            case MOSAIC_RASTER_READ_AS_PATH    => ReadAsPath
-            case _                             => ReadAsPath
+            case MOSAIC_RASTER_READ_IN_MEMORY    => ReadInMemory
+            case MOSAIC_RASTER_SUBDIVIDE_ON_READ => SubdivideOnRead
+            case MOSAIC_RASTER_READ_AS_PATH      => ReadAsPath
+            case "retile_on_read"                => SubdivideOnRead // <- this is for legacy (has been renamed)
+            case _                               => ReadAsPath
         }
 
     }

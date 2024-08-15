@@ -94,13 +94,12 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
         )
         val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))
         val skipProject: Boolean = skipProjectExpr.eval(input).asInstanceOf[Boolean]
-        //scalastyle:off println
-        //println(s"RasterTessellateGeneratorExpression - skipProject? $skipProject, inResolution? $inResolution")
-        //scalastyle:on println
-        var genTiles = rasterGenerator(tile, inResolution, skipProject).map(_.formatCellId(indexSystem))
+        var genTiles = rasterGenerator(tile, inResolution, skipProject)
+            .map(_.formatCellId(indexSystem)) // <- format cellid prior to resultType
         val resultType = RasterTile.getRasterType(RasterTileType(rasterExpr, useCheckpoint = true)) // always use checkpoint
-        val rows = genTiles.map(t => InternalRow.fromSeq(Seq(t.formatCellId(indexSystem)
-            .serialize(resultType, doDestroy = true, Option(exprConfig)))))
+        val rows = genTiles.map(tile => InternalRow.fromSeq(
+            Seq(tile.serialize(resultType, doDestroy = true, Option(exprConfig))))
+        )
 
         tile.flushAndDestroy()
         tile = null

@@ -45,20 +45,13 @@ object GDALTranslate {
         writeOptions: RasterWriteOptions,
         exprConfigOpt: Option[ExprConfig]
     ): RasterGDAL = {
-        // scalastyle:off println
         require(command.startsWith("gdal_translate"), "Not a valid GDAL Translate command.")
         val effectiveCommand = OperatorOptions.appendOptions(command, writeOptions)
-        //println(s"GDALTranslate - is raster hydrated? ${raster.isDatasetHydrated}")
-        //println(s"GDALTranslate - createInfo? ${raster.getCreateInfo}")
-
         Try {
             val translateOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
             val translateOptions = new TranslateOptions(translateOptionsVec)
             val transResult = gdal.Translate(outputPath, raster.getDatasetOrNull(), translateOptions)
             val errorMsg = gdal.GetLastErrorMsg
-            //        if (errorMsg.nonEmpty) {
-            //            println(s"... GDALTranslate (last_error) - '$errorMsg' for '$outputPath'")
-            //        }
 
             flushAndDestroy(transResult)
 
@@ -81,7 +74,6 @@ object GDALTranslate {
             result.updateError("GDAL Translate command threw exception")
             result
         }
-        // scalastyle:on println
     }
 
 }

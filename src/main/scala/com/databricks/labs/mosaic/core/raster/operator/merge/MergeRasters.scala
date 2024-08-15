@@ -4,12 +4,9 @@ import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.gdal.{GDALBuildVRT, GDALTranslate}
 import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
-import org.apache.spark.sql.types.{BinaryType, DataType}
 
 /** MergeRasters is a helper object for merging rasters. */
 object MergeRasters {
-
-    val tileDataType: DataType = BinaryType
 
     /**
       * Merges the rasters into a single tile.

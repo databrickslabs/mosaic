@@ -19,18 +19,18 @@ trait RST_MinBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val df = rastersInMemory
+        val df = rasterDf
             .withColumn("tile", rst_tessellate($"tile", lit(3)))
             .withColumn("result", rst_min($"tile"))
             .select("result")
             .select(explode($"result").as("result"))
 
-        rastersInMemory
+        rasterDf
             .withColumn("tile", rst_tessellate($"tile", lit(3)))
             .createOrReplaceTempView("source")
 

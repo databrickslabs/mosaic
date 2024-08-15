@@ -1,8 +1,12 @@
 package com.databricks.labs.mosaic.utils
 
-import com.databricks.labs.mosaic.MOSAIC_RASTER_TMP_PREFIX_DEFAULT
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_TMP_PREFIX_DEFAULT, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.CleanUpManager
 import com.databricks.labs.mosaic.utils.FileUtils.isPathModTimeGTMillis
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
+import org.apache.spark.sql.functions.{col, explode}
 
 import java.io.{BufferedInputStream, File, FileInputStream, IOException}
 import java.nio.file.attribute.BasicFileAttributes
@@ -231,6 +235,94 @@ object FileUtils {
         println(s"FileUtils - does this env need sudo (non-root)? $result (out? '$stdout', err: '$stderr', status: $status)")
         //scalastyle:on println
         result
+    }
+
+    /**
+     * Deletes Files associated with a tile from the provided dataframe.
+     * - To avoid repeat calculations that generate new tiles,
+     *   recommend caching the dataframe during execution that generates the tiles.
+     * - It uses [[RASTER_PATH_KEY]].
+     * - If file path provided, it deletes at the parent path level.
+     * - If dir provided, that is the delete level.
+     * - It only deletes if the dir starts with fuse checkpoint path
+     * - It does not delete if the dir is the same as the checkpoint path,
+     *   should be a sub-directory.
+     *
+     * @param dfIn
+     *   Dataframe holding the tiles. If it hasn't been cached or isn't backed by a table,
+     *   then execution may very well just generate new tiles, making this op kind of pointless.
+     * @param colName
+     *   column name to select in `dfIn`, default is 'tile'.
+     * @param doExplode
+     *   Whether to explode the tiles, means they are a collection per row, default is false.
+     * @param handleCache
+     *   Whether to uncache `dfIn` at the end of the deletions, default is true.
+     * @param verboseLevel
+     *   Get some information about the operation (0,1,2), default is 0.
+     * @param msg
+     *   IF provided, print message to identify what is being deleted
+     * @return
+     *   2-Tuple of Longs for `(deletes.length, noDeletes.length)`.
+     */
+    def deleteDfTilePathDirs(
+                                dfIn: DataFrame,
+                                colName: String = "tile",
+                                doExplode: Boolean = false,
+                                handleCache: Boolean = true,
+                                verboseLevel: Int = 0,
+                                msg: String = ""
+                            ): (Long, Long) = {
+        //scalastyle:off println
+        if (msg.nonEmpty) println(s"Deleting df tile paths -> '$msg'")
+        try {
+            var df: DataFrame = dfIn
+            // explode
+            if (doExplode) {
+                df = df.select(
+                    explode(col(colName)).alias(colName)
+                )
+            }
+
+            // delete
+            val paths = df
+                .select(colName)
+                .collect()
+                .map { row =>
+                    row
+                        .asInstanceOf[GenericRowWithSchema]
+                        .get(0)
+                        .asInstanceOf[GenericRowWithSchema]
+                        .getAs[Map[String, String]](2)(RASTER_PATH_KEY)
+                }
+
+            if (verboseLevel > 1) println(s"tile paths (length) -> ${paths.length}")
+            if (verboseLevel > 1) println(s"tile paths (first) ->  ${paths(0)}")
+
+            val checkDir = GDAL.getCheckpointDir
+            val checkPath = Paths.get(checkDir)
+
+            val deleteStats = paths.map {
+                p =>
+                    val path = Paths.get(p)
+                    val parentPath =
+                        if (Files.isDirectory(path)) path // <- use dir if that is what was provided
+                        else path.getParent               // <- otherwise, use the dir to the file
+                    if (parentPath.startsWith(checkDir) && parentPath.compareTo(checkPath) != 0) {
+                        // tuple of whether delete was success and the provided path
+                        (Try {
+                            FileUtils.deleteRecursively(parentPath, keepRoot = false)
+                        }.isSuccess, p)
+                    } else {
+                        (false, p)
+                    }
+            }
+            val (deletes, noDeletes) = deleteStats.partition(_._1) // true goes to deletes
+            if (verboseLevel > 0) println(s" df -> # deleted? ${deletes.length} , # not? ${noDeletes.length}")
+            (deletes.length, noDeletes.length)
+        } finally {
+            if (handleCache) Try(dfIn.unpersist())
+        }
+        //scalastyle:on println
     }
 
 }

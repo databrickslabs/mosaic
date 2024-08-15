@@ -247,12 +247,9 @@ case class PathGDAL(
      */
     def rawPathWildcardCopyToDir(toDir: String, skipUpdatePath: Boolean): Option[String] =
         Try {
-            //scalastyle:off println
             Files.createDirectories(Paths.get(toDir)) // <- ok exists
-            //println("::: PathGDAL - rawPathWildcardCopyToDir :::")
             val thisDir = this.asJavaPath.getParent.toString
             val thisFN = this.getFilename
-            //println(s"isDir? ${this.isDir}")
             val outPathOpt: Option[String] = this.asFileSystemPathOpt match {
                 case Some(_) if !this.isDir =>
                     // (1a) wildcard copy based on filename
@@ -284,7 +281,6 @@ case class PathGDAL(
                     Option(toZip)
                 case _ =>
                     // (3) not a valid filesystem path, e.g. [[NO_PATH_STRING]]
-                    //println(s"PathGDAL - path: '$path' not filesystem path?")
                     None
             }
 
@@ -298,8 +294,6 @@ case class PathGDAL(
             outPathOpt
         }.getOrElse {
             // (4) unable to act on the file, does it exist?
-            //println(s"PathGDAL - Exception - does raw path: '$path' exist?")
-            //scalastyle:on println
             None
         }
 

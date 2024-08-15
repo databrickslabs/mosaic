@@ -20,16 +20,16 @@ trait RST_TryOpenBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("gdal")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersInMemory
+        val gridTiles = rasterDf
             .withColumn("tile", rst_tryopen($"tile"))
             .select("tile")
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql(
@@ -41,7 +41,7 @@ trait RST_TryOpenBehaviors extends QueryTest {
 
         val result = gridTiles.collect()
 
-        result.length == rastersInMemory.count() should be(true)
+        result.length == rasterDf.count() should be(true)
 
     }
 

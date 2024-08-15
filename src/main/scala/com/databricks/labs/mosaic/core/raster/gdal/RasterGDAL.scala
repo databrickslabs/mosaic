@@ -126,23 +126,17 @@ case class RasterGDAL(
                 POLYGON
             )
             val geom = org.gdal.ogr.ogr.CreateGeometryFromWkb(bbox.toWKB)
-            //println(s"RasterGDAL - bbox - geom (WKB -> WKT)? ${geom.ExportToWkt()}")
-
             if (!skipTransform) {
                 // source CRS defaults to WGS84
                 val sourceCRS = this.getSpatialReference
-                //println(s"RasterGDAL - bbox -> sourceCRS? ${sourceCRS.GetName()}")
-                //println(s"RasterGDAL - bbox -> destCRS? ${destCRS.GetName()}")
                 if (sourceCRS.GetName() != destCRS.GetName()) {
                     // perform transform if needed
                     // - transform is "in-place", so same object
-                    //println(s"RasterGDAL - bbox - performing transform soureCRS? '${sourceCRS.GetName()}', destCRS? '${destCRS.GetName()}'")
                     val transform = new osr.CoordinateTransformation(sourceCRS, destCRS)
                     geom.Transform(transform)
                 }
             }
             val result = geometryAPI.geometry(geom.ExportToWkb(), "WKB")
-            //println(s"RasterGDAL - bbox - result (WKB -> WKT)? ${result.toWKT}")
 
             result
         }.getOrElse(geometryAPI.geometry(POLYGON_EMPTY_WKT, "WKT"))
@@ -210,8 +204,10 @@ case class RasterGDAL(
      */
     def getSpatialReference: SpatialReference =
         Try {
-            this.getDatasetOrNull().GetSpatialRef
-        }.getOrElse(MosaicGDAL.WSG84)
+            val srs = this.getDatasetOrNull().GetSpatialRef // <- dataset available
+            if (srs != null) srs                            // <- SRS available
+            else MosaicGDAL.WSG84                           // <- SRS not available
+        }.getOrElse(MosaicGDAL.WSG84)                       // <- dataset not available
 
     /** @return Returns a map of tile band(s) valid pixel count, default 0. */
     def getValidCount: Map[Int, Long] =
@@ -392,7 +388,6 @@ case class RasterGDAL(
      *   Returns the tile's SRID. This is the EPSG code of the tile's CRS.
      */
     def SRID: Int = {
-        //Try(println(s"Epsg? ${crsFactory.readEpsgFromParameters(proj4String)}"))
         Try(crsFactory.readEpsgFromParameters(proj4String))
             .filter(_ != null)
             .getOrElse("EPSG:0")
@@ -707,7 +702,6 @@ case class RasterGDAL(
      */
     def getSubdataset(subsetName: String): RasterGDAL =
         Try {
-            //scalastyle:off println
             // try to get the subdataset requested
             // - allow failure on extracting subdataset,
             // then handle with empty [[RasterGDAL]]
@@ -719,7 +713,6 @@ case class RasterGDAL(
             // to trigger exception if null
             val pathRawSub = dsGDAL.getPath
             val dsSubOpt = dsGDAL.getDatasetOpt
-            //println(s"RasterGDAL - getSubdataset - pathRawSub? '$pathRawSub', (dsSubOpt defined? ${dsSubOpt.isDefined})")
 
             // Avoid costly IO to compute MEM size here
             // It will be available when the tile is serialized for next operation
@@ -746,7 +739,7 @@ case class RasterGDAL(
                              |     ${subdatasets.keys.filterNot (_.startsWith ("SUBDATASET_") ).mkString (", ")}
                              |     """.stripMargin
             )
-            //scalastyle:on println
+
             result
         }
 
@@ -799,7 +792,6 @@ case class RasterGDAL(
     // Raster Lifecycle Functions
     // ///////////////////////////////////////
 
-    //scalastyle:off println
     /** @inheritdoc */
     override def finalizeRaster(toFuse: Boolean): RasterGDAL =
         Try {
@@ -814,13 +806,11 @@ case class RasterGDAL(
                 val driverSN = this.getDriverName()
                 val ext = GDAL.getExtension(driverSN)
                 val newDir = this.makeNewFuseDir(ext, uuidOpt = None)
-                //println(s"RasterGDAL - finalizeRaster -> newDir? '$newDir'")
 
                 datasetGDAL.datasetOrPathCopy(newDir, doDestroy = true, skipUpdatePath = true) match {
                     case Some(newPath) =>
-                        //println(s"RasterGDAL - finalizeRaster -> success [pre-update raw path] - finalizeRaster - new path? '$newPath'")
+                        // for clarity, handling update here
                         this.updateRawPath(newPath)
-                        //println(s"...success - finalizeRaster - path? '${getRawPath}'")
                     case _ =>
                         this.updateLastCmd("finalizeRaster")
                         this.updateError(s"finalizeRaster - fuse write")
@@ -837,7 +827,6 @@ case class RasterGDAL(
             }
             this
         }
-    //scalastyle:on println
 
     /** @inheritdoc */
     override def isRawPathInFuseDir: Boolean =

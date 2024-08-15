@@ -19,12 +19,12 @@ trait RST_MakeTilesBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("binaryFile")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val gridTiles1 = rastersInMemory
+        val gridTiles1 = rasterDf
             .withColumn("tile", rst_maketiles($"content", "GTiff", -1))
             .select(!rst_isempty($"tile"))
             .as[Boolean]
@@ -32,7 +32,7 @@ trait RST_MakeTilesBehaviors extends QueryTest {
 
         gridTiles1.forall(identity) should be(true)
 
-        rastersInMemory.createOrReplaceTempView("source")
+        rasterDf.createOrReplaceTempView("source")
 
         val gridTilesSQL = spark
             .sql("""
@@ -90,7 +90,7 @@ trait RST_MakeTilesBehaviors extends QueryTest {
 
         gridTilesSQL4.forall(identity) should be(true)
 
-        val gridTiles2 = rastersInMemory
+        val gridTiles2 = rasterDf
             .withColumn("tile", rst_maketiles($"path"))
             .select(!rst_isempty($"tile"))
             .as[Boolean]

@@ -23,30 +23,28 @@ case class RST_Avg(tileExpr: Expression, exprConfig: ExprConfig)
     override def dataType: DataType = ArrayType(DoubleType)
 
     /** Returns the avg value per band of the tile. */
-    override def rasterTransform(tile: RasterTile): Any = {
-        import org.json4s._
-        import org.json4s.jackson.JsonMethods._
-        implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
+    override def rasterTransform(tile: RasterTile): Any =
+        Try {
+            import org.json4s._
+            import org.json4s.jackson.JsonMethods._
+            implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
 
-        val command = s"gdalinfo -stats -json -mm -nogcp -nomd -norat -noct"
-        val gdalInfo = GDALInfo.executeInfo(tile.raster, command)
+            val command = s"gdalinfo -stats -json -mm -nogcp -nomd -norat -noct"
+            val gdalInfo = GDALInfo.executeInfo(tile.raster, command)
 
-        // parse json from gdalinfo
-        // - can print out during debugging
-        // - essentially if this doesn't parse
-        //   then will throw an exception down below
-        val json = Try(parse(gdalInfo).extract[Map[String, Any]]).getOrElse(
-            //scalastyle:off println
-            //println(s"RST_Avg - ERROR: GDALInfo -> '$gdalInfo'")
-            //scalastyle:on println
-            null
-        )
-        // if the above failed, this block will throw an exception
-        val meanValues = json("bands").asInstanceOf[List[Map[String, Any]]].map { band =>
-            band("mean").asInstanceOf[Double]
-        }
-        ArrayData.toArrayData(meanValues.toArray)
-    }
+            // parse json from gdalinfo
+            // - can print out during debugging
+            // - essentially if this doesn't parse
+            //   then will throw an exception down below
+            val json = Try(parse(gdalInfo).extract[Map[String, Any]]).getOrElse(null)
+
+            // if the above failed, this block will throw an exception
+            val meanValues = json("bands").asInstanceOf[List[Map[String, Any]]].map { band =>
+                band("mean").asInstanceOf[Double]
+            }
+
+            ArrayData.toArrayData(meanValues.toArray)
+        }.getOrElse(ArrayData.toArrayData(Array.empty[Double]))
 
 }
 

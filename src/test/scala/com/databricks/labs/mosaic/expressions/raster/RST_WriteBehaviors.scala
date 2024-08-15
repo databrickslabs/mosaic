@@ -31,14 +31,14 @@ trait RST_WriteBehaviors extends QueryTest {
         Files.createDirectories(writeDirJava)
         Files.list(Paths.get(writeDir)).count() should be (0)
 
-        val rastersInMemory = spark.read
+        val rasterDf = spark.read
             .format("binaryFile")
             .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
             //.drop("content")
 
         // test write path tiles (scala for this)
-        val gridTiles1 = rastersInMemory
+        val gridTiles1 = rasterDf
             .withColumn("tile", rst_maketiles($"path"))
             .filter(!rst_isempty($"tile"))
             .select(rst_write($"tile", writeDir))
@@ -55,7 +55,7 @@ trait RST_WriteBehaviors extends QueryTest {
         Files.list(Paths.get(writeDir)).count() should be (0)
 
         // test write content tiles (sql for this)
-        rastersInMemory.createOrReplaceTempView("source")
+        rasterDf.createOrReplaceTempView("source")
 
         val gridTilesSQL = spark
             .sql(

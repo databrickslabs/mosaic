@@ -139,16 +139,24 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             self.generate_singleband_raster_df()
             .withColumn("extent", api.st_astext(api.rst_boundingbox("tile")))
             .withColumn(
-                "rst_tooverlappingtiles",
+                "tile",
                 api.rst_tooverlappingtiles("tile", lit(200), lit(200), lit(10)),
             )
+            .cache()
         )
+        collection_cnt = collection.count()
+        print(f"collection - count? {collection_cnt}")  # <- 87
+        collection.limit(1).show()
 
         merge_result = (
             collection.groupBy("path")
-            .agg(api.rst_merge_agg("tile").alias("tile"))
-            .withColumn("extent", api.st_astext(api.rst_boundingbox("tile")))
+            .agg(api.rst_merge_agg("tile").alias("merge_tile"))
+            .withColumn("extent", api.st_astext(api.rst_boundingbox("merge_tile")))
+            .cache()
         )
+        merge_cnt = merge_result.count()
+        print(f"merge agg - count? {merge_cnt}")
+        merge_result.limit(1).show()
 
         self.assertEqual(merge_result.count(), 1)
         self.assertEqual(
@@ -159,13 +167,19 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             collection.groupBy("path")
             .agg(api.rst_combineavg_agg("tile").alias("tile"))
             .withColumn("extent", api.st_astext(api.rst_boundingbox("tile")))
+            .cache()
         )
+        combine_cnt = combine_avg_result.count()
+        print(f"combine avg - count? {combine_cnt}")
+        combine_avg_result.limit(1).show()
 
         self.assertEqual(combine_avg_result.count(), 1)
         self.assertEqual(
             collection.select("extent").first(),
             combine_avg_result.select("extent").first(),
         )
+
+        combine_avg_result.unpersist()
 
     def test_netcdf_load_tessellate_clip_merge(self):
         target_resolution = 1

@@ -49,15 +49,15 @@ object RasterClipByVector {
                 cutlineAllTouched: Boolean = true, skipProject: Boolean = false
             ): RasterGDAL = {
 
-        val rasterCRS =
-            if (!skipProject) raster.getSpatialReference
+        val rasterSRS =
+            if (!skipProject) raster.getSpatialReference // <- this will default to WGS84
             else geomCRS
-        val geomSrcCRS = if (geomCRS == null) rasterCRS else geomCRS
+        val geomSRS = if (geomCRS == null) rasterSRS else geomCRS
         val resultFileName = raster.createTmpFileFromDriver(exprConfigOpt)
         val shapePath = VectorClipper.generateClipper(
             geometry,
-            geomSrcCRS,
-            rasterCRS,
+            geomSRS,
+            rasterSRS,
             geometryAPI,
             exprConfigOpt
         )
@@ -72,16 +72,14 @@ object RasterClipByVector {
 
         //https://gdal.org/programs/gdalwarp.html#cmdoption-gdalwarp-s_srs
         val srsToken: String =
-            if (!skipProject) ""
-            else " -s_srs epsg:4326 -t_srs epsg:4326" // <- for now just 4326
+            if (!skipProject && geomSRS.IsSame(rasterSRS) != 1) "" // <- '1' means equivalent SRS
+            else {
+                // SRS treated as equivalent (use geomSRS)
+                // Note that null is the right value in these api calls
+                val authToken = s"${geomSRS.GetAuthorityName(null)}:${geomSRS.GetAuthorityCode(null)}"
+                s" -s_srs $authToken -t_srs $authToken"
+            }
         val cmd = s"gdalwarp${cutlineToken} -cutline ${shapePath} -crop_to_cutline${srsToken}"
-
-        /*
-         * //scalastyle:off println
-         * println(s"...clip command -> $cmd")
-         * //scalastyle:on println
-        */
-
         val result = GDALWarp.executeWarp(
             resultFileName,
             Seq(raster),
