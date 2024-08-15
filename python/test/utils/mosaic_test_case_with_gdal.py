@@ -1,6 +1,7 @@
 from test.context import api
 from .mosaic_test_case import MosaicTestCase
 from pyspark.sql.dataframe import DataFrame
+from pyspark.sql.functions import lit
 
 import os
 import shutil
@@ -46,7 +47,15 @@ class MosaicTestCaseWithGDAL(MosaicTestCase):
     def generate_singleband_raster_df(self) -> DataFrame:
         return (
             self.spark.read.format("gdal")
-            .option("pathGlobFilter", "*_B04.TIF")        # <- B04
-            .option("raster.read.strategy", "in_memory")
-            .load("test/data")                            # <- /MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF
+                .option("pathGlobFilter", "*_B04.TIF")          # <- B04
+                .option("raster.read.strategy", "in_memory")
+            .load("test/data")                                  # <- /MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF
         )
+
+    def generate_singleband_4326_raster_df(self) -> DataFrame:
+        return (
+            self.generate_singleband_raster_df()
+            .withColumn("tile", api.rst_setsrid("tile", lit(9122)))   # <- set srid
+            .withColumn("tile", api.rst_transform("tile", lit(4326))) # <- transform to 4326
+        )
+

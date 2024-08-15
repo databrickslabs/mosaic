@@ -1,5 +1,6 @@
 from .context import api
 from .utils import MosaicTestCaseWithGDAL
+from pyspark.sql.functions import lit
 import os
 
 class TestCheckpoint(MosaicTestCaseWithGDAL):
@@ -28,13 +29,19 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         api.gdal.set_checkpoint_on(self.spark) # <- important to call from api.gdal
         self.assertTrue(self.get_context().is_use_checkpoint(), "context should be configured on.")
         result = (
-            self.generate_singleband_raster_df()
+            self.generate_singleband_4326_raster_df()
             .withColumn("rst_boundingbox", api.rst_boundingbox("tile"))
             .withColumn("tile", api.rst_clip("tile", "rst_boundingbox"))
+            .cache()
         )
-        result.write.format("noop").mode("overwrite").save()
-        self.assertEqual(result.count(), 1)
+        result_cnt = result.count()
+        print(f"result (checkpoint on) - count? {result_cnt}")
+        self.assertEqual(result_cnt, 1)
+        result.limit(1).show()
+
         tile = result.select("tile").first()[0]
+        result.unpersist()
+        print(f"tile? {tile}")
         raster = tile['raster']
         self.assertIsInstance(raster, str, "tile type should be string.")
 
@@ -45,13 +52,18 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
             "context should be configured on.")
         self.assertTrue(os.path.exists(self.new_check_dir), "new check dir should exist.")
         result = (
-            self.generate_singleband_raster_df()
+            self.generate_singleband_4326_raster_df()
             .withColumn("rst_boundingbox", api.rst_boundingbox("tile"))
             .withColumn("tile", api.rst_clip("tile", "rst_boundingbox"))
+            .cache()
         )
-        result.write.format("noop").mode("overwrite").save()
-        self.assertEqual(result.count(), 1)
+        result_cnt = result.count()
+        print(f"result (update path) - count? {result_cnt}")
+        self.assertEqual(result_cnt, 1)
+        result.limit(1).show()
+
         tile = result.select("tile").first()[0]
+        result.unpersist()
         raster = tile['raster']
         self.assertIsInstance(raster, str, "tile type should be string.")
 
@@ -59,13 +71,18 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         api.gdal.set_checkpoint_off(self.spark) # <- important to call from api.gdal
         self.assertFalse(self.get_context().is_use_checkpoint(), "context should be configured off.")
         result = (
-            self.generate_singleband_raster_df()
+            self.generate_singleband_4326_raster_df()
             .withColumn("rst_boundingbox", api.rst_boundingbox("tile"))
             .withColumn("tile", api.rst_clip("tile", "rst_boundingbox"))
+            .cache()
         )
-        result.write.format("noop").mode("overwrite").save()
-        self.assertEqual(result.count(), 1)
+        result_cnt = result.count()
+        print(f"result (checkpoint off) - count? {result_cnt}")
+        self.assertEqual(result_cnt, 1)
+        result.limit(1).show()
+
         tile = result.select("tile").first()[0]
+        result.unpersist()
         raster = tile['raster']
         self.assertNotIsInstance(raster, str, "tile type should be binary (not string).")
 
@@ -77,12 +94,17 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
             f"checkpoint directory should equal default '{api.gdal.get_checkpoint_dir_default()}'."
         )
         result = (
-            self.generate_singleband_raster_df()
+            self.generate_singleband_4326_raster_df()
             .withColumn("rst_boundingbox", api.rst_boundingbox("tile"))
             .withColumn("tile", api.rst_clip("tile", "rst_boundingbox"))
+            .cache()
         )
-        result.write.format("noop").mode("overwrite").save()
-        self.assertEqual(result.count(), 1)
+        result_cnt = result.count()
+        print(f"result (reset checkpoint) - count? {result_cnt}")
+        self.assertEqual(result_cnt, 1)
+        result.limit(1).show()
+
         tile = result.select("tile").first()[0]
+        result.unpersist()
         raster = tile['raster']
         self.assertNotIsInstance(raster, str, "tile type should be binary (not string).")
