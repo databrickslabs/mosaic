@@ -59,7 +59,7 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
             val multiLineString = MosaicMultiLineStringJTS.fromSeq(breaklines)
             triangulator.setConstraints(multiLineString.getGeom)
         }
-        triangulator.setTolerance(tolerance)
+        triangulator.setTolerance(0.0)
 
         val trianglesGeomCollection = triangulator.getTriangles(geomFact)
         val trianglePolygons = PolygonExtracter.getPolygons(trianglesGeomCollection).asScala.map(_.asInstanceOf[Polygon])
