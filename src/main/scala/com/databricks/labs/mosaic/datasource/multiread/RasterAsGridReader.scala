@@ -30,7 +30,9 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     private val mc = MosaicContext.context()
     import mc.functions._
 
-    private var nPartitions = -1 // may change throughout the phases
+    private var nPartitions = -1                       // <- may change
+
+    private var readStrat = MOSAIC_RASTER_READ_AS_PATH // <- may change
 
     override def load(path: String): DataFrame = load(Seq(path): _*)
 
@@ -108,7 +110,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         }
 
         // <<< GDAL READER OPTIONS >>>
-        val readStrat = {
+        readStrat = {
             // have to go out of way to specify "-1"
             // don't use subdivide strategy with zips (AKA MOSAIC_RASTER_SUBDIVIDE_ON_READ)
             if (config("sizeInMB").toInt < 0 || config("vsizip").toBoolean) MOSAIC_RASTER_READ_AS_PATH
@@ -314,7 +316,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
     /**
      * Resolve the subdatasets if configured to do so. Resolving subdatasets
-     * requires "subdatasetName" to be set.
+     * - requires "subdatasetName" to be set.
+     * - Skips if read strategy is [[MOSAIC_RASTER_SUBDIVIDE_ON_READ]].
      *
      * @param df
      *   The DataFrame containing the paths.
@@ -327,7 +330,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
      */
     private def resolveSubdataset(df: DataFrame, config: Map[String, String], verboseLevel: Int) = {
         val subdatasetName = config("subdatasetName")
-        if (subdatasetName.nonEmpty) {
+        if (subdatasetName.nonEmpty && readStrat != MOSAIC_RASTER_SUBDIVIDE_ON_READ) {
             if (verboseLevel > 0) println(s"... subdataset? = $subdatasetName")
             val result = df
                 .withColumn("subdatasets", rst_subdatasets(col("tile")))

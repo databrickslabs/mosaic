@@ -105,20 +105,16 @@ object SubdivideOnRead extends ReadStrategy {
             case _ => identifyDriverNameFromRawPath(inPath, uriGdalOpt)
         }
         val tmpPath = PathUtils.copyCleanPathToTmpWithRetry(inPath, exprConfigOpt, retries = 5)
-        // 13 AUG 2024 - 0.4.3
-        // - For now, not handling subdatasets with retile (subdivide)
-        // - subdataset is handled after, e.g. with 'raster_to_grid'
-        // - TODO: REVALIDATE SUBDATASET HANDLING (PRE)
         val createInfo = Map(
             RASTER_PATH_KEY -> tmpPath,
             RASTER_PARENT_PATH_KEY -> inPath,
-            RASTER_DRIVER_KEY -> driverName
-            //RASTER_SUBDATASET_NAME_KEY -> options.getOrElse("subdatasetName", "") // <- SUBDATASET HERE (PRE)!
+            RASTER_DRIVER_KEY -> driverName,
+            RASTER_SUBDATASET_NAME_KEY -> options.getOrElse("subdatasetName", "") // <- SUBDATASET HERE (PRE)!
         )
         val tiles = localSubdivide(createInfo, sizeInMB, exprConfigOpt)
         val rows = tiles.map(tile => {
             val raster = tile.raster
-            // TODO: REVALIDATE SUBDATASET HANDLING (POST)
+
             // Clear out subset name on retile (subdivide)
             // - this is important to allow future loads to not try the path
             // - while subdivide should not be allowed for zips, testing just in case
