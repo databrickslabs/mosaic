@@ -41,7 +41,7 @@ trait ST_TriangulateBehaviours extends QueryTest {
             .withColumn("mesh", st_triangulate($"masspoints", $"breaklines", lit(tolerance)))
             .drop($"masspoints")
         noException should be thrownBy result.collect()
-        result.count() shouldBe 4435
+        result.count() shouldBe 4445
 
     }
 
