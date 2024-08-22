@@ -380,7 +380,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             .drop("x_size", "y_size", "bandCount", "metadata", "subdatasets", "length")
 
 
-        val tessCols = Array("tile", "cell_id") ++ tessellatedDf.columns.filter(c => c != "tile" && c != "cell_id")
+        val tessCols = Array("cell_id", "tile") ++ tessellatedDf.columns.filter(c => c != "tile" && c != "cell_id")
         tessellatedDf = tessellatedDf.selectExpr(tessCols : _*)
         if (limitTessellate > 0) {
             // handle optional limit (for testing)
@@ -692,7 +692,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             }
 
         val finalDf =
-            if (finalTbl && config("finalTableFuse").nonEmpty) {
+            if (finalTbl && config("finalTableFuse").nonEmpty && phase == "tessellate") {
+                // only write to fuse for tessellate phase when it is the final phase
                 df
                     .withColumn("tile", rst_write(col("tile"), config("finalTableFuse")))
             } else df
@@ -702,6 +703,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         finalDf.write
             .format("delta")
             .mode("overwrite")
+            .option("overwriteSchema", "true") // <- required for repeats
             .saveAsTable(fqn)
 
         // [3] change target for more files to spread out operation (SQL)

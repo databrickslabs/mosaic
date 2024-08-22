@@ -283,6 +283,6 @@ The reader supports the following options:
       - :code:`deltaFileMB` (default 8) specifies the underlying file sizes to use in the delta lake table; smaller file
         sizes will drive more parallelism which can be really useful in compute heavy operations as found in spatial
         processing.
-      - :code:`finalTableFuse` (default "") specifies alternate location for the final stage table; this will be either
-        tessellate (if :code:`stopAtTessellate` is true) or combine or interpolate (if :code:`kRingInterpolate` is > 0).
+      - :code:`finalTableFuse` (default "") specifies alternate location for the final stage table; this will only be
+        applied if :code:`stopAtTessellate` is true since the combine phases afterwards do not maintain the raster tile data.
       - :code:`keepInterimTables` (default false) specifies whether to delete interim DeltaLake tables generated.
