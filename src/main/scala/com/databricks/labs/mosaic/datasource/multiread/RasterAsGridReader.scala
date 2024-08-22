@@ -504,7 +504,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                 .select(
                     col("cell_id"),
                     lit(0).alias("band_id"),
-                    lit(0.0).alias("measure"),
+                    lit(0.0).alias("measure")
                 )
                 .cache()
             val invalidDfCnt = invalidDf.count()
