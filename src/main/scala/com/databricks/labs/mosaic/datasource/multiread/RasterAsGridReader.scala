@@ -658,22 +658,22 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             if (config("stopAtTessellate").toBoolean && phase == "tessellate") {
                 finalTbl = true
                 if (overrideTblName.nonEmpty) overrideTblName
-                else config("finalTablefqn")
+                else config("finalTableFqn")
             }
             else if (config("kRingInterpolate").toInt == 0 && phase == "combine") {
                 finalTbl = true
                 if (overrideTblName.nonEmpty) overrideTblName
-                else config("finalTablefqn")
+                else config("finalTableFqn")
             }
             else if (config("kRingInterpolate").toInt > 0 && phase == "interpolate") {
                 finalTbl = true
                 if (overrideTblName.nonEmpty) overrideTblName
-                else config("finalTablefqn")
+                else config("finalTableFqn")
             } else {
                 // interim table
                 val tbl =
                     if (overrideTblName.nonEmpty) overrideTblName
-                    else s"${config("finalTablefqn")}_$phase"
+                    else s"${config("finalTableFqn")}_$phase"
                 interimTbls :+ tbl
                 tbl
             }
@@ -743,7 +743,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             "extensions" -> this.extraOptions.getOrElse("extensions", "*"),
             "finalTableFqn" -> this.extraOptions.getOrElse("finalTableFqn", ""),              // <- identifies use of tables
             "finalTableFuse" -> this.extraOptions.getOrElse("finalTableFuse", ""),            // <- for tables
-            "keepInterimTables" -> this.extraOptions.getOrElse("keepIterimTables", "false"),  // <- for tables
+            "keepInterimTables" -> this.extraOptions.getOrElse("keepInterimTables", "false"),  // <- for tables
             "kRingInterpolate" -> this.extraOptions.getOrElse("kRingInterpolate", "0"),
             "limitTessellate" -> this.extraOptions.getOrElse("limitTessellate", "0"),
             "nPartitions" -> this.extraOptions.getOrElse("nPartitions", sparkSession.conf.get("spark.sql.shuffle.partitions")),

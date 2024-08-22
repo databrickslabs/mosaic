@@ -274,7 +274,12 @@ The reader supports the following options:
       - Fully qualified name (Fqn) can be up to "catalog.schema.final_table_name" or can be "schema.final_table_name" or
         "final_table_name"; the current catalog and schema will be used if not provided.
       - If provided, delta lake tables will be generated instead of keeping everything in ephemeral dataframes;
-        this can be much more performant as it benefits from materialized data per stage.
+        this can be much more performant as it benefits from materialized data per stage as well as liquid clustering of
+        the "cellid" column in the tessellate+ stages.
+      - Tables are overwritten per execution, so make sure to provide a new / unique table name if you want to preserve
+        prior results; also, interim tables will have "_phase" appended to the end of the provided final table name;
+        tessellate is performed incrementally, starting at 0 and going up to specified resolution (if > 0) with a separate
+        table generated for each iterative step.
       - :code:`deltaFileMB` (default 8) specifies the underlying file sizes to use in the delta lake table; smaller file
         sizes will drive more parallelism which can be really useful in compute heavy operations as found in spatial
         processing.
