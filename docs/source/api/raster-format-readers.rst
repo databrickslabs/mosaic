@@ -114,10 +114,18 @@ The reader supports the following options:
 
     * :code:`combiner` (default "mean") - combiner operation to use when converting raster to grid (StringType), options:
       "average", "avg", "count", "max", "mean", "median", and "min"
+    * :code:`deltaFileMB` (default 8) - If :code:`finalTableFqn` provided, this specifies the size of the delta table
+      files generated; smaller value drives more parallelism (IntegerType)
     * :code:`driverName` (default "") - when the extension of the file is not enough, specify the driver (e.g. .zips) (StringType)
     * :code:`extensions` (default "*") - raster file extensions, e.g. "tiff" and "nc", optionally separated by ";" (StringType),
       e.g. "grib;grb" or "*" or ".tif" or  "tif" (what the file ends with will be tested), case insensitive; useful like
       a glob filter to ignore other files in the directory, e.g. sidecar files
+    * :code:`finalTableFqn` (default "") - If this is provided, tables will be generated instead of just dataframes;
+      this is going to be much more performant and is recommended (StringType)
+    * :code:`finalTableFuse` (default "") - If :code:`finalTableFqn` provided, this specifies alternate location for
+      the final stage table (StringType)
+    * :code:`keepInterimTables` (default false) - If :code:`finalTableFqn` provided, this specifies whether to delete
+      interim DeltaLake tables generated (BooleanType)
     * :code:`kRingInterpolate` (default 0) - if the raster pixels are larger than the grid cells, use k_ring
       interpolation with n = kRingInterpolate (IntegerType)
     * :code:`limitTessellate` (default 0) - limits the number of rows during / after tessellate; useful for sampling or testing (IntegerType)
@@ -261,3 +269,15 @@ The reader supports the following options:
         even 16MB or 8MB, for better parallelism towards tessellation and measure aggregation.
       - If size is set to -1, the file is loaded and returned as a single tile (not recommended).
       - If set to 0, the file is loaded and subdivided into tiles of size no greater than 64MB.
+
+    :code:`finalTableFqn`:
+      - Fully qualified name (Fqn) can be up to "catalog.schema.final_table_name" or can be "schema.final_table_name" or
+        "final_table_name"; the current catalog and schema will be used if not provided.
+      - If provided, delta lake tables will be generated instead of keeping everything in ephemeral dataframes;
+        this can be much more performant as it benefits from materialized data per stage.
+      - :code:`deltaFileMB` (default 8) specifies the underlying file sizes to use in the delta lake table; smaller file
+        sizes will drive more parallelism which can be really useful in compute heavy operations as found in spatial
+        processing.
+      - :code:`finalTableFuse` (default "") specifies alternate location for the final stage table; this will be either
+        tessellate (if :code:`stopAtTessellate` is true) or combine or interpolate (if :code:`kRingInterpolate` is > 0).
+      - :code:`keepInterimTables` (default false) specifies whether to delete interim DeltaLake tables generated.
