@@ -1587,7 +1587,12 @@ st_triangulate
 
     Performs a conforming Delaunay triangulation using the points in :code:`pointsArray` including :code:`linesArray` as constraint / break lines.
 
-    :code:`tolerance` sets the tolerance for snapping nearby points together before executing the initial triangulation.
+    :code:`tolerance` sets the tolerance for post-processing the results of the triangulation, i.e. matching
+    the vertices of the output triangles to input points / lines. This is necessary as the algorithm often returns null
+    height / Z values. Setting this to a large value may result in the incorrect Z values being assigned to the
+    output triangle vertices (especially when :code:`linesArray` contains very densely spaced segments).
+    Setting this value to zero may result in the output triangle vertices being assigned a null Z value.
+    The point-snapping tolerance of the triangulation algorithm is always zero (i.e. all points are considered for triangulation).
 
     This is a generator expression and the resulting DataFrame will contain one row per triangle returned by the algorithm.
 
@@ -1606,15 +1611,21 @@ st_triangulate
 
 
     df = (
-      spark.createDataFrame([{'wkt': 'MULTIPOINT ((10 40), (40 30), (20 20), (30 10))'}])
-      .withColumn('geom', st_setsrid(st_geomfromwkt('wkt'), lit(4326)))
+      spark.createDataFrame([{
+        'points': [
+          'POINT Z (2 1 0)', 'POINT Z (3 2 1)',
+          'POINT Z (1 3 3)', 'POINT Z (0 2 2)'
+          ], 'lines': ['LINESTRING EMPTY']
+        }])
+      .select(st_triangulate('points', 'lines', lit(0.01)))
     )
-    df.select(st_astext(st_transform('geom', lit(3857)))).show(1, False)
-    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    |convert_to(st_transform(geom, 3857))                                                                                                                                      |
-    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
-    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    df.show(2, False)
+    +---------------------------------------+
+    |triangles                              |
+    +---------------------------------------+
+    |POLYGON Z((0 2 2, 2 1 0, 1 3 3, 0 2 2))|
+    |POLYGON Z((1 3 3, 2 1 0, 3 2 1, 1 3 3))|
+    +---------------------------------------+
 
    .. code-tab:: scala
 
