@@ -135,8 +135,12 @@ object SubdivideOnRead extends ReadStrategy {
             }
             raster.flushAndDestroy()
             // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
-            val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem)
-                .serialize(tileDataType, doDestroy = true, exprConfigOpt)))
+            val row = Utils.createRow(fields ++ Seq(
+                tile
+                    .finalizeTile(toFuse = true) // <- raster written to configured checkpoint
+                    .formatCellId(indexSystem)
+                    .serialize(tileDataType, doDestroy = true, exprConfigOpt)
+            ))
 
             row
         })

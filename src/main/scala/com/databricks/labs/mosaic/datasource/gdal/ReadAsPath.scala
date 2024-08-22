@@ -132,7 +132,11 @@ object ReadAsPath extends ReadStrategy {
 
         // Serialize to configured fuse directory
         val row = Utils.createRow(fields ++ Seq(
-            tile.formatCellId(indexSystem).serialize(tileDataType, doDestroy = true, exprConfigOpt)))
+            tile
+                .finalizeTile(toFuse = true) // <- raster written to configured checkpoint
+                .formatCellId(indexSystem)
+                .serialize(tileDataType, doDestroy = true, exprConfigOpt)
+        ))
         val rows = Seq(row)
 
         rows.iterator

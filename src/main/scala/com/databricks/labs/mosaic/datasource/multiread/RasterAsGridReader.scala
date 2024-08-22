@@ -372,6 +372,16 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                 "tile",
                 rst_tessellate(col("tile"), lit(0), lit(skipProject))
             )
+            .withColumn("cell_id", col("tile.index_id"))
+            .withColumnRenamed("path", "path_original")
+            .withColumnRenamed("modificationTime", "modification_time_original")
+            .withColumnRenamed("uuid", "uuid_original")
+            .withColumnRenamed("srid", "srid_original")
+            .drop("x_size", "y_size", "bandCount", "metadata", "subdatasets", "length")
+
+
+        val tessCols = Array("tile", "cell_id") ++ tessellatedDf.columns.filter(c => c != "tile" && c != "cell_id")
+        tessellatedDf = tessellatedDf.selectExpr(tessCols : _*)
         if (limitTessellate > 0) {
             // handle optional limit (for testing)
             tessellatedDf = tessellatedDf.limit(limitTessellate)
@@ -402,9 +412,11 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                         s"tile_$res",
                         rst_tessellate(col("tile"), lit(res), lit(skipProject)) // <- skipProject needed?
                     )
-                    .drop("tile")
+                    .drop("cell_id", "tile")
                     .filter(col(s"tile_$res").isNotNull)
                     .withColumnRenamed(s"tile_$res", "tile")
+                    .withColumn("cell_id", col("tile.index_id"))
+                tmpTessellatedDf = tmpTessellatedDf.selectExpr(tessCols : _*)
                 if (limitTessellate > 0) {
                     // handle optional limit (for testing)
                     tmpTessellatedDf = tmpTessellatedDf.limit(limitTessellate)
@@ -450,13 +462,14 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     private def combine(df: DataFrame, config: Map[String, String], verboseLevel: Int): DataFrame = {
 
         val combinedDf = df
-            .groupBy("tile.index_id")
+            .groupBy("cell_id")
             .agg(rst_combineavg_agg(col("tile")).alias("tile"))
             .withColumn(
                 "grid_measures",
                 rasterToGridCombiner(col("tile"))
             )
             .select(
+                "cell_id",
                 "grid_measures",
                 "tile"
             )
@@ -476,12 +489,12 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             validDf = combinedDf
                 .filter(size(col("grid_measures")) > lit(0))
                 .select(
-                    posexplode(col("grid_measures")).as(Seq("band_id", "measure")),
-                    col("tile").getField("index_id").alias("cell_id")
+                    col("cell_id"),
+                    posexplode(col("grid_measures")).as(Seq("band_id", "measure"))
                 )
                 .select(
-                    col("band_id"),
                     col("cell_id"),
+                    col("band_id"),
                     col("measure")
                 )
                 .cache()
@@ -489,14 +502,9 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             invalidDf = combinedDf
                 .filter(size(col("grid_measures")) === lit(0))
                 .select(
+                    col("cell_id"),
                     lit(0).alias("band_id"),
                     lit(0.0).alias("measure"),
-                    col("tile").getField("index_id").alias("cell_id")
-                )
-                .select(
-                    col("band_id"),
-                    col("cell_id"),
-                    col("measure")
                 )
                 .cache()
             val invalidDfCnt = invalidDf.count()
@@ -548,6 +556,11 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                 .withColumn("weight", lit(k + 1) - grid_distance(col("origin_cell_id"), col("cell_id")))
                 .groupBy("band_id", "cell_id")
                 .agg(weighted_sum("measure", "weight"))
+                .select(
+                  "cell_id",
+                  "band_id",
+                  "measure"
+                )
             if (doTables) {
                 result = writeTable(result, "interpolate", config, verboseLevel)
             } else result.cache()
@@ -631,7 +644,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
      * - uses the fqn for catalog and schema.
      * - uses the fqn for interim tables.
      * - uses the config for "deltaFileMB".
-     * - uses the "cellid" col to liquid cluster in tessellate, combine, and interpolate phases.
+     * - uses the "cell_id" col to liquid cluster in tessellate, combine, and interpolate phases.
      * - adds interim table names to the `interimTbls` array.
      *
      * @param df
@@ -694,9 +707,9 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         // [3] change target for more files to spread out operation (SQL)
         sparkSession.sql(s"ALTER TABLE $fqn SET TBLPROPERTIES(delta.targetFileSize = '${config("deltaFileMB").toInt}mb')")
 
-        // [4] set-up liquid clustering on tables with cellid (SQL)
+        // [4] set-up liquid clustering on tables with cell_id (SQL)
         if (Seq("tessellate", "combine", "interpolate").contains(phase)) {
-            sparkSession.sql(s"ALTER TABLE $fqn CLUSTER BY (cellid)")
+            sparkSession.sql(s"ALTER TABLE $fqn CLUSTER BY (cell_id)")
         }
 
         // [5] perform optimize to enact the change(s) (SQL)
