@@ -113,8 +113,9 @@ object SubdivideOnRead extends ReadStrategy {
         )
         val tiles = localSubdivide(createInfo, sizeInMB, exprConfigOpt)
         val rows = tiles.map(tile => {
-            tile.finalizeTile(toFuse = true)  // <- raster written to configured checkpoint
             val raster = tile.raster
+            raster.tryInitAndHydrate()            // <- need a hydrated raster
+            raster.finalizeRaster(toFuse = true)  // <- raster written to configured checkpoint
 
             // Clear out subset name on retile (subdivide)
             // - this is important to allow future loads to not try the path

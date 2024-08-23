@@ -60,7 +60,7 @@ case class RasterGDAL(
 
     /** @inheritdoc */
     override def tryInitAndHydrate(): RasterGDAL = {
-        this.getDatasetOpt() // <- hydrate attempted
+        this.getDatasetOpt() // <- hydrate attempted (if needed)
         this // fluent
     }
 

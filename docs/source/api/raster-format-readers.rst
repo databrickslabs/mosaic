@@ -135,21 +135,21 @@ The reader supports the following options:
       starting number of partitions, will grow (x10 up to 10K) for retile and/or tessellate (IntegerType)
     * :code:`resolution` (default 0) - resolution of the output grid (IntegerType)
     * :code:`retile` (default false) - recommended to re-tile to smaller tiles, not used for geo-scientific files (BooleanType)
-    * :code:`sizeInMB` (default 0) - subdivide on initial read if value > 0 provided; this is forced (8MB default)
-      for geo-scientific files (IntegerType)
+    * :code:`sizeInMB` (default 0) - subdivide on initial read if value > 0 provided (IntegerType)
     * :code:`skipProject` (default false) - mostly for troubleshooting, only good up to tessellate phase, most likely (BooleanType)
       will fail in combiner phase, e.g. can be used with :code:`stopAtTessellate` to help with initial processing of
       challenging datasets
     * :code:`srid` (default 0) - can attempt to set the SRID on the dataset, e.g. if it isn't already set (IntegerType);
       if a dataset has no SRID, then WGS84 / SRID=4326 will be assumed
-    * :code:`stepTessellate` (default false) - optionally, iterate tessellation from 0..resolution; not allowed with
+    * :code:`stepTessellate` (default false) - optionally, iterate tessellation from 0..resolution; not allowed with either
       geo-scientific or vsizip files (BooleanType)
     * :code:`stopAtTessellate` (default false) - optionally, return after tessellate phase, prior to the combiner phase (BooleanType)
     * :code:`subdatasetName` (default "") - if the raster has subdatasets, select a specific subdataset by name (StringType)
     * :code:`tileSize` (default 512) - size of the re-tiled tiles, tiles are always squares of tileSize x tileSize (IntegerType)
     * :code:`uriDeepCheck` (default false) - specify whether more extensive testing of known URI parts is needed (StringType)
     * :code:`vsizip` (default false) - if the rasters are zipped files, set this to true (BooleanType)
-    * :code:`verboseLevel` (default 0) - get increasing level of information (0..2) during processing (IntegerType)
+    * :code:`verboseLevel` (default 0) - get increasing level of information (0..2) during processing, shows up in
+      driver stdout (IntegerType)
 
 .. function:: format("raster_to_grid")
 
@@ -208,31 +208,32 @@ The reader supports the following options:
     **Phases ("raster_to_grid")**
 
     | (1) Initial load with "gdal" reader, passes select arguments and specifies based on internal logic whether using
-    |     "read_as_path" or "subdivide_on_read" (based on :code:`sizeInMB`); also, repartitions after load using :code:`nPartitions`.
+    |     either read strategy "as_path" or "subdivide_on_read" (based on :code:`sizeInMB`); for non-table handling,
+    |     repartitions after load using :code:`nPartitions`.
     | (2) Resolve the :code:`subdatasetName` if provided.
     | (3) Set the :code:`srid` if provided.
-    | (4) Increase :code:`nPartitions` for retile (different than subdivide) and tessellate ops.
+    | (4) Increase :code:`nPartitions` for non-table handling, used for retile (different than subdivide) and tessellate ops.
     | (5) Retile if :code:`retile` is true using provided :code:`tileSize`; not allowed for zips and geo-scientific files.
-    | (6) Tessellate to the specified resolution (0..:code:`resolution`) is iterated for better performance.
+    | (6) Tessellate to the specified resolution; with :code:`stepTessellate` is iterated (0..:code:`resolution`) for better performance.
     | (7) Combiner Aggregation for :code:`combiner`, if not returning after tessellate phase.
-    | (8) Explode combiner measures to row-per-band.
+    | (8) Explode combiner measures to row-per-band; 0 is used if no bands.
     | (9) Resample using :code:`kRingInterpolate` number of K-Rings if directed.
       
     General
       To improve performance, for 0.4.3+ rasters are stored in the fuse-mount checkpoint directory with "raster_to_grid",
       based on config :code:`spark.databricks.labs.mosaic.raster.checkpoint`. Also, "raster_to_grid" sets the following
       AQE configuration to false: :code:`spark.sql.adaptive.coalescePartitions.enabled`. There is some interim caching
-      (using the metadata only) and should be cleaned up, but for safety you can run :code:`spark.catalog.clearCache()`
-      in python to un-cache everything (including anything you may have explicitly cached previously). The dataframe
-      returned from this function will be cached, so you can explicitely call :code:`df.unpersist()` on it.
+      for non-table handling (using the metadata only) and should be cleaned up, but for safety you can run
+      :code:`spark.catalog.clearCache()` in python to un-cache everything (including anything you may have explicitly
+      cached previously). The dataframe returned from this function will be cached, so you can explicitly call
+      :code:`df.unpersist()` on it.
 
       Reader key-values may be provided either individually with :code:`option` (:code:`StringType` as shown in the example)
       or provided as a single map :code:`options` (:code:`Map<String,String>`). Then they will be coerced to the actual type
       expected, e.g. using :code:`toBoolean` or :code:`toInt` during handling.
 
     Geo-Scientific Files (N-D Labeled)
-      - :code:`sizeInMB` is forced (default set to 8) and strategy "subdivide_on_read" is used as these are dense files.
-      - Zipped (.zip) variations of geo-scientific use "read_as_path" strategy (vs "subdivide_on_read")
+      - :code:`sizeInMB` is ignored and read strategy "as_path" is used.
       - :code:`retile` and :code:`tileSize` are ignored; also, :code:`stepTessellate` is forced to false.
       - Drivers (and corresponding file extensions) that are defaulted to geo-scientific handling:
         :code:`HDF4` ("hdf4"), :code:`HDF5` ("hdf5"), :code:`GRIB` ("grb"), :code:`netCDF` ("nc"),
@@ -246,13 +247,14 @@ The reader supports the following options:
 
     Zipped Files
       - Zipped files should end in ".zip".
-      - Zipped (.zip) variations use "read_as_path" strategy regardless of whether :code:`sizeInMB` is provided
+      - Zipped (.zip) variations use "as_path" read strategy regardless of whether :code:`sizeInMB` is provided
         (which would otherwise cue "subdivide_on_read").
       - Ignores :code:`retile` and :code:`tileSize`; also, :code:`stepTessellate` is forced to false.
 
     NetCDF Files
       - Additional for this geo-scientific format.
       - Mostly tested with :code:`subdatasetName` provided which seems to reduce the NetCDF to 1 band which GDAL likes.
+      - Does not allow :code:`sizeInMB`, :code:`retile`, :code:`tileSize`, or :code:`stepTessellate`.
       - Not really tested zipped, don't recommend providing this format zipped.
       - If not using subdataset, due to potentially challenges with multiple bands at once for this format,
         may need to stop at tessellate with :code:`stopAtTessellate` set to "true", then use UDF (e.g. with [rio]xarray).
@@ -263,6 +265,7 @@ The reader supports the following options:
       - Recommend providing zipped with option :code:`vsizip` to help with handling.
       - Recommend option :code:`driverName` "Zarr" to help with handling.
       - Recommend option :code:`subdatasetName` to specify the group name (relative path after unzipped).
+      - Does not allow :code:`sizeInMB`, :code:`retile`, :code:`tileSize`, or :code:`stepTessellate`.
       - Recommend option :code:`stopAtTessellate` "true" to not try to use combiner (band-based) logic,
         then use UDF (e.g. with [rio]xarray).
 

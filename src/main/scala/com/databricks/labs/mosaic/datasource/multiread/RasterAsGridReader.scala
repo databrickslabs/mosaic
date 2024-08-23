@@ -25,9 +25,11 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     private val mc = MosaicContext.context()
     import mc.functions._
 
-    private var nPartitions = -1                       // <- may change
+    private var nPartitions = -1                             // <- may change
 
-    private var readStrat = MOSAIC_RASTER_READ_AS_PATH // <- may change
+    private var nestedHandling = false                       // <- may change
+
+    private var readStrat = MOSAIC_RASTER_READ_AS_PATH       // <- may change
 
     private var phases = Seq("path", "subdataset", "srid", "retile", "tessellate", "combine", "interpolate")
 
@@ -63,7 +65,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         val nestedExts = Seq("hdf4", "hdf5", "grb", "nc", "zarr")
         val driverName = config("driverName")
 
-        val nestedHandling = {
+        nestedHandling = {
             if (config("vsizip").toBoolean) {
                 false // <- skip subdivide for zips
             } else if (
@@ -88,28 +90,10 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                 false
             }
         }
-        if (nestedHandling) {
+        if (nestedHandling || config("vsizip").toBoolean) {
             // nested handling
-            // - update "sizeInMB" if missing,
+            // - set "sizeInMB" to "-1",
             //   want pretty small splits for dense data
-            // - update "retile" to false / "tileSize" to -1
-            if (config("sizeInMB").toInt != 0) {
-                config = getConfig + (
-                    "retile" -> "false",
-                    "tileSize" -> "-1",
-                    "stepTessellate" -> "false"
-                )
-            } else {
-                config = getConfig + (
-                    "sizeInMB" -> "8",
-                    "retile" -> "false",
-                    "tileSize" -> "-1",
-                    "stepTessellate" -> "false"
-                )
-            }
-        } else if (!nestedHandling && config("vsizip").toBoolean) {
-            // vsizip handling
-            // - update "sizeInMB" to -1
             // - update "retile" to false / "tileSize" to -1
             config = getConfig + (
                 "sizeInMB" -> "-1",
@@ -121,9 +105,9 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
         // <<< GDAL READER OPTIONS >>>
         readStrat = {
-            // have to go out of way to specify "-1"
-            // don't use subdivide strategy with zips (AKA MOSAIC_RASTER_SUBDIVIDE_ON_READ)
-            if (config("sizeInMB").toInt < 0 || config("vsizip").toBoolean) MOSAIC_RASTER_READ_AS_PATH
+            // have to go out of way to manually specify "-1"
+            // don't use subdivide strategy with zips or nested formats
+            if (config("sizeInMB").toInt < 0) MOSAIC_RASTER_READ_AS_PATH
             else MOSAIC_RASTER_SUBDIVIDE_ON_READ
         }
 
@@ -177,8 +161,6 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             // (2) resolve subdataset (if directed)
             // - metadata cache handled in the function
             resolvedDf = resolveSubdataset(pathsDf, config, verboseLevel)
-            if (config("subdatasetName").nonEmpty) println(s"::: resolved subdataset :::")
-            if (verboseLevel > 1) resolvedDf.limit(1).show()
 
             // (3) set srid (if directed)
             // - this may throw an exception, e.g. Zarr or Zips
@@ -231,7 +213,9 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
     /**
      * Resolve the subdatasets if configured to do so. Resolving subdatasets
-     * - requires "subdatasetName" to be set.
+     * - Requires "subdatasetName" to be set.
+     * - Skips if nestedHandling identified.
+     * - Skips if vsizip identified.
      * - Skips if read strategy is [[MOSAIC_RASTER_SUBDIVIDE_ON_READ]].
      *
      * @param df
@@ -245,7 +229,11 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
      */
     private def resolveSubdataset(df: DataFrame, config: Map[String, String], verboseLevel: Int) = {
         val subdatasetName = config("subdatasetName")
-        if (subdatasetName.nonEmpty && readStrat != MOSAIC_RASTER_SUBDIVIDE_ON_READ) {
+
+        if (
+            subdatasetName.nonEmpty && !nestedHandling && !config("vsizip").toBoolean
+                && readStrat != MOSAIC_RASTER_SUBDIVIDE_ON_READ
+        ) {
             if (verboseLevel > 0) println(s"... subdataset? = $subdatasetName")
             var result = df
                 .withColumn("subdatasets", rst_subdatasets(col("tile")))
@@ -262,6 +250,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                 FileUtils.deleteDfTilePathDirs(df, verboseLevel = verboseLevel, msg = "df (after subdataset)")
                 Try(df.unpersist())      // <- uncache df (after count)
             }
+            println(s"::: resolved subdataset :::")
+            if (verboseLevel > 1) result.limit(1).show()
 
             result
         } else {
@@ -398,7 +388,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         }
         if (doTables) {
             val tblName =
-                if (stepTessellate) s"${config("finalTableFqn")}_tessellate_0"
+                if (stepTessellate && resolution > 0) s"${config("finalTableFqn")}_tessellate_0"
                 else ""
             tessellatedDf = writeTable(
                 tessellatedDf,
@@ -418,7 +408,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
         var tmpTessellatedDf: DataFrame = null
         if (stepTessellate && resolution > 0) {
-            // [2] iterate over remainined resolutions
+            // [2] iterate over remained resolutions
             for (res <- 1 to resolution) {
                 tmpTessellatedDf = tessellatedDf
                     .withColumn("resolution", lit(res))

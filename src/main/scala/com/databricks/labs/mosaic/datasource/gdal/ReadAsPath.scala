@@ -118,8 +118,9 @@ object ReadAsPath extends ReadStrategy {
             RasterGDAL(createInfo, exprConfigOpt),
             tileDataType
         )
-        tile.finalizeTile(toFuse = true)  // <- raster written to configured checkpoint
         val raster = tile.raster
+        raster.tryInitAndHydrate()            // <- need a hydrated raster
+        raster.finalizeRaster(toFuse = true)  // <- raster written to configured checkpoint
 
         val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
         val fields = trimmedSchema.fieldNames.map {
