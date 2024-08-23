@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.datasource.multiread
 
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_READ_AS_PATH, MOSAIC_RASTER_READ_STRATEGY, MOSAIC_RASTER_SUBDIVIDE_ON_READ, NO_EXT, POLYGON_EMPTY_WKT}
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_READ_AS_PATH, MOSAIC_RASTER_READ_STRATEGY, MOSAIC_RASTER_SUBDIVIDE_ON_READ, NO_EXT}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
 import org.apache.spark.sql._
@@ -96,13 +96,15 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             if (config("sizeInMB").toInt != 0) {
                 config = getConfig + (
                     "retile" -> "false",
-                    "tileSize" -> "-1"
+                    "tileSize" -> "-1",
+                    "stepTessellate" -> "false"
                 )
             } else {
                 config = getConfig + (
                     "sizeInMB" -> "8",
                     "retile" -> "false",
-                    "tileSize" -> "-1"
+                    "tileSize" -> "-1",
+                    "stepTessellate" -> "false"
                 )
             }
         } else if (!nestedHandling && config("vsizip").toBoolean) {
@@ -112,7 +114,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             config = getConfig + (
                 "sizeInMB" -> "-1",
                 "retile" -> "false",
-                "tileSize" -> "-1"
+                "tileSize" -> "-1",
+                "stepTessellate" -> "false"
             )
         }
 
@@ -365,13 +368,20 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         val resolution = config("resolution").toInt
         val limitTessellate = config("limitTessellate").toInt
         val skipProject = config("skipProject").toBoolean
+        val stepTessellate = config("stepTessellate").toBoolean
+
+        val initRes =
+            if (stepTessellate) 0
+            else resolution
 
         // [1] initially tessellate at res=0
         var tessellatedDf = df
+            .withColumn("resolution", lit(initRes))
             .withColumn(
                 "tile",
-                rst_tessellate(col("tile"), lit(0), lit(skipProject))
+                rst_tessellate(col("tile"), col("resolution"), lit(skipProject))
             )
+            .filter(col("tile").isNotNull)
             .withColumn("cell_id", col("tile.index_id"))
             .withColumnRenamed("path", "path_original")
             .withColumnRenamed("modificationTime", "modification_time_original")
@@ -379,20 +389,23 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             .withColumnRenamed("srid", "srid_original")
             .drop("x_size", "y_size", "bandCount", "metadata", "subdatasets", "length")
 
-
-        val tessCols = Array("cell_id", "tile") ++ tessellatedDf.columns.filter(c => c != "tile" && c != "cell_id")
+        val tessCols = Array("cell_id", "resolution", "tile") ++ tessellatedDf.columns
+            .filter(c => c != "tile" && c != "cell_id" && c != "resolution")
         tessellatedDf = tessellatedDf.selectExpr(tessCols : _*)
         if (limitTessellate > 0) {
             // handle optional limit (for testing)
             tessellatedDf = tessellatedDf.limit(limitTessellate)
         }
         if (doTables) {
+            val tblName =
+                if (stepTessellate) s"${config("finalTableFqn")}_tessellate_0"
+                else ""
             tessellatedDf = writeTable(
                 tessellatedDf,
                 "tessellate",
                 config,
                 verboseLevel,
-                overrideTblName = s"${config("finalTableFqn")}_tessellate_0"
+                overrideTblName = tblName
             )
         } else {
             tessellatedDf = tessellatedDf.cache()
@@ -400,21 +413,20 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         var tessellatedDfCnt = tessellatedDf.count()
         if (!doTables) Try(df.unpersist()) // <- let go of prior caching
 
-        if (verboseLevel > 0) println(s"... tessellated at resolution 0 - count? $tessellatedDfCnt " +
+        if (verboseLevel > 0) println(s"... tessellated at resolution $initRes - count? $tessellatedDfCnt " +
             s"(going to $resolution) | skipProject? $skipProject")
 
         var tmpTessellatedDf: DataFrame = null
-        if (resolution > 0) {
+        if (stepTessellate && resolution > 0) {
             // [2] iterate over remainined resolutions
             for (res <- 1 to resolution) {
                 tmpTessellatedDf = tessellatedDf
+                    .withColumn("resolution", lit(res))
                     .withColumn(
-                        s"tile_$res",
-                        rst_tessellate(col("tile"), lit(res), lit(skipProject)) // <- skipProject needed?
+                        s"tile",
+                        rst_tessellate(col("tile"), col("resolution"), lit(skipProject)) // <- skipProject needed?
                     )
-                    .drop("cell_id", "tile")
-                    .filter(col(s"tile_$res").isNotNull)
-                    .withColumnRenamed(s"tile_$res", "tile")
+                    .filter(col("tile").isNotNull)
                     .withColumn("cell_id", col("tile.index_id"))
                 tmpTessellatedDf = tmpTessellatedDf.selectExpr(tessCols : _*)
                 if (limitTessellate > 0) {
@@ -599,51 +611,10 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     }
 
     /**
-     * Attempt to parse the catalog from the "finalTableFqn".
-     * - If fqn is empty, return None.
-     * - If the fqn has the catalog, return that; if not, return current catalog.
-     *
-     * @param config
-     *   The config to use.
-     * @return
-     *   Option string.
-     */
-    private def getCatalog(config: Map[String, String]): Option[String] = {
-        val fqn = config("finalTableFqn")
-        if (fqn.isEmpty) None
-        else {
-            val parts = fqn.split(".")
-            if (parts.length == 3) Some(parts(0))             // <- catalog provided
-            else Some(sparkSession.catalog.currentCatalog())  // <- current catalog
-        }
-    }
-
-    /**
-     * Attempt to parse the schema from the "finalTableFqn".
-     * - If fqn is empty, return None.
-     * - If the fqn has the schema, return that; if not, return current schema.
-     *
-     * @param config
-     *   The config to use.
-     * @return
-     *   Option string.
-     */
-    private def getSchema(config: Map[String, String]): Option[String] = {
-        val fqn = config("finalTableFqn")
-        if (fqn.isEmpty) None
-        else {
-            val parts = fqn.split(".")
-            if (parts.length == 3) Some(parts(1))             // <- catalog + schema provided
-            if (parts.length == 2) Some(parts(0))             // <- schema provided
-            else Some(sparkSession.catalog.currentDatabase)   // <- current schema
-        }
-    }
-
-    /**
      * Write DataFrame to Delta Lake.
      * - uses the fqn for catalog and schema.
      * - uses the fqn for interim tables.
-     * - uses the config for "deltaFileMB".
+     * - uses the configs for "deltaFileMB" and "deltaFileRecords".
      * - uses the "cell_id" col to liquid cluster in tessellate, combine, and interpolate phases.
      * - adds interim table names to the `interimTbls` array.
      *
@@ -700,10 +671,19 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
         // [2] initial write of the table to delta lake
         // - this is an overwrite operation
+        // .option("maxRecordsPerFile", "")
+        val writeOpts =
+            if (config("deltaFileRecords").toInt > 0) {
+                Map(
+                  "overwriteSchema" -> "true",
+                  "maxRecordsPerFile" -> config("deltaFileRecords")
+                )
+            } else Map("overwriteSchema" -> "true")
+
         finalDf.write
             .format("delta")
             .mode("overwrite")
-            .option("overwriteSchema", "true") // <- required for repeats
+            .options(writeOpts)
             .saveAsTable(fqn)
 
         // [3] change target for more files to spread out operation (SQL)
@@ -753,12 +733,13 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     private def getConfig: Map[String, String] = {
         Map(
             "combiner" -> this.extraOptions.getOrElse("combiner", "mean"),
-            "deltaFileMB" -> this.extraOptions.getOrElse("deltaFileMB", "8"),                 // <- for tables
+            "deltaFileMB" -> this.extraOptions.getOrElse("deltaFileMB", "8"),                    // <- for tables
+            "deltaFileRecords" -> this.extraOptions.getOrElse("deltaFileRecords", "1000"),       // <- for tables
             "driverName" -> this.extraOptions.getOrElse("driverName", ""),
             "extensions" -> this.extraOptions.getOrElse("extensions", "*"),
-            "finalTableFqn" -> this.extraOptions.getOrElse("finalTableFqn", ""),              // <- identifies use of tables
-            "finalTableFuse" -> this.extraOptions.getOrElse("finalTableFuse", ""),            // <- for tables
-            "keepInterimTables" -> this.extraOptions.getOrElse("keepInterimTables", "false"),  // <- for tables
+            "finalTableFqn" -> this.extraOptions.getOrElse("finalTableFqn", ""),                 // <- identifies use of tables
+            "finalTableFuse" -> this.extraOptions.getOrElse("finalTableFuse", ""),               // <- for tables
+            "keepInterimTables" -> this.extraOptions.getOrElse("keepInterimTables", "false"),    // <- for tables
             "kRingInterpolate" -> this.extraOptions.getOrElse("kRingInterpolate", "0"),
             "limitTessellate" -> this.extraOptions.getOrElse("limitTessellate", "0"),
             "nPartitions" -> this.extraOptions.getOrElse("nPartitions", sparkSession.conf.get("spark.sql.shuffle.partitions")),
@@ -766,8 +747,9 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             "retile" -> this.extraOptions.getOrElse("retile", "false"),
             "srid" -> this.extraOptions.getOrElse("srid", "0"),
             "sizeInMB" -> this.extraOptions.getOrElse("sizeInMB", "0"),
-            "skipProject" -> this.extraOptions.getOrElse("skipProject", "false"),             // <- debugging primarily
-            "stopAtTessellate" -> this.extraOptions.getOrElse("stopAtTessellate", "false"),   // <- debugging + tessellate perf
+            "skipProject" -> this.extraOptions.getOrElse("skipProject", "false"),                // <- debugging primarily
+            "stepTessellate" -> this.extraOptions.getOrElse("stepTessellate", "false"),
+            "stopAtTessellate" -> this.extraOptions.getOrElse("stopAtTessellate", "false"),      // <- debugging + tessellate perf
             "subdatasetName" -> this.extraOptions.getOrElse("subdatasetName", ""),
             "tileSize" -> this.extraOptions.getOrElse("tileSize", "512"),
             "uriDeepCheck" -> this.extraOptions.getOrElse("uriDeepCheck", "false"),

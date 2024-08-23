@@ -114,8 +114,10 @@ The reader supports the following options:
 
     * :code:`combiner` (default "mean") - combiner operation to use when converting raster to grid (StringType), options:
       "average", "avg", "count", "max", "mean", "median", and "min"
-    * :code:`deltaFileMB` (default 8) - If :code:`finalTableFqn` provided, this specifies the size of the delta table
+    * :code:`deltaFileMB` (default 8) - If :code:`finalTableFqn` provided, this specifies the max size of the delta table
       files generated; smaller value drives more parallelism (IntegerType)
+    * :code:`deltaFileRecords` (default 1000) - If > 0 and :code:`finalTableFqn` provided, limit number of files
+      per delta file to help with parallelism (IntegerType)
     * :code:`driverName` (default "") - when the extension of the file is not enough, specify the driver (e.g. .zips) (StringType)
     * :code:`extensions` (default "*") - raster file extensions, e.g. "tiff" and "nc", optionally separated by ";" (StringType),
       e.g. "grib;grb" or "*" or ".tif" or  "tif" (what the file ends with will be tested), case insensitive; useful like
@@ -140,6 +142,8 @@ The reader supports the following options:
       challenging datasets
     * :code:`srid` (default 0) - can attempt to set the SRID on the dataset, e.g. if it isn't already set (IntegerType);
       if a dataset has no SRID, then WGS84 / SRID=4326 will be assumed
+    * :code:`stepTessellate` (default false) - optionally, iterate tessellation from 0..resolution; not allowed with
+      geo-scientific or vsizip files (BooleanType)
     * :code:`stopAtTessellate` (default false) - optionally, return after tessellate phase, prior to the combiner phase (BooleanType)
     * :code:`subdatasetName` (default "") - if the raster has subdatasets, select a specific subdataset by name (StringType)
     * :code:`tileSize` (default 512) - size of the re-tiled tiles, tiles are always squares of tileSize x tileSize (IntegerType)
@@ -229,7 +233,7 @@ The reader supports the following options:
     Geo-Scientific Files (N-D Labeled)
       - :code:`sizeInMB` is forced (default set to 8) and strategy "subdivide_on_read" is used as these are dense files.
       - Zipped (.zip) variations of geo-scientific use "read_as_path" strategy (vs "subdivide_on_read")
-      - :code:`retile` and :code:`tileSize` are ignored.
+      - :code:`retile` and :code:`tileSize` are ignored; also, :code:`stepTessellate` is forced to false.
       - Drivers (and corresponding file extensions) that are defaulted to geo-scientific handling:
         :code:`HDF4` ("hdf4"), :code:`HDF5` ("hdf5"), :code:`GRIB` ("grb"), :code:`netCDF` ("nc"),
         and :code:`Zarr` ("zarr"); see Zarr and NetCDF notes further down.
@@ -244,7 +248,7 @@ The reader supports the following options:
       - Zipped files should end in ".zip".
       - Zipped (.zip) variations use "read_as_path" strategy regardless of whether :code:`sizeInMB` is provided
         (which would otherwise cue "subdivide_on_read").
-      - Ignores :code:`retile` and :code:`tileSize`.
+      - Ignores :code:`retile` and :code:`tileSize`; also, :code:`stepTessellate` is forced to false.
 
     NetCDF Files
       - Additional for this geo-scientific format.
@@ -283,6 +287,7 @@ The reader supports the following options:
       - :code:`deltaFileMB` (default 8) specifies the underlying file sizes to use in the delta lake table; smaller file
         sizes will drive more parallelism which can be really useful in compute heavy operations as found in spatial
         processing.
+      - :code:`deltaFileRecords` (default 1000) - If > 0, limit number of files per delta file to help with parallelism.
       - :code:`finalTableFuse` (default "") specifies alternate location for the final stage table; this will only be
         applied if :code:`stopAtTessellate` is true since the combine phases afterwards do not maintain the raster tile data.
       - :code:`keepInterimTables` (default false) specifies whether to delete interim DeltaLake tables generated.

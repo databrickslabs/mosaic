@@ -113,8 +113,14 @@ object ReadAsPath extends ReadStrategy {
             RASTER_DRIVER_KEY -> driverName,
             RASTER_SUBDATASET_NAME_KEY -> options.getOrElse(RASTER_SUBDATASET_NAME_KEY, "")
         )
-        val raster = RasterGDAL(createInfo, exprConfigOpt).tryInitAndHydrate()
-        val tile = RasterTile(null, raster, tileDataType)
+        val tile = RasterTile(
+            null,
+            RasterGDAL(createInfo, exprConfigOpt),
+            tileDataType
+        )
+        tile.finalizeTile(toFuse = true)  // <- raster written to configured checkpoint
+        val raster = tile.raster
+
         val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
         val fields = trimmedSchema.fieldNames.map {
             case PATH              => status.getPath.toString
@@ -129,11 +135,8 @@ object ReadAsPath extends ReadStrategy {
             case LENGTH            => raster.getMemSize
             case other             => throw new RuntimeException(s"Unsupported field name: $other")
         }
-
-        // Serialize to configured fuse directory
         val row = Utils.createRow(fields ++ Seq(
             tile
-                .finalizeTile(toFuse = true) // <- raster written to configured checkpoint
                 .formatCellId(indexSystem)
                 .serialize(tileDataType, doDestroy = true, exprConfigOpt)
         ))

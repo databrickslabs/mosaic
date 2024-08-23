@@ -70,8 +70,9 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("extensions", "tif")
             .option("resolution", "2")
             .option("kRingInterpolate", "3")
-            .option("verboseLevel", "2")     // <- interim progress (0,1,2)?
-            .option("limitTessellate", "10") // <- keeping rows down for testing
+            .option("verboseLevel", "2")      // <- interim progress (0,1,2)?
+            .option("limitTessellate", "10")  // <- keeping rows down for testing
+            .option("stepTessellate", "true") // <- allowed for tifs
             .load(s"${filePath}MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
             .select("measure")
         df.count() == 94 shouldBe(true)
@@ -139,8 +140,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .select("measure")
         df.count() == 588 shouldBe(true)
     }
-
-
+    
     test("Read netcdf with Raster As Grid Reader") {
 
         assume(System.getProperty("os.name") == "Linux")

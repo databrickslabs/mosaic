@@ -113,6 +113,7 @@ object SubdivideOnRead extends ReadStrategy {
         )
         val tiles = localSubdivide(createInfo, sizeInMB, exprConfigOpt)
         val rows = tiles.map(tile => {
+            tile.finalizeTile(toFuse = true)  // <- raster written to configured checkpoint
             val raster = tile.raster
 
             // Clear out subset name on retile (subdivide)
@@ -133,11 +134,8 @@ object SubdivideOnRead extends ReadStrategy {
                 case LENGTH            => raster.getMemSize
                 case other             => throw new RuntimeException(s"Unsupported field name: $other")
             }
-            raster.flushAndDestroy()
-            // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
             val row = Utils.createRow(fields ++ Seq(
                 tile
-                    .finalizeTile(toFuse = true) // <- raster written to configured checkpoint
                     .formatCellId(indexSystem)
                     .serialize(tileDataType, doDestroy = true, exprConfigOpt)
             ))
