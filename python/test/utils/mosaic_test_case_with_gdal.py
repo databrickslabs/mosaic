@@ -1,10 +1,11 @@
+import os
+import shutil
 from test.context import api
-from .mosaic_test_case import MosaicTestCase
+
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.functions import lit
 
-import os
-import shutil
+from .mosaic_test_case import MosaicTestCase
 
 
 class MosaicTestCaseWithGDAL(MosaicTestCase):
@@ -21,8 +22,10 @@ class MosaicTestCaseWithGDAL(MosaicTestCase):
         # manual cleanup "true" is needed (0.4.3)
         cls.spark.conf.set("spark.databricks.labs.mosaic.test.mode", "true")
         cls.spark.conf.set("spark.databricks.labs.mosaic.manual.cleanup.mode", "false")
-        cls.spark.conf.set("spark.databricks.labs.mosaic.cleanup.age.limit.minutes", "10") # "30" default
-        #cls.spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "true") # "false" default
+        cls.spark.conf.set(
+            "spark.databricks.labs.mosaic.cleanup.age.limit.minutes", "10"
+        )  # "30" default
+        # cls.spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "true") # "false" default
 
         pwd_dir = os.getcwd()
         cls.check_dir = f"{pwd_dir}/checkpoint"
@@ -31,7 +34,9 @@ class MosaicTestCaseWithGDAL(MosaicTestCase):
             os.makedirs(cls.check_dir)
         if not os.path.exists(cls.new_check_dir):
             os.makedirs(cls.new_check_dir)
-        cls.spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", cls.check_dir)
+        cls.spark.conf.set(
+            "spark.databricks.labs.mosaic.raster.checkpoint", cls.check_dir
+        )
 
         api.enable_mosaic(cls.spark)
         api.enable_gdal(cls.spark)
@@ -47,15 +52,16 @@ class MosaicTestCaseWithGDAL(MosaicTestCase):
     def generate_singleband_raster_df(self) -> DataFrame:
         return (
             self.spark.read.format("gdal")
-                .option("pathGlobFilter", "*_B04.TIF")          # <- B04
-                .option("raster.read.strategy", "in_memory")
-            .load("test/data")                                  # <- /MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF
+            .option("pathGlobFilter", "*_B04.TIF")  # <- B04
+            .option("raster.read.strategy", "in_memory")
+            .load("test/data")  # <- /MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF
         )
 
     def generate_singleband_4326_raster_df(self) -> DataFrame:
         return (
             self.generate_singleband_raster_df()
-            .withColumn("tile", api.rst_setsrid("tile", lit(9122)))   # <- set srid
-            .withColumn("tile", api.rst_transform("tile", lit(4326))) # <- transform to 4326
+            .withColumn("tile", api.rst_setsrid("tile", lit(9122)))  # <- set srid
+            .withColumn(
+                "tile", api.rst_transform("tile", lit(4326))
+            )  # <- transform to 4326
         )
-

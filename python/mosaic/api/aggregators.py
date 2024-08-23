@@ -66,11 +66,13 @@ def st_asgeojsontile_agg(geom: ColumnOrName, attributes: ColumnOrName) -> Column
     return config.mosaic_context.invoke_function(
         "st_asgeojsontile_agg",
         pyspark_to_java_column(geom),
-        pyspark_to_java_column(attributes)
+        pyspark_to_java_column(attributes),
     )
 
 
-def st_asmvttile_agg(geom: ColumnOrName, attributes: ColumnOrName, zxyID: ColumnOrName) -> Column:
+def st_asmvttile_agg(
+    geom: ColumnOrName, attributes: ColumnOrName, zxyID: ColumnOrName
+) -> Column:
     """
     Returns the aggregated MVT tile.
 
@@ -92,7 +94,7 @@ def st_asmvttile_agg(geom: ColumnOrName, attributes: ColumnOrName, zxyID: Column
         "st_asmvttile_agg",
         pyspark_to_java_column(geom),
         pyspark_to_java_column(attributes),
-        pyspark_to_java_column(zxyID)
+        pyspark_to_java_column(zxyID),
     )
 
 

@@ -1,10 +1,10 @@
-from pkg_resources import working_set, Requirement
-from test.context import api
-
 import os
 import shutil
 import subprocess
 import tempfile
+from test.context import api
+
+from pkg_resources import Requirement, working_set
 
 
 class FuseInstaller:
@@ -24,7 +24,7 @@ class FuseInstaller:
             jar_copy=self.jar_copy,
             jni_so_copy=self.jni_so_copy,
             script_out_name=self.FUSE_INIT_SCRIPT_FILENAME,
-            test_mode=True
+            test_mode=True,
         )
 
     def run_init_script(self) -> int:

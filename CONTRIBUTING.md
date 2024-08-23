@@ -129,4 +129,5 @@ To build the docs:
 
 Tools we use for code formatting and checking:
 - `scalafmt` and `scalastyle` in the main scala project.
-- `black` and `isort` for the python bindings.
+- `black` (python dir), e.g. `black mosaic` and `black test`.  
+- `isort` (python dir), e.g. `isort .` from within "mosaic" and "test" dirs.

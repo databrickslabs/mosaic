@@ -140,7 +140,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .select("measure")
         df.count() == 588 shouldBe(true)
     }
-    
+
     test("Read netcdf with Raster As Grid Reader") {
 
         assume(System.getProperty("os.name") == "Linux")

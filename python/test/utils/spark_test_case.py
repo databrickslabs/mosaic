@@ -1,6 +1,6 @@
-import unittest
 import os
 import shutil
+import unittest
 from importlib.metadata import version
 
 from pyspark.sql import SparkSession
@@ -41,7 +41,9 @@ class SparkTestCase(unittest.TestCase):
         )
         cls.spark.conf.set("spark.databricks.labs.mosaic.test.mode", "true")
         cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
-        cls.spark.conf.set("spark.databricks.labs.mosaic.raster.tmp.prefix", cls.tmp_dir)
+        cls.spark.conf.set(
+            "spark.databricks.labs.mosaic.raster.tmp.prefix", cls.tmp_dir
+        )
         cls.spark.sparkContext.setLogLevel("ERROR")
 
     @classmethod

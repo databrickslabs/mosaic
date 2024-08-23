@@ -1,5 +1,5 @@
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import abs, col, first, lit, sqrt, array, element_at
+from pyspark.sql.functions import abs, array, col, element_at, first, lit, sqrt
 
 from .context import api, readers
 from .utils import MosaicTestCaseWithGDAL
@@ -11,7 +11,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
 
     def test_read_raster(self):
         """
-         Uses the non-transformed singleband raster.
+        Uses the non-transformed singleband raster.
         """
         result = self.generate_singleband_raster_df().first()
         self.assertEqual(result.length, 1067862)
@@ -109,7 +109,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         result_cnt = result.count()
         print(f"result - count? {result_cnt}")
         self.assertEqual(result_cnt, 1)
-        #result.limit(1).show() # <- too messy (skipping)
+        # result.limit(1).show() # <- too messy (skipping)
         result.unpersist()
 
     def test_raster_flatmap_functions(self):
@@ -118,7 +118,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         """
         retile_result = (
             self.generate_singleband_4326_raster_df()
-                .withColumn("rst_retile", api.rst_retile("tile", lit(1200), lit(1200)))
+            .withColumn("rst_retile", api.rst_retile("tile", lit(1200), lit(1200)))
             .cache()
         )
         retile_cnt = retile_result.count()
@@ -129,7 +129,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
 
         subdivide_result = (
             self.generate_singleband_4326_raster_df()
-                .withColumn("rst_subdivide", api.rst_subdivide("tile", lit(1)))
+            .withColumn("rst_subdivide", api.rst_subdivide("tile", lit(1)))
             .cache()
         )
         subdivide_cnt = subdivide_result.count()
@@ -140,12 +140,14 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
 
         tessellate_result = (
             self.generate_singleband_4326_raster_df()
-                .withColumn("srid", api.rst_srid("tile"))
-                .withColumn("rst_tessellate", api.rst_tessellate("tile", lit(3)))
+            .withColumn("srid", api.rst_srid("tile"))
+            .withColumn("rst_tessellate", api.rst_tessellate("tile", lit(3)))
             .cache()
         )
         tessellate_cnt = tessellate_result.count()
-        print(f"tessellate - count? {tessellate_cnt} (srid? {tessellate_result.select('srid').first()[0]})")
+        print(
+            f"tessellate - count? {tessellate_cnt} (srid? {tessellate_result.select('srid').first()[0]})"
+        )
         self.assertEqual(tessellate_cnt, 63)
         tessellate_result.limit(1).show()
         tessellate_result.unpersist()
@@ -266,23 +268,22 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
                 .withColumn("tile", api.rst_setsrid("tile", lit(4326)))
                 .where(col("timestep") == 21)
                 .withColumn(
-                    "tile", api.rst_tooverlappingtiles("tile", lit(20), lit(20), lit(10))
+                    "tile",
+                    api.rst_tooverlappingtiles("tile", lit(20), lit(20), lit(10)),
                 )
                 .repartition(self.spark.sparkContext.defaultParallelism)
                 .cache()
             )
             df_cnt = df.count()
             print(f"...df count? {df_cnt}")
-            #print(f"...df tile? {df.select('tile').first()[0]}")
-            #print(f"""... metadata -> {df.select(api.rst_metadata("tile")).first()[0]}""")
-            #print(f"""... timesteps -> {[r[0] for r in df.select("timestep").distinct().collect()]}""")
+            # print(f"...df tile? {df.select('tile').first()[0]}")
+            # print(f"""... metadata -> {df.select(api.rst_metadata("tile")).first()[0]}""")
+            # print(f"""... timesteps -> {[r[0] for r in df.select("timestep").distinct().collect()]}""")
             df.limit(1).show()
 
-            prh_bands_indexed = (
-                df
-                .withColumn("tile", api.rst_tessellate("tile", lit(target_resolution)))
-                .cache()
-            )
+            prh_bands_indexed = df.withColumn(
+                "tile", api.rst_tessellate("tile", lit(target_resolution))
+            ).cache()
             prh_cnt = prh_bands_indexed.count()
             print(f"...prh count? {prh_cnt}")
             prh_bands_indexed.limit(1).show()
@@ -302,9 +303,8 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             clipped_precipitation.limit(1).show()
 
             merged_precipitation = (
-                clipped_precipitation
-                    .groupBy(*region_keys)
-                    .agg(api.rst_merge_agg("tile").alias("tile"))
+                clipped_precipitation.groupBy(*region_keys)
+                .agg(api.rst_merge_agg("tile").alias("tile"))
                 .cache()
             )
             merged_precip_cnt = merged_precipitation.count()
@@ -313,8 +313,8 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             merged_precipitation.limit(1).show()
 
         finally:
-            exec('try:census_df.unpersist() \nexcept:pass')
-            exec('try:df.unpersist() \nexcept:pass')
-            exec('try:prh_bands_indexed.unpersist() \nexcept:pass')
-            exec('try:clipped_precipitation.unpersist() \nexcept:pass')
-            exec('try:merged_precipitation.unpersist() \nexcept:pass')
+            exec("try:census_df.unpersist() \nexcept:pass")
+            exec("try:df.unpersist() \nexcept:pass")
+            exec("try:prh_bands_indexed.unpersist() \nexcept:pass")
+            exec("try:clipped_precipitation.unpersist() \nexcept:pass")
+            exec("try:merged_precipitation.unpersist() \nexcept:pass")
