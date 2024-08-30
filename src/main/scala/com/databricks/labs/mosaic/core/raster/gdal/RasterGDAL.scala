@@ -40,7 +40,7 @@ case class RasterGDAL(
                          exprConfigOpt: Option[ExprConfig]
                      ) extends RasterIO {
 
-    val DIR_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmm") // yyyyMMddHHmmss
+    val DIR_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
 
     // Factory for creating CRS objects
     protected val crsFactory: CRSFactory = new CRSFactory
@@ -343,8 +343,13 @@ case class RasterGDAL(
             this.getDatasetOpt() match {
                 case Some(dataset) =>
                     // (2) srs from srid
-                    val srs = new osr.SpatialReference()
-                    srs.ImportFromEPSG(srid)
+                    var srs: SpatialReference = null
+                    if (srid == 0 || srid == 4326) {
+                        srs = MosaicGDAL.WSG84
+                    } else {
+                        srs = new osr.SpatialReference()
+                        srs.ImportFromEPSG(srid)
+                    }
 
                     // (3) set srs on internal datasource
                     // - see (4) as well
@@ -700,6 +705,9 @@ case class RasterGDAL(
 
     /**
      * Get a particular subdataset by name.
+     * - This does not generate a new file.
+     * - It hydrates the dataset with the subset.
+     * - It also updates the path to include the subset.
      * @param subsetName
      *   The name of the subdataset to get.
      * @return
@@ -862,6 +870,7 @@ case class RasterGDAL(
 
     /** @return new fuse dir underneath the base fuse dir (checkpoint or override) */
     def makeNewFuseDir(ext: String, uuidOpt: Option[String]): String = {
+
         // (1) uuid used in dir
         // - may be provided (for filename consistency)
         val uuid = uuidOpt match {
@@ -873,7 +882,7 @@ case class RasterGDAL(
         val timePrefix = LocalDateTime.now().format(DIR_TIME_FORMATTER)
         val newDir = s"${timePrefix}_${ext}_${uuid}"
         val dir = s"$rootDir/$newDir"
-        Files.createDirectories(Paths.get(dir)) // <- create the directories
+        Files.createDirectories(Paths.get(dir))
         dir
     }
 

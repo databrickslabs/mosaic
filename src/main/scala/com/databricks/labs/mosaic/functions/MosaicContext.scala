@@ -790,6 +790,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_Tessellate(raster.expr, lit(resolution).expr, lit(skipProject).expr, exprConfig))
         def rst_tessellate(raster: Column, resolution: Column, skipProject: Column): Column =
             ColumnAdapter(RST_Tessellate(raster.expr, resolution.expr, skipProject.expr, exprConfig))
+        def rst_totif(raster: Column, dir: Column): Column =
+            ColumnAdapter(RST_ToTif(raster.expr, dir.expr, exprConfig))
+        def rst_totif(raster: Column, dir: String): Column =
+            ColumnAdapter(RST_ToTif(raster.expr, lit(dir).expr, exprConfig))
         def rst_fromcontent(raster: Column, driver: Column): Column =
             ColumnAdapter(RST_FromContent(raster.expr, driver.expr, lit(-1).expr, exprConfig))
         def rst_fromcontent(raster: Column, driver: Column, sizeInMB: Column): Column =

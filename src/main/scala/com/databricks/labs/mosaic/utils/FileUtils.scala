@@ -3,7 +3,6 @@ package com.databricks.labs.mosaic.utils
 import com.databricks.labs.mosaic.{MOSAIC_RASTER_TMP_PREFIX_DEFAULT, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.CleanUpManager
-import com.databricks.labs.mosaic.utils.FileUtils.isPathModTimeGTMillis
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.{col, explode}
@@ -11,7 +10,6 @@ import org.apache.spark.sql.functions.{col, explode}
 import java.io.{BufferedInputStream, File, FileInputStream, IOException}
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{FileVisitResult, Files, Path, Paths, SimpleFileVisitor}
-import java.util.Objects
 import java.util.concurrent.atomic.AtomicInteger
 import scala.sys.process._
 import scala.util.Try
@@ -260,7 +258,7 @@ object FileUtils {
      * @param verboseLevel
      *   Get some information about the operation (0,1,2), default is 0.
      * @param msg
-     *   IF provided, print message to identify what is being deleted
+     *   If provided, print message to identify what is being deleted, default is "".
      * @return
      *   2-Tuple of Longs for `(deletes.length, noDeletes.length)`.
      */
@@ -273,30 +271,34 @@ object FileUtils {
                                 msg: String = ""
                             ): (Long, Long) = {
         //scalastyle:off println
-        if (msg.nonEmpty) println(s"Deleting df tile paths -> '$msg'")
+        if (msg.nonEmpty && verboseLevel >= 2) println(s"Deleting df tile paths -> $msg")
         try {
             var df: DataFrame = dfIn
             // explode
-            if (doExplode) {
+            if (doExplode && df != null && df.columns.contains(colName)) {
                 df = df.select(
                     explode(col(colName)).alias(colName)
                 )
             }
 
             // delete
-            val paths = df
-                .select(colName)
-                .collect()
-                .map { row =>
-                    row
-                        .asInstanceOf[GenericRowWithSchema]
-                        .get(0)
-                        .asInstanceOf[GenericRowWithSchema]
-                        .getAs[Map[String, String]](2)(RASTER_PATH_KEY)
+            val paths =
+                if (df == null || df.count() == 0 || !df.columns.contains(colName)) Array.empty[String]
+                else {
+                    df
+                        .select(colName)
+                        .collect()
+                        .map { row =>
+                            row
+                                .asInstanceOf[GenericRowWithSchema]
+                                .get(0)
+                                .asInstanceOf[GenericRowWithSchema]
+                                .getAs[Map[String, String]](2)(RASTER_PATH_KEY)
+                        }
                 }
 
-            if (verboseLevel > 1) println(s"tile paths (length) -> ${paths.length}")
-            if (verboseLevel > 1) println(s"tile paths (first) ->  ${paths(0)}")
+            if (verboseLevel >= 2) println(s"tile paths (length) -> ${paths.length}")
+            if (verboseLevel >= 2 && paths.length > 0) println(s"tile paths (first) ->  ${paths(0)}")
 
             val checkDir = GDAL.getCheckpointDir
             val checkPath = Paths.get(checkDir)
@@ -317,7 +319,7 @@ object FileUtils {
                     }
             }
             val (deletes, noDeletes) = deleteStats.partition(_._1) // true goes to deletes
-            if (verboseLevel > 0) println(s" df -> # deleted? ${deletes.length} , # not? ${noDeletes.length}")
+            if (verboseLevel >= 2) println(s" df -> # deleted? ${deletes.length} , # not? ${noDeletes.length}")
             (deletes.length, noDeletes.length)
         } finally {
             if (handleCache) Try(dfIn.unpersist())

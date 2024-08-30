@@ -1,20 +1,10 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
-import com.databricks.labs.mosaic.{
-    NO_PATH_STRING,
-    RASTER_ALL_PARENTS_KEY,
-    RASTER_BAND_INDEX_KEY,
-    RASTER_DRIVER_KEY,
-    RASTER_LAST_CMD_KEY,
-    RASTER_LAST_ERR_KEY,
-    RASTER_PARENT_PATH_KEY,
-    RASTER_PATH_KEY,
-    RASTER_SUBDATASET_NAME_KEY
-}
+import com.databricks.labs.mosaic.{NO_PATH_STRING, RASTER_ALL_PARENTS_KEY, RASTER_BAND_INDEX_KEY, RASTER_DRIVER_KEY, RASTER_LAST_CMD_KEY, RASTER_LAST_ERR_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.core.raster.gdal.{RasterGDAL, RasterWriteOptions}
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.flushAndDestroy
 import com.databricks.labs.mosaic.functions.ExprConfig
-import org.gdal.gdal.{TranslateOptions, gdal}
+import org.gdal.gdal.{Dataset, TranslateOptions, gdal}
 
 import scala.util.Try
 
@@ -60,7 +50,7 @@ object GDALTranslate {
                     RASTER_PATH_KEY -> outputPath,
                     RASTER_PARENT_PATH_KEY -> raster.identifyPseudoPathOpt().getOrElse(NO_PATH_STRING),
                     RASTER_DRIVER_KEY -> writeOptions.format,
-                    RASTER_SUBDATASET_NAME_KEY -> raster.getSubsetName,
+                    //RASTER_SUBDATASET_NAME_KEY -> raster.getSubsetName, <- goes away after translate
                     RASTER_BAND_INDEX_KEY -> raster.getBandIdxOpt.getOrElse(-1).toString,
                     RASTER_LAST_CMD_KEY -> effectiveCommand,
                     RASTER_LAST_ERR_KEY -> errorMsg,

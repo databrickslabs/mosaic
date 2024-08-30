@@ -23,7 +23,7 @@ package object mosaic {
     val MOSAIC_RASTER_CHECKPOINT = "spark.databricks.labs.mosaic.raster.checkpoint"
     val MOSAIC_RASTER_CHECKPOINT_DEFAULT = "/dbfs/tmp/mosaic/raster/checkpoint"
     val MOSAIC_RASTER_USE_CHECKPOINT = "spark.databricks.labs.mosaic.raster.use.checkpoint"
-    val MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT = "false"
+    val MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT = "true" // <- now true by default!
     val MOSAIC_RASTER_TMP_PREFIX = "spark.databricks.labs.mosaic.raster.tmp.prefix"
     val MOSAIC_RASTER_TMP_PREFIX_DEFAULT = "/tmp"
     val MOSAIC_CLEANUP_AGE_LIMIT_MINUTES = "spark.databricks.labs.mosaic.cleanup.age.limit.minutes"

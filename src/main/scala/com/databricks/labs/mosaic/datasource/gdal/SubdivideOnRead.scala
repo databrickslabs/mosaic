@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
-import com.databricks.labs.mosaic.{RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_SUBDIVIDE_ON_READ, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
@@ -113,9 +113,11 @@ object SubdivideOnRead extends ReadStrategy {
         )
         val tiles = localSubdivide(createInfo, sizeInMB, exprConfigOpt)
         val rows = tiles.map(tile => {
+
+            val tileRow =  tile
+                .formatCellId(indexSystem)
+                .serialize(tileDataType, doDestroy = true, exprConfigOpt)
             val raster = tile.raster
-            raster.tryInitAndHydrate()            // <- need a hydrated raster
-            raster.finalizeRaster(toFuse = true)  // <- raster written to configured checkpoint
 
             // Clear out subset name on retile (subdivide)
             // - this is important to allow future loads to not try the path
@@ -135,11 +137,7 @@ object SubdivideOnRead extends ReadStrategy {
                 case LENGTH            => raster.getMemSize
                 case other             => throw new RuntimeException(s"Unsupported field name: $other")
             }
-            val row = Utils.createRow(fields ++ Seq(
-                tile
-                    .formatCellId(indexSystem)
-                    .serialize(tileDataType, doDestroy = true, exprConfigOpt)
-            ))
+            val row = Utils.createRow(fields ++ Seq(tileRow))
 
             row
         })
@@ -175,5 +173,8 @@ object SubdivideOnRead extends ReadStrategy {
 
         tiles
     }
+
+    /** @return the ReadStrategy name implemented. */
+    override def getReadStrategy: String = MOSAIC_RASTER_SUBDIVIDE_ON_READ
 
 }

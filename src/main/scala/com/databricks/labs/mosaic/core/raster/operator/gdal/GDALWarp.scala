@@ -58,6 +58,7 @@ object GDALWarp {
                 } else outputPath
 
             val size = Try(Files.size(Paths.get(resultPath))).getOrElse(-1L)
+            // TODO - RE-VERIFY SUBDATASET HANDLING FOR WARP
             val createInfo = Map(
                 RASTER_PATH_KEY -> resultPath,
                 RASTER_PARENT_PATH_KEY -> rasters.head.identifyPseudoPathOpt().getOrElse(NO_PATH_STRING),

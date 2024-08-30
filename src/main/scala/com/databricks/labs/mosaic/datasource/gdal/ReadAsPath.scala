@@ -1,9 +1,16 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
-import com.databricks.labs.mosaic.{RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
+import com.databricks.labs.mosaic.{
+    MOSAIC_RASTER_READ_AS_PATH,
+    NO_DRIVER,
+    RASTER_DRIVER_KEY,
+    RASTER_PARENT_PATH_KEY,
+    RASTER_PATH_KEY,
+    RASTER_SUBDATASET_NAME_KEY
+}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromExtOpt
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.datasource.Utils
@@ -100,28 +107,33 @@ object ReadAsPath extends ReadStrategy {
         val tmpPath = PathUtils.copyToTmp(inPath, exprConfigOpt)
         val uriDeepCheck = Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
         val uriGdalOpt = PathUtils.parseGdalUriOpt(inPath, uriDeepCheck)
-        val driverName = options.get("driverName") match {
-            case Some(name) if name.nonEmpty => name
-            case _ => identifyDriverNameFromRawPath(inPath, uriGdalOpt)
+        val extOpt = PathUtils.getExtOptFromPath(inPath, uriGdalOpt)
+        val driverName = options.getOrElse("driverName", NO_DRIVER) match {
+            case name if name.nonEmpty && name != NO_DRIVER => name
+            case _ => identifyDriverNameFromExtOpt(extOpt)
+        }
+        // Allow subdataset for read as path
+        // - subdataset is important also for Zarr with groups
+        val raster = RasterGDAL(
+            Map(
+                RASTER_PATH_KEY -> tmpPath,
+                RASTER_PARENT_PATH_KEY -> inPath,
+                RASTER_DRIVER_KEY -> driverName,
+                RASTER_SUBDATASET_NAME_KEY -> options.getOrElse(RASTER_SUBDATASET_NAME_KEY, "")
+            ),
+            exprConfigOpt
+        ).tryInitAndHydrate()
+
+        if (!raster.isEmptyRasterGDAL && exprConfigOpt.isDefined) {
+            // explicitly set the checkpoint dir
+            // the reader doesn't always have the configured information
+            raster.setFuseDirOpt(Some(exprConfigOpt.get.getRasterCheckpoint))
         }
 
-        // Allow subdataset for read as path
-        // - this is important also for Zarr with groups
-        val createInfo = Map(
-            RASTER_PATH_KEY -> tmpPath,
-            RASTER_PARENT_PATH_KEY -> inPath,
-            RASTER_DRIVER_KEY -> driverName,
-            RASTER_SUBDATASET_NAME_KEY -> options.getOrElse(RASTER_SUBDATASET_NAME_KEY, "")
-        )
-        val tile = RasterTile(
-            null,
-            RasterGDAL(createInfo, exprConfigOpt),
-            tileDataType
-        )
-        val raster = tile.raster
-        raster.tryInitAndHydrate()            // <- need a hydrated raster
-        raster.finalizeRaster(toFuse = true)  // <- raster written to configured checkpoint
-
+        val tile = RasterTile(null, raster, tileDataType)
+        val tileRow = tile
+            .formatCellId(indexSystem)
+            .serialize(tileDataType, doDestroy = true, exprConfigOpt)
         val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
         val fields = trimmedSchema.fieldNames.map {
             case PATH              => status.getPath.toString
@@ -136,14 +148,12 @@ object ReadAsPath extends ReadStrategy {
             case LENGTH            => raster.getMemSize
             case other             => throw new RuntimeException(s"Unsupported field name: $other")
         }
-        val row = Utils.createRow(fields ++ Seq(
-            tile
-                .formatCellId(indexSystem)
-                .serialize(tileDataType, doDestroy = true, exprConfigOpt)
-        ))
+        val row = Utils.createRow(fields ++ Seq(tileRow))
         val rows = Seq(row)
 
         rows.iterator
     }
 
+    /** @return the ReadStrategy name implemented. */
+    override def getReadStrategy: String = MOSAIC_RASTER_READ_AS_PATH
 }

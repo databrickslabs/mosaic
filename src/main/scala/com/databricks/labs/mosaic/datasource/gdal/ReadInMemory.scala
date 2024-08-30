@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
-import com.databricks.labs.mosaic.{RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_READ_IN_MEMORY, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
@@ -130,5 +130,8 @@ object ReadInMemory extends ReadStrategy {
 
         rows.iterator
     }
+
+    /** @return the ReadStrategy name implemented. */
+    override def getReadStrategy: String = MOSAIC_RASTER_READ_IN_MEMORY
 
 }

@@ -98,18 +98,23 @@ The packaged JAR should be available in `target/`.
 
 ### Python bindings
 
-The python bindings can be tested using [unittest](https://docs.python.org/3/library/unittest.html).
-- Build the scala project and copy to the packaged JAR to the `python/mosaic/lib/` directory.
-- Move to the `python/` directory and install the project and its dependencies:
-    `pip install . && pip install pyspark==<project_spark_version>`
-  (where 'project_spark_version' corresponds to the version of Spark 
-  used for the target Databricks Runtime, e.g. `3.4.1` for DBR 13.3 LTS.
-- Run the tests using `unittest`: `python -m unittest`
-
-The project wheel file can be built with [build](https://pypa-build.readthedocs.io/en/stable/).
-- Install the build requirements: `pip install build wheel`.
-- Build the wheel using `python -m build`.
-- Collect the .whl file from `python/dist/`
+1. Testing - You can run the tests (recommended within docker container) using
+   [unittest](https://docs.python.org/3/library/unittest.html), e.g. `python -m unittest`.
+2. Install the build requirements: `pip install build wheel`.
+3. [Option] Build with Script - If you are within docker container, to build the WHL file you can just run the following
+   from project root (mosaic) dir: `sh scripts/docker/python-local-build.sh` (it will package jar and build WHL).
+4. [Option] If doing build more manually (recommended within docker container using its init scripts):
+   - Build the scala project, e.g. `mvn package -DskipTests=true` if you have already tested successfully; that call. 
+     will copy the packaged JAR to the `python/mosaic/lib/` directory (or you can do so manually) and be sure to verify
+     no older JARs are lingering.
+   - Move to the `python/` directory and install the project and its dependencies:
+       `pip install . && pip install pyspark==<project_spark_version>`
+     (where 'project_spark_version' corresponds to the version of Spark 
+     used for the target Databricks Runtime, e.g. `3.4.1` for DBR 13.3 LTS. 
+   - The project wheel file can be built with [build](https://pypa-build.readthedocs.io/en/stable/), e.g. `python -m build`.
+5. Collect the .whl file from `python/dist/`:
+   - WHL contains the JAR.
+   - It is all that is needed for installing on a cluster (same for the deployed PyPI version).
 
 ### Documentation
 

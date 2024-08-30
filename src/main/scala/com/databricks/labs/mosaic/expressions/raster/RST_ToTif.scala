@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
+import com.databricks.labs.mosaic.core.raster.operator.TranslateToGTiff
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.WithExpressionInfo
@@ -15,28 +16,30 @@ import org.apache.spark.unsafe.types.UTF8String
 import scala.util.Try
 
 /**
-  * Writes raster tiles from the input column to a specified directory.
-  *   - expects the driver to already have been set on the inputExpr ("tile"
-  *     column).
-  * @param inputExpr
-  *   The expression for the tile with the raster to write.
-  * @param dirExpr
-  *   Write to directory.
-  * @param exprConfig
-  *   Additional arguments for the expression (expressionConfigs).
-  */
-case class RST_Write(
+ *   Converts the provided raster tile to tif if possible.
+ *   - Writes raster tiles from the input column to a specified directory.
+ *   - expects the driver to already have been set on the inputExpr ("tile"
+ *     column).
+ *
+ * @param inputExpr
+ *   The expression for the tile with the raster to write.
+ * @param dirExpr
+ *   Write to directory.
+ * @param exprConfig
+ *   Additional arguments for the expression (expressionConfigs).
+ */
+case class RST_ToTif(
                         inputExpr: Expression,
                         dirExpr: Expression,
                         exprConfig: ExprConfig
-) extends Raster1ArgExpression[RST_Write](
-      inputExpr,
-      dirExpr,
-      returnsRaster = true,
-      exprConfig = exprConfig
-    )
-      with NullIntolerant
-      with CodegenFallback {
+                    ) extends Raster1ArgExpression[RST_ToTif](
+    inputExpr,
+    dirExpr,
+    returnsRaster = true,
+    exprConfig = exprConfig
+)
+    with NullIntolerant
+    with CodegenFallback {
 
     // serialize data type
     // - don't use checkpoint because we are writing to a different location
@@ -46,29 +49,32 @@ case class RST_Write(
     }
 
     /**
-      * write a tile to dir.
-      *
-      * @param tile
-      *   The tile to be used.
-      * @param arg1
-      *   The dir.
-      * @return
-      *   tile using the new path
-      */
+     * write a tile to dir.
+     *
+     * @param tile
+     *   The tile to be used.
+     * @param arg1
+     *   The dir.
+     * @return
+     *   tile using the new path
+     */
     override def rasterTransform(tile: RasterTile, arg1: Any): Any = {
+        // [1] convert current raster to tif
+        val outRaster = TranslateToGTiff.compute(tile.raster, Some(exprConfig))
+
+        // [2] generate a tile copy with the copied raster
         tile.copy(
-          raster = copyToArg1Dir(tile, arg1)
+            raster = copyToArg1Dir(outRaster, arg1)
         )
     }
 
-    private def copyToArg1Dir(inTile: RasterTile, arg1: Any): RasterGDAL = {
+    private def copyToArg1Dir(raster: RasterGDAL, arg1: Any): RasterGDAL = {
         require(dirExpr.isInstanceOf[Literal])
 
         // (1) new [[RasterGDAL]]
         // - from createInfo of existing
-        val inRaster = inTile.raster
         val result = RasterGDAL(
-          createInfoInit = inRaster.getCreateInfo(includeExtras = true),
+            createInfoInit = raster.getCreateInfo(includeExtras = true),
             exprConfigOpt = Option(exprConfig)
         )
         // (2) just update the FuseDirOpt
@@ -83,13 +89,13 @@ case class RST_Write(
 }
 
 /** Expression info required for the expression registration for spark SQL. */
-object RST_Write extends WithExpressionInfo {
+object RST_ToTif extends WithExpressionInfo {
 
-    override def name: String = "rst_write"
+    override def name: String = "rst_totif"
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a new tile written to the specified directory.
+          |_FUNC_(expr1) - Returns a new tile of type "tif" written to the specified directory.
           |""".stripMargin
 
     override def example: String =
@@ -101,15 +107,16 @@ object RST_Write extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(exprConfig: ExprConfig): FunctionBuilder = { (children: Seq[Expression]) =>
-        {
-            def checkDir(dir: Expression) = Try(dir.eval().asInstanceOf[String]).isSuccess
+    {
+        def checkDir(dir: Expression) = Try(dir.eval().asInstanceOf[String]).isSuccess
 
-            children match {
-                // Note type checking only works for literals
-                case Seq(input, dir) if checkDir(dir) => RST_Write(input, dir, exprConfig)
-                case _                                => RST_Write(children.head, children(1), exprConfig)
-            }
+        children match {
+            // Note type checking only works for literals
+            case Seq(input, dir) if checkDir(dir) => RST_ToTif(input, dir, exprConfig)
+            case _                                => RST_ToTif(children.head, children(1), exprConfig)
         }
+    }
     }
 
 }
+

@@ -5,6 +5,7 @@ import com.databricks.labs.mosaic.core.raster.api.{FormatLookup, GDAL}
 import com.databricks.labs.mosaic.core.raster.gdal.{DatasetGDAL, PathGDAL, RasterBandGDAL, RasterGDAL}
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.{identifyDriverNameFromDataset, identifyDriverNameFromRawPath, identifyExtFromDriver}
 import com.databricks.labs.mosaic.functions.ExprConfig
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.utils.{PathUtils, SysUtils}
 import org.gdal.gdal.{Dataset, Driver, gdal}
 import org.gdal.gdalconst.gdalconstConstants.GA_ReadOnly
@@ -12,7 +13,7 @@ import org.gdal.ogr.DataSource
 import org.gdal.osr
 
 import java.nio.file.{Files, Paths, StandardCopyOption}
-import java.util.{Vector => JVector}
+import java.util.{Locale, Vector => JVector}
 import scala.util.Try
 
 /**
@@ -310,13 +311,12 @@ object RasterIO {
         Try {
             extOpt match {
                 case Some(ext) if ext != NO_EXT =>
-                    val driver = gdal.IdentifyDriverEx(ext)
+                    val driver = gdal.IdentifyDriverEx(ext.toLowerCase(Locale.ROOT))
                     try {
                         driver.getShortName
                     } finally {
                         driver.delete()
                     }
-
                 case _                          => NO_DRIVER
             }
         }.getOrElse {
@@ -457,11 +457,7 @@ object RasterIO {
 
             if (dsOpt.isDefined && Try(dsOpt.get.GetSpatialRef()).isFailure || dsOpt.get.GetSpatialRef() == null) {
                 // if SRS not set, try to set it to WGS84
-                Try{
-                    val srs = new osr.SpatialReference()
-                    srs.ImportFromEPSG(4326)
-                    dsOpt.get.SetSpatialRef(srs)
-                }
+                Try(dsOpt.get.SetSpatialRef(MosaicGDAL.WSG84))
             }
 
             dsOpt

@@ -11,6 +11,9 @@ import org.apache.spark.sql.types.StructType
 /** A trait defining the read strategy for the GDAL file format. */
 trait ReadStrategy extends Serializable {
 
+    /** @return the ReadStrategy name implemented. */
+    def getReadStrategy: String
+
     /**
       * Returns the schema of the GDAL file format.
       * @note

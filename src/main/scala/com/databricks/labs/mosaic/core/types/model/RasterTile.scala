@@ -165,6 +165,7 @@ case class RasterTile(
         // - safety net for parent path
         val parentPath = this.raster.identifyPseudoPathOpt().getOrElse(NO_PATH_STRING)
         val newCreateInfo = raster.getCreateInfo(includeExtras = true) + (RASTER_PATH_KEY -> path, RASTER_PARENT_PATH_KEY -> parentPath)
+        raster.updateCreateInfo(newCreateInfo) // <- in case tile is used after this
 
         // (4) actual serialization
         val mapData = buildMapString(newCreateInfo)

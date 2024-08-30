@@ -1,7 +1,9 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
+import com.databricks.labs.mosaic.MOSAIC_RASTER_READ_IN_MEMORY
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.google.common.io.{ByteStreams, Closeables}
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
@@ -23,6 +25,8 @@ import java.util.Locale
 class GDALFileFormat extends BinaryFileFormat {
 
     import GDALFileFormat._
+
+    var firstRun = true
 
     /**
       * Infer schema for the tile file.
@@ -117,8 +121,6 @@ class GDALFileFormat extends BinaryFileFormat {
         options: Map[String, String],
         hadoopConf: org.apache.hadoop.conf.Configuration
     ): PartitionedFile => Iterator[org.apache.spark.sql.catalyst.InternalRow] = {
-        // sets latest [[MosaicGDAL.exprConfigOpt]]
-        GDAL.enable(sparkSession)
 
         val indexSystem = IndexSystemFactory.getIndexSystem(sparkSession)
         val supportedExtensions = options.getOrElse("extensions", "*").split(";").map(_.trim.toLowerCase(Locale.ROOT))
@@ -129,15 +131,30 @@ class GDALFileFormat extends BinaryFileFormat {
         // GDAL supports multiple reading strategies.
         val reader = ReadStrategy.getReader(options)
 
+        // handle expression config
+        // - this is a special pattern
+        //   for readers vs expressions
+        // - explicitely setting use checkpoint to true
+        val exprConfig = ExprConfig(sparkSession)
+        GDAL.enable(exprConfig) // <- appropriate for workers (MosaicGDAL on driver)
+        reader match {
+            case r if r.getReadStrategy == MOSAIC_RASTER_READ_IN_MEMORY  =>
+                // update for 'in_memory'
+                exprConfig.setRasterUseCheckpoint("false")
+            case _ =>
+                // update for 'as_path' and 'subdivide_on_read'
+                exprConfig.setRasterUseCheckpoint("true")
+        }
+
         file: PartitionedFile => {
-            val exprConfig = MosaicGDAL.exprConfigOpt
+
             val path = new Path(new URI(file.filePath.toString()))
             val fs = path.getFileSystem(broadcastedHadoopConf.value.value)
             val status = fs.getFileStatus(path)
 
             if (supportedExtensions.contains("*") || supportedExtensions.exists(status.getPath.getName.toLowerCase(Locale.ROOT).endsWith)) {
                 if (filterFuncs.forall(_.apply(status)) && isAllowedExtension(status, options)) {
-                    reader.read(status, fs, requiredSchema, options, indexSystem, exprConfig)
+                    reader.read(status, fs, requiredSchema, options, indexSystem, Some(exprConfig))
                 } else {
                     Iterator.empty
                 }
@@ -160,8 +177,6 @@ object GDALFileFormat {
     val CONTENT = "content"
     val X_SIZE = "x_size"
     val Y_SIZE = "y_size"
-//    val X_OFFSET = "x_offset"
-//    val Y_OFFSET = "y_offset"
     val BAND_COUNT = "bandCount"
     val METADATA = "metadata"
     val SUBDATASETS: String = "subdatasets"
