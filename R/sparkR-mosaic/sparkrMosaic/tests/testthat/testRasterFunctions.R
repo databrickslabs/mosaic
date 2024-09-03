@@ -2,7 +2,7 @@ generate_singleband_raster_df <- function() {
   read.df(
     path = "sparkrMosaic/tests/testthat/data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF",
     source = "gdal",
-    raster.read.strategy = "in_memory"
+    raster.read.strategy = "as_path"  # <- changed to "as_path" strategy
     )
 }
 

@@ -4,7 +4,7 @@ generate_singleband_raster_df <- function() {
     name = "raster",
     source = "gdal",
     path = "data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF",
-    options = list("raster.read.strategy" = "in_memory")
+    options = list("raster.read.strategy" = "as_path")  # <- changed to "as_path" strategy
   )
 }
 
