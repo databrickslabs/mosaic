@@ -110,8 +110,8 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
 
         # - reset
         api.gdal.reset_checkpoint(self.spark)
-        self.assertFalse(
-            self.get_context().is_use_checkpoint(), "context should be configured off."
+        self.assertTrue(
+            self.get_context().is_use_checkpoint(), "context should be configured on."
         )
         self.assertEqual(
             self.get_context().get_checkpoint_dir(),
@@ -132,6 +132,6 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         tile = result.select("tile").first()[0]
         result.unpersist()
         raster = tile["raster"]
-        self.assertNotIsInstance(
-            raster, str, "tile type should be binary (not string)."
+        self.assertIsInstance(
+            raster, str, "tile type should be string (not binary)."
         )

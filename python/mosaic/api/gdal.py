@@ -146,11 +146,11 @@ def set_checkpoint_on(spark: SparkSession):
 def reset_checkpoint(spark: SparkSession):
     """
     Go back to defaults.
-    - spark conf unset for use checkpoint (off)
+    - spark conf unset for use checkpoint (on) <- note: change
     - spark conf unset for checkpoint path
     :param spark: session to use.
     """
-    spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "false")
+    spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "true")
     spark.conf.set(
         "spark.databricks.labs.mosaic.raster.checkpoint", get_checkpoint_dir_default()
     )
