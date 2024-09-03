@@ -44,11 +44,11 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     private var verboseLevel = 0                             // <- may change
 
     private val phases = Seq(
-        "path", "subdataset", "srid", "tif", "retile", "tessellate", "combine", "interpolate" // <- ordered
+        "path", "tif", "retile", "tessellate", "combine", "interpolate" // <- ordered
     )
 
     private val tileCols = Seq(
-        "tess_tile", "re_tile", "tile", "subset_tile", "orig_tile"                            // <- ordered
+        "tess_tile", "re_tile", "tile", "orig_tile"                            // <- ordered
     )
 
     private var interimTbls = Seq.empty[String]
@@ -86,8 +86,6 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
         // <<< PERFORM READ >>>
         var pathsDf: DataFrame = null
-        var resolvedDf: DataFrame = null
-        var sridDf: DataFrame = null
         var convertDf: DataFrame = null
         var retiledDf: DataFrame = null
         var tessellatedDf: DataFrame = null
@@ -98,24 +96,18 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             // (1) gdal reader load
             pathsDf = initialLoad(paths: _*)
 
-            // (2) resolve subdataset (if directed)
-            //resolvedDf = resolveSubdataset(pathsDf)
-
-            // (3) set srid (if directed)
-            //sridDf = handleSRID(resolvedDf)
-
-            // (4) toTif conversion (if directed)
+            // (2) toTif conversion (if directed)
             convertDf = convertToTif(pathsDf)
 
-            // (5) increase nPartitions for retile and tessellate
+            // (3) increase nPartitions for retile and tessellate
             nPartitions = Math.min(10000, pathsDf.count() * 32).toInt
             logMsg(s"::: adjusted nPartitions to $nPartitions :::", 1)
 
-            // (6) retile with 'tileSize'
+            // (4) retile with 'tileSize'
             // - different than RETILE (AKA SUBDIVIDE) read strategy
             retiledDf = retileRaster(convertDf)
 
-            // (7) tessellation
+            // (5) tessellation
             // - uses checkpoint dir
             // - optionally, skip project for data without SRS,
             //   e.g. Zarr handling (handled as WGS84)
@@ -125,10 +117,10 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                 // return tessellated
                 tessellatedDf
             } else {
-                // (8) combine
+                // (6) combine
                 combinedDf = combine(tessellatedDf)
 
-                // (9) handle k-ring resample
+                // (7) handle k-ring resample
                 kSampleDf = kRingResample(combinedDf)
 
                 kSampleDf // <- returned cached (this is metadata only)
@@ -140,8 +132,6 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             // handle interim dfs
             if (!doTables) {
                 Try(pathsDf.unpersist())
-                Try(resolvedDf.unpersist())
-                Try(sridDf.unpersist())
                 Try(convertDf.unpersist())
                 Try(retiledDf.unpersist())
                 if (!config("stopAtTessellate").toBoolean) Try(tessellatedDf.unpersist())
@@ -179,85 +169,9 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
     }
 
     /**
-     * Resolve the subdatasets if configured to do so. Resolving subdatasets
-     * - Requires "subdatasetName" to be set.
-     * - Adds 'subset_tile'.
-     *
-     * @param df
-     *   The DataFrame containing the paths.
-     * @return
-     *   The DataFrame after handling.
-     */
-    private def resolveSubdataset(df: DataFrame): DataFrame = {
-        val subdatasetName = config("subdatasetName")
-
-        if (subdatasetName.nonEmpty) {
-            logMsg(s"\t... subdataset? = $subdatasetName", 1)
-            var result = df
-                .withColumn("subdatasets", rst_subdatasets(col("tile")))
-                .withColumn("subset_name", lit(subdatasetName))
-                .withColumn("subset_tile", rst_getsubdataset(col("tile"), lit(subdatasetName)))
-            if (doTables) {
-                result = writeTable(result, "subdataset")
-                    .repartition(nPartitions)
-            } else {
-                result = result.cache()
-            }
-            val cnt = result.count() // <- need this to force cache
-            logMsg(s"\t... count? $cnt", 1)
-            cleanUpDfFiles(df, "subdataset")
-
-            logMsg(s"::: resolved subdataset :::", 0)
-            if (verboseLevel >= 2) result.limit(1).show()
-
-            result
-        } else {
-            df // <- as-is
-        }
-    }
-
-    /**
-     * Attempt to set srid.
-     * - Some drivers don't support this, e.g. Zarr might not.
-     * - Won't attempt for zip files.
-     *
-     * @param df
-     *   The DataFrame containing the paths.
-     * @return
-     *   The DataFrame after handling.
-     */
-    private def handleSRID(df: DataFrame): DataFrame = {
-        val srid = config("srid").toInt
-        if (srid > 0) {
-            logMsg(s"\t... srid? = $srid", 1)
-            var result = df
-                .withColumn("tile", rst_setsrid(col("tile"), lit(srid)))
-            if (df.columns.contains("subset_tile")) {
-                result = result
-                    .withColumn("subset_tile", rst_setsrid(col("subset_tile"), lit(srid)))
-            }
-
-            if (doTables) {
-                result = writeTable(result, "srid")
-                    .repartition(nPartitions)
-            } else {
-                result = result.cache()
-            }
-            val cnt = result.count() // <- need this to force cache
-            logMsg(s"\t... count? $cnt", 1)
-            cleanUpDfFiles(df, "srid")
-            logMsg(s"::: handled srid :::", 0)
-            if (verboseLevel >= 2) result.limit(1).show()
-
-            result
-        } else {
-            df                       // <- as-is
-        }
-    }
-
-    /**
      * Convert to tif.
-     * - Generates tif variations of 'tile' and 'subset_tile' (if available).
+     * - Generates tif variation of 'tile' (if directed).
+     * - 'tile' column becomes 'orig_tile'.
      *
      * @param df
      *   The df to act on.
@@ -274,20 +188,6 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
                 .withColumnRenamed("tile", "orig_tile")
                 .filter(col("orig_tile").isNotNull) // <- keep non-nulls only
                 .withColumn("tile", rst_totif(col("orig_tile"), toFuseDir))
-                .withColumn("tile_type", lit("tif_orig_tile"))
-                .filter(col("tile").isNotNull)      // <- keep non-nulls only
-
-            if (df.columns.contains("subset_tile")) {
-                result = result
-                    .union(
-                        df
-                            .withColumnRenamed("tile", "orig_tile")
-                            .filter(col("subset_tile").isNotNull) // <- keep non-nulls only
-                            .withColumn("tile", rst_totif(col("subset_tile"), toFuseDir))
-                            .withColumn("tile_type", lit("tif_subset_tile"))
-                            .filter(col("tile").isNotNull)        // <- keep non-nulls only
-                    )
-            }
             if (doTables) {
                 result = writeTable(result, "tif")
                     .repartition(nPartitions)
@@ -325,14 +225,6 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             logMsg(s"\t... retiling to tileSize = $tileSize", 1)
             val tileCol = bestTileCol(df, "retile")
             var result: DataFrame = df.select("*")
-            if (tileCol == "tile" && df.columns.contains("tile_type")) {
-                // specially handle "tile_type"
-                if (df.filter("tile_type = 'tif_subset_tile'").count() > 0) {
-                    result = result.filter("tile_type = 'tif_subset_tile'")
-                } else {
-                    result = result.filter("tile_type = 'tif_orig_tile'")
-                }
-            }
             result = result
                 .filter(col(tileCol).isNotNull)
                 .withColumn("re_tile", rst_retile(col(tileCol), lit(tileSize), lit(tileSize)))
@@ -378,14 +270,6 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         // - pick the preferred column to use
         val tileCol = bestTileCol(df, "tessellate")
         var tessellatedDf = df.withColumn("resolution", lit(initRes))
-            if (tileCol == "tile" && df.columns.contains("tile_type")) {
-                // specially handle "tile_type"
-                if (df.filter("tile_type = 'tif_subset_tile'").count() > 0) {
-                    tessellatedDf = tessellatedDf.filter("tile_type = 'tif_subset_tile'")
-                } else {
-                    tessellatedDf = tessellatedDf.filter("tile_type = 'tif_orig_tile'")
-                }
-            }
         tessellatedDf = tessellatedDf
             .filter(col(tileCol).isNotNull)
             .withColumn(
@@ -800,27 +684,12 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         ) {
             "re_tile"
         } else if (
-            (phase == "retile" || phase == "tessellate")
-            && df.columns.contains("tile") && df.columns.contains("tile_type")
-                && (
-                df.filter("tile_type = 'tif_subset_tile'").count() > 0
-                    || df.filter("tile_type = 'tif_orig_tile'").count() > 0
-                )
+            (phase == "retile" || phase == "tessellate") && df.columns.contains("tile")
         ) {
-            // Not-null already handled
-            // - will have to repeat the test in phase
-            "tile"
-        } else if (
-            df.columns.contains("subset_tile")
-                && df.filter(col("subset_tile").isNotNull).count() > 0
-        ) {
-            "subset_tile"
-        } else if (df.columns.contains("orig_tile")) {
-            "orig_tile"
-        } else {
             "tile"
         }
-
+        else if (df.columns.contains("orig_tile")) "orig_tile" // <- available after 'tif' phase
+        else "tile"                                            // <- catch-all
     }
 
     /**
@@ -874,24 +743,9 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             }
         }
 
-// TODO: ADJUST AFTER TESTING
-//        if (nestedHandling || config("vsizip").toBoolean) {
-//            // nested handling
-//            // - set "sizeInMB" to "-1",
-//            //   want pretty small splits for dense data
-//            // - update "retile" to false / "tileSize" to -1
-//            config = config + (
-//                "sizeInMB" -> "-1",
-//                "retile" -> "false",
-//                "tileSize" -> "-1",
-//                "stepTessellate" -> "false"
-//            )
-//        }
-
         // <<< GDAL READER STRATEGY && OPTIONS >>>
         readStrat = {
             // have to go out of way to manually specify "-1"
-            // don't use subdivide strategy with zips or nested formats
             if (config("sizeInMB").toInt < 0) MOSAIC_RASTER_READ_AS_PATH
             else MOSAIC_RASTER_SUBDIVIDE_ON_READ
         }
@@ -936,7 +790,6 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             "nPartitions" -> this.extraOptions.getOrElse("nPartitions", sparkSession.conf.get("spark.sql.shuffle.partitions")),
             "resolution" -> this.extraOptions.getOrElse("resolution", "0"),
             "retile" -> this.extraOptions.getOrElse("retile", "false"),
-            "srid" -> this.extraOptions.getOrElse("srid", "0"),
             "sizeInMB" -> this.extraOptions.getOrElse("sizeInMB", "0"),
             "skipProject" -> this.extraOptions.getOrElse("skipProject", "false"),                // <- debugging primarily
             "stepTessellate" -> this.extraOptions.getOrElse("stepTessellate", "false"),

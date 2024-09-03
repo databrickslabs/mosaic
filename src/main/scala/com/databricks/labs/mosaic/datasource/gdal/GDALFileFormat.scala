@@ -4,7 +4,6 @@ import com.databricks.labs.mosaic.MOSAIC_RASTER_READ_IN_MEMORY
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.functions.ExprConfig
-import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.google.common.io.{ByteStreams, Closeables}
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 import org.apache.hadoop.mapreduce.Job
@@ -90,7 +89,7 @@ class GDALFileFormat extends BinaryFileFormat {
         path: org.apache.hadoop.fs.Path
     ): Boolean = false
 
-    override def shortName(): String = GDAL_BINARY_FILE
+    override def shortName(): String = GDAL_FILE_FORMAT
 
     /**
       * Build a reader for the file format.
@@ -169,7 +168,7 @@ class GDALFileFormat extends BinaryFileFormat {
 
 object GDALFileFormat {
 
-    val GDAL_BINARY_FILE = "gdal"
+    val GDAL_FILE_FORMAT = "gdal"
     val PATH = "path"
     val LENGTH = "length"
     val MODIFICATION_TIME = "modificationTime"

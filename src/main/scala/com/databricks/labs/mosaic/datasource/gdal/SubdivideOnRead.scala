@@ -1,6 +1,12 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_SUBDIVIDE_ON_READ, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
+import com.databricks.labs.mosaic.{
+    MOSAIC_RASTER_SUBDIVIDE_ON_READ,
+    RASTER_DRIVER_KEY,
+    RASTER_PARENT_PATH_KEY,
+    RASTER_PATH_KEY,
+    RASTER_SUBDATASET_NAME_KEY
+}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
@@ -70,6 +76,7 @@ object SubdivideOnRead extends ReadStrategy {
 
     /**
      * Reads the content of the file.
+     * - Accepts options "sizeInMB", "driverName", and "subdatasetName".
      *
      * @param status
      *   File status.
@@ -113,11 +120,15 @@ object SubdivideOnRead extends ReadStrategy {
         )
         val tiles = localSubdivide(createInfo, sizeInMB, exprConfigOpt)
         val rows = tiles.map(tile => {
-
+            val raster = tile.raster
+            if (!raster.isEmptyRasterGDAL && exprConfigOpt.isDefined) {
+                // explicitly set the checkpoint dir
+                // the reader doesn't always have the configured information
+                raster.setFuseDirOpt(Some(exprConfigOpt.get.getRasterCheckpoint))
+            }
             val tileRow =  tile
                 .formatCellId(indexSystem)
                 .serialize(tileDataType, doDestroy = true, exprConfigOpt)
-            val raster = tile.raster
 
             // Clear out subset name on retile (subdivide)
             // - this is important to allow future loads to not try the path
@@ -163,7 +174,8 @@ object SubdivideOnRead extends ReadStrategy {
                           exprConfigOpt: Option[ExprConfig]
                       ): Seq[RasterTile] = {
 
-        var raster = RasterGDAL(createInfo, exprConfigOpt).tryInitAndHydrate()
+        var raster = RasterGDAL(createInfo, exprConfigOpt)
+            .tryInitAndHydrate()
         var inTile = new RasterTile(null, raster, tileDataType)
         val tiles = BalancedSubdivision.splitRaster(inTile, sizeInMB, exprConfigOpt)
 

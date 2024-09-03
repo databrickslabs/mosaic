@@ -1,23 +1,17 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.{BAND_META_GET_KEY, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO
 import com.databricks.labs.mosaic.functions.{ExprConfig, MosaicContext}
-import com.databricks.labs.mosaic.utils.PathUtils.VSI_ZIP_TOKEN
-import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
-import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
+import com.databricks.labs.mosaic.test.RasterTestHelpers.datasetFromPathUsingDriver
+import com.databricks.labs.mosaic.utils.FileUtils
 import org.apache.spark.sql.{DataFrame, QueryTest}
 import org.apache.spark.sql.functions.{size, _}
-import org.gdal.gdal.{Dataset, gdal}
-import org.gdal.gdalconst.gdalconstConstants.GA_ReadOnly
+import org.gdal.gdal.Dataset
 import org.gdal.osr
 import org.scalatest.matchers.should.Matchers._
 
-import java.nio.file.{Files, Paths}
-import java.util.{Vector => JVector}
 import scala.util.Try
 
 trait RST_TessellateBehaviors extends QueryTest {
@@ -39,7 +33,6 @@ trait RST_TessellateBehaviors extends QueryTest {
         var ds: Dataset = null
         val srs4326 = new osr.SpatialReference()
         srs4326.ImportFromEPSG(4326)
-        var drivers = new JVector[String]() // java.util.Vector
 
         // ::: [1] TIF :::
         println(s"<<< TIF >>>")
@@ -91,8 +84,6 @@ trait RST_TessellateBehaviors extends QueryTest {
 
         // ::: [2] NETCDF :::
         println(s"<<< NETCDF >>>")
-        drivers = new JVector[String]() // java.util.Vector
-        drivers.add("netCDF")
 
         info("\n<<< testing some tessellation + combine steps for Coral Bleaching netcdf >>>")
         info("  - NOTE: GETS FILTERED TO SUBDATASET 'bleaching_alert_area' (1 BAND) -\n")
@@ -182,34 +173,31 @@ trait RST_TessellateBehaviors extends QueryTest {
             Try(netAvgDf.unpersist())
         }
 
-        //        info("\n<<< testing [[Dataset]] for Coral Bleaching netcdf >>>\n")
-        //
-        //        ds = gdal.OpenEx(rawPath, GA_ReadOnly, drivers)
-        //        ds != null should be(true)
-        //        info(s"ds description -> ${ds.GetDescription()}")
-        //        info(s"ds rasters -> ${ds.GetRasterCount()}") // <- 0 for this one
-        //        info(s"ds files -> ${ds.GetFileList()}")
-        //        //info(s"ds tile-1 -> ${ds.GetRasterBand(1).GetDescription()}")
-        //
-        //        info("\n- testing [[RasterIO.rawPathAsDatasetOpt]] for netcdf coral bleaching -\n")
-        //
-        //        val ds2 = RasterIO.rawPathAsDatasetOpt(rawPath, subNameOpt = None, driverNameOpt = Some("netCDF"), exprConfigOpt)
-        //        ds2.isDefined should be(true)
-        //        info(s"ds2 description -> ${ds2.get.GetDescription()}")
-        //        info(s"ds2 num rasters -> ${ds2.get.GetRasterCount()}")     // <  0
-        //        Try(info(s"ds2 layer count -> ${ds2.get.GetLayerCount()}")) // <- 0
-        //        info(s"ds2 files -> ${ds2.get.GetFileList()}")              // <- 1
-        //        info(s"ds2 meta domains -> ${ds2.get.GetMetadataDomainList()}")
-        //
-        //        Try(info(s"<<< ds2 SRS (pre)? ${ds2.get.GetSpatialRef().toString} >>>")) // <- exception
-        //        ds2.get.SetSpatialRef(srs4326)
-        //        Try(info(s"<<< ds2 SRS (post)? ${ds2.get.GetSpatialRef().toString} >>>")) // <- good
+//                info("\n<<< testing [[Dataset]] for Coral Bleaching netcdf >>>\n")
+//                ds = datasetFromPathUsingDriver(rawPath, "netCDF")
+//                ds != null should be(true)
+//                info(s"ds description -> ${ds.GetDescription()}")
+//                info(s"ds rasters -> ${ds.GetRasterCount()}") // <- 0 for this one
+//                info(s"ds files -> ${ds.GetFileList()}")
+//                //info(s"ds tile-1 -> ${ds.GetRasterBand(1).GetDescription()}")
+//
+//                info("\n- testing [[RasterIO.rawPathAsDatasetOpt]] for netcdf coral bleaching -\n")
+//
+//                val ds2 = RasterIO.rawPathAsDatasetOpt(rawPath, subNameOpt = None, driverNameOpt = Some("netCDF"), exprConfigOpt)
+//                ds2.isDefined should be(true)
+//                info(s"ds2 description -> ${ds2.get.GetDescription()}")
+//                info(s"ds2 num rasters -> ${ds2.get.GetRasterCount()}")     // <  0
+//                Try(info(s"ds2 layer count -> ${ds2.get.GetLayerCount()}")) // <- 0
+//                info(s"ds2 files -> ${ds2.get.GetFileList()}")              // <- 1
+//                info(s"ds2 meta domains -> ${ds2.get.GetMetadataDomainList()}")
+//
+//                Try(info(s"<<< ds2 SRS (pre)? ${ds2.get.GetSpatialRef().toString} >>>")) // <- exception
+//                ds2.get.SetSpatialRef(srs4326)
+//                Try(info(s"<<< ds2 SRS (post)? ${ds2.get.GetSpatialRef().toString} >>>")) // <- good
 
 
         // ::: [3] ZARR :::
         println(s"<<< ZARR >>>")
-        drivers = new JVector[String]() // java.util.Vector
-        drivers.add("Zarr")
 
         info("\n<<< testing tessellation for zarr >>>\n")
 

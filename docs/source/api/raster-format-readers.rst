@@ -114,8 +114,6 @@ The reader supports the following options:
 
     * :code:`combiner` (default "mean") - combiner operation to use when converting raster to grid (StringType), options:
       "average", "avg", "count", "max", "mean", "median", and "min"
-    * :code:`deltaFileMB` (default 8) - If :code:`finalTableFqn` provided, this specifies the max size of the delta table
-      files generated; smaller value drives more parallelism (IntegerType)
     * :code:`deltaFileRecords` (default 1000) - If > 0 and :code:`finalTableFqn` provided, limit number of files
       per delta file to help with parallelism (IntegerType)
     * :code:`driverName` (default "") - when the extension of the file is not enough, specify the driver (e.g. .zips) (StringType)
@@ -139,8 +137,6 @@ The reader supports the following options:
     * :code:`skipProject` (default false) - mostly for troubleshooting, only good up to tessellate phase, most likely (BooleanType)
       will fail in combiner phase, e.g. can be used with :code:`stopAtTessellate` to help with initial processing of
       challenging datasets
-    * :code:`srid` (default 0) - can attempt to set the SRID on the dataset, e.g. if it isn't already set (IntegerType);
-      if a dataset has no SRID, then WGS84 / SRID=4326 will be assumed
     * :code:`stepTessellate` (default false) - optionally, iterate tessellation from 0..resolution; not allowed with either
       geo-scientific or vsizip files (BooleanType)
     * :code:`stopAtTessellate` (default false) - optionally, return after tessellate phase, prior to the combiner phase (BooleanType)
@@ -208,16 +204,14 @@ The reader supports the following options:
     **Phases ("raster_to_grid")**
 
     | (1) Initial load with "gdal" reader, passes select arguments and specifies based on internal logic whether using
-    |     either read strategy "as_path" or "subdivide_on_read" (based on :code:`sizeInMB`); for non-table handling,
-    |     repartitions after load using :code:`nPartitions`.
-    | (2) Resolve the :code:`subdatasetName` if provided.
-    | (3) Set the :code:`srid` if provided.
-    | (4) Increase :code:`nPartitions` for non-table handling, used for retile (different than subdivide) and tessellate ops.
-    | (5) Retile if :code:`retile` is true using provided :code:`tileSize`; not allowed for zips and geo-scientific files.
-    | (6) Tessellate to the specified resolution; with :code:`stepTessellate` is iterated (0..:code:`resolution`) for better performance.
-    | (7) Combiner Aggregation for :code:`combiner`, if not returning after tessellate phase.
-    | (8) Explode combiner measures to row-per-band; 0 is used if no bands.
-    | (9) Resample using :code:`kRingInterpolate` number of K-Rings if directed.
+    |     either read strategy "as_path" or "subdivide_on_read" (based on :code:`sizeInMB`)
+    | (2) Increase :code:`nPartitions` for non-table handling, used for retile (different than subdivide) and tessellate ops.
+    | (3) Convert the provided raster data to GeoTIFF if :code:`toTif` is true.
+    | (4) Retile if :code:`retile` is true using provided :code:`tileSize`.
+    | (5) Tessellate to the specified resolution; with :code:`stepTessellate` is iterated (0..:code:`resolution`) for better performance.
+    | (6) Combiner Aggregation for :code:`combiner`, if not returning after tessellate phase.
+    | (7) Explode combiner measures to row-per-band; 0 is used if no bands.
+    | (8) Resample using :code:`kRingInterpolate` number of K-Rings if directed.
       
     General
       To improve performance, for 0.4.3+ rasters are stored in the fuse-mount checkpoint directory with "raster_to_grid",
@@ -233,31 +227,33 @@ The reader supports the following options:
       expected, e.g. using :code:`toBoolean` or :code:`toInt` during handling.
 
     Geo-Scientific Files (N-D Labeled)
-      - :code:`sizeInMB` is ignored and read strategy "as_path" is used.
-      - :code:`retile` and :code:`tileSize` are ignored; also, :code:`stepTessellate` is forced to false.
       - Drivers (and corresponding file extensions) that are defaulted to geo-scientific handling:
         :code:`HDF4` ("hdf4"), :code:`HDF5` ("hdf5"), :code:`GRIB` ("grb"), :code:`netCDF` ("nc"),
         and :code:`Zarr` ("zarr"); see Zarr and NetCDF notes further down.
+      - Use of option :code:`toTif` might be useful to standardize handling of the nested data into more pixel-based,
+        e.g. for retile, tessellate, and combine phases.
       - Consider use of `xarray <https://pypi.org/project/xarray/>`_ / `rioxarray <https://pypi.org/project/rioxarray/>`_
         libs to work with Geo-Scientific; can combine with various data engineering and can use UDF patterns, adapting from
         examples shown in :doc:`rasterio-gdal-udfs` as well as various notebook examples in the project repo.
 
-    Other Non-Zipped Files
-      - Allows :code:`retile` (and :code:`tileSize`) can be used with :code:`sizeInMB`, or neither.
+    Tif Files
+      - GeoTIFFs (driver "GTiff" with extension "tif") are pixel based vs nested. They more readily allow subdivide
+        read strategy with :code:`sizeInMB` >= 0 as well as retiling with :code:`retile` and :code:`tileSize`.
 
     Zipped Files
       - Zipped files should end in ".zip".
       - Zipped (.zip) variations use "as_path" read strategy regardless of whether :code:`sizeInMB` is provided
         (which would otherwise cue "subdivide_on_read").
-      - Ignores :code:`retile` and :code:`tileSize`; also, :code:`stepTessellate` is forced to false.
+      - Recommend :code:`sizeInMB` "-1" to avoid attempting to subdivide read strategy.
+      - Might have issues with :code:`retile`, :code:`tileSize`, or :code:`stepTessellate`.
 
     NetCDF Files
       - Additional for this geo-scientific format.
       - Mostly tested with :code:`subdatasetName` provided which seems to reduce the NetCDF to 1 band which GDAL likes.
-      - Does not allow :code:`sizeInMB`, :code:`retile`, :code:`tileSize`, or :code:`stepTessellate`.
       - Not really tested zipped, don't recommend providing this format zipped.
-      - If not using subdataset, due to potentially challenges with multiple bands at once for this format,
-        may need to stop at tessellate with :code:`stopAtTessellate` set to "true", then use UDF (e.g. with [rio]xarray).
+      - When a subdataset is not specified, you
+        may need to stop at tessellate with :code:`stopAtTessellate` set to "true", then use UDF (e.g. with [rio]xarray);
+        this is due to potentially challenges with attempting to process multiple bands at once for this format.
 
     Zarr Files
       - Additional for this geo-scientific format.
@@ -265,7 +261,8 @@ The reader supports the following options:
       - Recommend providing zipped with option :code:`vsizip` to help with handling.
       - Recommend option :code:`driverName` "Zarr" to help with handling.
       - Recommend option :code:`subdatasetName` to specify the group name (relative path after unzipped).
-      - Does not allow :code:`sizeInMB`, :code:`retile`, :code:`tileSize`, or :code:`stepTessellate`.
+      - Recommend :code:`sizeInMB` "-1" to avoid attempting to subdivide read strategy.
+      - Might have issues with :code:`retile`, :code:`tileSize`, or :code:`stepTessellate`.
       - Recommend option :code:`stopAtTessellate` "true" to not try to use combiner (band-based) logic,
         then use UDF (e.g. with [rio]xarray).
 
@@ -281,16 +278,14 @@ The reader supports the following options:
       - Fully qualified name (Fqn) can be up to "catalog.schema.final_table_name" or can be "schema.final_table_name" or
         "final_table_name"; the current catalog and schema will be used if not provided.
       - If provided, delta lake tables will be generated instead of keeping everything in ephemeral dataframes;
-        this can be much more performant as it benefits from materialized data per stage as well as liquid clustering of
-        the "cellid" column in the tessellate+ stages.
+        this can be much more performant as it benefits from materialized data per stage.
       - Tables are overwritten per execution, so make sure to provide a new / unique table name if you want to preserve
         prior results; also, interim tables will have "_phase" appended to the end of the provided final table name;
         tessellate is performed incrementally, starting at 0 and going up to specified resolution (if > 0) with a separate
         table generated for each iterative step.
-      - :code:`deltaFileMB` (default 8) specifies the underlying file sizes to use in the delta lake table; smaller file
-        sizes will drive more parallelism which can be really useful in compute heavy operations as found in spatial
-        processing.
-      - :code:`deltaFileRecords` (default 1000) - If > 0, limit number of files per delta file to help with parallelism.
+      - :code:`deltaFileRecords` (default 1000) - If > 0, limit number of files per delta file to help with parallelism;
+        this will possibly get wiped out if you subsequently manually call OPTIMIZE on the table, e.g. as part of liquid
+        clustering of the "cellid" column in the tessellate+ stages (the write operations here do not liquid cluster).
       - :code:`finalTableFuse` (default "") specifies alternate location for the final stage table; this will only be
         applied if :code:`stopAtTessellate` is true since the combine phases afterwards do not maintain the raster tile data.
       - :code:`keepInterimTables` (default false) specifies whether to delete interim DeltaLake tables generated.

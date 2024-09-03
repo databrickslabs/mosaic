@@ -1,22 +1,10 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.{
-    MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT,
-    MOSAIC_CLEANUP_AGE_LIMIT_MINUTES,
-    MOSAIC_MANUAL_CLEANUP_MODE,
-    MOSAIC_RASTER_USE_CHECKPOINT,
-    MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT,
-    MOSAIC_TEST_MODE,
-    RASTER_MEM_SIZE_KEY,
-    RASTER_PATH_KEY
-}
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_READ_IN_MEMORY, MOSAIC_RASTER_READ_STRATEGY}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.CleanUpManager
-import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.gdal.MosaicGDAL
-import com.databricks.labs.mosaic.utils.FileUtils
+import com.databricks.labs.mosaic.functions.{ExprConfig, MosaicContext}
+import com.databricks.labs.mosaic.test.RasterTestHelpers
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.types.BinaryType
@@ -24,12 +12,11 @@ import org.scalatest.matchers.should.Matchers._
 
 import java.nio.file.Paths
 import scala.collection.mutable
-import scala.util.Try
 
 trait RST_ClipBehaviors extends QueryTest {
 
     // noinspection MapGetGet
-    def behaviors(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def behaviors(indexSystem: IndexSystem, geometryAPI: GeometryAPI, exprConfigOpt: Option[ExprConfig]): Unit = {
         val sc = this.spark
         import sc.implicits._
 
@@ -38,33 +25,12 @@ trait RST_ClipBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        //info(s"is CleanUpManager running? ${CleanUpManager.isCleanThreadAlive}")
-        //info(s"test on? ${sc.conf.get(MOSAIC_TEST_MODE, "false")}")
-        //info(s"manual cleanup on? ${sc.conf.get(MOSAIC_MANUAL_CLEANUP_MODE, "false")}")
-        //info(s"cleanup minutes (config)? ${sc.conf.get(MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT)}")
-
-//        val checkDir = MosaicGDAL.getCheckpointPath
-//        info(s"configured checkpoint dir? $checkDir")
-//        info(s"checkpoint on? ${sc.conf.get(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT)}")
-//
-//        val localDir = MosaicGDAL.getLocalRasterDir
-//        info(s"configured local tile dir? $localDir")
-//        info(s"local dir exists and is dir? -> ${Paths.get(localDir).toFile.exists()} |" +
-//            s" ${Paths.get(localDir).toFile.isDirectory}")
-//        info(s"last modified for working dir? -> ${Paths.get(localDir).toFile.lastModified()}")
-//        info(s"current time millis -> ${System.currentTimeMillis()}")
-
-//        // clean up configured MosaicTmpRootDir
-//        // - all but those in the last 5 minutes
-//        GDAL.cleanUpManualDir(ageMinutes = 5, MosaicGDAL.getMosaicTmpRootDir, keepRoot = true) match {
-//            case Some(msg) => info(s"cleanup mosaic tmp dir msg -> '$msg'")
-//            case _ => ()
-//        }
-
         val testPath = "src/test/resources/binary/geotiff-small/chicago_sp27.tif"
 
-        info("\n::: base :::")
-        val df = spark.read.format("gdal").load(testPath)
+        //info("\n::: base :::")
+        val df = spark.read.format("gdal")
+            .option(MOSAIC_RASTER_READ_STRATEGY, MOSAIC_RASTER_READ_IN_MEMORY)
+            .load(testPath)
             .withColumn("content", $"tile.raster")
             .withColumn("pixels", rst_pixelcount($"tile"))
             .withColumn("size", rst_memsize($"tile"))
@@ -74,22 +40,23 @@ trait RST_ClipBehaviors extends QueryTest {
             .select("pixels", "srid", "size", "tile", "pixel_height", "pixel_width", "content")
             .limit(1)
 
+        val tileBase = RasterTestHelpers.getFirstTile(df, exprConfigOpt)
+        //info(s"tileBase (class? ${tileBase.getClass.getName}) -> $tileBase")
+        tileBase.raster.isEmptyRasterGDAL should be(false)
+
         val base = df.first
         val p = base.getAs[mutable.WrappedArray[Long]](0)(0)
         val srid = base.get(1).asInstanceOf[Int]
         val sz = base.get(2)
-        val tile = base.get(3)
         val ph = base.get(4).asInstanceOf[Double]
         val pw = base.get(5).asInstanceOf[Double]
-//        val content = base.get(6)
-        //info(s"tile -> $tile (${tile.getClass.getName})")
         //info(s"size -> $sz")
-        //info(s"pixels -> $p")
         //info(s"srid -> $srid (${srid.getClass.getName})")
+        //info(s"pixels -> $p")
         //info(s"pixel_height -> $ph")
         //info(s"pixel_width -> $pw")
 
-        info("\n::: clipper :::")
+        //info("\n::: clipper :::")
         val ftMeters = 0.3 // ~0.3 ft in meter
         val ftUnits = 0.3  // epsg:26771 0.3 ft per unit
         val buffVal: Double = ph * ftMeters * ftUnits * 50.5
@@ -111,7 +78,7 @@ trait RST_ClipBehaviors extends QueryTest {
         gRegion.setSpatialReference(srid)
         val wkbRegion4326 = gRegion.transformCRSXY(4326).toWKB
 
-        info("\n::: clip tests :::")
+        //info("\n::: clip tests :::")
         // WKB that will produce same pixel outputs
         val h3WKB = {
             List(wkbRegion4326).toDF("wkb")
@@ -129,41 +96,31 @@ trait RST_ClipBehaviors extends QueryTest {
         //info(s"gH3Trans area -> ${gH3Trans.getArea}")
         val clipWKB = gH3Trans.toWKB
 
-        val r1 = df
+        val df1= df
             .withColumn("clip", rst_clip($"tile", lit(clipWKB))) // <- touches
             .withColumn("pixels", rst_pixelcount($"clip"))
             .select("clip", "pixels")
-            .first
 
-        //        val c1 = r1.asInstanceOf[GenericRowWithSchema].get(0)
-        //        val createInfo1 = c1.asInstanceOf[GenericRowWithSchema].getAs[Map[String, String]](2)
-//                val path1 = createInfo1(RASTER_PATH_KEY)
-//                val sz1 = createInfo1(RASTER_MEM_SIZE_KEY).toInt
-        //        info(s"clip-touches -> $c1 (${c1.getClass.getName})")
-        //        info(s"clip-touches-createInfo -> $createInfo1")
-        //        info(s"...clip-touches-path -> $path1")
-        //        info(s"...clip-touches-memsize -> $sz1}")
-        //        Paths.get(path1).toFile.exists should be(true)
+        val r1Tile = RasterTestHelpers.getFirstTile(df1, exprConfigOpt, tileCol = "clip")
+        //info(s"r1Tile (class? ${r1Tile.getClass.getName}) -> $r1Tile")
+        r1Tile.raster.isEmptyRasterGDAL should be(false)
+        Paths.get(r1Tile.raster.getPathGDAL.asFileSystemPath).toFile.exists should be(true)
 
+        val r1 = df1.first
         val p1 = r1.getAs[mutable.WrappedArray[Long]](1)(0)
         //info(s"clip-touches-pixels -> $p1")
 
-        val r2 = df
+        val df2 = df
             .withColumn("clip", rst_clip($"tile", lit(clipWKB), lit(false))) // <- half-in
             .withColumn("pixels", rst_pixelcount($"clip"))
             .select("clip", "pixels")
-            .first
 
-//                val c2 = r2.asInstanceOf[GenericRowWithSchema].get(0)
-//                val createInfo2 = c2.asInstanceOf[GenericRowWithSchema].getAs[Map[String, String]](2)
-//                val path2 = createInfo2(RASTER_PATH_KEY)
-//                val sz2 = createInfo2(RASTER_MEM_SIZE_KEY).toInt
-//                //info(s"clip-half -> $c2 (${c2.getClass.getName})")
-//                //info(s"clip-half-createInfo -> $createInfo2")
-//                //info(s"...clip-half-path -> $path2")
-//                info(s"...clip-half-memsize -> $sz2}")
-//                Paths.get(path2).toFile.exists should be(true)
+        val r2Tile = RasterTestHelpers.getFirstTile(df2, exprConfigOpt, tileCol = "clip")
+        //info(s"r2Tile (class? ${r2Tile.getClass.getName}) -> $r1Tile")
+        r2Tile.raster.isEmptyRasterGDAL should be(false)
+        Paths.get(r2Tile.raster.getPathGDAL.asFileSystemPath).toFile.exists should be(true)
 
+        val r2 =  df2.first
         val p2 = r2.getAs[mutable.WrappedArray[Long]](1)(0)
         //info(s"clip-half-pixels -> $p2")
 
