@@ -7,8 +7,6 @@ import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALWarp
 import com.databricks.labs.mosaic.functions.ExprConfig
 import org.gdal.osr.SpatialReference
 
-import scala.util.Try
-
 /**
   * RasterClipByVector is an object that defines the interface for clipping a
   * tile by a vector geometry.

@@ -10,6 +10,7 @@ import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.functions.ExprConfig
+import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
 import org.gdal.gdal.{Dataset, gdal}
 import org.gdal.gdalconst.gdalconstConstants._
 import org.gdal.osr
@@ -819,11 +820,14 @@ case class RasterGDAL(
                 val driverSN = this.getDriverName()
                 val ext = GDAL.getExtension(driverSN)
                 val newDir = this.makeNewFuseDir(ext, uuidOpt = None)
+                val oldFs = this.getPathGDAL.asFileSystemPath
 
                 datasetGDAL.datasetOrPathCopy(newDir, doDestroy = true, skipUpdatePath = true) match {
                     case Some(newPath) =>
                         // for clarity, handling update here
+                        // - clean up the old if conditions met
                         this.updateRawPath(newPath)
+                        FileUtils.tryDeleteLocalFsPath(oldFs, delParentIfFile = true)
                     case _ =>
                         this.updateLastCmd("finalizeRaster")
                         this.updateError(s"finalizeRaster - fuse write")

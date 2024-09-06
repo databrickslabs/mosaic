@@ -162,7 +162,6 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
     }
 
     test("Read netcdf with Raster As Grid Reader") {
-
         assume(System.getProperty("os.name") == "Linux")
         val netcdf = "/binary/netcdf-coral/"
         val filePath = getClass.getResource(netcdf).getPath

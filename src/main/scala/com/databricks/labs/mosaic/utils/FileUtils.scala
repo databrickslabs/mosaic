@@ -3,6 +3,8 @@ package com.databricks.labs.mosaic.utils
 import com.databricks.labs.mosaic.{MOSAIC_RASTER_TMP_PREFIX_DEFAULT, RASTER_PATH_KEY}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.CleanUpManager
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
+import com.databricks.labs.mosaic.utils.PathUtils.{DBFS_FUSE_TOKEN, VOLUMES_TOKEN, WORKSPACE_TOKEN}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.{col, explode}
@@ -70,6 +72,53 @@ object FileUtils {
                 s"sudo rm -f $filePath" ! procLogger
                 err.length() == 0
             }
+    }
+
+    /**
+     * Consolidated logic to delete a local `fs` path:
+     * - Used in `RasterGDAL.finalizeRaster` for StringType, `RasterTile.serialize` for BinaryType,
+     *   and GDAL manipulating functions that generate a new local path (the old is removed).
+     * - Since it is called a lot during processing, optimizing input requirements.
+     * - Expects a file system path (no URIs), e.g. '/tmp/<some_path>/<some_file>'.
+     * - For non-fuse locations only, it verifies, e.g. '/dbfs', '/Volumes', '/Workspace';
+     *   does nothing if condition not met.
+     * - For existing file paths only, it verifies; does nothing if condition not met.
+     * - For directories that do not equal the current `MosaicGDAL.getLocalRasterDirThreadSafe` only,
+     *   it verifies; does nothing if condition not met.
+     * - deletes directory, even if not empty.
+     * - deletes either a file or its parent directory (depending on `delParentFile`).
+     *
+     * @param fs
+     *   The file system path to delete, should not include any URI parts and fuse already handled.
+     * @param delParentIfFile
+     *   Whether to delete the parent dir if a file.
+     */
+    def tryDeleteLocalFsPath(fs: String, delParentIfFile: Boolean): Unit = {
+        val isFuse = fs match {
+            case p if
+                p.startsWith(s"$DBFS_FUSE_TOKEN/") ||
+                    p.startsWith(s"$VOLUMES_TOKEN/") ||
+                    p.startsWith(s"$WORKSPACE_TOKEN/") => true
+            case _ => false
+        }
+
+        val fsPath = Paths.get(fs)
+        if (
+            !isFuse
+                && Files.exists(fsPath)
+                && fs != MosaicGDAL.getLocalRasterDirThreadSafe
+        ) {
+            if (Files.isDirectory(fsPath)) {
+                deleteRecursively(fsPath, keepRoot = false)           // <- recurse the dir
+                Try(Files.deleteIfExists(fsPath)) // <- delete the empty dir
+            } else if (delParentIfFile) {
+                deleteRecursively(fsPath.getParent, keepRoot = false) // <- recurse the parent dir
+                Try(Files.deleteIfExists(fsPath))                     // <- delete the empty dir
+                Try(Files.deleteIfExists(fsPath.getParent))           // <- delete the empty parent dir
+            } else {
+                Try(Files.deleteIfExists(fsPath))
+            }
+        }
     }
 
     /**

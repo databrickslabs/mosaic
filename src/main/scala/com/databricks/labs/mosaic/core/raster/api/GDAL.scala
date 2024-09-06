@@ -115,6 +115,7 @@ object GDAL extends RasterTransform
                     case StringType =>
                         writeRasterAsStringType(raster, doDestroy)
                     case BinaryType =>
+                        // write as binary
                         writeRasterAsBinaryType(raster, doDestroy, exprConfigOpt)
                 }
             } else {

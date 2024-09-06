@@ -66,9 +66,16 @@ trait GDALWriter {
             val tmpDir = MosaicContext.createTmpContextDir(exprConfigOpt)
             val tmpPathOpt = raster.datasetGDAL.datasetOrPathCopy(tmpDir, doDestroy = doDestroy, skipUpdatePath = false)
             // this is a tmp file, so no uri checks needed
-            Try(FileUtils.readBytes(tmpPathOpt.get, uriDeepCheck = false)).getOrElse(Array.empty[Byte])
+            val result = Try(FileUtils.readBytes(tmpPathOpt.get, uriDeepCheck = false)).getOrElse(Array.empty[Byte])
+            FileUtils.deleteRecursively(tmpDir, keepRoot = false) // <- delete the tmp context dir
+            result
         } finally {
-            if (doDestroy) raster.flushAndDestroy()
+            if (doDestroy) {
+                // - handle local path delete if `doDestroy`
+                val oldFs = raster.getPathGDAL.asFileSystemPath
+                raster.flushAndDestroy()
+                FileUtils.tryDeleteLocalFsPath(oldFs, delParentIfFile = true) // <- delete the local fs contents
+            }
         }
     }
 
