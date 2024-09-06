@@ -1,13 +1,13 @@
-generate_singleband_raster_df <- function() {
+generate_singleband_in_mem_raster_df <- function() {
   read.df(
     path = "sparkrMosaic/tests/testthat/data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF",
     source = "gdal",
-    raster.read.strategy = "as_path"  # <- changed to "as_path" strategy
+    raster.read.strategy = "in_memory"
     )
 }
 
 test_that("mosaic can read single-band GeoTiff", {
-  sdf <- generate_singleband_raster_df()
+  sdf <- generate_singleband_in_mem_raster_df()
   row <- first(sdf)
   expect_equal(row$length, 1067862L)
   expect_equal(row$x_size, 2400)
@@ -20,7 +20,7 @@ test_that("mosaic can read single-band GeoTiff", {
 })
 
 test_that("scalar raster functions behave as intended", {
-  sdf <- generate_singleband_raster_df()
+  sdf <- generate_singleband_in_mem_raster_df()
   sdf <- withColumn(sdf, "rst_rastertogridavg", rst_rastertogridavg(column("tile"), lit(9L)))
   sdf <- withColumn(sdf, "rst_rastertogridcount", rst_rastertogridcount(column("tile"), lit(9L)))
   sdf <- withColumn(sdf, "rst_rastertogridmax", rst_rastertogridmax(column("tile"), lit(9L)))
@@ -45,25 +45,25 @@ test_that("scalar raster functions behave as intended", {
 })
 
 test_that("raster flatmap functions behave as intended", {
-  retiled_sdf <- generate_singleband_raster_df()
+  retiled_sdf <- generate_singleband_in_mem_raster_df()
   retiled_sdf <- withColumn(retiled_sdf, "rst_retile", rst_retile(column("tile"), lit(1200L), lit(1200L)))
 
   expect_no_error(write.df(retiled_sdf, source = "noop", mode = "overwrite"))
   expect_equal(nrow(retiled_sdf), 4)
 
-  subdivide_sdf <- generate_singleband_raster_df()
+  subdivide_sdf <- generate_singleband_in_mem_raster_df()
   subdivide_sdf <- withColumn(subdivide_sdf, "rst_subdivide", rst_subdivide(column("tile"), lit(1L)))
 
   expect_no_error(write.df(subdivide_sdf, source = "noop", mode = "overwrite"))
   expect_equal(nrow(subdivide_sdf), 4)
 
-  tessellate_sdf <- generate_singleband_raster_df()
+  tessellate_sdf <- generate_singleband_in_mem_raster_df()
   tessellate_sdf <- withColumn(tessellate_sdf, "rst_tessellate", rst_tessellate(column("tile"), lit(3L)))
 
   expect_no_error(write.df(tessellate_sdf, source = "noop", mode = "overwrite"))
   expect_equal(nrow(tessellate_sdf), 63)
 
-  overlap_sdf <- generate_singleband_raster_df()
+  overlap_sdf <- generate_singleband_in_mem_raster_df()
   overlap_sdf <- withColumn(overlap_sdf, "rst_tooverlappingtiles", rst_tooverlappingtiles(column("tile"), lit(200L), lit(200L), lit(10L)))
 
   expect_no_error(write.df(overlap_sdf, source = "noop", mode = "overwrite"))
@@ -71,7 +71,7 @@ test_that("raster flatmap functions behave as intended", {
 })
 
 test_that("raster aggregation functions behave as intended", {
-  collection_sdf <- generate_singleband_raster_df()
+  collection_sdf <- generate_singleband_in_mem_raster_df()
   collection_sdf <- withColumn(collection_sdf, "extent", st_astext(rst_boundingbox(column("tile"))))
   collection_sdf <- withColumn(collection_sdf, "tile", rst_tooverlappingtiles(column("tile"), lit(200L), lit(200L), lit(10L)))
 

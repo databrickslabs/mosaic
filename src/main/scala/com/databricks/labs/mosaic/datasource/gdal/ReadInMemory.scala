@@ -1,7 +1,8 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_READ_IN_MEMORY, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_READ_IN_MEMORY, MOSAIC_URI_DEEP_CHECK, MOSAIC_URI_DEEP_CHECK_DEFAULT, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
 import com.databricks.labs.mosaic.core.types.RasterTileType
@@ -73,8 +74,6 @@ object ReadInMemory extends ReadStrategy {
       *   Options passed to the reader.
       * @param indexSystem
       *   Index system.
-      * @param exprConfigOpt
-      *   Option [[ExprConfig]].
       * @return
       *   Iterator of internal rows.
       */
@@ -83,15 +82,22 @@ object ReadInMemory extends ReadStrategy {
                          fs: FileSystem,
                          requiredSchema: StructType,
                          options: Map[String, String],
-                         indexSystem: IndexSystem,
-                         exprConfigOpt: Option[ExprConfig]
+                         indexSystem: IndexSystem
     ): Iterator[InternalRow] = {
 
+        // Expression Config
+        // - index system set
+        // - use checkpoint set to true
+        // - deep check set
+        // - GDAL enable called on worker
+        val exprConfigOpt = Some(new ExprConfig(Map.empty[String, String]))
+        exprConfigOpt.get.setIndexSystem(indexSystem.name)
+        exprConfigOpt.get.setRasterUseCheckpoint("false")
+        exprConfigOpt.get.setUriDeepCheck(options.getOrElse(MOSAIC_URI_DEEP_CHECK, MOSAIC_URI_DEEP_CHECK_DEFAULT))
+        GDAL.enable(exprConfigOpt.get)
+
         val inPath = status.getPath.toString
-        val uriDeepCheck = {
-            if (options.contains("uriDeepCheck")) options("uriDeepCheck").toBoolean
-            else Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
-        }
+        val uriDeepCheck = exprConfigOpt.get.isUriDeepCheck
         val uriGdalOpt = PathUtils.parseGdalUriOpt(inPath, uriDeepCheck)
         val driverName = options.get("driverName") match {
             case Some(name) if name.nonEmpty => name

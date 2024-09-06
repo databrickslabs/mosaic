@@ -15,7 +15,7 @@ object OverlappingTiles {
 
     /**
       * Retiles a tile into overlapping tiles.
- *
+      *
       * @note
       *   The overlap percentage is a percentage of the tile size.
       * @param tile

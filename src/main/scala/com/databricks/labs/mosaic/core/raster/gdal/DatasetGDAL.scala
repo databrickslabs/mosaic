@@ -424,7 +424,7 @@ case class DatasetGDAL() {
      * @param dataset
      *   [[Dataset]] to update.
      * @param doUpdateDriver
-     *   Whether to upate `driverName`, if dataset is null, falls back to [[NO_DRIVER]]
+     *   Whether to update `driverName` or keep current
      * @return
      */
     def updateDataset(dataset: Dataset, doUpdateDriver: Boolean): DatasetGDAL = {
@@ -433,9 +433,6 @@ case class DatasetGDAL() {
         if (this.isHydrated && doUpdateDriver) {
             this.updateDriverName(
                 RasterIO.identifyDriverNameFromDataset(this.dataset))
-        } else if (doUpdateDriver) {
-            this.updateDriverName(NO_DRIVER)
-            this.dsErrFlag = true
         }
         this
     }

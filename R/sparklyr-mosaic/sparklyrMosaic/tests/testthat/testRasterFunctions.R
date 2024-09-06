@@ -1,16 +1,16 @@
-generate_singleband_raster_df <- function() {
+generate_singleband_in_mem_raster_df <- function() {
   spark_read_source(
     sc,
     name = "raster",
     source = "gdal",
     path = "data/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF",
-    options = list("raster.read.strategy" = "as_path")  # <- changed to "as_path" strategy
+    options = list("raster.read.strategy" = "in_memory")
   )
 }
 
 
 test_that("mosaic can read single-band GeoTiff", {
-  sdf <- generate_singleband_raster_df()
+  sdf <- generate_singleband_in_mem_raster_df()
   row <- sdf %>% head(1) %>% sdf_collect
   expect_equal(row$length, 1067862L)
   expect_equal(row$x_size, 2400)
@@ -24,7 +24,7 @@ test_that("mosaic can read single-band GeoTiff", {
 
 
 test_that("scalar raster functions behave as intended", {
-  sdf <- generate_singleband_raster_df() %>%
+  sdf <- generate_singleband_in_mem_raster_df() %>%
     mutate(rst_bandmetadata = rst_bandmetadata(tile, 1L)) %>%
     mutate(rst_boundingbox = rst_boundingbox(tile)) %>%
     mutate(rst_boundingbox = st_buffer(rst_boundingbox, -0.001)) %>%
@@ -49,7 +49,7 @@ test_that("scalar raster functions behave as intended", {
   # breaking the chain here to avoid memory issues
   expect_no_error(spark_write_source(sdf, "noop", mode = "overwrite"))
 
-  sdf <- generate_singleband_raster_df() %>%
+  sdf <- generate_singleband_in_mem_raster_df() %>%
     mutate(rst_rastertogridavg = rst_rastertogridavg(tile, 9L)) %>%
     mutate(rst_rastertogridcount = rst_rastertogridcount(tile, 9L)) %>%
     mutate(rst_rastertogridmax = rst_rastertogridmax(tile, 9L)) %>%
@@ -74,25 +74,25 @@ test_that("scalar raster functions behave as intended", {
 })
 
 test_that("raster flatmap functions behave as intended", {
-  retiled_sdf <- generate_singleband_raster_df() %>%
+  retiled_sdf <- generate_singleband_in_mem_raster_df() %>%
     mutate(rst_retile = rst_retile(tile, 1200L, 1200L))
 
   expect_no_error(spark_write_source(retiled_sdf, "noop", mode = "overwrite"))
   expect_equal(sdf_nrow(retiled_sdf), 4)
 
-  subdivide_sdf <- generate_singleband_raster_df() %>%
+  subdivide_sdf <- generate_singleband_in_mem_raster_df() %>%
     mutate(rst_subdivide = rst_subdivide(tile, 1L))
 
   expect_no_error(spark_write_source(subdivide_sdf, "noop", mode = "overwrite"))
   expect_equal(sdf_nrow(subdivide_sdf), 4)
 
-  tessellate_sdf <- generate_singleband_raster_df() %>%
+  tessellate_sdf <- generate_singleband_in_mem_aster_df() %>%
     mutate(rst_tessellate = rst_tessellate(tile, 3L))
 
   expect_no_error(spark_write_source(tessellate_sdf, "noop", mode = "overwrite"))
   expect_equal(sdf_nrow(tessellate_sdf), 63)
 
-  overlap_sdf <- generate_singleband_raster_df() %>%
+  overlap_sdf <- generate_singleband_in_mem_raster_df() %>%
     mutate(rst_tooverlappingtiles = rst_tooverlappingtiles(tile, 200L, 200L, 10L))
 
   expect_no_error(spark_write_source(overlap_sdf, "noop", mode = "overwrite"))
@@ -101,7 +101,7 @@ test_that("raster flatmap functions behave as intended", {
 })
 
 test_that("raster aggregation functions behave as intended", {
-  collection_sdf <- generate_singleband_raster_df() %>%
+  collection_sdf <- generate_singleband_in_mem_raster_df() %>%
     mutate(extent = st_astext(rst_boundingbox(tile))) %>%
     mutate(tile = rst_tooverlappingtiles(tile, 200L, 200L, 10L))
 

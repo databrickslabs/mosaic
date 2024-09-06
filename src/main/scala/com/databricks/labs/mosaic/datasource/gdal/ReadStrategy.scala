@@ -46,8 +46,6 @@ trait ReadStrategy extends Serializable {
       *   Options passed to the reader.
       * @param indexSystem
       *   Index system.
-      * @param exprConfigOpt
-      *   Option [[ExprConfig]].
       * @return
       *   Iterator of internal rows.
       */
@@ -56,8 +54,7 @@ trait ReadStrategy extends Serializable {
                 fs: FileSystem,
                 requiredSchema: StructType,
                 options: Map[String, String],
-                indexSystem: IndexSystem,
-                exprConfigOpt: Option[ExprConfig]
+                indexSystem: IndexSystem
     ): Iterator[InternalRow]
 
 }

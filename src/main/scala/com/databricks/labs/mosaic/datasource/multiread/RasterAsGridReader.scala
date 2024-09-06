@@ -1,12 +1,7 @@
 package com.databricks.labs.mosaic.datasource.multiread
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.{
-    MOSAIC_RASTER_READ_AS_PATH,
-    MOSAIC_RASTER_READ_STRATEGY,
-    MOSAIC_RASTER_SUBDIVIDE_ON_READ,
-    NO_EXT
-}
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_READ_AS_PATH, MOSAIC_RASTER_READ_STRATEGY, MOSAIC_RASTER_SUBDIVIDE_ON_READ, MOSAIC_URI_DEEP_CHECK, NO_EXT, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
 import org.apache.spark.sql._
@@ -757,7 +752,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         val baseOptions = Map(
             "extensions" -> config("extensions"),
             "vsizip" -> config("vsizip"),
-            "subdatasetName" -> config("subdatasetName"),
+            RASTER_SUBDATASET_NAME_KEY -> config(RASTER_SUBDATASET_NAME_KEY),
+            MOSAIC_URI_DEEP_CHECK -> config("uriDeepCheck"), // <- use the spark config for the map
             MOSAIC_RASTER_READ_STRATEGY -> readStrat
         )
         readOptions =
@@ -794,7 +790,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             "skipProject" -> this.extraOptions.getOrElse("skipProject", "false"),                // <- debugging primarily
             "stepTessellate" -> this.extraOptions.getOrElse("stepTessellate", "false"),
             "stopAtTessellate" -> this.extraOptions.getOrElse("stopAtTessellate", "false"),      // <- debugging + tessellate perf
-            "subdatasetName" -> this.extraOptions.getOrElse("subdatasetName", ""),
+            RASTER_SUBDATASET_NAME_KEY -> this.extraOptions.getOrElse(RASTER_SUBDATASET_NAME_KEY, ""),
             "tileSize" -> this.extraOptions.getOrElse("tileSize", "512"),
             "toTif" -> this.extraOptions.getOrElse("toTif", "false"),                            // <- tessellate perf
             "uriDeepCheck" -> this.extraOptions.getOrElse("uriDeepCheck", "false"),

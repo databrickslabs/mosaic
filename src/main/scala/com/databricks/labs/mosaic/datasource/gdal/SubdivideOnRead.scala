@@ -1,13 +1,8 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
-import com.databricks.labs.mosaic.{
-    MOSAIC_RASTER_SUBDIVIDE_ON_READ,
-    RASTER_DRIVER_KEY,
-    RASTER_PARENT_PATH_KEY,
-    RASTER_PATH_KEY,
-    RASTER_SUBDATASET_NAME_KEY
-}
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_SUBDIVIDE_ON_READ, MOSAIC_URI_DEEP_CHECK, MOSAIC_URI_DEEP_CHECK_DEFAULT, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
 import com.databricks.labs.mosaic.core.raster.operator.retile.BalancedSubdivision
@@ -88,8 +83,6 @@ object SubdivideOnRead extends ReadStrategy {
      *   Options passed to the reader.
      * @param indexSystem
      *   Index system.
-     * @param exprConfigOpt
-     *   Option [[ExprConfig]].
      * @return
      *   Iterator of internal rows.
      */
@@ -98,14 +91,24 @@ object SubdivideOnRead extends ReadStrategy {
                          fs: FileSystem,
                          requiredSchema: StructType,
                          options: Map[String, String],
-                         indexSystem: IndexSystem,
-                         exprConfigOpt: Option[ExprConfig]
+                         indexSystem: IndexSystem
                      ): Iterator[InternalRow] = {
+
+        // Expression Config
+        // - index system set
+        // - use checkpoint set to true
+        // - deep check set
+        // - GDAL enable called on worker
+        val exprConfigOpt = Some(new ExprConfig(Map.empty[String, String]))
+        exprConfigOpt.get.setIndexSystem(indexSystem.name)
+        exprConfigOpt.get.setRasterUseCheckpoint("true")
+        exprConfigOpt.get.setUriDeepCheck(options.getOrElse(MOSAIC_URI_DEEP_CHECK, MOSAIC_URI_DEEP_CHECK_DEFAULT))
+        GDAL.enable(exprConfigOpt.get)
 
         val inPath = status.getPath.toString
         val uuid = getUUID(status)
         val sizeInMB = options.getOrElse("sizeInMB", "16").toInt
-        val uriDeepCheck = Try(exprConfigOpt.get.isUriDeepCheck).getOrElse(false)
+        val uriDeepCheck = exprConfigOpt.get.isUriDeepCheck
         val uriGdalOpt = PathUtils.parseGdalUriOpt(inPath, uriDeepCheck)
         val driverName = options.get("driverName") match {
             case Some(name) if name.nonEmpty => name
@@ -121,14 +124,17 @@ object SubdivideOnRead extends ReadStrategy {
         val tiles = localSubdivide(createInfo, sizeInMB, exprConfigOpt)
         val rows = tiles.map(tile => {
             val raster = tile.raster
-            if (!raster.isEmptyRasterGDAL && exprConfigOpt.isDefined) {
+            if (!raster.isEmptyRasterGDAL) {
                 // explicitly set the checkpoint dir
                 // the reader doesn't always have the configured information
-                raster.setFuseDirOpt(Some(exprConfigOpt.get.getRasterCheckpoint))
+                val checkDir = exprConfigOpt.get.getRasterCheckpoint
+                raster.setFuseDirOpt(Some(checkDir))
             }
+            // don't destroy the raster since we need to read from it...
+            // - raster will have the updated fuse path
             val tileRow =  tile
                 .formatCellId(indexSystem)
-                .serialize(tileDataType, doDestroy = true, exprConfigOpt)
+                .serialize(tileDataType, doDestroy = false, exprConfigOpt)
 
             // Clear out subset name on retile (subdivide)
             // - this is important to allow future loads to not try the path
@@ -148,6 +154,7 @@ object SubdivideOnRead extends ReadStrategy {
                 case LENGTH            => raster.getMemSize
                 case other             => throw new RuntimeException(s"Unsupported field name: $other")
             }
+            raster.flushAndDestroy() // <- destroy after getting details
             val row = Utils.createRow(fields ++ Seq(tileRow))
 
             row
