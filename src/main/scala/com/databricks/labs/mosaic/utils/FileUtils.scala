@@ -106,17 +106,18 @@ object FileUtils {
         if (
             !isFuse
                 && Files.exists(fsPath)
+                && fs.startsWith("/tmp")
                 && fs != MosaicGDAL.getLocalRasterDirThreadSafe
         ) {
             if (Files.isDirectory(fsPath)) {
                 deleteRecursively(fsPath, keepRoot = false)           // <- recurse the dir
-                Try(Files.deleteIfExists(fsPath)) // <- delete the empty dir
+                Try(Files.deleteIfExists(fsPath))                     // <- delete the empty dir (just in case)
             } else if (delParentIfFile) {
                 deleteRecursively(fsPath.getParent, keepRoot = false) // <- recurse the parent dir
-                Try(Files.deleteIfExists(fsPath))                     // <- delete the empty dir
-                Try(Files.deleteIfExists(fsPath.getParent))           // <- delete the empty parent dir
+                Try(Files.deleteIfExists(fsPath))                     // <- delete the empty dir (just in case)
+                Try(Files.deleteIfExists(fsPath.getParent))           // <- delete the empty parent dir (just in case)
             } else {
-                Try(Files.deleteIfExists(fsPath))
+                Try(Files.deleteIfExists(fsPath))                     // <- delete the file only
             }
         }
     }
