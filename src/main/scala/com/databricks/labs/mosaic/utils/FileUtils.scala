@@ -75,25 +75,27 @@ object FileUtils {
     }
 
     /**
-     * Consolidated logic to delete a local `fs` path:
-     * - Used in `RasterGDAL.finalizeRaster` for StringType, `RasterTile.serialize` for BinaryType,
-     *   and GDAL manipulating functions that generate a new local path (the old is removed).
+     * Consolidated logic to delete a local "../context_*" dir or a file within:
+     * - Used in `RasterGDAL.finalizeRaster` for StringType, `RasterTile.serialize` for BinaryType.
      * - Since it is called a lot during processing, optimizing input requirements.
-     * - Expects a file system path (no URIs), e.g. '/tmp/<some_path>/<some_file>'.
-     * - For non-fuse locations only, it verifies, e.g. '/dbfs', '/Volumes', '/Workspace';
-     *   does nothing if condition not met.
+     * - Expects a file system path (no URIs),
+         e.g. '/tmp/mosaic_tmp/mosaic_<some_id>/context_<some_id>[/<some_file>]'.
+     * - For non-fuse locations only, it verifies, e.g. '/dbfs/..', '/Volumes/..', '/Workspace/..' are skipped.
      * - For existing file paths only, it verifies; does nothing if condition not met.
+     * - For paths containing '/mosaic_tmp/' and '/context_' only, it verifies; does nothing if condition not met.
      * - For directories that do not equal the current `MosaicGDAL.getLocalRasterDirThreadSafe` only,
      *   it verifies; does nothing if condition not met.
-     * - deletes directory, even if not empty.
-     * - deletes either a file or its parent directory (depending on `delParentFile`).
+     * - deletes a directory `fs` starting with "context_", even if not empty.
+     * - deletes parent directory of `fs` starting with "context_" (depending on `delParentIfContext`),
+     *   even if not empty.
+     * - deletes a file `fs` within a directory that starts with "context_".
      *
      * @param fs
-     *   The file system path to delete, should not include any URI parts and fuse already handled.
-     * @param delParentIfFile
-     *   Whether to delete the parent dir if a file.
+     *   The file system path to delete, should not include any URI parts and expects fuse or local fs path to test.
+     * @param delParentIfContext
+     *   Whether to delete the parent dir if it starts with "context_".
      */
-    def tryDeleteLocalFsPath(fs: String, delParentIfFile: Boolean): Unit = {
+    def tryDeleteLocalContextPath(fs: String, delParentIfContext: Boolean): Unit = {
         val isFuse = fs match {
             case p if
                 p.startsWith(s"$DBFS_FUSE_TOKEN/") ||
@@ -102,22 +104,21 @@ object FileUtils {
             case _ => false
         }
 
-        val fsPath = Paths.get(fs)
+        val fsPath = Paths.get(fs).toAbsolutePath
         if (
             !isFuse
                 && Files.exists(fsPath)
-                && fs.startsWith("/tmp")
+                && fs.contains("/mosaic_tmp/")
+                && fs.contains("/context_")
                 && fs != MosaicGDAL.getLocalRasterDirThreadSafe
         ) {
-            if (Files.isDirectory(fsPath)) {
-                deleteRecursively(fsPath, keepRoot = false)           // <- recurse the dir
-                Try(Files.deleteIfExists(fsPath))                     // <- delete the empty dir (just in case)
-            } else if (delParentIfFile) {
-                deleteRecursively(fsPath.getParent, keepRoot = false) // <- recurse the parent dir
-                Try(Files.deleteIfExists(fsPath))                     // <- delete the empty dir (just in case)
-                Try(Files.deleteIfExists(fsPath.getParent))           // <- delete the empty parent dir (just in case)
-            } else {
-                Try(Files.deleteIfExists(fsPath))                     // <- delete the file only
+            if (Files.isDirectory(fsPath) && fsPath.getFileName.startsWith("context_")) {
+                deleteRecursively(fsPath, keepRoot = false)               // <- recurse the "context_" dir
+            } else if (fsPath.getParent.getFileName.startsWith("context_")) {
+                if (delParentIfContext) {
+                    deleteRecursively(fsPath.getParent, keepRoot = false) // <- recurse the parent "context_" dir
+                }
+                else tryDeleteFileOrDir(fsPath)                           // <- delete the file only within "context_" dir
             }
         }
     }

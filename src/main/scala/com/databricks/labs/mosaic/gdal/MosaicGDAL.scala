@@ -50,7 +50,11 @@ object MosaicGDAL extends Logging {
     private var enabled = false
     private var checkpointDir: String = MOSAIC_RASTER_CHECKPOINT_DEFAULT
     private var useCheckpoint: Boolean = MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT.toBoolean
-    private var localRasterDir: String = s"$MOSAIC_RASTER_TMP_PREFIX_DEFAULT/mosaic_tmp"
+    private var localRasterDir: String = {
+        val cand = s"$MOSAIC_RASTER_TMP_PREFIX_DEFAULT/mosaic_tmp"
+        if (!CleanUpManager.USE_SUDO || !cand.startsWith("/")) cand
+        else Paths.get(cand.substring(1)).toAbsolutePath.toString
+    }
     private var cleanUpAgeLimitMinutes: Int = MOSAIC_CLEANUP_AGE_LIMIT_DEFAULT.toInt
     private var manualMode: Boolean = true
 
@@ -109,7 +113,10 @@ object MosaicGDAL extends Logging {
                 s"configured tmp prefix '$tmpPrefix' must be local, " +
                     s"not fuse mounts ('/dbfs/', '/Volumes/', or '/Workspace/')")
         } else {
-            this.localRasterDir = s"$tmpPrefix/mosaic_tmp"
+            val cand = s"$tmpPrefix/mosaic_tmp"
+            this.localRasterDir =
+            if (!CleanUpManager.USE_SUDO || !cand.startsWith("/")) cand
+            else Paths.get(cand.substring(1)).toAbsolutePath.toString
         }
 
         // make sure cleanup manager thread is running

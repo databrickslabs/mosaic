@@ -827,7 +827,7 @@ case class RasterGDAL(
                         // for clarity, handling update here
                         // - clean up the old if conditions met
                         this.updateRawPath(newPath)
-                        FileUtils.tryDeleteLocalFsPath(oldFs, delParentIfFile = true)
+                        FileUtils.tryDeleteLocalContextPath(oldFs, delParentIfContext = true)
                     case _ =>
                         this.updateLastCmd("finalizeRaster")
                         this.updateError(s"finalizeRaster - fuse write")

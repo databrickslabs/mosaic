@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.raster.io.CleanUpManager
 import com.databricks.labs.mosaic.core.types.ChipType
 import com.databricks.labs.mosaic.datasource.multiread.MosaicDataFrameReader
 import com.databricks.labs.mosaic.expressions.constructors._
@@ -1087,7 +1088,13 @@ object MosaicContext extends Logging {
     private var instance: Option[MosaicContext] = None
 
     private def configTmpSessionDir(exprConfigOpt: Option[ExprConfig]): String = {
-        val prefixCand = Try { exprConfigOpt.get.getTmpPrefix }.toOption.getOrElse(MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
+        val prefixCand = {
+            val cand = Try {
+                exprConfigOpt.get.getTmpPrefix
+            }.toOption.getOrElse(MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
+            if (!CleanUpManager.USE_SUDO || !cand.startsWith("/")) cand // <- absolute path
+            else Paths.get(cand.substring(1)).toAbsolutePath.toString   // <- strip leading slash (rel path)
+        }
         //println(s"MosaicContext - configTmpSessionDir -> prefixCand? '$prefixCand'")
         if (_tmpDir == "" || _tmpPrefix == "" || (exprConfigOpt.isDefined && prefixCand != _tmpPrefix)) {
             val (currTmpDir, currTmpPrefix) = (_tmpDir, _tmpPrefix)

@@ -74,7 +74,7 @@ trait GDALWriter {
                 // - handle local path delete if `doDestroy`
                 val oldFs = raster.getPathGDAL.asFileSystemPath
                 raster.flushAndDestroy()
-                FileUtils.tryDeleteLocalFsPath(oldFs, delParentIfFile = true) // <- delete the local fs contents
+                FileUtils.tryDeleteLocalContextPath(oldFs, delParentIfContext = true) // <- delete the local fs contents
             }
         }
     }
