@@ -68,6 +68,7 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         keepInterimTables = config("keepInterimTables").toBoolean
         nPartitions = config("nPartitions").toInt
         rasterToGridCombiner = getRasterToGridFunc(config("combiner")) // <- want to fail early
+        val resolution = config("resolution").toInt
 
         sparkSession.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "false")
         logMsg(s"raster_to_grid -> 'spark.sql.adaptive.coalescePartitions.enabled' set to false", 1)
@@ -95,7 +96,10 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             convertDf = convertToTif(pathsDf)
 
             // (3) increase nPartitions for retile and tessellate
-            nPartitions = Math.min(10000, pathsDf.count() * 32).toInt
+            // - max will be 10,000
+            nPartitions =
+                if (resolution > 0) Math.min(10000, pathsDf.count() * resolution * sparkSession.sparkContext.defaultParallelism).toInt
+                else Math.min(10000, pathsDf.count() * sparkSession.sparkContext.defaultParallelism).toInt
             logMsg(s"::: adjusted nPartitions to $nPartitions :::", 1)
 
             // (4) retile with 'tileSize'

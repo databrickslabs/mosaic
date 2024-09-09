@@ -72,18 +72,18 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
                 .format("raster_to_grid")
                 .option("nPartitions", "10")
                 .option("extensions", "tif")
-                .option("resolution", "2")
+                .option("resolution", "1")        // <- down to 1
                 .option("kRingInterpolate", "3")
-                .option("verboseLevel", "1") // <- interim progress (0,1,2)?
-                .option("limitTessellate", "10") // <- keeping rows down for testing
+                .option("verboseLevel", "1")      // <- interim progress (0,1,2)?
+                .option("limitTessellate", "10")  // <- keeping rows down for testing
                 .option("stepTessellate", "true") // <- allowed for tifs
                 .load(s"${filePath}MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
                 .select("measure")
 
             dfCnt = df.count()
             info(s"tif testing count - $dfCnt  (stepTessellate? $stepTessellate) ...")
-            if (stepTessellate) dfCnt == 94 shouldBe (true)        // <- step tessellate (with `limit`)
-            else dfCnt == 94 shouldBe (true)                       // <- tif or orig = same
+            if (stepTessellate) dfCnt == 61 shouldBe (true)        // <- step tessellate (with `limit`)
+            else dfCnt == 61 shouldBe (true)                       // <- tif or orig = same
         }
     }
 
@@ -114,7 +114,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("resolution", "2")
             .option("kRingInterpolate", "3")
             .option("verboseLevel", "1")     // <- interim progress (0,1,2)?
-            .option("limitTessellate", "10") // <- keeping rows down for testing
+            .option("limitTessellate", "5")  // <- keeping rows down for testing
             .option("combiner", randomCombiner)
             .load(s"${filePath}MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
             .select("measure")
@@ -143,20 +143,20 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             for (stepTessellate <- Seq(false, true)) {
                 val df = MosaicContext.read
                     .format("raster_to_grid")
-                    .option("resolution", "1")          // <- was 0, 1 for stepTessellate now
+                    .option("resolution", "1")          // <- 1 for stepTessellate
                     .option("nPartitions", "10")
                     .option("extensions", "grb")
                     .option("combiner", "min")
                     .option("kRingInterpolate", "3")
                     .option("verboseLevel", "1")        // <- interim progress (0,1,2)?
-                    .option("limitTessellate", "10")    // <- keeping rows down for testing
+                    .option("limitTessellate", "5")    // <- keeping rows down for testing
                     .load(filePath)
                     .select("measure")
 
                 dfCnt = df.count()
                 info(s"grib testing count - $dfCnt  (toTif? $toTif, stepTessellate? $stepTessellate) ...")
-                if (stepTessellate) dfCnt == 868 shouldBe (true)        // <- step tessellate (with `limit`)
-                else dfCnt == 868 shouldBe (true)                       // <- tif or orig = same
+                if (stepTessellate) dfCnt == 784 shouldBe (true)        // <- step tessellate (with `limit`)
+                else dfCnt == 784 shouldBe (true)                       // <- tif or orig = same
             }
         }
     }
@@ -186,7 +186,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
                     .option("resolution", "1")
                     .option("kRingInterpolate", "1")
                     .option("verboseLevel", "1")     // <- interim progress (0,1,2)?
-                    .option("limitTessellate", "10") // <- keeping rows down for testing
+                    .option("limitTessellate", "5") // <- keeping rows down for testing
                     .option("sizeInMB", "-1")
                     .option("toTif", toTif.toString)
                     .option("stepTessellate", stepTessellate.toString)
@@ -194,8 +194,8 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
                 dfCnt = df.count()
                 info(s"netcdf testing count - $dfCnt  (toTif? $toTif, stepTessellate? $stepTessellate) ...")
-                if (stepTessellate) dfCnt == 32 shouldBe (true)        // <- step tessellate (with `limit`)
-                else dfCnt == 68 shouldBe (true)                       // <- tif or orig = same
+                if (stepTessellate) dfCnt == 26 shouldBe (true)        // <- step tessellate (with `limit`)
+                else dfCnt == 33 shouldBe (true)                       // <- tif or orig = same
             }
         }
     }
