@@ -86,7 +86,7 @@ test_that("raster flatmap functions behave as intended", {
   expect_no_error(spark_write_source(subdivide_sdf, "noop", mode = "overwrite"))
   expect_equal(sdf_nrow(subdivide_sdf), 4)
 
-  tessellate_sdf <- generate_singleband_in_mem_aster_df() %>%
+  tessellate_sdf <- generate_singleband_in_mem_raster_df() %>%
     mutate(rst_tessellate = rst_tessellate(tile, 3L))
 
   expect_no_error(spark_write_source(tessellate_sdf, "noop", mode = "overwrite"))
