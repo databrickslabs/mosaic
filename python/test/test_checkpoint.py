@@ -55,7 +55,7 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         result.unpersist()
         print(f"tile? {tile}")
         raster = tile["raster"]
-        self.assertIsInstance(raster, str, "tile type should be string.")
+        self.assertIsNone(raster, "raster type should be None (not binary).")
 
         # - update path
         api.gdal.update_checkpoint_dir(
@@ -83,7 +83,7 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         tile = result.select("tile").first()[0]
         result.unpersist()
         raster = tile["raster"]
-        self.assertIsInstance(raster, str, "tile type should be string.")
+        self.assertIsNone(raster, "raster type should be None (not binary).")
 
         # - checkpoint off
         api.gdal.set_checkpoint_off(self.spark)  # <- important to call from api.gdal
@@ -104,14 +104,14 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         tile = result.select("tile").first()[0]
         result.unpersist()
         raster = tile["raster"]
-        self.assertNotIsInstance(
-            raster, str, "tile type should be binary (not string)."
+        self.assertIsNotNone(
+            raster, "raster type should be binary (not None)."
         )
 
         # - reset
         api.gdal.reset_checkpoint(self.spark)
-        self.assertTrue(
-            self.get_context().is_use_checkpoint(), "context should be configured on."
+        self.assertFalse(
+            self.get_context().is_use_checkpoint(), "context should be configured off."
         )
         self.assertEqual(
             self.get_context().get_checkpoint_dir(),
@@ -132,6 +132,6 @@ class TestCheckpoint(MosaicTestCaseWithGDAL):
         tile = result.select("tile").first()[0]
         result.unpersist()
         raster = tile["raster"]
-        self.assertIsInstance(
-            raster, str, "tile type should be string (not binary)."
+        self.assertIsNotNone(
+            raster, "raster type should be binary (not None)."
         )

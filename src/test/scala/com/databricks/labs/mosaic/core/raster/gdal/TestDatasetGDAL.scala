@@ -63,7 +63,7 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
 
             val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo(includeExtras = true))
             raster.updateRawPath(p)
-            raster.finalizeRaster(toFuse = true) // <- specify fuse
+            raster.finalizeRaster() // <- specify fuse
 
             val outFusePath = raster.getRawPath
             info(s"out fuse path -> '$outFusePath'")
@@ -113,7 +113,7 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
 
             val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo(includeExtras = true))
             raster.updateRawPath(p)
-            raster.finalizeRaster(toFuse = true)
+            raster.finalizeRaster()
 
             val outFusePath = raster.getRawPath
             info(s"out fuse path -> '$outFusePath'")
@@ -168,7 +168,7 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
 
             val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo(includeExtras = true))
             raster.updateRawPath(sp)
-            raster.finalizeRaster(toFuse = true)
+            raster.finalizeRaster()
 
             val outFusePath = raster.getRawPath
             info(s"out fuse path -> '$outFusePath'")
@@ -208,7 +208,7 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
 
             val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo(includeExtras = true))
             raster.updateRawPath(p)
-            raster.finalizeRaster(toFuse = true)
+            raster.finalizeRaster()
 
             val outFusePath = raster.getRawPath
             info(s"out fuse path -> '$outFusePath'")
@@ -261,7 +261,7 @@ class TestDatasetGDAL  extends SharedSparkSessionGDAL {
 
             val raster = RasterGDAL(dsOpt.get, getExprConfigOpt, dsGDAL.asCreateInfo(includeExtras = true))
             raster.updateRawPath(p)
-            raster.finalizeRaster(toFuse = true)
+            raster.finalizeRaster()
 
             val outFusePath = raster.getRawPath
             info(s"out fuse path -> '$outFusePath'")

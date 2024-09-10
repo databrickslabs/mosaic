@@ -39,10 +39,10 @@ case class RST_Write(
       with CodegenFallback {
 
     // serialize data type
-    // - don't use checkpoint because we are writing to a different location
     // - type is StringType
+    // - default checkpoint not used (location is overridden)
     override def dataType: DataType = {
-        RasterTileType(exprConfig.getCellIdType, StringType, useCheckpoint = false)
+        RasterTileType(exprConfig.getCellIdType, StringType, useCheckpoint = true)
     }
 
     /**

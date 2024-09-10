@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.core.raster.api
 
 import com.databricks.labs.mosaic.{RASTER_BAND_INDEX_KEY, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
-import com.databricks.labs.mosaic.core.raster.gdal.{GDALReader, GDALWriter, RasterBandGDAL, RasterGDAL}
+import com.databricks.labs.mosaic.core.raster.gdal.{RasterBandGDAL, RasterGDAL}
 import com.databricks.labs.mosaic.core.raster.io.{CleanUpManager, RasterIO}
 import com.databricks.labs.mosaic.core.raster.operator.transform.RasterTransform
 import com.databricks.labs.mosaic.functions.ExprConfig
@@ -18,9 +18,7 @@ import scala.sys.process._
 import scala.util.Try
 
 /** GDAL Raster API. */
-object GDAL extends RasterTransform
-    with GDALReader
-    with GDALWriter {
+object GDAL extends RasterTransform {
 
     /** @return Returns the name of the tile API. */
     val name: String = "GDAL"
@@ -55,75 +53,6 @@ object GDAL extends RasterTransform
         val exprConfig = ExprConfig(spark)
         enable(exprConfig)
     }
-
-    /** @inheritdoc */
-    override def readRasterExpr(
-                      inputRaster: Any,
-                      createInfo: Map[String, String],
-                      inputDT: DataType,
-                      exprConfigOpt: Option[ExprConfig]
-                  ): RasterGDAL = {
-        if (inputRaster == null) {
-            RasterGDAL() // <- (1) empty tile
-        } else {
-            inputDT match {
-                case _: StringType =>
-                    // ::: STRING TYPE :::
-                    try {
-                        RasterIO.readRasterHydratedFromPath(
-                            createInfo,
-                            exprConfigOpt
-                        ) // <- (2a) from path
-                    } catch {
-                        case _: Throwable =>
-                            RasterIO.readRasterHydratedFromContent(
-                                inputRaster.asInstanceOf[Array[Byte]],
-                                createInfo,
-                                exprConfigOpt
-                            ) // <- (2b) from bytes
-                    }
-                case _: BinaryType =>
-                    // ::: BINARY TYPE :::
-                    try {
-                        RasterIO.readRasterHydratedFromContent(
-                            inputRaster.asInstanceOf[Array[Byte]],
-                            createInfo,
-                            exprConfigOpt
-                        ) // <- (3a) from bytes
-                    } catch {
-                        case _: Throwable =>
-                            RasterIO.readRasterHydratedFromPath(
-                                createInfo,
-                                exprConfigOpt
-                            ) // <- (3b) from path
-                    }
-                case _             => throw new IllegalArgumentException(s"Unsupported data type: $inputDT")
-            }
-        }
-    }
-
-    /** @inheritdoc */
-    override def writeRasters(
-                        rasters: Seq[RasterGDAL],
-                        rasterDT: DataType,
-                        doDestroy: Boolean,
-                        exprConfigOpt: Option[ExprConfig]
-    ): Seq[Any] = {
-        rasters.map(raster =>
-            if (raster != null && !raster.isEmptyRasterGDAL) {
-                rasterDT match {
-                    case StringType =>
-                        writeRasterAsStringType(raster, doDestroy)
-                    case BinaryType =>
-                        // write as binary
-                        writeRasterAsBinaryType(raster, doDestroy, exprConfigOpt)
-                }
-            } else {
-                null
-            }
-        )
-    }
-
 
     // ///////////////////////////////////////////////////////////////
     // CONVENIENCE CREATE FUNCTIONS
@@ -214,6 +143,59 @@ object GDAL extends RasterTransform
             ),
             exprConfigOpt
         )
+    }
+
+    /**
+     *
+     * @param inputRaster
+     * @param createInfo
+     * @param inputDT
+     * @param exprConfigOpt
+     * @return
+     */
+    def readRasterExpr(
+                          inputRaster: Any,
+                          createInfo: Map[String, String],
+                          inputDT: DataType,
+                          exprConfigOpt: Option[ExprConfig]
+                      ): RasterGDAL = {
+        if (inputRaster == null) {
+            RasterGDAL() // <- (1) empty tile
+        } else {
+            inputDT match {
+                case _: StringType =>
+                    // ::: STRING TYPE :::
+                    try {
+                        RasterIO.readRasterHydratedFromPath(
+                            createInfo,
+                            exprConfigOpt
+                        ) // <- (2a) from path
+                    } catch {
+                        case _: Throwable =>
+                            RasterIO.readRasterHydratedFromContent(
+                                inputRaster.asInstanceOf[Array[Byte]],
+                                createInfo,
+                                exprConfigOpt
+                            ) // <- (2b) from bytes
+                    }
+                case _: BinaryType =>
+                    // ::: BINARY TYPE :::
+                    try {
+                        RasterIO.readRasterHydratedFromContent(
+                            inputRaster.asInstanceOf[Array[Byte]],
+                            createInfo,
+                            exprConfigOpt
+                        ) // <- (3a) from bytes
+                    } catch {
+                        case _: Throwable =>
+                            RasterIO.readRasterHydratedFromPath(
+                                createInfo,
+                                exprConfigOpt
+                            ) // <- (3b) from path
+                    }
+                case _             => throw new IllegalArgumentException(s"Unsupported data type: $inputDT")
+            }
+        }
     }
 
     // ///////////////////////////////////////////////////////////////

@@ -122,7 +122,7 @@ case class RST_MakeTiles(
       * Loads a tile from a file and subdivides it into tiles of the specified
       * size (in MB).
       * @param input
-      *   The input file path.
+      *   The input file path or content.
       * @return
       *   The tiles.
       */
@@ -131,7 +131,7 @@ case class RST_MakeTiles(
         val resultType = RasterTile.getRasterType(dataType)
 
         val rawDriver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
-        val rawInput = inputExpr.eval(input)
+        val rawInput = inputExpr.eval(input) // <- path or content
         val driverShortName = getDriver(rawInput, rawDriver)
         val targetSize = sizeInMBExpr.eval(input).asInstanceOf[Int]
         val inputSize = getInputSize(rawInput, uriDeepCheck = false) // <- this can become a config

@@ -9,8 +9,9 @@ import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic._
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL.makeNewFuseDir
 import com.databricks.labs.mosaic.functions.ExprConfig
-import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
+import com.databricks.labs.mosaic.utils.FileUtils
 import org.gdal.gdal.{Dataset, gdal}
 import org.gdal.gdalconst.gdalconstConstants._
 import org.gdal.osr
@@ -40,8 +41,6 @@ case class RasterGDAL(
                          createInfoInit: Map[String, String],
                          exprConfigOpt: Option[ExprConfig]
                      ) extends RasterIO {
-
-    val DIR_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
 
     // Factory for creating CRS objects
     protected val crsFactory: CRSFactory = new CRSFactory
@@ -807,11 +806,11 @@ case class RasterGDAL(
     // ///////////////////////////////////////
 
     /** @inheritdoc */
-    override def finalizeRaster(toFuse: Boolean): RasterGDAL =
+    override def finalizeRaster(): RasterGDAL =
         Try {
             // (1) write if current path not fuse or not under the expected dir
             if (
-                (!this.isEmptyRasterGDAL && toFuse) &&
+                (!this.isEmptyRasterGDAL) &&
                     (!this.getPathGDAL.isFusePath || !this.isRawPathInFuseDir)
             ) {
                 // (2) hydrate the dataset
@@ -819,7 +818,7 @@ case class RasterGDAL(
 
                 val driverSN = this.getDriverName()
                 val ext = GDAL.getExtension(driverSN)
-                val newDir = this.makeNewFuseDir(ext, uuidOpt = None)
+                val newDir = makeNewFuseDir(this, ext, uuidOpt = None)
                 val oldFs = this.getPathGDAL.asFileSystemPath
 
                 datasetGDAL.datasetOrPathCopy(newDir, doDestroy = true, skipUpdatePath = true) match {
@@ -870,37 +869,6 @@ case class RasterGDAL(
     /** @return whether `this` has a non-empty error. */
     def hasError: Boolean = {
         Try(datasetGDAL.getCreateInfoExtras(RASTER_LAST_ERR_KEY).nonEmpty).getOrElse(false)
-    }
-
-    /** @return new fuse dir underneath the base fuse dir (checkpoint or override) */
-    def makeNewFuseDir(ext: String, uuidOpt: Option[String]): String = {
-
-        // (1) uuid used in dir
-        // - may be provided (for filename consistency)
-        val uuid = uuidOpt match {
-            case Some(u) => u
-            case _ => RasterIO.genUUID
-        }
-        // (2) new dir under fuse dir (<timePrefix>_<ext>_<uuid>)
-        val rootDir = fuseDirOpt.getOrElse(GDAL.getCheckpointDir)
-        val timePrefix = LocalDateTime.now().format(DIR_TIME_FORMATTER)
-        val newDir = s"${timePrefix}_${ext}_${uuid}"
-        val dir = s"$rootDir/$newDir"
-        Files.createDirectories(Paths.get(dir))
-        dir
-    }
-
-    /** @return new fuse path string, defaults to under checkpoint dir (doesn't actually create the file). */
-    def makeNewFusePath(ext: String): String = {
-        // (1) uuid used in dir and filename
-        val uuid = RasterIO.genUUID
-
-        // (2) new dir under fuse dir (<timePrefix>_<uuid>.<ext>)
-        val fuseDir = makeNewFuseDir(ext, Option(uuid))
-
-        // (3) return the new fuse path name
-        val filename = RasterIO.genFilenameUUID(ext, Option(uuid))
-        s"$fuseDir/$filename"
     }
 
     /** @return `this` [[RasterGDAL]] (fluent). */
@@ -1075,6 +1043,43 @@ object RasterGDAL {
         val result = RasterGDAL(createInfo, exprConfigOpt)
         result.updateDataset(dataset) // <- will internally configure.
         result
+    }
+
+    val DIR_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+
+    /** @return new fuse dir underneath the base fuse dir (checkpoint or override) */
+    def makeNewFuseDir(raster: RasterGDAL, ext: String, uuidOpt: Option[String]): String = {
+
+        // (1) uuid used in dir
+        // - may be provided (for filename consistency)
+        val uuid = uuidOpt match {
+            case Some(u) => u
+            case _ => RasterIO.genUUID
+        }
+        // (2) new dir under fuse dir (<timePrefix>_<ext>_<uuid>)
+        val fuseDirRoot =
+            if (raster.getFuseDirOpt.isDefined) raster.getFuseDirOpt.get
+            else if (raster.exprConfigOpt.isDefined) raster.exprConfigOpt.get.getRasterCheckpoint
+            else GDAL.getCheckpointDir
+
+        val timePrefix = LocalDateTime.now().format(DIR_TIME_FORMATTER)
+        val newDir = s"${timePrefix}_${ext}_${uuid}"
+        val dir = s"$fuseDirRoot/$newDir"
+        Files.createDirectories(Paths.get(dir))
+        dir
+    }
+
+    /** @return new fuse path string, defaults to under checkpoint dir (doesn't actually create the file). */
+    def makeNewFusePath(raster: RasterGDAL, ext: String): String = {
+        // (1) uuid used in dir and filename
+        val uuid = RasterIO.genUUID
+
+        // (2) new dir under fuse dir (<timePrefix>_<uuid>.<ext>)
+        val fuseDir = makeNewFuseDir(raster, ext, Option(uuid))
+
+        // (3) return the new fuse path name
+        val filename = RasterIO.genFilenameUUID(ext, Option(uuid))
+        s"$fuseDir/$filename"
     }
 
 }

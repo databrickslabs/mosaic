@@ -186,9 +186,9 @@ object PathUtils {
         val cleanPath = getCleanPath(rawPath, addVsiZipToken = false, uriGdalOpt)
         val pamFilePath = s"$cleanPath.aux.xml"
 
-        Try(Files.deleteIfExists(Paths.get(cleanPath)))
-        Try(Files.deleteIfExists(Paths.get(rawPath)))
-        Try(Files.deleteIfExists(Paths.get(pamFilePath)))
+        FileUtils.tryDeleteFileOrDir(Paths.get(cleanPath))
+        FileUtils.tryDeleteFileOrDir(Paths.get(rawPath))
+        FileUtils.tryDeleteFileOrDir(Paths.get(pamFilePath))
     }
 
     /**
@@ -202,9 +202,7 @@ object PathUtils {
      */
     def cleanUpPAMFiles(rawPathOrDir: String, uriGdalOpt: Option[String]): Unit = {
         if (isSubdataset(rawPathOrDir, uriGdalOpt)) {
-            Try(Files.deleteIfExists(
-                Paths.get(s"${asFileSystemPath(rawPathOrDir, uriGdalOpt)}.aux.xml"))
-            )
+            FileUtils.tryDeleteFileOrDir(Paths.get(s"${asFileSystemPath(rawPathOrDir, uriGdalOpt)}.aux.xml"))
         } else {
             val cleanPathObj = Paths.get(getCleanPath(rawPathOrDir, addVsiZipToken = false, uriGdalOpt))
             if (Files.isDirectory(cleanPathObj)) {
@@ -213,9 +211,9 @@ object PathUtils {
                     .foreach(f => cleanUpPAMFiles(f.toString, uriGdalOpt))
             } else {
                 if (cleanPathObj.toString.endsWith(".aux.xml")) {
-                    Try(Files.deleteIfExists(cleanPathObj))
+                    FileUtils.tryDeleteFileOrDir(cleanPathObj)
                 } else {
-                    Try(Files.deleteIfExists(Paths.get(s"${cleanPathObj.toString}.aux.xml")))
+                    FileUtils.tryDeleteFileOrDir(Paths.get(s"${cleanPathObj.toString}.aux.xml"))
                 }
             }
         }

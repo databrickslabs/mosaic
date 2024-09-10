@@ -5,7 +5,16 @@ import com.databricks.labs.mosaic.functions.{ExprConfig, MosaicContext}
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
 import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
-import com.databricks.labs.mosaic.{MOSAIC_CLEANUP_AGE_LIMIT_MINUTES, MOSAIC_GDAL_NATIVE, MOSAIC_MANUAL_CLEANUP_MODE, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_TMP_PREFIX, MOSAIC_RASTER_TMP_PREFIX_DEFAULT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
+import com.databricks.labs.mosaic.{
+    MOSAIC_CLEANUP_AGE_LIMIT_MINUTES,
+    MOSAIC_GDAL_NATIVE,
+    MOSAIC_MANUAL_CLEANUP_MODE,
+    MOSAIC_RASTER_CHECKPOINT,
+    MOSAIC_RASTER_TMP_PREFIX,
+    MOSAIC_RASTER_TMP_PREFIX_DEFAULT,
+    MOSAIC_RASTER_USE_CHECKPOINT,
+    MOSAIC_TEST_MODE
+}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.gdal.gdal.gdal

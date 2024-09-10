@@ -1092,11 +1092,15 @@ object MosaicContext extends Logging {
             val cand = Try {
                 exprConfigOpt.get.getTmpPrefix
             }.toOption.getOrElse(MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
-            if (!CleanUpManager.USE_SUDO || !cand.startsWith("/")) cand // <- absolute path
-            else Paths.get(cand.substring(1)).toAbsolutePath.toString   // <- strip leading slash (rel path)
+            if (!CleanUpManager.USE_SUDO || !cand.startsWith("/")) {
+                Paths.get(cand).toAbsolutePath.toString
+            } else {
+                // strip leading slash (rel path)
+                Paths.get(cand.substring(1)).toAbsolutePath.toString
+            }
         }
         //println(s"MosaicContext - configTmpSessionDir -> prefixCand? '$prefixCand'")
-        if (_tmpDir == "" || _tmpPrefix == "" || (exprConfigOpt.isDefined && prefixCand != _tmpPrefix)) {
+        if (_tmpDir == "" || _tmpPrefix == "" || prefixCand != _tmpPrefix) {
             val (currTmpDir, currTmpPrefix) = (_tmpDir, _tmpPrefix)
             _tmpPrefix = prefixCand
             _tmpDir = FileUtils.createMosaicTmpDir(prefix = _tmpPrefix)

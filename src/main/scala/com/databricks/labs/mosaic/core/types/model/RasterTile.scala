@@ -1,12 +1,13 @@
 package com.databricks.labs.mosaic.core.types.model
 
-import com.databricks.labs.mosaic.{NO_PATH_STRING, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.NO_PATH_STRING
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterIO
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.expressions.raster.{buildMapString, extractMap}
 import com.databricks.labs.mosaic.functions.ExprConfig
+import com.databricks.labs.mosaic.utils.FileUtils
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{BinaryType, DataType, LongType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
@@ -43,9 +44,8 @@ case class RasterTile(
 
     /**
      * Finalize the tile.
-     * - essentially calls `tile.finalizeRaster()`.
-     * @param toFuse
-     *   Whether to write to fuse during finalize; if [[RASTER_PATH_KEY]] not already under the specified fuse dir.
+     * - essentially calls `raster.finalizeRaster()`.
+     *
      * @param overrideFuseDirOpt
      *   Option to specify the fuse dir location, None means use checkpoint dir;
      *   only relevant if 'toFuse' is true, default is None.
@@ -53,10 +53,10 @@ case class RasterTile(
      * @return
      *   [[RasterTile]] `this` (fluent).
      */
-    def finalizeTile(toFuse: Boolean, overrideFuseDirOpt: Option[String] = None): RasterTile = {
+    def finalizeTile(overrideFuseDirOpt: Option[String] = None): RasterTile = {
         Try{
             if (overrideFuseDirOpt.isDefined) this.raster.setFuseDirOpt(overrideFuseDirOpt)
-            this.raster.finalizeRaster(toFuse)
+            this.raster.finalizeRaster()
         }
         this
     }
@@ -135,9 +135,11 @@ case class RasterTile(
       *
       * @param rasterDT
       *    How to encode the tile.
-      *    - Options are [[StringType]] or [[BinaryType]]
-      *    - If checkpointing is used, [[StringType]] will be forced
-      *    - call finalize on tiles when serializing them.
+      *    - Options are [[StringType]] or [[BinaryType]].
+      *    - Checkpointing is used regardless.
+     *     - For [[BinaryType]] the binary payload also set on `raster`.
+     *     - For [[StringType]] the binary payload is null.
+      *    - Calls finalize on tiles when serializing them.
       * @param doDestroy
       *   Whether to destroy the internal object after serializing.
       * @param exprConfigOpt
@@ -150,37 +152,47 @@ case class RasterTile(
                      doDestroy: Boolean,
                      exprConfigOpt: Option[ExprConfig]
                  ): InternalRow = {
+        // [1] handle the finalization of the raster
+        // - writes to fuse for the path (if not already)
+        // - expects any fuse dir customization to have already been set on raster
+        // - this updates the createInfo 'path'
+        this.finalizeTile()
 
-        // (1) serialize the tile according to the specified serialization type
-        // - write to fuse if [[StringType]]
-        val encodedRaster = GDAL.writeRasters(
-            Seq(raster), rasterDT, doDestroy, exprConfigOpt).head
+        // [2] update the raw parent path with the "best"
+        this.raster.updateRawParentPath(this.raster.identifyPseudoPathOpt()
+            .getOrElse(NO_PATH_STRING))
 
-        val path = encodedRaster match {
-                case uStr: UTF8String => uStr.toString
-                case _ => this.raster.getRawPath // <- we want raw path here
-        }
+        // [3] if `rasterDT` is [[BinaryType]],
+        //     store the byte array as `raster`
+        // - uses FS Path
+        val binaryPayload =
+            if (rasterDT == BinaryType) {
+                Try(FileUtils.readBytes(
+                    this.raster.getPathGDAL.asFileSystemPath,
+                    uriDeepCheck = false)
+                )
+                    .getOrElse(Array.empty[Byte])
+            } else null
 
-        // (3) update createInfo
-        // - safety net for parent path
-        val parentPath = this.raster.identifyPseudoPathOpt().getOrElse(NO_PATH_STRING)
-        val newCreateInfo = raster.getCreateInfo(includeExtras = true) + (RASTER_PATH_KEY -> path, RASTER_PARENT_PATH_KEY -> parentPath)
-        raster.updateCreateInfo(newCreateInfo) // <- in case tile is used after this
-
-        // (4) actual serialization
-        val mapData = buildMapString(newCreateInfo)
-        if (Option(index).isDefined) {
+        // [4] actual serialization
+        // cell, raster, and map data
+        val mapData = buildMapString(this.raster.getCreateInfo(includeExtras = true))
+        val encodedTile = if (Option(index).isDefined) {
             if (index.isLeft) InternalRow.fromSeq(
-              Seq(index.left.get, encodedRaster, mapData)
+              Seq(index.left.get, binaryPayload, mapData)
             )
             else {
                 InternalRow.fromSeq(
-                  Seq(UTF8String.fromString(index.right.get), encodedRaster, mapData)
+                  Seq(UTF8String.fromString(index.right.get), binaryPayload, mapData)
                 )
             }
         } else {
-            InternalRow.fromSeq(Seq(null, encodedRaster, mapData))
+            InternalRow.fromSeq(Seq(null, binaryPayload, mapData))
         }
+        // [5] handle destroy
+        if (doDestroy) this.flushAndDestroy()
+
+        encodedTile
     }
 
 }
@@ -203,30 +215,64 @@ object RasterTile {
      */
     def deserialize(row: InternalRow, idDataType: DataType, exprConfigOpt: Option[ExprConfig]): RasterTile = {
 
+        // [0] read the cellid
+        // - may be null
         val index = row.get(0, idDataType)
-        var rawRaster: Any = null
-        val rawRasterDataType =
-            allCatch.opt(row.get(1, StringType)) match {
-                case Some(value) =>
-                    rawRaster = value
-                    StringType
-                case _ =>
-                    rawRaster = row.get(1, BinaryType)
-                    BinaryType
-            }
+
+        // [1] read the binary payload
+        // - either null or Array[Byte]
+        val binaryPayload = getBinaryPayloadOrNull(row)
+
+        // [2] read the `createInfo` map
         val createInfo = extractMap(row.getMap(2))
-        val raster = GDAL.readRasterExpr(rawRaster, createInfo, rawRasterDataType, exprConfigOpt)
+
+        // [3] read the rastersExpr
+        val raster: RasterGDAL =
+            Try {
+                if (binaryPayload == null) {
+                    // try to load from "path"
+                    RasterIO.readRasterHydratedFromPath(
+                        createInfo,
+                        exprConfigOpt
+                    )
+                } else {
+                    // try to load from binary
+                    RasterIO.readRasterHydratedFromContent(
+                        binaryPayload,
+                        createInfo,
+                        exprConfigOpt
+                    )
+                }
+            }.getOrElse {
+                // empty tile
+                RasterGDAL()
+            }
+
+        val rasterDataType =
+            if (Option(binaryPayload).isDefined) BinaryType
+            else StringType
 
         // noinspection TypeCheckCanBeMatch
         if (Option(index).isDefined) {
             if (index.isInstanceOf[Long]) {
-                new RasterTile(Left(index.asInstanceOf[Long]), raster, rawRasterDataType)
+                new RasterTile(Left(index.asInstanceOf[Long]), raster, rasterDataType)
             } else {
-                new RasterTile(Right(index.asInstanceOf[UTF8String].toString), raster, rawRasterDataType)
+                new RasterTile(Right(index.asInstanceOf[UTF8String].toString), raster, rasterDataType)
             }
         } else {
-            new RasterTile(null, raster, rawRasterDataType)
+            new RasterTile(null, raster, rasterDataType)
         }
+    }
+
+    def getBinaryPayloadOrNull(tileInternalRow: InternalRow): Array[Byte] = {
+        val binaryPayload: Array[Byte] = allCatch.opt(tileInternalRow.get(1, StringType)) match {
+            case Some(_) => null // <- might be StringType prior to 0.4.3
+            case _ => allCatch.opt(tileInternalRow.get(1, BinaryType)) match {
+                case Some(binVal) => binVal.asInstanceOf[Array[Byte]]
+                case _ => null
+            }
+        }
+        binaryPayload
     }
 
     /** returns rasterType from a passed DataType, handling RasterTileType as well as string + binary. */
@@ -236,7 +282,5 @@ object RasterTile {
             case _ => dataType
         }
     }
-
-
 
 }

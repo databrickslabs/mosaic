@@ -64,12 +64,14 @@ object FileUtils {
             if (!CleanUpManager.USE_SUDO) Try(Files.delete(path)).isSuccess
             else {
                 val err = new StringBuilder()
-                val procLogger = ProcessLogger(_ => (), err append _)
-                val filePath = path.toString
-                //scalastyle:off println
-                //println(s"FileUtils - tryDeleteFileOrDir -> '$filePath'")
-                //scalastyle:on println
-                s"sudo rm -f $filePath" ! procLogger
+                Try {
+                    val procLogger = ProcessLogger(_ => (), err append _)
+                    val filePath = path.toString
+                    //scalastyle:off println
+                    //println(s"FileUtils - tryDeleteFileOrDir -> '$filePath'")
+                    //scalastyle:on println
+                    s"sudo rm -f $filePath" ! procLogger
+                }
                 err.length() == 0
             }
     }

@@ -33,12 +33,10 @@ trait RasterIO {
       *   - Impl should handle flags.
       *   - Impl should be able to write to fuse dir if specified.
       *
-      * @param toFuse
-      *   Whether to write to fuse during finalize; if [[RASTER_PATH_KEY]] not already under the specified fuse dir.
       * @return
       *   [[RasterGDAL]] `this` (fluent).
       */
-    def finalizeRaster(toFuse: Boolean): RasterGDAL
+    def finalizeRaster(): RasterGDAL
 
     /**
       * Call to setup a tile (handle flags): (1) initFlag - if dataset exists,

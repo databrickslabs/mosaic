@@ -26,7 +26,7 @@ class RST_WriteTest extends QueryTest with SharedSparkSessionGDAL with RST_Write
     test("Testing RST_Write with manual GDAL registration (H3, JTS).") {
         noCodegen {
             assume(System.getProperty("os.name") == "Linux")
-            behaviors(H3IndexSystem, JTS)
+            behaviors(H3IndexSystem, JTS, getExprConfigOpt)
         }
     }
 }

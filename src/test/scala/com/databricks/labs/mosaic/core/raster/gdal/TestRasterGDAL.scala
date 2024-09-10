@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.core.raster.gdal
 import com.databricks.labs.mosaic.core.raster.io.RasterIO
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils}
 import com.databricks.labs.mosaic._
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.gdal.gdal.{gdal => gdalJNI}
@@ -73,7 +73,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         // 0.4.3 PAM file might still be around
         info(s"path -> ${createInfo(RASTER_PATH_KEY)}")
         val fsPath = PathUtils.asFileSystemPath(createInfo(RASTER_PATH_KEY), uriGdalOpt = None)
-        Try(Files.deleteIfExists(Paths.get(s"$fsPath.aux.xml")))
+        FileUtils.tryDeleteFileOrDir(Paths.get(s"$fsPath.aux.xml"))
         val testRaster = RasterGDAL(createInfo, getExprConfigOpt)
         testRaster.xSize shouldBe 2400
         testRaster.ySize shouldBe 2400

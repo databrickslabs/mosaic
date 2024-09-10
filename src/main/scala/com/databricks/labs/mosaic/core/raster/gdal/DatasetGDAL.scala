@@ -154,7 +154,6 @@ case class DatasetGDAL() {
             val newPathOpt: Option[String] = this.getDatasetOpt match {
                 case Some(_) if !pathGDAL.isSubdataset && !pathGDAL.isPathZip =>
                     // (1a) try copy from dataset to a new path
-                    val ext = RasterIO.identifyExtFromDriver(this.getDriverName)
                     val newFN = this.pathGDAL.getFilename
                     val newPath = s"$newDir/$newFN"
                     if (datasetCopyToPath(newPath, doDestroy = doDestroy, skipUpdatePath = true)) {
