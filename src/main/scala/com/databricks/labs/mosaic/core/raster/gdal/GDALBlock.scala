@@ -139,11 +139,11 @@ object GDALBlock {
     }
 
     def apply(
-        band: MosaicRasterBandGDAL,
-        stride: Int,
-        xOffset: Int,
-        yOffset: Int,
-        blockSize: Int
+                 band: RasterBandGDAL,
+                 stride: Int,
+                 xOffset: Int,
+                 yOffset: Int,
+                 blockSize: Int
     ): GDALBlock[Double] = {
         val noDataValue = band.noDataValue
         val rasterWidth = band.xSize

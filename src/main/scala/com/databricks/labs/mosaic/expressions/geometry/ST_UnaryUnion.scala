@@ -3,16 +3,16 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVectorExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.types.DataType
 
 case class ST_UnaryUnion(
-    inputGeom: Expression,
-    expressionConfig: MosaicExpressionConfig
-) extends UnaryVectorExpression[ST_UnaryUnion](inputGeom, returnsGeometry = true, expressionConfig) {
+                            inputGeom: Expression,
+                            exprConfig: ExprConfig
+) extends UnaryVectorExpression[ST_UnaryUnion](inputGeom, returnsGeometry = true, exprConfig) {
 
     override def dataType: DataType = inputGeom.dataType
 
@@ -40,8 +40,8 @@ object ST_UnaryUnion extends WithExpressionInfo {
           |        "POLYGON (( 0 0, 1 0, 1 1, 0 1 ))"
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_UnaryUnion](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_UnaryUnion](1, exprConfig)
     }
 
 }

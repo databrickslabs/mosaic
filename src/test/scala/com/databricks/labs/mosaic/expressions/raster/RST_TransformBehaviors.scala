@@ -11,32 +11,34 @@ trait RST_TransformBehaviors extends QueryTest {
 
     // noinspection MapGetGet
     def behavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
-        val rastersInMemory = spark.read
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
+
+        val rasterDf = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
+            .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersInMemory
+        val gridTiles = rasterDf
             .withColumn("tile", rst_transform($"tile", lit(27700)))
             .withColumn("bbox", st_aswkt(rst_boundingbox($"tile")))
             .select("bbox", "path", "tile")
             .withColumn("avg", rst_avg($"tile"))
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
                                                    |select rst_transform(tile, 27700) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("tile", rst_transform($"tile", lit(27700)))
             .select("tile")
 

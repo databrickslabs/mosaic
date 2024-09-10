@@ -9,22 +9,22 @@ Mosaic provides spark readers for raster files supported by GDAL OGR drivers.
 Only the drivers that are built by default are supported.
 Here are some common useful file formats:
 
-    * `GTiff <https://gdal.org/drivers/raster/gtiff.html>`_ (GeoTiff) using .tif file extension
-    * `COG <https://gdal.org/drivers/raster/cog.html>`_ (Cloud Optimized GeoTiff) using .tif file extension
-    * `HDF4 <https://gdal.org/drivers/raster/hdf4.html>`_ using .hdf file extension
-    * `HDF5 <https://gdal.org/drivers/raster/hdf5.html>`_ using .h5 file extension
-    * `NetCDF <https://gdal.org/drivers/raster/netcdf.html>`_ using .nc file extension
-    * `JP2ECW <https://gdal.org/drivers/raster/jp2ecw.html>`_ using .jp2 file extension
-    * `JP2KAK <https://gdal.org/drivers/raster/jp2kak.html>`_ using .jp2 file extension
-    * `JP2OpenJPEG <https://gdal.org/drivers/raster/jp2openjpeg.html>`_ using .jp2 file extension
-    * `PDF <https://gdal.org/drivers/raster/pdf.html>`_ using .pdf file extension
-    * `PNG <https://gdal.org/drivers/raster/png.html>`_ using .png file extension
-    * `VRT <https://gdal.org/drivers/raster/vrt.html>`_ using .vrt file extension
-    * `XPM <https://gdal.org/drivers/raster/xpm.html>`_ using .xpm file extension
-    * `GRIB <https://gdal.org/drivers/raster/grib.html>`_ using .grb file extension
-    * `Zarr <https://gdal.org/drivers/raster/zarr.html>`_ using .zarr file extension
+    * `GTiff <https://gdal.org/drivers/raster/gtiff.html>`__ (GeoTiff) using .tif file extension
+    * `COG <https://gdal.org/drivers/raster/cog.html>`__ (Cloud Optimized GeoTiff) using .tif file extension
+    * `HDF4 <https://gdal.org/drivers/raster/hdf4.html>`__ using .hdf file extension
+    * `HDF5 <https://gdal.org/drivers/raster/hdf5.html>`__ using .h5 file extension
+    * `NetCDF <https://gdal.org/drivers/raster/netcdf.html>`__ using .nc file extension
+    * `JP2ECW <https://gdal.org/drivers/raster/jp2ecw.html>`__ using .jp2 file extension
+    * `JP2KAK <https://gdal.org/drivers/raster/jp2kak.html>`__ using .jp2 file extension
+    * `JP2OpenJPEG <https://gdal.org/drivers/raster/jp2openjpeg.html>`__ using .jp2 file extension
+    * `PDF <https://gdal.org/drivers/raster/pdf.html>`__ using .pdf file extension
+    * `PNG <https://gdal.org/drivers/raster/png.html>`__ using .png file extension
+    * `VRT <https://gdal.org/drivers/raster/vrt.html>`__ using .vrt file extension
+    * `XPM <https://gdal.org/drivers/raster/xpm.html>`__ using .xpm file extension
+    * `GRIB <https://gdal.org/drivers/raster/grib.html>`__ using .grb file extension
+    * `Zarr <https://gdal.org/drivers/raster/zarr.html>`__ using .zarr file extension
 
-For more information please refer to gdal `raster driver <https://gdal.org/drivers/raster/index.html>`_ documentation.
+For more information please refer to gdal `raster driver <https://gdal.org/drivers/raster/index.html>`__ documentation.
 
 Mosaic provides two flavors of the readers:
 
@@ -36,23 +36,29 @@ spark.read.format("gdal")
 *************************
 A base Spark SQL data source for reading GDAL raster data sources.
 It reads metadata of the raster and exposes the direct paths for the raster files.
-The output of the reader is a DataFrame with the following columns:
+The output of the reader is a DataFrame with the following columns (provided in order):
 
-    * tile - loaded raster tile (RasterTileType)
-    * ySize - height of the raster in pixels (IntegerType)
-    * xSize - width of the raster in pixels (IntegerType)
-    * bandCount - number of bands in the raster (IntegerType)
-    * metadata - raster metadata (MapType(StringType, StringType))
-    * subdatasets - raster subdatasets (MapType(StringType, StringType))
-    * srid - raster spatial reference system identifier (IntegerType)
-    * proj4Str - raster spatial reference system proj4 string (StringType)
+    * :code:`path` - path read (StringType)
+    * :code:`modificationTime` - last modification of the raster (TimestampType)
+    * :code:`length` -  size of the raster, e.g. memory size (LongType)
+    * :code:`uuid` -  unique identifier for the raster (LongType)
+    * :code:`x_Size` - width of the raster in pixels (IntegerType)
+    * :code:`y_size` - height of the raster in pixels (IntegerType)
+    * :code:`bandCount` - number of bands in the raster (IntegerType)
+    * :code:`metadata` - raster metadata (MapType(StringType, StringType))
+    * :code:`subdatasets` - raster subdatasets (MapType(StringType, StringType))
+    * :code:`srid` - raster spatial reference system identifier (IntegerType)
+    * :code:`tile` - loaded raster tile (StructType - RasterTileType)
 
-.. function:: spark.read.format("gdal").load(path)
+.. figure:: ../images/gdal-reader.png
+   :figclass: doc-figure
+
+.. function:: format("gdal")
 
     Loads a GDAL raster file and returns the result as a DataFrame.
-    It uses standard :code:`spark.read.format(*).option(*).load(*)` pattern.
+    It uses the standard spark reader patthern of :code:`spark.read.format(*).option(*).load(*)`.
 
-    :param path: path to the raster file on dbfs
+    :param path: path to the raster file, e.g. on dbfs
     :type path: Column(StringType)
     :rtype: DataFrame
 
@@ -98,7 +104,7 @@ The output of the reader is a DataFrame with the following columns:
 mos.read().format("raster_to_grid")
 ***********************************
 Reads a GDAL raster file and converts it to a grid.
-It uses a pattern similar to standard spark.read.format(*).option(*).load(*) pattern.
+It uses a pattern similar to standard :code:`spark.read.format(*).option(*).load(*)` pattern.
 The only difference is that it uses :code:`mos.read()` instead of :code:`spark.read()`.
 The raster pixels are converted to grid cells using specified combiner operation (default is mean).
 If the raster pixels are larger than the grid cells, the cell values can be calculated using interpolation.
@@ -106,23 +112,47 @@ The interpolation method used is Inverse Distance Weighting (IDW) where the dist
 distance of the grid.
 The reader supports the following options:
 
-    * fileExtension - file extension of the raster file (StringType) - default is *.*
-    * vsizip - if the rasters are zipped files, set this to true (BooleanType)
-    * resolution - resolution of the output grid (IntegerType)
-    * combiner - combiner operation to use when converting raster to grid (StringType) - default is mean
-    * retile - if the rasters are too large they can be re-tiled to smaller tiles (BooleanType)
-    * tileSize - size of the re-tiled tiles, tiles are always squares of tileSize x tileSize (IntegerType)
-    * readSubdatasets - if the raster has subdatasets set this to true (BooleanType)
-    * subdatasetNumber - if the raster has subdatasets, select a specific subdataset by index (IntegerType)
-    * subdatasetName - if the raster has subdatasets, select a specific subdataset by name (StringType)
-    * kRingInterpolate - if the raster pixels are larger than the grid cells, use k_ring interpolation with n = kRingInterpolate (IntegerType)
+    * :code:`combiner` (default "mean") - combiner operation to use when converting raster to grid (StringType), options:
+      "average", "avg", "count", "max", "mean", "median", and "min"
+    * :code:`deltaFileRecords` (default 1000) - If > 0 and :code:`finalTableFqn` provided, limit number of files
+      per delta file to help with parallelism (IntegerType)
+    * :code:`driverName` (default "") - when the extension of the file is not enough, specify the driver (e.g. .zips) (StringType)
+    * :code:`extensions` (default "*") - raster file extensions, e.g. "tiff" and "nc", optionally separated by ";" (StringType),
+      e.g. "grib;grb" or "*" or ".tif" or  "tif" (what the file ends with will be tested), case insensitive; useful like
+      a glob filter to ignore other files in the directory, e.g. sidecar files
+    * :code:`finalTableFqn` (default "") - If this is provided, tables will be generated instead of just dataframes;
+      this is going to be much more performant and is recommended (StringType)
+    * :code:`finalTableFuse` (default "") - If :code:`finalTableFqn` provided, this specifies alternate location for
+      the final stage table (StringType)
+    * :code:`keepInterimTables` (default false) - If :code:`finalTableFqn` provided, this specifies whether to delete
+      interim DeltaLake tables generated (BooleanType)
+    * :code:`kRingInterpolate` (default 0) - if the raster pixels are larger than the grid cells, use k_ring
+      interpolation with n = kRingInterpolate (IntegerType)
+    * :code:`limitTessellate` (default 0) - limits the number of rows during / after tessellate; useful for sampling or testing (IntegerType)
+    * :code:`nPartitions` (default <spark.conf.get("spark.sql.shuffle.partitions")>) - you can specify the
+      starting number of partitions, will grow (x10 up to 10K) for retile and/or tessellate (IntegerType)
+    * :code:`resolution` (default 0) - resolution of the output grid (IntegerType)
+    * :code:`retile` (default false) - recommended to re-tile to smaller tiles, not used for geo-scientific files (BooleanType)
+    * :code:`sizeInMB` (default 0) - subdivide on initial read if value > 0 provided (IntegerType)
+    * :code:`skipProject` (default false) - mostly for troubleshooting, only good up to tessellate phase, most likely (BooleanType)
+      will fail in combiner phase, e.g. can be used with :code:`stopAtTessellate` to help with initial processing of
+      challenging datasets
+    * :code:`stepTessellate` (default false) - optionally, iterate tessellation from 0..resolution; not allowed with either
+      geo-scientific or vsizip files (BooleanType)
+    * :code:`stopAtTessellate` (default false) - optionally, return after tessellate phase, prior to the combiner phase (BooleanType)
+    * :code:`subdatasetName` (default "") - if the raster has subdatasets, select a specific subdataset by name (StringType)
+    * :code:`tileSize` (default 512) - size of the re-tiled tiles, tiles are always squares of tileSize x tileSize (IntegerType)
+    * :code:`uriDeepCheck` (default false) - specify whether more extensive testing of known URI parts is needed (StringType)
+    * :code:`vsizip` (default false) - if the rasters are zipped files, set this to true (BooleanType)
+    * :code:`verboseLevel` (default 0) - get increasing level of information (0..2) during processing, shows up in
+      driver stdout (IntegerType)
 
-.. function:: mos.read().format("raster_to_grid").load(path)
+.. function:: format("raster_to_grid")
 
-    Loads a GDAL raster file and returns the result as a DataFrame.
-    It uses standard :code:`mos.read().format(*).option(*).load(*)` pattern.
+    Loads a GDAL tile file and returns the result as a DataFrame.
+    It uses the standard spark reader pattern of :code:`mos.read().format(*).option(*).load(*)`.
 
-    :param path: path to the raster file on dbfs
+    :param path: path to the raster file, e.g. on dbfs
     :type path: Column(StringType)
     :rtype: DataFrame
 
@@ -132,11 +162,11 @@ The reader supports the following options:
     .. code-tab:: py
 
         df = mos.read().format("raster_to_grid")\
-            .option("fileExtension", "*.tif")\
+            .option("extensions", "tif")\
             .option("resolution", "8")\
             .option("combiner", "mean")\
             .option("retile", "true")\
-            .option("tileSize", "1000")\
+            .option("tileSize", "1024")\
             .option("kRingInterpolate", "2")\
             .load("dbfs:/path/to/raster.tif")
         df.show()
@@ -152,11 +182,11 @@ The reader supports the following options:
     .. code-tab:: scala
 
         val df = MosaicContext.read.format("raster_to_grid")
-            .option("fileExtension", "*.tif")
+            .option("extensions", "tif")
             .option("resolution", "8")
             .option("combiner", "mean")
             .option("retile", "true")
-            .option("tileSize", "1000")
+            .option("tileSize", "1024")
             .option("kRingInterpolate", "2")
             .load("dbfs:/path/to/raster.tif")
         df.show()
@@ -170,11 +200,92 @@ The reader supports the following options:
         +--------+--------+------------------+
 
 .. note::
-    Keyword options not identified in function signature are converted to a :code:`Map<String,String>`.
-    These must be supplied as a :code:`String`.
-    Also, you can supply function signature values as :code:`String`.
 
-.. warning::
-    Issue 350: https://github.com/databrickslabs/mosaic/issues/350
-    The option 'fileExtension' expects a wild card mask. Please use the following format: '*.tif' or equivalent for other formats.
-    If you use 'tif' without the wildcard the reader wont pick up any files and you will have empty table as a result.
+    **Phases ("raster_to_grid")**
+
+    | (1) Initial load with "gdal" reader, passes select arguments and specifies based on internal logic whether using
+    |     either read strategy "as_path" or "subdivide_on_read" (based on :code:`sizeInMB`)
+    | (2) Increase :code:`nPartitions` for non-table handling, used for retile (different than subdivide) and tessellate ops.
+    | (3) Convert the provided raster data to GeoTIFF if :code:`toTif` is true.
+    | (4) Retile if :code:`retile` is true using provided :code:`tileSize`.
+    | (5) Tessellate to the specified resolution; with :code:`stepTessellate` is iterated (0..:code:`resolution`) for better performance.
+    | (6) Combiner Aggregation for :code:`combiner`, if not returning after tessellate phase.
+    | (7) Explode combiner measures to row-per-band; 0 is used if no bands.
+    | (8) Resample using :code:`kRingInterpolate` number of K-Rings if directed.
+      
+    General
+      To improve performance, for 0.4.3+ rasters are stored in the fuse-mount checkpoint directory with "raster_to_grid",
+      based on config :code:`spark.databricks.labs.mosaic.raster.checkpoint`. Also, "raster_to_grid" sets the following
+      AQE configuration to false: :code:`spark.sql.adaptive.coalescePartitions.enabled`. There is some interim caching
+      for non-table handling (using the metadata only) and should be cleaned up, but for safety you can run
+      :code:`spark.catalog.clearCache()` in python to un-cache everything (including anything you may have explicitly
+      cached previously). The dataframe returned from this function will be cached, so you can explicitly call
+      :code:`df.unpersist()` on it.
+
+      Reader key-values may be provided either individually with :code:`option` (:code:`StringType` as shown in the example)
+      or provided as a single map :code:`options` (:code:`Map<String,String>`). Then they will be coerced to the actual type
+      expected, e.g. using :code:`toBoolean` or :code:`toInt` during handling.
+
+    Geo-Scientific Files (N-D Labeled)
+      - Drivers (and corresponding file extensions) that are defaulted to geo-scientific handling:
+        :code:`HDF4` ("hdf4"), :code:`HDF5` ("hdf5"), :code:`GRIB` ("grb"), :code:`netCDF` ("nc"),
+        and :code:`Zarr` ("zarr"); see Zarr and NetCDF notes further down.
+      - Use of option :code:`toTif` might be useful to standardize handling of the nested data into more pixel-based,
+        e.g. for retile, tessellate, and combine phases.
+      - Consider use of `xarray <https://pypi.org/project/xarray/>`_ / `rioxarray <https://pypi.org/project/rioxarray/>`_
+        libs to work with Geo-Scientific; can combine with various data engineering and can use UDF patterns, adapting from
+        examples shown in :doc:`rasterio-gdal-udfs` as well as various notebook examples in the project repo.
+
+    Tif Files
+      - GeoTIFFs (driver "GTiff" with extension "tif") are pixel based vs nested. They more readily allow subdivide
+        read strategy with :code:`sizeInMB` >= 0 as well as retiling with :code:`retile` and :code:`tileSize`.
+
+    Zipped Files
+      - Zipped files should end in ".zip".
+      - Zipped (.zip) variations use "as_path" read strategy regardless of whether :code:`sizeInMB` is provided
+        (which would otherwise cue "subdivide_on_read").
+      - Recommend :code:`sizeInMB` "-1" to avoid attempting to subdivide read strategy.
+      - Might have issues with :code:`retile`, :code:`tileSize`, or :code:`stepTessellate`.
+
+    NetCDF Files
+      - Additional for this geo-scientific format.
+      - Mostly tested with :code:`subdatasetName` provided which seems to reduce the NetCDF to 1 band which GDAL likes.
+      - Not really tested zipped, don't recommend providing this format zipped.
+      - When a subdataset is not specified, you
+        may need to stop at tessellate with :code:`stopAtTessellate` set to "true", then use UDF (e.g. with [rio]xarray);
+        this is due to potentially challenges with attempting to process multiple bands at once for this format.
+
+    Zarr Files
+      - Additional for this geo-scientific format.
+      - GDAL 3.4.1 (Ubuntu Jammy version) has limited support for Zarr v2 (it is a directory format vs file).
+      - Recommend providing zipped with option :code:`vsizip` to help with handling.
+      - Recommend option :code:`driverName` "Zarr" to help with handling.
+      - Recommend option :code:`subdatasetName` to specify the group name (relative path after unzipped).
+      - Recommend :code:`sizeInMB` "-1" to avoid attempting to subdivide read strategy.
+      - Might have issues with :code:`retile`, :code:`tileSize`, or :code:`stepTessellate`.
+      - Recommend option :code:`stopAtTessellate` "true" to not try to use combiner (band-based) logic,
+        then use UDF (e.g. with [rio]xarray).
+
+    :code:`sizeInMB`:
+      - Optional: default is 0 (for geo-scientific default is 8).
+      - Uses file size vs in-memory size which will be different, e.g. due to compression.
+      - If size > 0 that size is used for subdividing the initial file (must be below 2GB); we recommend at/below 64MB,
+        even 16MB or 8MB, for better parallelism towards tessellation and measure aggregation.
+      - If size is set to -1, the file is loaded and returned as a single tile (not recommended).
+      - If set to 0, the file is loaded and subdivided into tiles of size no greater than 64MB.
+
+    :code:`finalTableFqn`:
+      - Fully qualified name (Fqn) can be up to "catalog.schema.final_table_name" or can be "schema.final_table_name" or
+        "final_table_name"; the current catalog and schema will be used if not provided.
+      - If provided, delta lake tables will be generated instead of keeping everything in ephemeral dataframes;
+        this can be much more performant as it benefits from materialized data per stage.
+      - Tables are overwritten per execution, so make sure to provide a new / unique table name if you want to preserve
+        prior results; also, interim tables will have "_phase" appended to the end of the provided final table name;
+        tessellate is performed incrementally, starting at 0 and going up to specified resolution (if > 0) with a separate
+        table generated for each iterative step.
+      - :code:`deltaFileRecords` (default 1000) - If > 0, limit number of files per delta file to help with parallelism;
+        this will possibly get wiped out if you subsequently manually call OPTIMIZE on the table, e.g. as part of liquid
+        clustering of the "cellid" column in the tessellate+ stages (the write operations here do not liquid cluster).
+      - :code:`finalTableFuse` (default "") specifies alternate location for the final stage table; this will only be
+        applied if :code:`stopAtTessellate` is true since the combine phases afterwards do not maintain the raster tile data.
+      - :code:`keepInterimTables` (default false) specifies whether to delete interim DeltaLake tables generated.

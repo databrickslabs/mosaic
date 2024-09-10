@@ -3,11 +3,11 @@ package com.databricks.labs.mosaic.expressions.raster.base
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.flushAndDestroy
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, NullIntolerant}
 import org.apache.spark.sql.types._
@@ -15,41 +15,43 @@ import org.apache.spark.sql.types._
 import scala.reflect.ClassTag
 
 /**
-  * Base class for all raster generator expressions that take no arguments. It
+  * Base class for all tile generator expressions that take no arguments. It
   * provides the boilerplate code needed to create a function builder for a
   * given expression. It minimises amount of code needed to create a new
   * expression. These expressions are used to generate a collection of new
-  * rasters based on the input raster. The new rasters are written in the
+  * rasters based on the input tile. The new rasters are written in the
   * checkpoint directory. The files are written as GeoTiffs. Subdatasets are not
   * supported, please flatten beforehand.
-  * @param tileExpr
-  *   The expression for the raster. If the raster is stored on disc, the path
-  *   to the raster is provided. If the raster is stored in memory, the bytes of
-  *   the raster are provided.
-  * @param expressionConfig
+  * @param rasterExpr
+  *   The expression for the tile. If the tile is stored on disc, the path
+  *   to the tile is provided. If the tile is stored in memory, the bytes of
+  *   the tile are provided.
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
   *   The type of the extending class.
   */
 abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
-    tileExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                                                                       rasterExpr: Expression,
+                                                                       exprConfig: ExprConfig
 ) extends CollectionGenerator
       with NullIntolerant
       with Serializable {
 
+    GDAL.enable(exprConfig)
+
     override def dataType: DataType = {
-        GDAL.enable(expressionConfig)
-        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+        // !!! always checkpoint !!!
+        RasterTileType(exprConfig.getCellIdType, rasterExpr, useCheckpoint = true)
     }
 
     val uuid: String = java.util.UUID.randomUUID().toString.replace("-", "_")
 
-    protected val geometryAPI: GeometryAPI = GeometryAPI.apply(expressionConfig.getGeometryAPI)
+    protected val geometryAPI: GeometryAPI = GeometryAPI.apply(exprConfig.getGeometryAPI)
 
-    protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
+    protected def indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem)
 
-    protected val cellIdDataType: DataType = indexSystem.getCellIdDataType
+    protected def cellIdDataType: DataType = indexSystem.getCellIdDataType
 
     override def position: Boolean = false
 
@@ -64,31 +66,39 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
 
     /**
       * The function to be overridden by the extending class. It is called when
-      * the expression is evaluated. It provides the raster band to the
+      * the expression is evaluated. It provides the tile band to the
       * expression. It abstracts spark serialization from the caller.
       * @param raster
-      *   The raster to be used.
+      *   The tile to be used.
       * @return
       *   Sequence of generated new rasters to be written.
       */
-    def rasterGenerator(raster: MosaicRasterTile): Seq[MosaicRasterTile]
+    def rasterGenerator(raster: RasterTile): Seq[RasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        GDAL.enable(expressionConfig)
-        val rasterType = RasterTileType(tileExpr, expressionConfig.isRasterUseCheckpoint).rasterType
-        val tile = MosaicRasterTile.deserialize(tileExpr.eval(input).asInstanceOf[InternalRow], cellIdDataType, rasterType)
-        val generatedRasters = rasterGenerator(tile)
+        GDAL.enable(exprConfig)
+        var tile = RasterTile.deserialize(
+            rasterExpr.eval(input).asInstanceOf[InternalRow],
+            cellIdDataType,
+            Option(exprConfig)
+        )
 
-        // Writing rasters disposes of the written raster
-        val rows = generatedRasters.map(_.formatCellId(indexSystem).serialize(rasterType))
-        generatedRasters.foreach(gr => RasterCleaner.dispose(gr))
-        RasterCleaner.dispose(tile)
+        var genTiles = rasterGenerator(tile)
+            .map(_.formatCellId(indexSystem)) // <- format cellid prior to rasterType
+        val resultType = RasterTile.getRasterType(dataType)
+        val rows = genTiles.map(tile => InternalRow.fromSeq(
+            Seq(tile.serialize(resultType, doDestroy = true, Option(exprConfig))))
+        )
 
-        rows.map(row => InternalRow.fromSeq(Seq(row)))
+        tile.flushAndDestroy()
+        tile = null
+        genTiles = null
+
+        rows.iterator // <- want an iterator here
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression =
-        GenericExpressionFactory.makeCopyImpl[T](this, newArgs, children.length, expressionConfig)
+        GenericExpressionFactory.makeCopyImpl[T](this, newArgs, children.length, exprConfig)
 
     override def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression = makeCopy(newChildren.toArray)
 

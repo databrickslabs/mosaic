@@ -11,35 +11,39 @@ trait RST_ToOverlappingTilesBehaviors extends QueryTest {
 
     // noinspection MapGetGet
     def behaviors(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
-        val rastersInMemory = spark.read
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
+
+        val rasterDf = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
+            .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
+        //info(s"load -> ${rasterDf.first().toSeq.toString()}")
 
-        val gridTiles = rastersInMemory
-            .withColumn("tile", rst_to_overlapping_tiles($"tile", lit(500), lit(500), lit(10)))
+        val gridTiles = rasterDf
+            .withColumn("tile", rst_tooverlappingtiles($"tile", lit(500), lit(500), lit(10)))
             .select("tile")
+        //info(s"gridTiles -> ${gridTiles.first().toSeq.toString()}")
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql(
             """
-              |select rst_to_overlapping_tiles(tile, 500, 500, 10)
+              |select rst_tooverlappingtiles(tile, 500, 500, 10)
               |  from source
               |""".stripMargin).take(1)
 
 
         val result = gridTiles.collect()
 
-        result.length > rastersInMemory.count() should be(true)
+        result.length > rasterDf.count() should be(true)
 
     }
 

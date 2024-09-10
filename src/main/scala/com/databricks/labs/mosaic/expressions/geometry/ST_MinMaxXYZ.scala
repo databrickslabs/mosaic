@@ -3,25 +3,25 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.WithExpressionInfo
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVectorExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.{DataType, DoubleType}
 
 case class ST_MinMaxXYZ(
-    inputGeom: Expression,
-    expressionConfig: MosaicExpressionConfig,
-    dimension: String,
-    func: String
-) extends UnaryVectorExpression[ST_MinMaxXYZ](inputGeom, returnsGeometry = false, expressionConfig) {
+                           inputGeom: Expression,
+                           exprConfig: ExprConfig,
+                           dimension: String,
+                           func: String
+) extends UnaryVectorExpression[ST_MinMaxXYZ](inputGeom, returnsGeometry = false, exprConfig) {
 
     override def dataType: DataType = DoubleType
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression =
         ST_MinMaxXYZ(
           newArgs(0).asInstanceOf[Expression],
-          expressionConfig,
+          exprConfig,
           dimension,
           func
         )
@@ -39,23 +39,23 @@ case class ST_MinMaxXYZ(
 /** Expression info required for the expression registration for spark SQL. */
 object ST_MinMaxXYZ {
 
-    class ST_XMin(override val inputGeom: Expression, override val expressionConfig: MosaicExpressionConfig)
-        extends ST_MinMaxXYZ(inputGeom, expressionConfig, "x", "min")
+    class ST_XMin(override val inputGeom: Expression, override val exprConfig: ExprConfig)
+        extends ST_MinMaxXYZ(inputGeom, exprConfig, "x", "min")
 
-    class ST_XMax(override val inputGeom: Expression, override val expressionConfig: MosaicExpressionConfig)
-        extends ST_MinMaxXYZ(inputGeom, expressionConfig, "x", "max")
+    class ST_XMax(override val inputGeom: Expression, override val exprConfig: ExprConfig)
+        extends ST_MinMaxXYZ(inputGeom, exprConfig, "x", "max")
 
-    class ST_YMin(override val inputGeom: Expression, override val expressionConfig: MosaicExpressionConfig)
-        extends ST_MinMaxXYZ(inputGeom, expressionConfig, "y", "min")
+    class ST_YMin(override val inputGeom: Expression, override val exprConfig: ExprConfig)
+        extends ST_MinMaxXYZ(inputGeom, exprConfig, "y", "min")
 
-    class ST_YMax(override val inputGeom: Expression, override val expressionConfig: MosaicExpressionConfig)
-        extends ST_MinMaxXYZ(inputGeom, expressionConfig, "y", "max")
+    class ST_YMax(override val inputGeom: Expression, override val exprConfig: ExprConfig)
+        extends ST_MinMaxXYZ(inputGeom, exprConfig, "y", "max")
 
-    class ST_ZMin(override val inputGeom: Expression, override val expressionConfig: MosaicExpressionConfig)
-        extends ST_MinMaxXYZ(inputGeom, expressionConfig, "z", "min")
+    class ST_ZMin(override val inputGeom: Expression, override val exprConfig: ExprConfig)
+        extends ST_MinMaxXYZ(inputGeom, exprConfig, "z", "min")
 
-    class ST_ZMax(override val inputGeom: Expression, override val expressionConfig: MosaicExpressionConfig)
-        extends ST_MinMaxXYZ(inputGeom, expressionConfig, "z", "max")
+    class ST_ZMax(override val inputGeom: Expression, override val exprConfig: ExprConfig)
+        extends ST_MinMaxXYZ(inputGeom, exprConfig, "z", "max")
 
     object ST_XMin extends WithExpressionInfo {
 
@@ -67,8 +67,8 @@ object ST_MinMaxXYZ {
               |      > SELECT _FUNC_(a);
               |        12.3
               |  """.stripMargin
-        override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
-            ST_MinMaxXYZ(exprs.head, expressionConfig, "x", "min")
+        override def builder(exprConfig: ExprConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
+            ST_MinMaxXYZ(exprs.head, exprConfig, "x", "min")
         }
 
     }
@@ -83,8 +83,8 @@ object ST_MinMaxXYZ {
               |      > SELECT _FUNC_(a);
               |        12.3
               |  """.stripMargin
-        override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
-            ST_MinMaxXYZ(exprs.head, expressionConfig, "x", "max")
+        override def builder(exprConfig: ExprConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
+            ST_MinMaxXYZ(exprs.head, exprConfig, "x", "max")
         }
 
     }
@@ -99,8 +99,8 @@ object ST_MinMaxXYZ {
               |      > SELECT _FUNC_(a);
               |        12.3
               |  """.stripMargin
-        override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
-            ST_MinMaxXYZ(exprs.head, expressionConfig, "y", "min")
+        override def builder(exprConfig: ExprConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
+            ST_MinMaxXYZ(exprs.head, exprConfig, "y", "min")
         }
 
     }
@@ -115,8 +115,8 @@ object ST_MinMaxXYZ {
               |      > SELECT _FUNC_(a);
               |        12.3
               |  """.stripMargin
-        override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
-            ST_MinMaxXYZ(exprs.head, expressionConfig, "y", "max")
+        override def builder(exprConfig: ExprConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
+            ST_MinMaxXYZ(exprs.head, exprConfig, "y", "max")
         }
 
     }
@@ -131,8 +131,8 @@ object ST_MinMaxXYZ {
               |      > SELECT _FUNC_(a);
               |        12.3
               |  """.stripMargin
-        override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
-            ST_MinMaxXYZ(exprs.head, expressionConfig, "z", "min")
+        override def builder(exprConfig: ExprConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
+            ST_MinMaxXYZ(exprs.head, exprConfig, "z", "min")
         }
 
     }
@@ -147,8 +147,8 @@ object ST_MinMaxXYZ {
               |      > SELECT _FUNC_(a);
               |        12.3
               |  """.stripMargin
-        override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
-            ST_MinMaxXYZ(exprs.head, expressionConfig, "z", "max")
+        override def builder(exprConfig: ExprConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
+            ST_MinMaxXYZ(exprs.head, exprConfig, "z", "max")
         }
 
     }

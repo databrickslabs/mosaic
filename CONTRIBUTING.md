@@ -84,7 +84,8 @@ The repository is structured as follows:
 ## Test & build Mosaic
 
 Given that DBR 13.3 is Ubuntu 22.04, we recommend using docker, 
-see [mosaic-docker.sh](https://github.com/databrickslabs/mosaic/blob/main/scripts/docker/mosaic-docker.sh).
+see [mosaic-docker.sh](https://github.com/databrickslabs/mosaic/blob/main/scripts/docker/mosaic-docker.sh) or 
+[mosaic-docker-java-tool-options.sh](https://github.com/databrickslabs/mosaic/blob/main/scripts/docker/mosaic-docker-java-tool-options.sh).
 
 ### Scala JAR
 
@@ -97,18 +98,23 @@ The packaged JAR should be available in `target/`.
 
 ### Python bindings
 
-The python bindings can be tested using [unittest](https://docs.python.org/3/library/unittest.html).
-- Build the scala project and copy to the packaged JAR to the `python/mosaic/lib/` directory.
-- Move to the `python/` directory and install the project and its dependencies:
-    `pip install . && pip install pyspark==<project_spark_version>`
-  (where 'project_spark_version' corresponds to the version of Spark 
-  used for the target Databricks Runtime, e.g. `3.2.1`.
-- Run the tests using `unittest`: `python -m unittest`
-
-The project wheel file can be built with [build](https://pypa-build.readthedocs.io/en/stable/).
-- Install the build requirements: `pip install build wheel`.
-- Build the wheel using `python -m build`.
-- Collect the .whl file from `python/dist/`
+1. Testing - You can run the tests (recommended within docker container) using
+   [unittest](https://docs.python.org/3/library/unittest.html), e.g. `python -m unittest`.
+2. Install the build requirements: `pip install build wheel`.
+3. [Option] Build with Script - If you are within docker container, to build the WHL file you can just run the following
+   from project root (mosaic) dir: `sh scripts/docker/python-local-build.sh` (it will package jar and build WHL).
+4. [Option] If doing build more manually (recommended within docker container using its init scripts):
+   - Build the scala project, e.g. `mvn package -DskipTests=true` if you have already tested successfully; that call. 
+     will copy the packaged JAR to the `python/mosaic/lib/` directory (or you can do so manually) and be sure to verify
+     no older JARs are lingering.
+   - Move to the `python/` directory and install the project and its dependencies:
+       `pip install . && pip install pyspark==<project_spark_version>`
+     (where 'project_spark_version' corresponds to the version of Spark 
+     used for the target Databricks Runtime, e.g. `3.4.1` for DBR 13.3 LTS. 
+   - The project wheel file can be built with [build](https://pypa-build.readthedocs.io/en/stable/), e.g. `python -m build`.
+5. Collect the .whl file from `python/dist/`:
+   - WHL contains the JAR.
+   - It is all that is needed for installing on a cluster (same for the deployed PyPI version).
 
 ### Documentation
 
@@ -116,14 +122,17 @@ The documentation has been produced using [Sphinx](https://www.sphinx-doc.org/en
 
 To build the docs:
 - Install the pandoc library (follow the instructions for your platform [here](https://pandoc.org/installing.html)).
+- You can run `docs/mosaic-docs.sh` or do the manual steps that follow.
 - Install the python requirements from `docs/docs-requirements.txt`.
 - Build the HTML documentation by running `make html` from `docs/`.
   - For nbconvert you may have to symlink your jupyter share folder, 
     e.g. `sudo ln -s /opt/homebrew/share/jupyter /usr/local/share`. 
-- You can locally host the docs by running the `reload.py` script in the `docs/source/` directory.
+- You can locally host the docs by running the `reload.py` script in the `docs/source/` directory; 
+  recommend running `reload.py` through IntelliJ for auto-refresh features.
 
 ## Style
 
 Tools we use for code formatting and checking:
 - `scalafmt` and `scalastyle` in the main scala project.
-- `black` and `isort` for the python bindings.
+- `black` (python dir), e.g. `black mosaic` and `black test`.  
+- `isort` (python dir), e.g. `isort .` from within "mosaic" and "test" dirs.

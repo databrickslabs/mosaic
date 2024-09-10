@@ -102,7 +102,7 @@ trait ST_IsValidBehaviors extends MosaicSpatialQueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stIsValid = ST_IsValid(lit(1).expr, mc.expressionConfig)
+        val stIsValid = ST_IsValid(lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stIsValid.genCode(ctx)
     }
@@ -112,7 +112,7 @@ trait ST_IsValidBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register(spark)
 
-        val stIsValid = ST_IsValid(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, mc.expressionConfig)
+        val stIsValid = ST_IsValid(lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr, mc.exprConfig)
 
         stIsValid.child shouldEqual lit("POLYGON (1 1, 2 2, 3 3, 4 4, 1 1)").expr
         stIsValid.dataType shouldEqual BooleanType

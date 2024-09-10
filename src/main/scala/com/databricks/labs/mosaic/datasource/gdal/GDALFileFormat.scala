@@ -1,8 +1,10 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
+import com.databricks.labs.mosaic.MOSAIC_RASTER_READ_IN_MEMORY
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.google.common.io.{ByteStreams, Closeables}
 import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 import org.apache.hadoop.mapreduce.Job
@@ -18,6 +20,7 @@ import org.apache.spark.util.SerializableConfiguration
 import java.net.URI
 import java.sql.Timestamp
 import java.util.Locale
+import scala.util.Try
 
 /** A file format for reading binary files using GDAL. */
 class GDALFileFormat extends BinaryFileFormat {
@@ -25,7 +28,7 @@ class GDALFileFormat extends BinaryFileFormat {
     import GDALFileFormat._
 
     /**
-      * Infer schema for the raster file.
+      * Infer schema for the tile file.
       * @param sparkSession
       *   Spark session.
       * @param options
@@ -86,7 +89,7 @@ class GDALFileFormat extends BinaryFileFormat {
         path: org.apache.hadoop.fs.Path
     ): Boolean = false
 
-    override def shortName(): String = GDAL_BINARY_FILE
+    override def shortName(): String = GDAL_FILE_FORMAT
 
     /**
       * Build a reader for the file format.
@@ -117,22 +120,19 @@ class GDALFileFormat extends BinaryFileFormat {
         options: Map[String, String],
         hadoopConf: org.apache.hadoop.conf.Configuration
     ): PartitionedFile => Iterator[org.apache.spark.sql.catalyst.InternalRow] = {
-        GDAL.enable(sparkSession)
-
-        val indexSystem = IndexSystemFactory.getIndexSystem(sparkSession)
-        val expressionConfig = MosaicExpressionConfig(sparkSession)
-
-        val supportedExtensions = options.getOrElse("extensions", "*").split(";").map(_.trim.toLowerCase(Locale.ROOT))
-
-        val broadcastedHadoopConf = sparkSession.sparkContext.broadcast(new SerializableConfiguration(hadoopConf))
-        val filterFuncs = filters.flatMap(createFilterFunction)
+        // Suitable on the driver
+        MosaicGDAL.enableGDAL(sparkSession)
 
         // Identify the reader to use for the file format.
         // GDAL supports multiple reading strategies.
         val reader = ReadStrategy.getReader(options)
 
+        val indexSystem = IndexSystemFactory.getIndexSystem(sparkSession)
+        val supportedExtensions = options.getOrElse("extensions", "*").split(";").map(_.trim.toLowerCase(Locale.ROOT))
+        val broadcastedHadoopConf = sparkSession.sparkContext.broadcast(new SerializableConfiguration(hadoopConf))
+        val filterFuncs = filters.flatMap(createFilterFunction)
+
         file: PartitionedFile => {
-            GDAL.enable(expressionConfig)
             val path = new Path(new URI(file.filePath.toString()))
             val fs = path.getFileSystem(broadcastedHadoopConf.value.value)
             val status = fs.getFileStatus(path)
@@ -154,7 +154,7 @@ class GDALFileFormat extends BinaryFileFormat {
 
 object GDALFileFormat {
 
-    val GDAL_BINARY_FILE = "gdal"
+    val GDAL_FILE_FORMAT = "gdal"
     val PATH = "path"
     val LENGTH = "length"
     val MODIFICATION_TIME = "modificationTime"
@@ -162,8 +162,6 @@ object GDALFileFormat {
     val CONTENT = "content"
     val X_SIZE = "x_size"
     val Y_SIZE = "y_size"
-    val X_OFFSET = "x_offset"
-    val Y_OFFSET = "y_offset"
     val BAND_COUNT = "bandCount"
     val METADATA = "metadata"
     val SUBDATASETS: String = "subdatasets"

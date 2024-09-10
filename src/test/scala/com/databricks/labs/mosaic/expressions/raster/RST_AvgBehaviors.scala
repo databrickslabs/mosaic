@@ -10,24 +10,27 @@ import org.scalatest.matchers.should.Matchers._
 trait RST_AvgBehaviors extends QueryTest {
 
     def behavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
-        val rastersInMemory = spark.read
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
+
+        val rasterDf = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
+            .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val df = rastersInMemory
+        val df = rasterDf
             .withColumn("tile", rst_tessellate($"tile", lit(3)))
             .withColumn("result", rst_avg($"tile"))
             .select("result")
             .select(explode($"result").as("result"))
 
-        rastersInMemory
+        rasterDf
             .withColumn("tile", rst_tessellate($"tile", lit(3)))
             .createOrReplaceTempView("source")
 

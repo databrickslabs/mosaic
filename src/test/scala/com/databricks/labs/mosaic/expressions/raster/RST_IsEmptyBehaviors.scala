@@ -10,35 +10,36 @@ trait RST_IsEmptyBehaviors extends QueryTest {
 
     // noinspection AccessorLikeMethodIsUnit
     def isEmptyBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
-        val rastersInMemory = spark.read
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
+
+        val rasterDf = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
             .load("src/test/resources/binary/netcdf-coral")
 
-        val df = rastersInMemory
+        val df = rasterDf
             .withColumn("result", rst_isempty($"tile"))
             .select("result")
 
-        val df2 = rastersInMemory
+        val df2 = rasterDf
             .withColumn("tile", rst_getsubdataset($"tile", "bleaching_alert_area"))
             .withColumn("result", rst_isempty($"tile"))
             .select("result")
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
                                                    |select rst_isempty(tile) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("result", rst_isempty($"tile"))
             .select("result")
 

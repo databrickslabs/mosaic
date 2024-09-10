@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.expressions.base.WithExpressionInfo
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVector2ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -17,16 +17,16 @@ import org.apache.spark.unsafe.types.UTF8String
   *   Expression containing the geometry.
   * @param radiusExpr
   *   The radius of the buffer.
-  * @param expressionConfig
+  * @param exprConfig
   *   Mosaic execution context, e.g. geometryAPI, indexSystem, etc. Additional
   *   arguments for the expression (expressionConfigs).
   */
 case class ST_BufferCapStyle(
-    inputGeom: Expression,
-    radiusExpr: Expression,
-    capStyleExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
-) extends UnaryVector2ArgExpression[ST_BufferCapStyle](inputGeom, radiusExpr, capStyleExpr, returnsGeometry = true, expressionConfig) {
+                                inputGeom: Expression,
+                                radiusExpr: Expression,
+                                capStyleExpr: Expression,
+                                exprConfig: ExprConfig
+) extends UnaryVector2ArgExpression[ST_BufferCapStyle](inputGeom, radiusExpr, capStyleExpr, returnsGeometry = true, exprConfig) {
 
     override def dataType: DataType = inputGeom.dataType
 
@@ -58,8 +58,8 @@ object ST_BufferCapStyle extends WithExpressionInfo {
           |        POLYGON (...)
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
-        ST_BufferCapStyle(children.head, Column(children(1)).cast("double").expr, children(2), expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = { (children: Seq[Expression]) =>
+        ST_BufferCapStyle(children.head, Column(children(1)).cast("double").expr, children(2), exprConfig)
     }
 
 }

@@ -9,19 +9,21 @@ import org.scalatest.matchers.should.Matchers._
 trait RST_MetadataBehaviors extends QueryTest {
 
     def metadataBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
-        val rastersInMemory = spark.read
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
+
+        val rasterDf = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
+            .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val rasterDfWithMetadata = rastersInMemory
+        val rasterDfWithMetadata = rasterDf
             .select(
               rst_metadata($"tile").alias("metadata")
             )
@@ -29,7 +31,7 @@ trait RST_MetadataBehaviors extends QueryTest {
 
         val result = rasterDfWithMetadata.as[Map[String, String]].collect()
 
-       rastersInMemory
+       rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""

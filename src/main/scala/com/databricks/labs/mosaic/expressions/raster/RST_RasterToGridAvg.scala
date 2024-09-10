@@ -2,27 +2,27 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterToGridExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types.DoubleType
 
-/** Returns the average value of the raster within the grid cell. */
+/** Returns the average value of the tile within the grid cell. */
 case class RST_RasterToGridAvg(
-    raster: Expression,
-    resolution: Expression,
-    expressionConfig: MosaicExpressionConfig
+                                  raster: Expression,
+                                  resolution: Expression,
+                                  exprConfig: ExprConfig
 ) extends RasterToGridExpression[RST_RasterToGridAvg, Double](
       raster,
       resolution,
       DoubleType,
-      expressionConfig
+      exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
 
-    /** Returns the average value of the raster within the grid cell. */
+    /** Returns the average value of the tile within the grid cell. */
     override def valuesCombiner(values: Seq[Double]): Double = values.sum / values.length
 
 }
@@ -34,7 +34,7 @@ object RST_RasterToGridAvg extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2) - Returns a collection of grid index cells with the average pixel value for each band of the raster tile.
+          |_FUNC_(expr1, expr2) - Returns a collection of grid index cells with the average pixel value for each band of the tile tile.
           |                       The output type is array<array<struct<index: long, measure: double>>>.
           |                       Raster mask is taken into account and only valid pixels are used for the calculation.
           |""".stripMargin
@@ -46,8 +46,8 @@ object RST_RasterToGridAvg extends WithExpressionInfo {
           |        [[(11223344, 123.4), (11223345, 125.4), ...], [(11223344, 123.1), (11223344, 123.6) ...], ...]
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_RasterToGridAvg](2, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_RasterToGridAvg](2, exprConfig)
     }
 
 }

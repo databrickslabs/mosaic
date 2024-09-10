@@ -1,23 +1,25 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.core.types.model.RasterTile
+import com.databricks.labs.mosaic.functions.ExprConfig
+import org.apache.spark.sql.types.{DataType, StringType}
 
 import scala.collection.immutable
 
 /** OverlappingTiles is a helper object for retiling rasters. */
 object OverlappingTiles {
 
+    //serialize data type (always use checkpoint)
+    val tileDataType: DataType = StringType
+
     /**
-      * Retiles a raster into overlapping tiles.
+      * Retiles a tile into overlapping tiles.
+      *
       * @note
       *   The overlap percentage is a percentage of the tile size.
-      *
       * @param tile
-      *   The raster to retile.
+      *   The tile to retile.
       * @param tileWidth
       *   The width of the tiles.
       * @param tileHeight
@@ -25,15 +27,16 @@ object OverlappingTiles {
       * @param overlapPercentage
       *   The percentage of overlap between tiles.
       * @return
-      *   A sequence of MosaicRasterTile objects.
+      *   A sequence of RasterTile objects.
       */
     def reTile(
-        tile: MosaicRasterTile,
-        tileWidth: Int,
-        tileHeight: Int,
-        overlapPercentage: Int
-    ): immutable.Seq[MosaicRasterTile] = {
-        val raster = tile.getRaster
+                  tile: RasterTile,
+                  tileWidth: Int,
+                  tileHeight: Int,
+                  overlapPercentage: Int,
+                  exprConfigOpt: Option[ExprConfig]
+    ): immutable.Seq[RasterTile] = {
+        val raster = tile.raster
         val (xSize, ySize) = raster.getDimensions
 
         val overlapWidth = Math.ceil(tileWidth * overlapPercentage / 100.0).toInt
@@ -45,32 +48,29 @@ object OverlappingTiles {
                 val yOff = j
                 val width = Math.min(tileWidth, xSize - i)
                 val height = Math.min(tileHeight, ySize - j)
-
-                val fileExtension = GDAL.getExtension(tile.getDriver)
-                val rasterPath = PathUtils.createTmpFilePath(fileExtension)
+                val rasterPath = raster.createTmpFileFromDriver(exprConfigOpt)
                 val outOptions = raster.getWriteOptions
 
-                val result = GDALTranslate.executeTranslate(
-                  rasterPath,
-                  raster,
-                  command = s"gdal_translate -srcwin $xOff $yOff $width $height",
-                  outOptions
-                )
+                val interim = GDALTranslate.executeTranslate(
+                    rasterPath,
+                    raster,
+                    command = s"gdal_translate -srcwin $xOff $yOff $width $height",
+                    outOptions,
+                    exprConfigOpt
+                ).tryInitAndHydrate() // <- required
 
-                val isEmpty = result.isEmpty
-
-                if (isEmpty) dispose(result)
-
-                (isEmpty, result)
+                if (interim.isEmptyRasterGDAL || interim.isEmpty) {
+                    interim.flushAndDestroy() // destroy inline for performance
+                    (false, interim)
+                } else {
+                    (true, interim) // <- valid result
+                }
             }
         }
 
-        // TODO: The rasters should not be passed by objects.
+        val (result, invalid) = tiles.flatten.partition(_._1) // true goes to result
 
-        val (_, valid) = tiles.flatten.partition(_._1)
-
-        valid.map(t => MosaicRasterTile(null, t._2))
-
+        result.map(t => RasterTile(null, t._2, tileDataType)) // return valid tiles
     }
 
 }

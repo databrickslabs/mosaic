@@ -120,7 +120,7 @@ trait ST_TransformBehaviors extends QueryTest {
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
-        val stTransform = ST_Transform(lit("POINT (1 1)").expr, lit(4326).expr, mc.expressionConfig)
+        val stTransform = ST_Transform(lit("POINT (1 1)").expr, lit(4326).expr, mc.exprConfig)
 
         stTransform.left shouldEqual lit("POINT (1 1)").expr
         stTransform.right shouldEqual lit(4326).expr

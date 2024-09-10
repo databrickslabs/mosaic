@@ -10,30 +10,31 @@ import org.scalatest.matchers.should.Matchers._
 trait RST_WorldToRasterCoordBehaviors extends QueryTest {
 
     def worldToRasterCoordBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
-        val rastersInMemory = spark.read
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
+
+        val rasterDf = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
             .load("src/test/resources/binary/netcdf-coral")
 
-        val df = rastersInMemory
+        val df = rasterDf
             .withColumn("result", rst_worldtorastercoord($"tile", 0, 0))
             .select($"result".getItem("x").as("x"), $"result".getItem("y").as("y"))
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
                                                    |select rst_worldtorastercoord(tile, 1, 1) from source
                                                    |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("result", rst_worldtorastercoord($"tile", 0, 0))
             .withColumn("result", rst_worldtorastercoord($"tile", lit(0), lit(0)))
             .select("result")

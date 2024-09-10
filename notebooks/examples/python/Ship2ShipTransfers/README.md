@@ -14,7 +14,7 @@ Although the naive approach can be optimised with indices to be quite performant
 
 ![Naive Approach with buffers](./images/buffer_approach.png)
 
-According to our naive approach, where we buffer around our LAT/LONG points, the two vessels would not intersect. However, if we construct the actual path the vessels took, our algorithmic implementation would detect an overlap between the two paths, as shown below:
+According to our naive approach, where we buffer around our LAT/LONG points, the two vessels would not intersect. However, if we construct the actual rawPath the vessels took, our algorithmic implementation would detect an overlap between the two paths, as shown below:
 
 ![Path Line Strings approach](./images/linestring_approach.png)
 

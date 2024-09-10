@@ -1,12 +1,11 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.operator.pixel.PixelCombineRasters
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterArray2ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
@@ -15,33 +14,35 @@ import org.apache.spark.unsafe.types.UTF8String
 
 /** Expression for combining rasters using average of pixels. */
 case class RST_DerivedBand(
-    tileExpr: Expression,
-    pythonFuncExpr: Expression,
-    funcNameExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                              tileExpr: Expression,
+                              pythonFuncExpr: Expression,
+                              funcNameExpr: Expression,
+                              exprConfig: ExprConfig
 ) extends RasterArray2ArgExpression[RST_DerivedBand](
       tileExpr,
       pythonFuncExpr,
       funcNameExpr,
       returnsRaster = true,
-      expressionConfig = expressionConfig
+      exprConfig = exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
 
+    // serialize data type
     override def dataType: DataType = {
-        GDAL.enable(expressionConfig)
-        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
+        RasterTileType(exprConfig.getCellIdType, tileExpr, exprConfig.isRasterUseCheckpoint)
     }
 
     /** Combines the rasters using average of pixels. */
-    override def rasterTransform(tiles: Seq[MosaicRasterTile], arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(tiles: Seq[RasterTile], arg1: Any, arg2: Any): Any = {
         val pythonFunc = arg1.asInstanceOf[UTF8String].toString
         val funcName = arg2.asInstanceOf[UTF8String].toString
-        val index = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-        MosaicRasterTile(
-          index,
-          PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName)
+        val index = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
+        val resultType = RasterTile.getRasterType(dataType)
+        RasterTile(
+            index,
+            PixelCombineRasters.combine(tiles.map(_.raster), pythonFunc, funcName, Option(exprConfig)),
+            resultType
         )
     }
 
@@ -54,7 +55,7 @@ object RST_DerivedBand extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Combine an array of raster tiles using provided python function.
+          |_FUNC_(expr1) - Combine an array of tile tiles using provided python function.
           |""".stripMargin
 
     override def example: String =
@@ -67,13 +68,13 @@ object RST_DerivedBand extends WithExpressionInfo {
           |             ',
           |             'average'
           |       );
-          |        {index_id, raster, parent_path, driver}
-          |        {index_id, raster, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
+          |        {index_id, tile, parent_path, driver}
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_DerivedBand](3, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_DerivedBand](3, exprConfig)
     }
 
 }

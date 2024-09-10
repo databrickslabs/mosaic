@@ -1,4 +1,5 @@
 from typing import Any
+
 from py4j.java_gateway import JavaClass, JavaObject
 from py4j.protocol import Py4JJavaError
 from pyspark.sql import SparkSession
@@ -17,19 +18,29 @@ class MosaicContext:
     def __init__(self, spark: SparkSession):
         sc = spark.sparkContext
 
-        self._mosaicContextClass = getattr(sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext")
+        self._mosaicContextClass = getattr(
+            sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext"
+        )
         self._mosaicPackageRef = getattr(sc._jvm.com.databricks.labs.mosaic, "package$")
         self._mosaicPackageObject = getattr(self._mosaicPackageRef, "MODULE$")
-        self._mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
-        self._indexSystemFactory = getattr(sc._jvm.com.databricks.labs.mosaic.core.index, "IndexSystemFactory")
+        self._mosaicGDALObject = getattr(
+            sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
+        )
+        self._indexSystemFactory = getattr(
+            sc._jvm.com.databricks.labs.mosaic.core.index, "IndexSystemFactory"
+        )
 
         try:
-            self._geometry_api = spark.conf.get("spark.databricks.labs.mosaic.geometry.api")
+            self._geometry_api = spark.conf.get(
+                "spark.databricks.labs.mosaic.geometry.api"
+            )
         except Py4JJavaError as e:
             self._geometry_api = "JTS"
 
         try:
-            self._index_system = spark.conf.get("spark.databricks.labs.mosaic.index.system")
+            self._index_system = spark.conf.get(
+                "spark.databricks.labs.mosaic.index.system"
+            )
         except Py4JJavaError as e:
             self._index_system = "H3"
 
@@ -86,30 +97,31 @@ class MosaicContext:
         """
         Go back to defaults.
         - spark conf unset for use checkpoint (off)
-        - spark conf unset for checkpoint path
+        - spark conf unset for checkpoint dir
         :param spark: session to use.
         """
         self._mosaicGDALObject.resetCheckpoint(spark._jsparkSession)
 
-    def jEnableGDAL(self, spark: SparkSession, with_checkpoint_path: str = None):
+    def jEnableGDAL(self, spark: SparkSession, with_checkpoint_dir: str = None):
         """
         Enable GDAL, assumes regular enable already called.
         :param spark: session to use.
-        :param with_checkpoint_path: optional checkpoint path, default is None.
+        :param with_checkpoint_dir: optional checkpoint dir, default is None.
         """
-        if with_checkpoint_path:
-            self._mosaicGDALObject.enableGDALWithCheckpoint(spark._jsparkSession, with_checkpoint_path)
+        if with_checkpoint_dir:
+            self._mosaicGDALObject.enableGDALWithCheckpoint(
+                spark._jsparkSession, with_checkpoint_dir
+            )
         else:
             self._mosaicGDALObject.enableGDAL(spark._jsparkSession)
 
-
-    def jUpdateCheckpointPath(self, spark: SparkSession, path: str):
+    def jUpdateCheckpointDir(self, spark: SparkSession, dir: str):
         """
         Change the checkpoint location; does not adjust checkpoint on/off (stays as-is).
         :param spark: session to use.
-        :param path: new path.
+        :param dir: new directory.
         """
-        self._mosaicGDALObject.updateCheckpointPath(spark._jsparkSession, path)
+        self._mosaicGDALObject.updateCheckpointDir(spark._jsparkSession, dir)
 
     def jSetCheckpointOff(self, spark: SparkSession):
         """
@@ -138,13 +150,25 @@ class MosaicContext:
         return self._index_system
 
     def is_use_checkpoint(self) -> bool:
-        return self._mosaicGDALObject.isUseCheckpoint()
+        return self._mosaicGDALObject.isUseCheckpointThreadSafe()
 
-    def get_checkpoint_path(self) -> str:
-        return self._mosaicGDALObject.getCheckpointPath()
+    def get_checkpoint_dir(self) -> str:
+        return self._mosaicGDALObject.getCheckpointDirThreadSafe()
 
-    def get_checkpoint_path_default(self) -> str:
-        return self._mosaicGDALObject.getCheckpointPathDefault()
+    def get_checkpoint_dir_default(self) -> str:
+        return self._mosaicGDALObject.getCheckpointDirDefault()
 
     def has_context(self) -> bool:
         return self._context is not None
+
+    def is_gdal_enabled(self) -> bool:
+        return self._mosaicGDALObject.isEnabledThreadSafe()
+
+    def is_manual_mode(self) -> bool:
+        return self._mosaicGDALObject.isManualModeThreadSafe()
+
+    def get_local_raster_dir(self) -> str:
+        return self._mosaicGDALObject.getLocalRasterDirThreadSafe()
+
+    def get_cleanup_age_limit_minutes(self) -> int:
+        return self._mosaicGDALObject.getCleanUpAgeLimitMinutesThreadSafe()

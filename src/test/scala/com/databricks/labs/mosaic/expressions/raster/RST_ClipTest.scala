@@ -25,7 +25,7 @@ class RST_ClipTest extends QueryTest with SharedSparkSessionGDAL with RST_ClipBe
     test("Testing RST_Clip with manual GDAL registration (H3, JTS).") {
         noCodegen {
             assume(System.getProperty("os.name") == "Linux")
-            behaviors(H3IndexSystem, JTS)
+            behaviors(H3IndexSystem, JTS, getExprConfigOpt)
         }
     }
 

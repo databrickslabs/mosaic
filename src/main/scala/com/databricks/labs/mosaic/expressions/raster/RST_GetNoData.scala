@@ -1,23 +1,23 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.{ArrayType, DataType, DoubleType}
 
-/** The expression for extracting the no data value of a raster. */
+/** The expression for extracting the no data value of a tile. */
 case class RST_GetNoData(
-    rastersExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+                            rastersExpr: Expression,
+                            exprConfig: ExprConfig
 ) extends RasterExpression[RST_GetNoData](
       rastersExpr,
       returnsRaster = false,
-      expressionConfig = expressionConfig
+      exprConfig = exprConfig
     )
       with NullIntolerant
       with CodegenFallback {
@@ -25,15 +25,16 @@ case class RST_GetNoData(
     override def dataType: DataType = ArrayType(DoubleType)
 
     /**
-      * Extracts the no data value of a raster.
+      * Extracts the no data value of a tile.
       *
       * @param tile
-      *   The raster to be used.
+      *   The tile to be used.
       * @return
-      *   The no data value of the raster.
+      *   The no data value of the tile.
       */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        ArrayData.toArrayData(tile.getRaster.getBands.map(_.noDataValue))
+    override def rasterTransform(tile: RasterTile): Any = {
+        val raster = tile.raster
+        ArrayData.toArrayData(raster.getBands.map(_.noDataValue))
     }
 
 }
@@ -45,7 +46,7 @@ object RST_GetNoData extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns no data values for raster tile bands.
+          |_FUNC_(expr1) - Returns no data values for tile tile bands.
           |""".stripMargin
 
     override def example: String =
@@ -56,8 +57,8 @@ object RST_GetNoData extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_GetNoData](1, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_GetNoData](1, exprConfig)
     }
 
 }

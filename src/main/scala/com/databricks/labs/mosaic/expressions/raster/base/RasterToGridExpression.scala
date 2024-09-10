@@ -3,10 +3,9 @@ package com.databricks.labs.mosaic.expressions.raster.base
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.raster.RasterToGridType
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
@@ -15,57 +14,60 @@ import org.apache.spark.sql.types.DataType
 import scala.reflect.ClassTag
 
 /**
-  * Base class for all raster to grid expressions that take no arguments. It
+  * Base class for all tile to grid expressions that take no arguments. It
   * provides the boilerplate code needed to create a function builder for a
   * given expression. It minimises amount of code needed to create a new
   * expression. These expressions project rasters to grid index system of
   * Mosaic. All cells are projected to spatial coordinates and then to grid
   * index system. The pixels are grouped by cell ids and then combined to form a
-  * grid -> value/measure collection per band of the raster.
+  * grid -> value/measure collection per band of the tile.
   * @param rasterExpr
-  *   The raster expression. It can be a path to a raster file or a byte array
-  *   containing the raster file content.
+  *   The tile expression. It can be a path to a tile file or a byte array
+  *   containing the tile file content.
   * @param resolutionExpr
   *    The resolution of the index system to use.
   * @param measureType
   *   The output type of the result.
-  * @param expressionConfig
+  * @param exprConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
   *   The type of the extending class.
   */
 abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
-    rasterExpr: Expression,
-    resolutionExpr: Expression,
-    measureType: DataType,
-    expressionConfig: MosaicExpressionConfig
-) extends Raster1ArgExpression[T](rasterExpr, resolutionExpr, returnsRaster = false, expressionConfig)
-      with RasterGridExpression
-      with NullIntolerant
-      with Serializable {
+                                                                       rasterExpr: Expression,
+                                                                       resolutionExpr: Expression,
+                                                                       measureType: DataType,
+                                                                       exprConfig: ExprConfig
+) extends Raster1ArgExpression[T](rasterExpr, resolutionExpr, returnsRaster = false, exprConfig)
+    with RasterGridExpression
+    with NullIntolerant
+    with Serializable {
 
-    override def dataType: DataType = RasterToGridType(expressionConfig.getCellIdType, measureType)
+    GDAL.enable(exprConfig)
+
+    override def dataType: DataType = RasterToGridType(exprConfig.getCellIdType, measureType)
 
     /** The index system to be used. */
-    val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem)
-    val geometryAPI: GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
+    val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem)
+
+    val geometryAPI: GeometryAPI = GeometryAPI(exprConfig.getGeometryAPI)
 
     /**
       * It projects the pixels to the grid and groups by the results so that the
-      * result is a Sequence of (cellId, measure) of each band of the raster. It
+      * result is a Sequence of (cellId, measure) of each band of the tile. It
       * applies the values combiner on the measures of each cell. For no
       * combine, use the identity function.
       * @param tile
-      *   The raster to be used.
+      *   The tile to be used.
       * @return
-      *   Sequence of (cellId, measure) of each band of the raster.
+      *   Sequence of (cellId, measure) of each band of the tile.
       */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
-        GDAL.enable(expressionConfig)
+    override def rasterTransform(tile: RasterTile, arg1: Any): Any = {
+        GDAL.enable(exprConfig)
         val resolution = arg1.asInstanceOf[Int]
-        val transformed = griddedPixels(tile.getRaster, indexSystem, resolution)
+        val transformed = griddedPixels(tile.raster, indexSystem, resolution)
         val results = transformed.map(_.mapValues(valuesCombiner))
-        RasterCleaner.dispose(tile)
+
         serialize(results)
     }
 
@@ -80,10 +82,10 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
     def valuesCombiner(values: Seq[Double]): P
 
     /**
-      * Serializes the result of the raster transform to the desired output
+      * Serializes the result of the tile transform to the desired output
       * type.
       * @param cellsWithMeasure
-      *   The result of the raster transform to be serialized to spark internal
+      *   The result of the tile transform to be serialized to spark internal
       *   types.
       * @return
       *   The serialized result.

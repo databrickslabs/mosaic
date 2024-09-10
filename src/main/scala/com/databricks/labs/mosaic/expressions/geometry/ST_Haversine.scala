@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.{Expression, QuaternaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -68,8 +68,8 @@ object ST_Haversine extends WithExpressionInfo {
           |        {0.00463}
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_Haversine](4, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[ST_Haversine](4, exprConfig)
     }
 
 }

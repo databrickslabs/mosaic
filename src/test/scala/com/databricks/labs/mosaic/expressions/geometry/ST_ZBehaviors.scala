@@ -67,7 +67,7 @@ trait ST_ZBehaviors extends MosaicSpatialQueryTest {
 
         noException should be thrownBy CodeGenerator.compile(code)
 
-        val stZ = ST_Z(lit(1).expr, mc.expressionConfig)
+        val stZ = ST_Z(lit(1).expr, mc.exprConfig)
         val ctx = new CodegenContext
         an[Error] should be thrownBy stZ.genCode(ctx)
     }
@@ -77,7 +77,7 @@ trait ST_ZBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         mc.register(spark)
 
-        val stZ = ST_Z(lit("POINT (2 3 4)").expr, mc.expressionConfig)
+        val stZ = ST_Z(lit("POINT (2 3 4)").expr, mc.exprConfig)
 
         stZ.child shouldEqual lit("POINT (2 3 4)").expr
         stZ.dataType shouldEqual DoubleType

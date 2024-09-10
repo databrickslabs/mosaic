@@ -24,11 +24,18 @@ jobs:
     steps:
       - name: checkout code
         uses: actions/checkout@v2
+# ::: SCALA :::
       - name: build scala
         uses: ./.github/actions/scala_build
+      - name: upload scala artefacts
+        uses: ./.github/actions/upload_scala_artefacts
+# ::: PYTHON :::
       - name: build python
         uses: ./.github/actions/python_build
-      - name: build R
+      - name: upload python artefacts
+        uses: ./.github/actions/upload_python_artefacts
+# ::: R :::
+      - name: build r
         uses: ./.github/actions/r_build
-      - name: upload artefacts
-        uses: ./.github/actions/upload_artefacts
+      - name: upload r artefacts
+        uses: ./.github/actions/upload_r_artefacts

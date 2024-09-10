@@ -1,14 +1,13 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.index.IndexSystemFactory
+import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.CombineAVG
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile.{deserialize => deserializeTile}
+import com.databricks.labs.mosaic.core.types.model.RasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile.{deserialize => deserializeTile}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpressionSerialization
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, UnsafeProjection, UnsafeRow}
@@ -19,30 +18,41 @@ import org.apache.spark.sql.types.{ArrayType, DataType}
 import scala.collection.mutable.ArrayBuffer
 
 /**
-  * Returns a new raster that is a result of combining an array of rasters using
+  * Returns a new tile that is a result of combining an array of rasters using
   * average of pixels.
   */
 //noinspection DuplicatedCode
 case class RST_CombineAvgAgg(
-    tileExpr: Expression,
-    expressionConfig: MosaicExpressionConfig,
-    mutableAggBufferOffset: Int = 0,
-    inputAggBufferOffset: Int = 0
+                                rasterExpr: Expression,
+                                exprConfig: ExprConfig,
+                                mutableAggBufferOffset: Int = 0,
+                                inputAggBufferOffset: Int = 0
 ) extends TypedImperativeAggregate[ArrayBuffer[Any]]
       with UnaryLike[Expression]
       with RasterExpressionSerialization {
-    GDAL.enable(expressionConfig)
+
+    GDAL.enable(exprConfig)
+
     override lazy val deterministic: Boolean = true
-    override val child: Expression = tileExpr
+
+    override val child: Expression = rasterExpr
+
     override val nullable: Boolean = false
-    override lazy val dataType: DataType = RasterTileType(
-        expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
-    lazy val rasterType: DataType = dataType.asInstanceOf[RasterTileType].rasterType
-    override def prettyName: String = "rst_combine_avg_agg"
-    val cellIDType: DataType = expressionConfig.getCellIdType
+
+    protected val indexSystem: IndexSystem = IndexSystemFactory.getIndexSystem(exprConfig.getIndexSystem)
+
+    protected val cellIdDataType: DataType = indexSystem.getCellIdDataType
+
+    // serialize data type (keep as def)
+    override def dataType: DataType = {
+        RasterTileType(rasterExpr, exprConfig.isRasterUseCheckpoint)
+    }
 
     private lazy val projection = UnsafeProjection.create(Array[DataType](ArrayType(elementType = dataType, containsNull = false)))
+
     private lazy val row = new UnsafeRow(1)
+
+    override def prettyName: String = "rst_combine_avg_agg"
 
     override def update(buffer: ArrayBuffer[Any], input: InternalRow): ArrayBuffer[Any] = {
         val value = child.eval(input)
@@ -63,7 +73,7 @@ case class RST_CombineAvgAgg(
         copy(mutableAggBufferOffset = newMutableAggBufferOffset)
 
     override def eval(buffer: ArrayBuffer[Any]): Any = {
-        GDAL.enable(expressionConfig)
+        GDAL.enable(exprConfig)
 
         if (buffer.isEmpty) {
             null
@@ -74,24 +84,26 @@ case class RST_CombineAvgAgg(
         } else {
 
             // Do do move the expression
-            var tiles = buffer.map(row => deserializeTile(row.asInstanceOf[InternalRow], cellIDType, rasterType))
+            var tiles = buffer.map(row => deserializeTile(
+                row.asInstanceOf[InternalRow], cellIdDataType, Option(exprConfig))
+            )
             buffer.clear()
 
             // If merging multiple index rasters, the index value is dropped
-            val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
-            var combined = CombineAVG.compute(tiles.map(_.getRaster)).flushCache()
+            val idx = if (tiles.map(_.index).groupBy(identity).size == 1) tiles.head.index else null
+            var combined = CombineAVG.compute(tiles.map(_.raster), Option(exprConfig))
 
-            val result = MosaicRasterTile(idx, combined)
-                .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(rasterType)
+            val resultType = RasterTile.getRasterType(dataType)
+            var result = RasterTile(idx, combined, resultType).formatCellId(indexSystem)
+            val serialized = result.serialize(resultType, doDestroy = true, Option(exprConfig))
 
-            tiles.foreach(RasterCleaner.dispose)
-            RasterCleaner.dispose(result)
-
+            tiles.foreach(_.flushAndDestroy())
+            result.flushAndDestroy()
             tiles = null
             combined = null
+            result = null
 
-            result
+            serialized
         }
     }
 
@@ -107,7 +119,7 @@ case class RST_CombineAvgAgg(
         buffer
     }
 
-    override protected def withNewChildInternal(newChild: Expression): RST_CombineAvgAgg = copy(tileExpr = newChild)
+    override protected def withNewChildInternal(newChild: Expression): RST_CombineAvgAgg = copy(rasterExpr = newChild)
 
 }
 
@@ -120,13 +132,13 @@ object RST_CombineAvgAgg {
           db.orNull,
           "rst_combine_avg_agg",
           """
-            |    _FUNC_(tiles)) - Aggregate to combine raster tiles using an average of pixels.
+            |    _FUNC_(tiles)) - Aggregate to combine tile tiles using an average of pixels.
             """.stripMargin,
           "",
           """
             |    Examples:
             |      > SELECT _FUNC_(raster_tile);
-            |        {index_id, raster, parent_path, driver}
+            |        {index_id, tile, parent_path, driver}
             |  """.stripMargin,
           "",
           "agg_funcs",

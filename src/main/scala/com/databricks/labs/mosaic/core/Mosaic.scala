@@ -64,7 +64,7 @@ object Mosaic {
         keepCoreGeom: Boolean,
         indexSystem: IndexSystem,
         geometryAPI: GeometryAPI
-    ): Seq[MosaicChip] = {
+    ): Seq[MosaicChip] = Try {
 
         val radius = indexSystem.getBufferRadius(geometry, resolution, geometryAPI)
         // do not modify the radius
@@ -96,7 +96,7 @@ object Mosaic {
         val borderChips = indexSystem.getBorderChips(originalGeometryConstrained, borderIndices, keepCoreGeom, geometryAPI)
 
         coreChips ++ borderChips
-    }
+    }.getOrElse(Seq.empty[MosaicChip])
 
     def lineFill(geometry: MosaicGeometry, resolution: Int, indexSystem: IndexSystem, geometryAPI: GeometryAPI): Seq[MosaicChip] = {
         GeometryTypeEnum.fromString(geometry.getGeometryType) match {
@@ -180,7 +180,6 @@ object Mosaic {
                 if (!lineSegment.isEmpty) {
                     val chip = MosaicChip(isCore = false, Left(current), lineSegment)
                     val kRing = indexSystem.kRing(current, 1)
-                    
                     // Ignore already processed chips and those which are already in the
                     // queue to be processed
                     val toQueue = kRing.filterNot((newTraversed ++ accumulator._1).contains)

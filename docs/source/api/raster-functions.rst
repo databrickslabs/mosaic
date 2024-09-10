@@ -12,7 +12,7 @@ Please see :doc:`Install and Enable GDAL with Mosaic </usage/install-gdal>` for 
       system. This is useful for performing spatial joins between raster data and vector data.
     * Mosaic also provides a scalable retiling function that can be used to retile raster data in case of bottlenecking
       due to large files.
-    * All raster functions respect the :code:`rst_` prefix naming convention.
+    * All raster functions use the :code:`rst_` prefix naming convention.
 
 Tile objects
 ------------
@@ -26,16 +26,13 @@ e.g. :code:`spark.read.format("gdal")`
       :code:`<tile:struct<index_id:bigint, tile:binary, metadata:map<string, string>>`. All APIs that use tiles now follow
       this schema.
     * The function :ref:`rst_maketiles` allows for the raster tile schema to hold either a path pointer (string)
-      or a byte array representation of the source raster. It also supports optional checkpointing for increased
-      performance during chains of raster operations.
+      or a byte array representation of the source tile. It also supports optional checkpointing for increased
+      performance during chains of tile operations.
 
-Updates to the raster features for 0.4.1
+Updates to the tile features for 0.4.1
 ----------------------------------------
 
-  * In 0.4.1, there are a new set of raster apis that have not yet had python bindings generated; however you can still
-    call the functions with pyspark function :code:`selectExpr`, e.g. :code:`selectExpr("rst_avg(...)")` which invokes the sql
-    registered expression. The calls are: :ref:`rst_avg`, :ref:`rst_max`, :ref:`rst_min`, :ref:`rst_median`, and :ref:`rst_pixelcount`.
-  * Also, scala does not have a :code:`df.display()` method while python does. In practice you would most often call
+  * Scala does not have a :code:`df.display()` method while python does. In practice you would most often call
     :code:`display(df)` in scala for a prettier output, but for brevity, we write :code:`df.show` in scala.
 
 .. note:: For mosaic versions > 0.4.0 you can use the revamped setup_gdal function or new setup_fuse_install.
@@ -51,10 +48,8 @@ rst_avg
 .. function:: rst_avg(tile)
 
     Returns an array containing mean values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_avg(tile)")`
 
-    :param tile: A column containing the raster tile. 
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: ArrayType(DoubleType)
 
@@ -63,7 +58,7 @@ rst_avg
 .. tabs::
    .. code-tab:: python
 
-    df.selectExpr("rst_avg(tile)"").limit(1).display()
+    df.selectExpr(mos.rst_avg("tile")).limit(1).display()
     +---------------+
     | rst_avg(tile) |
     +---------------+
@@ -93,10 +88,10 @@ rst_bandmetadata
 
 .. function:: rst_bandmetadata(tile, band)
 
-    Extract the metadata describing the raster band.
+    Extract the metadata describing the tile band.
     Metadata is return as a map of key value pairs.
 
-    :param tile: A column containing the raster tile. 
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param band: The band number to extract metadata for.
     :type band: Column (IntegerType)
@@ -158,7 +153,7 @@ rst_boundingbox
 
 .. function:: rst_boundingbox(tile)
 
-    Returns the bounding box of the raster as a polygon geometry.
+    Returns the bounding box of the tile as a polygon geometry.
 
     :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
@@ -197,7 +192,7 @@ rst_boundingbox
 rst_clip
 ********
 
-.. function:: rst_clip(tile, geometry)
+.. function:: rst_clip(tile, geometry, cutline_all_touched)
 
     Clips :code:`tile` with :code:`geometry`, provided in a supported encoding (WKB, WKT or GeoJSON).
 
@@ -205,14 +200,25 @@ rst_clip
     :type tile: Column (RasterTileType)
     :param geometry: A column containing the geometry to clip the raster to.
     :type geometry: Column (GeometryType)
+    :param cutline_all_touched: A column to specify pixels boundary behavior.
+    :type cutline_all_touched: Column (BooleanType)
     :rtype: Column: RasterTileType
 
 .. note::
-  Notes
+  **Notes**
 
-    :code:`geometry` is expected to be:
-      - in the same coordinate reference system as the raster.
+    The :code:`geometry` parameter:
+      - Expected to be in the same coordinate reference system as the raster.
       - a polygon or a multipolygon.
+
+    The :code:`cutline_all_touched` parameter:
+      - Optional: default is true. this is a GDAL warp config for the operation.
+      - If set to true, the pixels touching the geometry are included in the clip,
+        regardless of half-in or half-out; this is important for tessellation behaviors.
+      - If set to false, only at least half-in pixels are included in the clip.
+
+    The actual GDAL command to clip looks something like the following (after some setup):
+      :code:`"gdalwarp -wo CUTLINE_ALL_TOUCHED=<TRUE|FALSE> -cutline <GEOMETRY> -crop_to_cutline"`
 
     The output raster tiles will have:
       - the same extent as the input geometry.
@@ -231,7 +237,7 @@ rst_clip
       +----------------------------------------------------------------------------------------------------------------+
       | rst_clip(tile, POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0)))                                                        |
       +----------------------------------------------------------------------------------------------------------------+
-      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+      | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
       +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -240,7 +246,7 @@ rst_clip
       +----------------------------------------------------------------------------------------------------------------+
       | rst_clip(tile, POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0)))                                                         |
       +-----------------------------------------------------------------------------------------------------------------+
-      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }  |
+      | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }  |
       +-----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -249,7 +255,7 @@ rst_clip
       +----------------------------------------------------------------------------------------------------------------+
       | rst_clip(tile, POLYGON ((0 0, 0 10, 10 10, 10 0, 0 0)))                                                        |
       +----------------------------------------------------------------------------------------------------------------+
-      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+      | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
       +----------------------------------------------------------------------------------------------------------------+
 
 
@@ -265,10 +271,9 @@ rst_combineavg
     :rtype: Column: RasterTileType
 
 .. note::
-
-  Notes
-    - Each tile in :code:`tiles` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
-    - The output raster will have the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input tiles.
+  **Notes**
+    - Each raster in :code:`tiles` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
+    - The output tile will have the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input raster tiles.
 
     Also, see :ref:`rst_combineavg_agg` function.
 ..
@@ -284,7 +289,7 @@ rst_combineavg
      +----------------------------------------------------------------------------------------------------------------+
      | rst_combineavg(tiles)                                                                                          |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -295,7 +300,7 @@ rst_combineavg
      +----------------------------------------------------------------------------------------------------------------+
      | rst_combineavg(tiles)                                                                                          |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -304,7 +309,7 @@ rst_combineavg
      +----------------------------------------------------------------------------------------------------------------+
      | rst_combineavg(array(tile1,tile2,tile3))                                                                       |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
 rst_convolve
@@ -312,7 +317,7 @@ rst_convolve
 
 .. function:: rst_convolve(tile, kernel)
 
-    Applies a convolution filter to the raster. The result is Mosaic raster tile representing the filtered input :code:`tile`.
+    Applies a convolution filter to the tile. The result is Mosaic raster tile representing the filtered input :code:`tile`.
 
     :param tile: A column containing raster tile.
     :type tile: Column (RasterTileType)
@@ -321,7 +326,7 @@ rst_convolve
     :rtype: Column: RasterTileType
 
 .. note::
-  Notes
+  **Notes**
     - The :code:`kernel` can be Array of Array of either Double, Integer, or Decimal but will be cast to Double.
     - This method assumes the kernel is square and has an odd number of rows and columns.
     - Kernel uses the configured GDAL :code:`blockSize` with a stride being :code:`kernelSize/2`.
@@ -342,7 +347,7 @@ rst_convolve
      +---------------------------------------------------------------------------+
      | rst_convolve(tile,convolve_arr)                                           |
      +---------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                      |
+     | {"index_id":null,"tile":"SUkqAAg...= (truncated)",                      |
      |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}}  |
      +---------------------------------------------------------------------------+
 
@@ -358,7 +363,7 @@ rst_convolve
      +---------------------------------------------------------------------------+
      | rst_convolve(tile,convolve_arr)                                           |
      +---------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                      |
+     | {"index_id":null,"tile":"SUkqAAg...= (truncated)",                      |
      |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}}  |
      +---------------------------------------------------------------------------+
 
@@ -368,7 +373,7 @@ rst_convolve
      +---------------------------------------------------------------------------+
      | rst_convolve(tile,convolve_arr)                                           |
      +---------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                      |
+     | {"index_id":null,"tile":"SUkqAAg...= (truncated)",                      |
      |  "metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}}  |
      +---------------------------------------------------------------------------+
 
@@ -414,9 +419,9 @@ rst_derivedband
     :rtype: Column: RasterTileType
 
 .. note::
-  Notes
+  **Notes**
     - Input raster tiles in :code:`tiles` must have the same extent, number of bands, pixel data type, pixel size and coordinate reference system.
-    - The output raster will have the same the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input raster tiles.
+    - The output tile will have the same the same extent, number of bands, pixel data type, pixel size and coordinate reference system as the input raster tiles.
 
   See also: :ref:`rst_derivedband_agg` function.
 ..
@@ -442,7 +447,7 @@ rst_derivedband
      +----------------------------------------------------------------------------------------------------------------+
      | rst_derivedband(tiles,py_func1,func1_name)                                                                     |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -462,7 +467,7 @@ rst_derivedband
      +----------------------------------------------------------------------------------------------------------------+
      | rst_derivedband(tiles,py_func1,func1_name)                                                                     |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -479,7 +484,7 @@ rst_derivedband
      +----------------------------------------------------------------------------------------------------------------+
      | rst_derivedband(tiles,py_func1,func1_name)                                                                     |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
 rst_filter
@@ -509,7 +514,7 @@ rst_filter
      +-----------------------------------------------------------------------------------------------------------------------------+
      | rst_filter(tile,3,mode)                                                                                                     |
      +-----------------------------------------------------------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
+     | {"index_id":null,"tile":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
      +-----------------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -518,7 +523,7 @@ rst_filter
      +-----------------------------------------------------------------------------------------------------------------------------+
      | rst_filter(tile,3,mode)                                                                                                     |
      +-----------------------------------------------------------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
+     | {"index_id":null,"tile":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
      +-----------------------------------------------------------------------------------------------------------------------------+
 
 
@@ -528,7 +533,7 @@ rst_filter
      +-----------------------------------------------------------------------------------------------------------------------------+
      | rst_filter(tile,3,mode)                                                                                                     |
      +-----------------------------------------------------------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
+     | {"index_id":null,"tile":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","parentPath":"no_path","driver":"GTiff"}} |
      +-----------------------------------------------------------------------------------------------------------------------------+
 
 rst_frombands
@@ -536,15 +541,14 @@ rst_frombands
 
 .. function:: rst_frombands(tiles)
 
-    Combines a collection of raster tiles of different bands into a single raster.
+    Combines a collection of raster tiles of different bands into a single tile.
 
     :param tiles: A column containing an array of raster tiles.
     :type tiles: Column (ArrayType(RasterTileType))
     :rtype: Column: RasterTileType
 
 .. note::
-
-  Notes
+  **Notes**
     - All raster tiles must have the same extent.
     - The tiles must have the same pixel coordinate reference system.
     - The output tile will have the same extent as the input tiles.
@@ -564,7 +568,7 @@ rst_frombands
      +----------------------------------------------------------------------------------------------------------------+
      | rst_frombands(tiles)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -575,7 +579,7 @@ rst_frombands
      +----------------------------------------------------------------------------------------------------------------+
      | rst_frombands(tiles)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -584,7 +588,7 @@ rst_frombands
      +----------------------------------------------------------------------------------------------------------------+
      | rst_frombands(array(tile1,tile2,tile3))                                                                        |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
 rst_fromcontent
@@ -594,21 +598,20 @@ rst_fromcontent
 
     Returns a tile from raster data.
 
-
     :param raster_bin: A column containing the raster data.
     :type raster_bin: Column (BinaryType)
+    :param driver: GDAL driver to use to open the raster.
+    :type driver: Column(StringType)
     :param size_in_MB: Optional parameter to specify the size of the raster tile in MB. Default is not to split the input.
     :type size_in_MB: Column (IntegerType)
     :rtype: Column: RasterTileType
 
 .. note::
-
-  Notes
+  **Notes**
     - The input raster must be a byte array in a BinaryType column.
     - The driver required to read the raster must be one supplied with GDAL.
     - If the size_in_MB parameter is specified, the raster will be split into tiles of the specified size.
     - If the size_in_MB parameter is not specified or if the size_in_Mb < 0, the raster will only be split if it exceeds Integer.MAX_VALUE. The split will be at a threshold of 64MB in this case.
-
 
 ..
 
@@ -624,7 +627,7 @@ rst_fromcontent
      +----------------------------------------------------------------------------------------------------------------+
      | rst_fromcontent(content)                                                                                       |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -637,7 +640,7 @@ rst_fromcontent
      +----------------------------------------------------------------------------------------------------------------+
      | rst_fromcontent(content)                                                                                       |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -649,7 +652,7 @@ rst_fromcontent
      +----------------------------------------------------------------------------------------------------------------+
      | rst_fromcontent(content)                                                                                       |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
 rst_fromfile
@@ -666,13 +669,12 @@ rst_fromfile
     :rtype: Column: RasterTileType
 
 .. note::
-
-  Notes
+  **Notes**
     - The file path must be a string.
     - The file path must be a valid path to a raster file.
     - The file path must be a path to a file that GDAL can read.
-    - If the size_in_MB parameter is specified, the raster will be split into tiles of the specified size.
-    - If the size_in_MB parameter is not specified or if the size_in_Mb < 0, the raster will only be split if it exceeds Integer.MAX_VALUE. The split will be at a threshold of 64MB in this case.
+    - If the size_in_MB parameter is specified, the tile will be split into tiles of the specified size.
+    - If the size_in_MB parameter is not specified or if the size_in_Mb < 0, the tile will only be split if it exceeds Integer.MAX_VALUE. The split will be at a threshold of 64MB in this case.
 ..
 
 
@@ -688,7 +690,7 @@ rst_fromfile
      +----------------------------------------------------------------------------------------------------------------+
      | rst_fromfile(path)                                                                                             |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -701,7 +703,7 @@ rst_fromfile
      +----------------------------------------------------------------------------------------------------------------+
      | rst_fromfile(path)                                                                                             |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -713,7 +715,7 @@ rst_fromfile
      +----------------------------------------------------------------------------------------------------------------+
      | rst_fromfile(path)                                                                                             |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
 rst_georeference
@@ -822,7 +824,7 @@ rst_getsubdataset
     :rtype: Column: RasterTileType
 
 .. note::
-  Notes
+  **Notes**
     - :code:`name` should be the last identifier in the standard GDAL subdataset path: :code:`DRIVER:PATH:NAME`.
     - :code:`name` must be a valid subdataset name for the raster, i.e. it must exist within the raster.
 ..
@@ -836,7 +838,7 @@ rst_getsubdataset
      +----------------------------------------------------------------------------------------------------------------+
      | rst_getsubdataset(tile, sst)                                                                                   |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -845,7 +847,7 @@ rst_getsubdataset
      +----------------------------------------------------------------------------------------------------------------+
      | rst_getsubdataset(tile, sst)                                                                                   |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -854,7 +856,7 @@ rst_getsubdataset
      +----------------------------------------------------------------------------------------------------------------+
      | rst_getsubdataset(tile, sst)                                                                                   |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
 rst_height
@@ -913,10 +915,9 @@ rst_initnodata
     :rtype: Column: RasterTileType
 
 .. note::
-
-  Notes
-    - The nodata value will be set to a default sentinel values according to the pixel data type of the raster bands.
-    - The output raster will have the same extent as the input raster.
+  **Notes**
+    - The nodata value will be set to a default sentinel values according to the pixel data type of the tile bands.
+    - The output tile will have the same extent as the input raster tile.
 
     .. list-table:: Default nodata values for raster data types
       :widths: 25 25 50
@@ -958,7 +959,7 @@ rst_initnodata
      +----------------------------------------------------------------------------------------------------------------+
      | rst_initnodata(tile)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -967,7 +968,7 @@ rst_initnodata
      +----------------------------------------------------------------------------------------------------------------+
      | rst_initnodata(tile)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -976,7 +977,7 @@ rst_initnodata
      +----------------------------------------------------------------------------------------------------------------+
      | rst_initnodata(tile)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
 rst_isempty
@@ -1026,13 +1027,13 @@ rst_isempty
 rst_maketiles
 *************
 
-.. function:: rst_maketiles(input, driver, size, withCheckpoint)
+.. function:: rst_maketiles(input, driver, size, with_checkpoint)
 
     Tiles the raster into tiles of the given size, optionally writing them to disk in the process.
 
     :param input: path (StringType) or content (BinaryType)
     :type input: Column
-    :param driver: The driver to use for reading the raster. 
+    :param driver: The driver to use for reading the raster.
     :type driver: Column(StringType)
     :param size_in_mb: The size of the tiles in MB. 
     :type size_in_mb: Column(IntegerType)
@@ -1041,8 +1042,7 @@ rst_maketiles
     :rtype: Column: RasterTileType
 
 .. note::
-
-  Notes:
+  **Notes**
 
   :code:`input`
     - If the raster is stored on disk, :code:`input` should be the path to the raster, similar to :ref:`rst_fromfile`.
@@ -1053,18 +1053,16 @@ rst_maketiles
     - If the input is a byte array, the driver must be explicitly specified.
 
   :code:`size`
-    - If :code:`size` is set to -1, the file is loaded and returned as a single tile
-    - If set to 0, the file is loaded and subdivided into tiles of size 64MB
-    - If set to a positive value, the file is loaded and subdivided into tiles of the specified size
+    - Optional: default is -1.
+    - If :code:`size` is set to -1, the file is loaded and returned as a single tile.
+    - If set to 0, the file is loaded and subdivided into tiles of size 64MB.
+    - If set to a positive value, the file is loaded and subdivided into tiles of the specified size.
     - If the file is too big to fit in memory, it is subdivided into tiles of size 64MB.
 
   :code:`with_checkpoint`
-    - If :code:`with_checkpoint` set to true, the tiles are written to the checkpoint directory
+    - Optional: default is false.
+    - If :code:`with_checkpoint` set to true, the tiles are written to the checkpoint directory.
     - If set to false, the tiles are returned as in-memory byte arrays.
-
-  Once enabled, checkpointing will remain enabled for tiles originating from this function,
-  meaning follow-on calls will also use checkpointing. To switch away from checkpointing down the line,
-  you could call :ref:`rst_fromfile` using the checkpointed locations as the :code:`path` input.
 ..
 
     :example:
@@ -1077,7 +1075,7 @@ rst_maketiles
      +------------------------------------------------------------------------+
      | tile                                                                   |
      +------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAMAAA (truncated)","metadata":{         |
+     | {"index_id":null,"tile":"SUkqAMAAA (truncated)","metadata":{         |
      | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
      +------------------------------------------------------------------------+
 
@@ -1088,7 +1086,7 @@ rst_maketiles
      +------------------------------------------------------------------------+
      | tile                                                                   |
      +------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAMAAA (truncated)","metadata":{         |
+     | {"index_id":null,"tile":"SUkqAMAAA (truncated)","metadata":{         |
      | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
      +------------------------------------------------------------------------+
 
@@ -1098,11 +1096,9 @@ rst_maketiles
      +------------------------------------------------------------------------+
      | tile                                                                   |
      +------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAMAAA (truncated)","metadata":{         |
+     | {"index_id":null,"tile":"SUkqAMAAA (truncated)","metadata":{         |
      | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
      +------------------------------------------------------------------------+
-
-
 
 rst_mapalgebra
 **************
@@ -1155,7 +1151,7 @@ rst_mapalgebra
      +----------------------------------------------------------------------------------------------------------------+
      | tile                                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -1164,7 +1160,7 @@ rst_mapalgebra
      +----------------------------------------------------------------------------------------------------------------+
      | tile                                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -1173,7 +1169,7 @@ rst_mapalgebra
      +----------------------------------------------------------------------------------------------------------------+
      | tile                                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
 rst_max
@@ -1182,10 +1178,8 @@ rst_max
 .. function:: rst_max(tile)
 
     Returns an array containing maximum values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_max(tile)")`
 
-    :param tile: A column containing the raster tile. 
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: ArrayType(DoubleType)
 
@@ -1194,7 +1188,7 @@ rst_max
 .. tabs::
    .. code-tab:: python
 
-    df.selectExpr("rst_max(tile)"").limit(1).display()
+    df.selectExpr(mos.rst_max("tile")).limit(1).display()
     +---------------+
     | rst_max(tile) |
     +---------------+
@@ -1225,10 +1219,8 @@ rst_median
 .. function:: rst_median(tile)
 
     Returns an array containing median values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_median(tile)")`
 
-    :param tile: A column containing the raster tile. 
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: ArrayType(DoubleType)
 
@@ -1237,7 +1229,7 @@ rst_median
 .. tabs::
    .. code-tab:: python
 
-    df.selectExpr("rst_median(tile)"").limit(1).display()
+    df.selectExpr(mos.rst_median("tile")).limit(1).display()
     +---------------+
     | rst_median(tile) |
     +---------------+
@@ -1311,24 +1303,24 @@ rst_merge
 
 .. function:: rst_merge(tiles)
 
-    Combines a collection of raster tiles into a single raster.
+    Combines a collection of raster tiles into a single tile.
 
     :param tiles: A column containing an array of raster tiles.
     :type tiles: Column (ArrayType(RasterTileType))
     :rtype: Column: RasterTileType
 
 .. note::
-  Notes
+  **Notes**
 
   Input tiles supplied in :code:`tiles`:
     - are not required to have the same extent.
     - must have the same coordinate reference system.
     - must have the same pixel data type.
     - will be combined using the :code:`gdalwarp` command.
-    - require a :code:`noData` value to have been initialised (if this is not the case, the non valid pixels may introduce artifacts in the output raster).
+    - require a :code:`noData` value to have been initialised (if this is not the case, the non valid pixels may introduce artifacts in the output tile).
     - will be stacked in the order they are provided.
 
-  The resulting output raster will have:
+  The resulting output tile will have:
     - an extent that covers all of the input tiles;
     - the same number of bands as the input tiles;
     - the same pixel type as the input tiles;
@@ -1348,7 +1340,7 @@ rst_merge
      +----------------------------------------------------------------------------------------------------------------+
      | rst_merge(tiles)                                                                                               |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -1358,7 +1350,7 @@ rst_merge
      +----------------------------------------------------------------------------------------------------------------+
      | rst_merge(tiles)                                                                                               |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -1367,7 +1359,7 @@ rst_merge
      +----------------------------------------------------------------------------------------------------------------+
      | rst_merge(array(tile1,tile2,tile3))                                                                            |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
 rst_metadata
@@ -1445,10 +1437,8 @@ rst_min
 .. function:: rst_min(tile)
 
     Returns an array containing minimum values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_min(tile)")`
 
-    :param tile: A column containing the raster tile. 
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: ArrayType(DoubleType)
 
@@ -1457,7 +1447,7 @@ rst_min
 .. tabs::
    .. code-tab:: python
 
-    df.selectExpr("rst_min(tile)"").limit(1).display()
+    df.selectExpr(mos.rst_min("tile")).limit(1).display()
     +---------------+
     | rst_min(tile) |
     +---------------+
@@ -1487,7 +1477,7 @@ rst_ndvi
 
 .. function:: rst_ndvi(tile, red_band_num, nir_band_num)
 
-    Calculates the Normalized Difference Vegetation Index (NDVI) for a raster.
+    Calculates the Normalized Difference Vegetation Index (NDVI) for a tile.
 
     :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
@@ -1498,13 +1488,15 @@ rst_ndvi
     :rtype: Column: RasterTileType
 
 .. note::
+  **Notes**
+
   NDVI is calculated using the formula: (NIR - RED) / (NIR + RED).
 
   The output raster tiles will have:
-    - the same extent as the input raster.
+    - the same extent as the input tile.
     - a single band.
     - a pixel data type of float64.
-    - the same coordinate reference system as the input raster.
+    - the same coordinate reference system as the input tile.
 ..
 
     :example:
@@ -1516,7 +1508,7 @@ rst_ndvi
      +----------------------------------------------------------------------------------------------------------------+
      | rst_ndvi(tile, 1, 2)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -1525,7 +1517,7 @@ rst_ndvi
      +----------------------------------------------------------------------------------------------------------------+
      | rst_ndvi(tile, 1, 2)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -1534,7 +1526,7 @@ rst_ndvi
      +----------------------------------------------------------------------------------------------------------------+
      | rst_ndvi(tile, 1, 2)                                                                                           |
      +----------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
 rst_numbands
@@ -1584,15 +1576,32 @@ rst_numbands
 rst_pixelcount
 ***************
 
-.. function:: rst_pixelcount(tile)
+.. function:: rst_pixelcount(tile, count_nodata, count_all)
 
-    Returns an array containing valid pixel count values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_pixelcount(tile)")`
+    Returns an array containing pixel count values for each band; default excludes mask and nodata pixels.
     
     :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
+    :param count_nodata: A column to specify whether to count nodata pixels.
+    :type count_nodata: Column (BooleanType)
+    :param count_all: A column to specify whether to count all pixels.
+    :type count_all: Column (BooleanType)
     :rtype: Column: ArrayType(LongType)
+
+.. note::
+  **Notes**
+
+  If pixel value is noData or mask value is 0.0, the pixel is not counted by default.
+
+  :code:`count_nodata`
+    - This is an optional param.
+    - if specified as true, include the noData (not mask) pixels in the count (default is false).
+
+  :code:`count_all`
+    - This is an optional param; as a positional arg, must also pass :code:`count_nodata`
+      (value of :code:`count_nodata` is ignored).
+    - if specified as true, simply return bandX * bandY in the count (default is false).
+..
 
     :example:
 
@@ -1729,7 +1738,7 @@ rst_rastertogridavg
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
 .. note::
-  Notes
+  **Notes**
     - To obtain cellID->value pairs, use the Spark SQL explode() function twice.
     - CellID can be LongType or StringType depending on the configuration of MosaicContext.
     - The value/measure for each cell is the average of the pixel values in the cell.
@@ -1804,7 +1813,7 @@ rst_rastertogridcount
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
 .. note::
-  Notes
+  **Notes**
     - To obtain cellID->value pairs, use the Spark SQL explode() function twice.
     - CellID can be LongType or StringType depending on the configuration of MosaicContext.
     - The value/measure for each cell is the count of the pixel values in the cell.
@@ -1879,7 +1888,7 @@ rst_rastertogridmax
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
 .. note::
-  Notes
+  **Notes**
     - To obtain cellID->value pairs, use the Spark SQL explode() function twice.
     - CellID can be LongType or StringType depending on the configuration of MosaicContext.
     - The value/measure for each cell is the maximum of the pixel values in the cell.
@@ -1954,7 +1963,7 @@ rst_rastertogridmedian
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
 .. note::
-  Notes
+  **Notes**
     - To obtain cellID->value pairs, use the Spark SQL explode() function twice.
     - CellID can be LongType or StringType depending on the configuration of MosaicContext.
     - The value/measure for each cell is the median of the pixel values in the cell.
@@ -2029,7 +2038,7 @@ rst_rastertogridmin
     :rtype: Column: ArrayType(ArrayType(StructType(LongType|StringType, DoubleType)))
 
 .. note::
-  Notes
+  **Notes**
     - To obtain cellID->value pairs, use the Spark SQL explode() function twice.
     - CellID can be LongType or StringType depending on the configuration of MosaicContext.
     - The value/measure for each cell is the minimum of the pixel values in the cell.
@@ -2104,7 +2113,7 @@ rst_rastertoworldcoord
     :rtype: Column: StringType
 
 .. note::
-  Notes
+  **Notes**
     - The result is a WKT point geometry.
     - The coordinates are computed using the GeoTransform of the raster to respect the projection.
 ..
@@ -2258,8 +2267,8 @@ rst_retile
     +------------------------------------------------------------------------------------------------------------------+
     | rst_retile(tile, 300, 300)                                                                                       |
     +------------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
-    | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
+    | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: scala
@@ -2268,8 +2277,8 @@ rst_retile
     +------------------------------------------------------------------------------------------------------------------+
     | rst_retile(tile, 300, 300)                                                                                       |
     +------------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
-    | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
+    | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
     +------------------------------------------------------------------------------------------------------------------+
 
    .. code-tab:: sql
@@ -2278,8 +2287,8 @@ rst_retile
     +------------------------------------------------------------------------------------------------------------------+
     | rst_retile(tile, 300, 300)                                                                                       |
     +------------------------------------------------------------------------------------------------------------------+
-    | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
-    | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
+    | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" }   |
     +------------------------------------------------------------------------------------------------------------------+
 
 rst_rotation
@@ -2414,7 +2423,7 @@ rst_separatebands
 
 .. function:: rst_separatebands(tile)
 
-    Returns a set of new single-band rasters, one for each band in the input raster. The result set will contain one row
+    Returns a set of new single-band rasters, one for each band in the input tile. The result set will contain one row
     per input band for each :code:`tile` provided.
 
     :param tile: A column containing the raster tile.
@@ -2423,7 +2432,7 @@ rst_separatebands
 
 .. note::
   ️⚠️ Before performing this operation, you may want to add an identifier column to the dataframe to trace each band
-  back to its original parent raster.
+  back to its original parent tile.
 ..
 
     :example:
@@ -2435,7 +2444,7 @@ rst_separatebands
     +--------------------------------------------------------------------------------------------------------------------------------+
     | tile                                                                                                                           |
     +--------------------------------------------------------------------------------------------------------------------------------+
-    | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                                                                           |
+    | {"index_id":null,"tile":"SUkqAAg...= (truncated)",                                                                           |
     |  "metadata":{"path":"....tif","last_error":"","all_parents":"no_path","driver":"GTiff","bandIndex":"1","parentPath":"no_path", |
     |              "last_command":"gdal_translate -of GTiff -b 1 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}                     |
     +--------------------------------------------------------------------------------------------------------------------------------+
@@ -2446,7 +2455,7 @@ rst_separatebands
     +--------------------------------------------------------------------------------------------------------------------------------+
     | tile                                                                                                                           |
     +--------------------------------------------------------------------------------------------------------------------------------+
-    | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                                                                           |
+    | {"index_id":null,"tile":"SUkqAAg...= (truncated)",                                                                           |
     |  "metadata":{"path":"....tif","last_error":"","all_parents":"no_path","driver":"GTiff","bandIndex":"1","parentPath":"no_path", |
     |              "last_command":"gdal_translate -of GTiff -b 1 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}                     |
     +--------------------------------------------------------------------------------------------------------------------------------+
@@ -2457,13 +2466,13 @@ rst_separatebands
     +--------------------------------------------------------------------------------------------------------------------------------+
     | tile                                                                                                                           |
     +--------------------------------------------------------------------------------------------------------------------------------+
-    | {"index_id":null,"raster":"SUkqAAg...= (truncated)",                                                                           |
+    | {"index_id":null,"tile":"SUkqAAg...= (truncated)",                                                                           |
     |  "metadata":{"path":"....tif","last_error":"","all_parents":"no_path","driver":"GTiff","bandIndex":"1","parentPath":"no_path", |
     |              "last_command":"gdal_translate -of GTiff -b 1 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}                     |
     +--------------------------------------------------------------------------------------------------------------------------------+
 
 rst_setnodata
-**********************
+*************
 
 .. function:: rst_setnodata(tile, nodata)
 
@@ -2476,7 +2485,7 @@ rst_setnodata
     :rtype: Column: (RasterTileType)
 
 .. note::
-  Notes
+  **Notes**
     - If a single :code:`nodata` value is passed, the same nodata value is set for all bands of :code:`tile`.
     - If an array of values is passed, the respective :code:`nodata` value is set for each band of :code:`tile`.
 ..
@@ -2491,8 +2500,8 @@ rst_setnodata
      +------------------------------------------------------------------------------------------------------------------+
      | rst_setnodata(tile, 0)                                                                                           |
      +------------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -2501,8 +2510,8 @@ rst_setnodata
      +------------------------------------------------------------------------------------------------------------------+
      | rst_setnodata(tile, 0)                                                                                           |
      +------------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -2511,9 +2520,52 @@ rst_setnodata
      +------------------------------------------------------------------------------------------------------------------+
      | rst_setnodata(tile, 0)                                                                                           |
      +------------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
+
+rst_setsrid
+***********
+
+.. function:: rst_setsrid(tile, srid)
+
+    Set the SRID of the raster tile as an EPSG code.
+
+    :param tile: A column containing the raster tile.
+    :type tile: Column (RasterTileType)
+    :param srid: The SRID to set
+    :type srid: Column (IntegerType)
+    :rtype: Column: (RasterTileType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df.select(mos.rst_setsrid('tile', F.lit(9122))).display()
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    df.select(rst_setsrid(col("tile"), lit(9122))).show
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT rst_setsrid(tile, 9122) FROM table
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
 
 rst_skewx
 *********
@@ -2641,7 +2693,7 @@ rst_srid
     +------------------------------------------------------------------------------------------------------------------+
 
 rst_subdatasets
-**********************
+***************
 
 .. function:: rst_subdatasets(tile)
 
@@ -2705,7 +2757,7 @@ rst_subdivide
     :type size_in_MB: Column (IntegerType)
 
 .. note::
-  Notes
+  **Notes**
     - Each :code:`tile` will be recursively split along two orthogonal axes until the expected size of the last child tile is < :code:`size_in_MB`.
     - The aspect ratio of the tiles is preserved.
     - The result set is automatically exploded.
@@ -2723,8 +2775,8 @@ rst_subdivide
      +------------------------------------------------------------------------------------------------------------------+
      | rst_subdivide(tile, 10)                                                                                          |
      +------------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -2733,8 +2785,8 @@ rst_subdivide
      +------------------------------------------------------------------------------------------------------------------+
      | rst_subdivide(tile, 10)                                                                                          |
      +------------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -2743,8 +2795,8 @@ rst_subdivide
      +------------------------------------------------------------------------------------------------------------------+
      | rst_subdivide(tile, 10)                                                                                          |
      +------------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
 
 rst_summary
@@ -2819,9 +2871,9 @@ rst_tessellate
     :type resolution: Column (IntegerType)
 
 .. note::
-  Notes
+  **Notes**
     - The result set is automatically exploded into a row-per-index-cell.
-    - If :ref:`rst_merge` is called on output tile set, the original raster will be reconstructed.
+    - If :ref:`rst_merge` is called on output tile set, the original tile will be reconstructed.
     - Each output tile chip will have the same number of bands as its parent :code:`tile`.
 ..
 
@@ -2834,8 +2886,8 @@ rst_tessellate
      +------------------------------------------------------------------------------------------------------------------+
      | rst_tessellate(tile, 10)                                                                                         |
      +------------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -2844,8 +2896,8 @@ rst_tessellate
      +------------------------------------------------------------------------------------------------------------------+
      | rst_tessellate(tile, 10)                                                                                         |
      +------------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -2854,8 +2906,8 @@ rst_tessellate
      +------------------------------------------------------------------------------------------------------------------+
      | rst_tessellate(tile, 10)                                                                                         |
      +------------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
 
 rst_tooverlappingtiles
@@ -2879,8 +2931,8 @@ rst_tooverlappingtiles
     :type overlap: Column (IntegerType)
 
 .. note::
-  Notes
-    - If :ref:`rst_merge` is called on the tile set the original raster will be reconstructed.
+  **Notes**
+    - If :ref:`rst_merge` is called on the tile set the original tile will be reconstructed.
     - Each output tile chip will have the same number of bands as its parent :code:`tile`.
 ..
 
@@ -2893,8 +2945,8 @@ rst_tooverlappingtiles
      +------------------------------------------------------------------------------------------------------------------+
      | rst_tooverlappingtiles(tile, 10, 10, 10)                                                                         |
      +------------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: scala
@@ -2903,8 +2955,8 @@ rst_tooverlappingtiles
      +------------------------------------------------------------------------------------------------------------------+
      | rst_tooverlappingtiles(tile, 10, 10, 10)                                                                         |
      +------------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
 
     .. code-tab:: sql
@@ -2913,16 +2965,16 @@ rst_tooverlappingtiles
      +------------------------------------------------------------------------------------------------------------------+
      | rst_tooverlappingtiles(tile, 10, 10, 10)                                                                         |
      +------------------------------------------------------------------------------------------------------------------+
-     | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
-     | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+     | {index_id: 593308294097928192, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
 
 rst_transform
-**********************
+*************
 
 .. function:: rst_transform(tile,srid)
 
-    Transforms the raster to the given SRID.
+    Transforms the tile to the given SRID.
 
     :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
@@ -2939,7 +2991,7 @@ rst_transform
      +----------------------------------------------------------------------------------------------------+
      | rst_transform(tile,4326)                                                                           |
      +----------------------------------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     | {"index_id":null,"tile":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
      |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
      |  "last_command":"gdalwarp -t_srs EPSG:4326 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
      +----------------------------------------------------------------------------------------------------+
@@ -2950,7 +3002,7 @@ rst_transform
      +----------------------------------------------------------------------------------------------------+
      | rst_transform(tile,4326)                                                                           |
      +----------------------------------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     | {"index_id":null,"tile":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
      |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
      |  "last_command":"gdalwarp -t_srs EPSG:4326 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
      +----------------------------------------------------------------------------------------------------+
@@ -2961,18 +3013,18 @@ rst_transform
      +----------------------------------------------------------------------------------------------------+
      | rst_transform(tile,4326)                                                                           |
      +----------------------------------------------------------------------------------------------------+
-     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     | {"index_id":null,"tile":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
      |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
      |  "last_command":"gdalwarp -t_srs EPSG:4326 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
      +----------------------------------------------------------------------------------------------------+
 
 
 rst_tryopen
-**********************
+***********
 
 .. function:: rst_tryopen(tile)
 
-    Tries to open the raster tile. If the raster cannot be opened the result is false and if the raster can be opened the result is true.
+    Tries to open the raster tile. If the tile cannot be opened the result is false and if the tile can be opened the result is true.
 
     :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
@@ -3009,7 +3061,7 @@ rst_tryopen
      +------------------------------------------------------------------------------------------------------------------+
 
 rst_upperleftx
-**********************
+**************
 
 .. function:: rst_upperleftx(tile)
 
@@ -3050,7 +3102,7 @@ rst_upperleftx
     +------------------------------------------------------------------------------------------------------------------+
 
 rst_upperlefty
-**********************
+**************
 
 .. function:: rst_upperlefty(tile)
 
@@ -3091,7 +3143,7 @@ rst_upperlefty
     +------------------------------------------------------------------------------------------------------------------+
 
 rst_width
-**********************
+*********
 
 .. function:: rst_width(tile)
 
@@ -3271,3 +3323,60 @@ rst_worldtorastercoordy
     +------------------------------------------------------------------------------------------------------------------+
     | 997                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
+
+rst_write
+*********
+
+.. function:: rst_write(input, dir)
+
+    Writes raster tiles from the input column to a specified directory.
+
+    :param input: A column containing the raster tile.
+    :type input: Column
+    :param dir: The directory, e.g. fuse, to write the tile's raster as file.
+    :type dir: Column(StringType)
+    :rtype: Column: RasterTileType
+
+.. note::
+  **Notes**
+    - Use :code:`RST_Write` to save a 'tile' column to a specified directory (e.g. fuse) location using its
+      already populated GDAL driver and tile information.
+    - Useful for formalizing the tile 'path' when writing a Lakehouse table. An example might be to turn on checkpointing
+      for internal data pipeline phase operations in which multiple interim tiles are populated, but at the end of the phase
+      use this function to set the final path to be used in the phase's persisted table. Then, you are free to delete
+      the internal tiles that accumulated in the configured checkpointing directory.
+..
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.select(rst_write("tile", <write_dir>).alias("tile")).limit(1).display()
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"tile":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.select(rst_write(col("tile", <write_dir>)).as("tile)).limit(1).show
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"tile":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT rst_write(tile, <write_dir>) as tile FROM table LIMIT 1
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"tile":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+

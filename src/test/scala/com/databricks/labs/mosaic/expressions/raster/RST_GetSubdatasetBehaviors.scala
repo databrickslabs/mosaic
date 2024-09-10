@@ -11,23 +11,24 @@ trait RST_GetSubdatasetBehaviors extends QueryTest {
 
     //noinspection MapGetGet
     def behaviors(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
-        val rastersInMemory = spark.read
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
+
+        val rasterDf = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
             .load("src/test/resources/binary/netcdf-coral")
 
-        val geoReferenceDf = rastersInMemory
+        val geoReferenceDf = rasterDf
             .withColumn("subdataset", rst_getsubdataset($"tile", lit("bleaching_alert_area")))
             .select(rst_georeference($"subdataset"))
 
-        rastersInMemory
+        rasterDf
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""

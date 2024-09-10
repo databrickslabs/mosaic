@@ -76,13 +76,13 @@ trait ST_DimensionBehaviors extends MosaicSpatialQueryTest {
 
         val df = getWKTRowsDf()
 
-        val stDimension = ST_Dimension(df.col("wkt").expr, mc.expressionConfig)
+        val stDimension = ST_Dimension(df.col("wkt").expr, mc.exprConfig)
 
         stDimension.child shouldEqual df.col("wkt").expr
         stDimension.dataType shouldEqual DoubleType
         noException should be thrownBy stDimension.makeCopy(Array(stDimension.child))
         noException should be thrownBy ST_Dimension.unapply(stDimension)
-        noException should be thrownBy ST_Dimension.apply(stDimension.child, mc.expressionConfig)
+        noException should be thrownBy ST_Dimension.apply(stDimension.child, mc.exprConfig)
     }
 
 }

@@ -1,0 +1,10 @@
+name: upload mosaic python artefacts
+description: upload mosaic python artefacts
+runs:
+  using: "composite"
+  steps:
+    - name: upload python artefacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: artefacts
+        path: staging/*.whl

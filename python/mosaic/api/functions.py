@@ -198,9 +198,9 @@ def st_concavehull(
 
 
 def st_buffer(
-        geom: ColumnOrName,
-        radius: ColumnOrName,
-        buffer_style_parameters: Any = "",
+    geom: ColumnOrName,
+    radius: ColumnOrName,
+    buffer_style_parameters: Any = "",
 ) -> Column:
     """
     Compute the buffered geometry based on geom and radius.

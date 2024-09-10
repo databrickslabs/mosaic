@@ -1,20 +1,28 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_READ_IN_MEMORY, MOSAIC_URI_DEEP_CHECK, MOSAIC_URI_DEEP_CHECK_DEFAULT, RASTER_DRIVER_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY, RASTER_SUBDATASET_NAME_KEY}
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
+import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
+import com.databricks.labs.mosaic.core.raster.io.RasterIO.identifyDriverNameFromRawPath
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
 import com.databricks.labs.mosaic.expressions.raster.buildMapString
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 
+import scala.util.Try
+
 /** An object defining the in memory read strategy for the GDAL file format. */
 object ReadInMemory extends ReadStrategy {
+
+    //serialize data type
+    val tileDataType: DataType = BinaryType
 
     // noinspection DuplicatedCode
     /**
@@ -30,7 +38,6 @@ object ReadInMemory extends ReadStrategy {
       *   Parent schema.
       * @param sparkSession
       *   Spark session.
-      *
       * @return
       *   Schema of the GDAL file format.
       */
@@ -51,11 +58,12 @@ object ReadInMemory extends ReadStrategy {
             .add(StructField(SRID, IntegerType, nullable = false))
             // Note, for in memory reads the rasters are stored in the tile.
             // For that we use Binary Columns.
-            .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType, BinaryType, useCheckpoint = false), nullable = false))
+            .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType, tileDataType, useCheckpoint = false), nullable = false))
     }
 
     /**
       * Reads the content of the file.
+ *
       * @param status
       *   File status.
       * @param fs
@@ -70,23 +78,41 @@ object ReadInMemory extends ReadStrategy {
       *   Iterator of internal rows.
       */
     override def read(
-        status: FileStatus,
-        fs: FileSystem,
-        requiredSchema: StructType,
-        options: Map[String, String],
-        indexSystem: IndexSystem
+                         status: FileStatus,
+                         fs: FileSystem,
+                         requiredSchema: StructType,
+                         options: Map[String, String],
+                         indexSystem: IndexSystem
     ): Iterator[InternalRow] = {
-        val inPath = status.getPath.toString
-        val readPath = PathUtils.getCleanPath(inPath)
-        val contentBytes: Array[Byte] = readContent(fs, status)
-        val createInfo = Map(
-            "path" -> readPath,
-            "parentPath" -> inPath
-        )
-        val raster = MosaicRasterGDAL.readRaster(createInfo)
-        val uuid = getUUID(status)
 
-        val fields = requiredSchema.fieldNames.filter(_ != TILE).map {
+        // Expression Config
+        // - index system set
+        // - use checkpoint set to true
+        // - deep check set
+        // - GDAL enable called on worker
+        val exprConfigOpt = Some(new ExprConfig(Map.empty[String, String]))
+        exprConfigOpt.get.setIndexSystem(indexSystem.name)
+        exprConfigOpt.get.setRasterUseCheckpoint("false")
+        exprConfigOpt.get.setUriDeepCheck(options.getOrElse(MOSAIC_URI_DEEP_CHECK, MOSAIC_URI_DEEP_CHECK_DEFAULT))
+        GDAL.enable(exprConfigOpt.get)
+
+        val inPath = status.getPath.toString
+        val uriDeepCheck = exprConfigOpt.get.isUriDeepCheck
+        val uriGdalOpt = PathUtils.parseGdalUriOpt(inPath, uriDeepCheck)
+        val driverName = options.get("driverName") match {
+            case Some(name) if name.nonEmpty => name
+            case _ => identifyDriverNameFromRawPath(inPath, uriGdalOpt)
+        }
+        val createInfo = Map(
+            RASTER_PATH_KEY -> inPath,
+            RASTER_PARENT_PATH_KEY -> inPath,
+            RASTER_DRIVER_KEY -> driverName,
+            RASTER_SUBDATASET_NAME_KEY -> options.getOrElse(RASTER_SUBDATASET_NAME_KEY, "")
+        )
+        val raster = RasterGDAL(createInfo, exprConfigOpt)
+        val uuid = getUUID(status)
+        val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
+        val fields = trimmedSchema.fieldNames.map {
             case PATH              => status.getPath.toString
             case LENGTH            => status.getLen
             case MODIFICATION_TIME => status.getModificationTime
@@ -99,15 +125,19 @@ object ReadInMemory extends ReadStrategy {
             case SRID              => raster.SRID
             case other             => throw new RuntimeException(s"Unsupported field name: $other")
         }
-        val mapData = buildMapString(raster.createInfo)
-        val rasterTileSer = InternalRow.fromSeq(
-          Seq(null, contentBytes, mapData)
-        )
-        val row = Utils.createRow(
-          fields ++ Seq(rasterTileSer)
-        )
-        RasterCleaner.dispose(raster)
-        Seq(row).iterator
+
+        val contentBytes: Array[Byte] = readContent(fs, status)
+        val mapData = buildMapString(raster.getCreateInfo(includeExtras = true))
+        val rasterTileSer = InternalRow.fromSeq(Seq(null, contentBytes, mapData))
+        val row = Utils.createRow(fields ++ Seq(rasterTileSer))
+        val rows = Seq(row)
+
+        raster.flushAndDestroy()
+
+        rows.iterator
     }
+
+    /** @return the ReadStrategy name implemented. */
+    override def getReadStrategy: String = MOSAIC_RASTER_READ_IN_MEMORY
 
 }

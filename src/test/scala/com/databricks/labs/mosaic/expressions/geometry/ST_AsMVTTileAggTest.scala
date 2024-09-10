@@ -5,6 +5,6 @@ import org.apache.spark.sql.test.SharedSparkSession
 
 class ST_AsMVTTileAggTest extends MosaicSpatialQueryTest with SharedSparkSession with ST_AsMVTTileAggBehaviors {
 
-    testAllNoCodegen("Testing stAsMVTTileAgg") { behavior }
+    testAllNoCodegen("Testing ST_AsMVTTileAgg (Codegen)") { behavior }
 
 }

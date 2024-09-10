@@ -17,7 +17,7 @@
   in '<project_root>/python/notebooks' which is already added to .gitignore
 * If you want to run tests within a container shell:
   - `unset JAVA_TOOL_OPTIONS` is needed to execute JVM tests
-  - then can test e.g. `mvn -X test -DskipTests=false -Dsuites=com.databricks.labs.mosaic.core.raster.TestRasterGDAL`
+  - then can test e.g. `mvn -X test -DskipTests=false -Dsuites=com.databricks.labs.mosaic.core.tile.gdal.TestRasterGDAL`
     and `python3 -m unittest mosaic test/test_fuse_install.py` from ./python dir
   - you may need to run `mvn clean` occasionally, especially around initial setup as intellij is JDK 11 (pom.xml)
     and docker is JDK 8

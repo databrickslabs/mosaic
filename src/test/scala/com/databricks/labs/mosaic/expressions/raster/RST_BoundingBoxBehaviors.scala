@@ -10,19 +10,21 @@ trait RST_BoundingBoxBehaviors extends QueryTest {
 
     // noinspection MapGetGet
     def behaviors(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
-        val rastersInMemory = spark.read
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
+
+        val rasterDf = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
+            .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersInMemory
+        val gridTiles = rasterDf
             .withColumn("bbox", rst_boundingbox($"tile"))
             .select(st_area($"bbox").as("area"))
             .as[Double]
@@ -30,7 +32,7 @@ trait RST_BoundingBoxBehaviors extends QueryTest {
 
         gridTiles.forall(_ > 0.0) should be(true)
 
-        rastersInMemory.createOrReplaceTempView("source")
+        rasterDf.createOrReplaceTempView("source")
 
         val gridTilesSQL = spark
             .sql("""

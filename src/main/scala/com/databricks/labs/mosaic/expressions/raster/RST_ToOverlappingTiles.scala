@@ -1,37 +1,37 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.operator.retile.OverlappingTiles
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.RasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterGeneratorExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.functions.ExprConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 
 /**
   * Returns a set of new rasters which are the result of a rolling window over
-  * the input raster.
+  * the input tile.
   */
 case class RST_ToOverlappingTiles(
-    rasterExpr: Expression,
-    tileWidthExpr: Expression,
-    tileHeightExpr: Expression,
-    overlapExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
-) extends RasterGeneratorExpression[RST_ToOverlappingTiles](rasterExpr, expressionConfig)
+                                     rasterExpr: Expression,
+                                     tileWidthExpr: Expression,
+                                     tileHeightExpr: Expression,
+                                     overlapExpr: Expression,
+                                     exprConfig: ExprConfig
+) extends RasterGeneratorExpression[RST_ToOverlappingTiles](rasterExpr, exprConfig)
       with NullIntolerant
       with CodegenFallback {
 
     /**
       * Returns a set of new rasters which are the result of a rolling window
-      * over the input raster.
+      * over the input tile.
       */
-    override def rasterGenerator(tile: MosaicRasterTile): Seq[MosaicRasterTile] = {
+    override def rasterGenerator(tile: RasterTile): Seq[RasterTile] = {
         val tileWidthValue = tileWidthExpr.eval().asInstanceOf[Int]
         val tileHeightValue = tileHeightExpr.eval().asInstanceOf[Int]
         val overlapValue = overlapExpr.eval().asInstanceOf[Int]
-        OverlappingTiles.reTile(tile, tileWidthValue, tileHeightValue, overlapValue)
+        OverlappingTiles.reTile(tile, tileWidthValue, tileHeightValue, overlapValue, Option(exprConfig))
     }
 
     override def children: Seq[Expression] = Seq(rasterExpr, tileWidthExpr, tileHeightExpr, overlapExpr)
@@ -41,11 +41,11 @@ case class RST_ToOverlappingTiles(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_ToOverlappingTiles extends WithExpressionInfo {
 
-    override def name: String = "rst_to_overlapping_tiles"
+    override def name: String = "rst_tooverlappingtiles"
 
     override def usage: String =
         """
-          |_FUNC_(expr1, expr2, expr3, expr4) - Returns a set of new raster tiles with the specified tile size (tileWidth x tileHeight).
+          |_FUNC_(expr1, expr2, expr3, expr4) - Returns a set of new tile tiles with the specified tile size (tileWidth x tileHeight).
           |                                     The tiles will overlap by the specified amount.
           |""".stripMargin
 
@@ -58,8 +58,8 @@ object RST_ToOverlappingTiles extends WithExpressionInfo {
           |        ...
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_ToOverlappingTiles](4, expressionConfig)
+    override def builder(exprConfig: ExprConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[RST_ToOverlappingTiles](4, exprConfig)
     }
 
 }

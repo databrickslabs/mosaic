@@ -76,13 +76,13 @@ trait ST_AreaBehaviors extends MosaicSpatialQueryTest {
 
         val df = getWKTRowsDf()
 
-        val stArea = ST_Area(df.col("wkt").expr, mc.expressionConfig)
+        val stArea = ST_Area(df.col("wkt").expr, mc.exprConfig)
 
         stArea.child shouldEqual df.col("wkt").expr
         stArea.dataType shouldEqual DoubleType
         noException should be thrownBy stArea.makeCopy(Array(stArea.child))
         noException should be thrownBy ST_Area.unapply(stArea)
-        noException should be thrownBy ST_Area.apply(stArea.child, mc.expressionConfig)
+        noException should be thrownBy ST_Area.apply(stArea.child, mc.exprConfig)
     }
 
 }

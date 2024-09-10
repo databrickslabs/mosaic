@@ -10,19 +10,21 @@ trait RST_CombineAvgAggBehaviors extends QueryTest {
 
     // noinspection MapGetGet
     def behaviors(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
-        val rastersInMemory = spark.read
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
+
+        val rasterDf = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
+            .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
 
-        val gridTiles = rastersInMemory.union(rastersInMemory)
+        val gridTiles = rasterDf.union(rasterDf)
             .withColumn("tiles", rst_tessellate($"tile", 2))
             .select("path", "tiles")
             .groupBy("path")
@@ -31,7 +33,7 @@ trait RST_CombineAvgAggBehaviors extends QueryTest {
             )
             .select("tiles")
 
-        rastersInMemory.union(rastersInMemory)
+        rasterDf.union(rasterDf)
             .createOrReplaceTempView("source")
 
         spark.sql("""
@@ -43,7 +45,7 @@ trait RST_CombineAvgAggBehaviors extends QueryTest {
                     |group by path
                     |""".stripMargin)
 
-        noException should be thrownBy rastersInMemory
+        noException should be thrownBy rasterDf
             .withColumn("tiles", rst_tessellate($"tile", 2))
             .select("path", "tiles")
             .groupBy("path")
@@ -54,7 +56,7 @@ trait RST_CombineAvgAggBehaviors extends QueryTest {
 
         val result = gridTiles.collect()
 
-        result.length should be(rastersInMemory.count())
+        result.length should be(rasterDf.count())
 
     }
 

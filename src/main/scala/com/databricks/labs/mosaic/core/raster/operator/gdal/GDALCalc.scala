@@ -1,9 +1,12 @@
 package com.databricks.labs.mosaic.core.raster.operator.gdal
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterGDAL, MosaicRasterWriteOptions}
+import com.databricks.labs.mosaic.{RASTER_ALL_PARENTS_KEY, RASTER_DRIVER_KEY, RASTER_FULL_ERR_KEY, RASTER_LAST_CMD_KEY, RASTER_LAST_ERR_KEY, RASTER_PARENT_PATH_KEY, RASTER_PATH_KEY}
+import com.databricks.labs.mosaic.core.raster.gdal.{RasterGDAL, RasterWriteOptions}
+import com.databricks.labs.mosaic.functions.ExprConfig
 import com.databricks.labs.mosaic.utils.SysUtils
 import org.gdal.gdal.gdal
+
+import scala.util.Try
 
 /** GDALCalc is a helper object for executing GDAL Calc commands. */
 object GDALCalc {
@@ -26,34 +29,43 @@ object GDALCalc {
       *   The GDAL Calc command to execute.
       * @param resultPath
       *   The path to the result.
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
-      *   Returns the result as a [[MosaicRasterGDAL]].
+      *   Returns the result as a [[RasterGDAL]].
       */
-    def executeCalc(gdalCalcCommand: String, resultPath: String): MosaicRasterGDAL = {
+    def executeCalc(gdalCalcCommand: String, resultPath: String, exprConfigOpt: Option[ExprConfig]): RasterGDAL = {
         require(gdalCalcCommand.startsWith("gdal_calc"), "Not a valid GDAL Calc command.")
-        val effectiveCommand = OperatorOptions.appendOptions(gdalCalcCommand, MosaicRasterWriteOptions.GTiff)
-        val toRun = effectiveCommand.replace("gdal_calc", gdal_calc)
-        val commandRes = SysUtils.runCommand(s"python3 $toRun")
-        val errorMsg = gdal.GetLastErrorMsg
-        val result = GDAL.raster(resultPath, resultPath)
-        val createInfo = Map(
-          "path" -> resultPath,
-          "parentPath" -> resultPath,
-          "driver" -> "GTiff",
-          "last_command" -> effectiveCommand,
-          "last_error" -> errorMsg,
-          "all_parents" -> resultPath,
-          "full_error" -> s"""
-                             |GDAL Calc command failed:
-                             |GDAL err:
-                             |$errorMsg
-                             |STDOUT:
-                             |${commandRes._2}
-                             |STDERR:
-                             |${commandRes._3}
-                             |""".stripMargin
-        )
-        result.copy(createInfo = createInfo)
+        val effectiveCommand = OperatorOptions.appendOptions(gdalCalcCommand, RasterWriteOptions.GTiff)
+
+        Try {
+            val toRun = effectiveCommand.replace("gdal_calc", gdal_calc)
+            val commandRes = SysUtils.runCommand(s"python3 $toRun")
+            val errorMsg = gdal.GetLastErrorMsg
+            val createInfo = Map(
+                RASTER_PATH_KEY -> resultPath,
+                RASTER_PARENT_PATH_KEY -> resultPath,
+                RASTER_DRIVER_KEY -> "GTiff",
+                RASTER_LAST_CMD_KEY -> effectiveCommand,
+                RASTER_LAST_ERR_KEY -> errorMsg,
+                RASTER_ALL_PARENTS_KEY -> resultPath,
+                RASTER_FULL_ERR_KEY -> s"""
+                                          |GDAL Calc command failed:
+                                          |GDAL err:
+                                          |$errorMsg
+                                          |STDOUT:
+                                          |${commandRes._2}
+                                          |STDERR:
+                                          |${commandRes._3}
+                                          |""".stripMargin
+            )
+            RasterGDAL(createInfo, exprConfigOpt)
+        }.getOrElse {
+            val result = RasterGDAL() // <- empty raster
+            result.updateLastCmd(effectiveCommand)
+            result.updateError("GDAL Calc command threw exception")
+            result
+        }
     }
 
 }

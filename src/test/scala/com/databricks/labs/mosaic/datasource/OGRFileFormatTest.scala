@@ -3,6 +3,7 @@ package com.databricks.labs.mosaic.datasource
 import com.databricks.labs.mosaic.expressions.util.OGRReadeWithOffset
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.utils.PathUtils.VSI_ZIP_TOKEN
 import com.databricks.labs.mosaic.{H3, JTS}
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.functions.{col, lit}
@@ -80,7 +81,10 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
         noException should be thrownBy OGRFileFormat.enableOGRDrivers(force = true)
 
-        val path = PathUtils.getCleanPath(getClass.getResource("/binary/geodb/bridges.gdb.zip").getPath)
+        val path = PathUtils.asFileSystemPath(
+            getClass.getResource("/binary/geodb/bridges.gdb.zip").getPath,
+            uriGdalOpt = None
+        )
         val ds = ogr.Open(path, 0)
 
         noException should be thrownBy OGRFileFormat.getLayer(ds, 0, "layer2")
@@ -120,7 +124,15 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
         OGRReadeWithOffset(
           null,
           null,
-          Map("driverName" -> "", "layerNumber" -> "1", "chunkSize" -> "200", "vsizip" -> "false", "layerName" -> "", "asWKB" -> "false"),
+          Map(
+              "driverName" -> "",
+              "layerNumber" -> "1",
+              "chunkSize" -> "200",
+              "vsizip" -> "false",
+              "layerName" -> "",
+              "asWKB" -> "false",
+              "uriDeepCheck" -> "false"
+          ),
           null
         ).position should be(false)
     }
@@ -136,7 +148,11 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
         val feature1 = ds.GetLayer(0).GetNextFeature()
         val testFeature = feature1
         testFeature.SetGeomField(0, null)
-        val schema = OGRFileFormat.inferSchemaImpl("", filePath, Map("driverName" -> "ESRI Shapefile", "asWKB" -> "true")).get
+        val schema = OGRFileFormat.inferSchemaImpl(
+            "",
+            filePath,
+            Map("driverName" -> "ESRI Shapefile", "asWKB" -> "true")
+        ).get
 
         noException should be thrownBy
             OGRFileFormat.getFeatureFields(testFeature, schema, asWKB = true)
@@ -150,6 +166,11 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
         val issue351 = "/binary/issue351/"
         val filePath = this.getClass.getResource(issue351).getPath
+
+        info(s"filePath -> '$filePath'")
+
+        val ds = ogr.Open(s"$VSI_ZIP_TOKEN$filePath/LAs_UK.zip")
+        info(s"ds name? '${ds.GetName()}")
 
         val lad_df = spark.read
             .format("ogr")

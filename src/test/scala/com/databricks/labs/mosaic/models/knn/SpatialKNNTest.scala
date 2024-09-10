@@ -13,6 +13,9 @@ import org.scalatest.flatspec.AnyFlatSpec
 class SpatialKNNTest extends AnyFlatSpec with SpatialKNNBehaviors with SparkSuite {
 
     "Mosaic" should "run SpatialKNN without approximation" in {
+        info("::: This is a long-running test :::")
+
+        info("start of SpatialKNNTest [H3, JTS] ...")
         var conf = new SparkConf(false)
             .set(MOSAIC_INDEX_SYSTEM, "H3")
             .set(MOSAIC_GEOMETRY_API, "JTS")
@@ -23,7 +26,9 @@ class SpatialKNNTest extends AnyFlatSpec with SpatialKNNBehaviors with SparkSuit
         var spark = withConf(conf)
         spark.sparkContext.setLogLevel("ERROR")
         it should behave like noApproximation(MosaicContext.build(H3IndexSystem, JTS), spark)
+        info("... end of SpatialKNNTest [H3, JTS]")
 
+        info("start of SpatialKNNTest [BNG, JTS] ...")
         conf = new SparkConf(false)
             .set(MOSAIC_INDEX_SYSTEM, "BNG")
             .set(MOSAIC_GEOMETRY_API, "JTS")
@@ -34,7 +39,7 @@ class SpatialKNNTest extends AnyFlatSpec with SpatialKNNBehaviors with SparkSuit
         spark = withConf(conf)
         spark.sparkContext.setLogLevel("ERROR")
         it should behave like noApproximation(MosaicContext.build(BNGIndexSystem, JTS), spark)
-
+        info("... end of SpatialKNNTest [BNG, JTS]")
     }
 
     //testAllCodegen("SpatialKNN behavior with approximation") { behaviorApproximate }

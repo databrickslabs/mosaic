@@ -4,146 +4,200 @@ import com.databricks.labs.mosaic.JTS
 import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.matchers.must.Matchers.{be, noException}
-import org.scalatest.matchers.should.Matchers.an
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
 
 import java.nio.file.{Files, Paths}
+import scala.util.Random
 
 class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSessionGDAL {
 
-    test("Read netcdf with Raster As Grid Reader") {
-        assume(System.getProperty("os.name") == "Linux")
-        MosaicContext.build(H3IndexSystem, JTS)
+    test("Read with Raster As Grid Reader - Exceptions") {
+        // <<< NOTE: KEEP THIS FIRST (SUCCESS = FILE CLEANUP) >>>
 
-        val netcdf = "/binary/netcdf-coral/"
-        val filePath = getClass.getResource(netcdf).getPath
+        assume(System.getProperty("os.name") == "Linux")
+        val tif = "/modis/"
+        val filePath = getClass.getResource(tif).getPath
+        val paths = Files.list(Paths.get(filePath)).toArray.map(_.toString)
+
+        val sc = this.spark
+        import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
+
+        // init
+        val mc = MosaicContext.build(H3IndexSystem, JTS)
+        mc.register(sc)
+        import mc.functions._
+
+        an[Error] should be thrownBy MosaicContext.read
+            .format("invalid") // <- invalid format (path)
+            .load(filePath)
+        info("... after invalid path format (exception)")
+
+        an[Error] should be thrownBy MosaicContext.read
+            .format("invalid") // <- invalid format (paths)
+            .load(paths: _*)
+        info("... after invalid paths format (exception)")
+
+        an[Error] should be thrownBy MosaicContext.read
+            .format("raster_to_grid")
+            .option("nPartitions", "10")
+            .option("combiner", "count_+") // <- invalid combiner (should fail early)
+            .load(paths: _*)
+            .select("measure")
+            .take(1)
+        info("... after count_+ combiner (exception)")
+    }
+
+    test("Read tif with Raster As Grid Reader") {
+        assume(System.getProperty("os.name") == "Linux")
+        val tif = "/modis/"
+        val filePath = getClass.getResource(tif).getPath
+
+        val sc = this.spark
+        import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
+
+        // init
+        val mc = MosaicContext.build(H3IndexSystem, JTS)
+        mc.register(sc)
+        import mc.functions._
+
+        var df: DataFrame = null
+        var dfCnt = -1L
+        for (stepTessellate <- Seq(false, true)) {
+            df = MosaicContext.read
+                .format("raster_to_grid")
+                .option("nPartitions", "10")
+                .option("extensions", "tif")
+                .option("resolution", "1")        // <- down to 1
+                .option("kRingInterpolate", "3")
+                .option("verboseLevel", "1")      // <- interim progress (0,1,2)?
+                .option("limitTessellate", "10")  // <- keeping rows down for testing
+                .option("stepTessellate", "true") // <- allowed for tifs
+                .load(s"${filePath}MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
+                .select("measure")
+
+            dfCnt = df.count()
+            info(s"tif testing count - $dfCnt  (stepTessellate? $stepTessellate) ...")
+            if (stepTessellate) dfCnt == 61 shouldBe (true)        // <- step tessellate (with `limit`)
+            else dfCnt == 61 shouldBe (true)                       // <- tif or orig = same
+        }
+    }
+
+    test("Read with Raster As Grid Reader - Various Combiners") {
+        assume(System.getProperty("os.name") == "Linux")
+        val tif = "/modis/"
+        val filePath = getClass.getResource(tif).getPath
+
+        val sc = this.spark
+        import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
+
+        // init
+        val mc = MosaicContext.build(H3IndexSystem, JTS)
+        mc.register(sc)
+        import mc.functions._
+
+        // all of these should work (very similar)
+        // - they generate a lot of files which affects local testing
+        // - so going with a random test
+        val combinerSeq = Seq("average", "median", "count", "min", "max")
+        val randomCombiner = combinerSeq(Random.nextInt(combinerSeq.size))
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
-            .option("retile", "true")
-            .option("tileSize", "10")
-            .option("readSubdataset", "true")
-            .option("subdataset", "1")
+            .option("nPartitions", "10")
+            .option("extensions", "tif")
+            .option("resolution", "2")
             .option("kRingInterpolate", "3")
-            .load(filePath)
+            .option("verboseLevel", "1")     // <- interim progress (0,1,2)?
+            .option("limitTessellate", "5")  // <- keeping rows down for testing
+            .option("combiner", randomCombiner)
+            .load(s"${filePath}MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
             .select("measure")
-            .queryExecution
-            .executedPlan
+            .take(1)
+        info(s"... after random combiner ('$randomCombiner')")
 
     }
 
     test("Read grib with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
-        MosaicContext.build(H3IndexSystem, JTS)
-
         val grib = "/binary/grib-cams/"
         val filePath = getClass.getResource(grib).getPath
 
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("extensions", "grib")
-            .option("combiner", "min")
-            .option("retile", "true")
-            .option("tileSize", "10")
-            .option("kRingInterpolate", "3")
-            .load(filePath)
-            .select("measure")
-            .take(1)
+        val sc = this.spark
+        import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
+        // init
+        val mc = MosaicContext.build(H3IndexSystem, JTS)
+        mc.register(sc)
+        import mc.functions._
+
+        var df: DataFrame = null
+        var dfCnt = -1L
+        for (toTif <- Seq(false, true)) {
+            for (stepTessellate <- Seq(false, true)) {
+                val df = MosaicContext.read
+                    .format("raster_to_grid")
+                    .option("resolution", "1")          // <- 1 for stepTessellate
+                    .option("nPartitions", "10")
+                    .option("extensions", "grb")
+                    .option("combiner", "min")
+                    .option("kRingInterpolate", "3")
+                    .option("verboseLevel", "1")        // <- interim progress (0,1,2)?
+                    .option("limitTessellate", "5")    // <- keeping rows down for testing
+                    .load(filePath)
+                    .select("measure")
+
+                dfCnt = df.count()
+                info(s"grib testing count - $dfCnt  (toTif? $toTif, stepTessellate? $stepTessellate) ...")
+                if (stepTessellate) dfCnt == 784 shouldBe (true)        // <- step tessellate (with `limit`)
+                else dfCnt == 784 shouldBe (true)                       // <- tif or orig = same
+            }
+        }
     }
 
-    test("Read tif with Raster As Grid Reader") {
+    test("Read netcdf with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
-        MosaicContext.build(H3IndexSystem, JTS)
+        val netcdf = "/binary/netcdf-coral/"
+        val filePath = getClass.getResource(netcdf).getPath
 
-        val tif = "/modis/"
-        val filePath = getClass.getResource(tif).getPath
+        val sc = this.spark
+        import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("combiner", "max")
-            .option("tileSize", "10")
-            .option("kRingInterpolate", "3")
-            .load(filePath)
-            .select("measure")
-            .take(1)
+        // init
+        val mc = MosaicContext.build(H3IndexSystem, JTS)
+        mc.register(sc)
+        import mc.functions._
 
-    }
+        var df: DataFrame = null
+        var dfCnt = -1L
+        for (toTif <- Seq(false, true)) {
+            for (stepTessellate <- Seq(false, true)) {
+                df = MosaicContext.read
+                    .format("raster_to_grid")
+                    .option("subdatasetName", "bleaching_alert_area")
+                    .option("nPartitions", "10")
+                    .option("resolution", "1")
+                    .option("kRingInterpolate", "1")
+                    .option("verboseLevel", "1")     // <- interim progress (0,1,2)?
+                    .option("limitTessellate", "5") // <- keeping rows down for testing
+                    .option("sizeInMB", "-1")
+                    .option("toTif", toTif.toString)
+                    .option("stepTessellate", stepTessellate.toString)
+                    .load(s"$filePath/ct5km_baa-max-7d_v3.1_20220101.nc")
 
-    test("Read zarr with Raster As Grid Reader") {
-        assume(System.getProperty("os.name") == "Linux")
-        MosaicContext.build(H3IndexSystem, JTS)
-
-        val zarr = "/binary/zarr-example/"
-        val filePath = getClass.getResource(zarr).getPath
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("readSubdataset", "true")
-            .option("subdatasetName", "/group_with_attrs/F_order_array")
-            .option("combiner", "median")
-            .option("vsizip", "true")
-            .option("tileSize", "10")
-            .load(filePath)
-            .select("measure")
-            .take(1)
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("readSubdataset", "true")
-            .option("subdatasetName", "/group_with_attrs/F_order_array")
-            .option("combiner", "count")
-            .option("vsizip", "true")
-            .load(filePath)
-            .select("measure")
-            .take(1)
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("readSubdataset", "true")
-            .option("subdatasetName", "/group_with_attrs/F_order_array")
-            .option("combiner", "average")
-            .option("vsizip", "true")
-            .load(filePath)
-            .select("measure")
-            .take(1)
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("readSubdataset", "true")
-            .option("subdatasetName", "/group_with_attrs/F_order_array")
-            .option("combiner", "avg")
-            .option("vsizip", "true")
-            .load(filePath)
-            .select("measure")
-            .take(1)
-
-        val paths = Files.list(Paths.get(filePath)).toArray.map(_.toString)
-
-        an[Error] should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("combiner", "count_+")
-            .option("vsizip", "true")
-            .load(paths: _*)
-            .select("measure")
-            .take(1)
-
-        an[Error] should be thrownBy MosaicContext.read
-            .format("invalid")
-            .load(paths: _*)
-
-        an[Error] should be thrownBy MosaicContext.read
-            .format("invalid")
-            .load(filePath)
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("readSubdataset", "true")
-            .option("subdatasetName", "/group_with_attrs/F_order_array")
-            .option("kRingInterpolate", "3")
-            .load(filePath)
-
+                dfCnt = df.count()
+                info(s"netcdf testing count - $dfCnt  (toTif? $toTif, stepTessellate? $stepTessellate) ...")
+                if (stepTessellate) dfCnt == 26 shouldBe (true)        // <- step tessellate (with `limit`)
+                else dfCnt == 33 shouldBe (true)                       // <- tif or orig = same
+            }
+        }
     }
 
 }

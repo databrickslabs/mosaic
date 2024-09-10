@@ -1,19 +1,21 @@
 package com.databricks.labs.mosaic.core.raster.operator.retile
 
-import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
 import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.core.types.model.RasterTile
+import com.databricks.labs.mosaic.functions.ExprConfig
+import org.apache.spark.sql.types.{DataType, StringType}
 
 /** ReTile is a helper object for retiling rasters. */
 object ReTile {
 
+    val tileDataType: DataType = StringType // always use checkpoint
+
     /**
-      * Retiles a raster into tiles. Empty tiles are discarded. The tile size is
+      * Retiles a tile into tiles. Empty tiles are discarded. The tile size is
       * specified by the user via the tileWidth and tileHeight parameters.
       *
       * @param tile
-      *   The raster to retile.
+      *   The tile to retile.
       * @param tileWidth
       *   The width of the tiles.
       * @param tileHeight
@@ -22,11 +24,13 @@ object ReTile {
       *   A sequence of MosaicRasterTile objects.
       */
     def reTile(
-        tile: MosaicRasterTile,
+        tile: RasterTile,
         tileWidth: Int,
-        tileHeight: Int
-    ): Seq[MosaicRasterTile] = {
-        val raster = tile.getRaster
+        tileHeight: Int,
+        exprConfigOpt: Option[ExprConfig]
+    ): Seq[RasterTile] = {
+
+        val raster = tile.raster
         val (xR, yR) = raster.getDimensions
         val xTiles = Math.ceil(xR / tileWidth).toInt
         val yTiles = Math.ceil(yR / tileHeight).toInt
@@ -37,29 +41,28 @@ object ReTile {
             val xOffset = if (xMin + tileWidth > xR) xR - xMin else tileWidth
             val yOffset = if (yMin + tileHeight > yR) yR - yMin else tileHeight
 
-            val fileExtension = raster.getRasterFileExtension
-            val rasterPath = PathUtils.createTmpFilePath(fileExtension)
+            val rasterPath = raster.createTmpFileFromDriver(exprConfigOpt) // <- no mosaic config
             val outOptions = raster.getWriteOptions
 
             val result = GDALTranslate.executeTranslate(
-              rasterPath,
-              raster,
-              command = s"gdal_translate -srcwin $xMin $yMin $xOffset $yOffset",
-                outOptions
-            )
+                rasterPath,
+                raster,
+                command = s"gdal_translate -srcwin $xMin $yMin $xOffset $yOffset",
+                outOptions,
+                exprConfigOpt
+            ).tryInitAndHydrate() // <- required
 
-            val isEmpty = result.isEmpty
-
-            if (isEmpty) dispose(result)
-
-            (isEmpty, result)
-
+            if (!result.isEmpty) {
+                (true, result)
+            } else {
+                result.flushAndDestroy() // destroy inline for performance
+                (false, result) // empty result
+            }
         }
 
-        val (_, valid) = tiles.partition(_._1)
+        val (result, invalid) = tiles.partition(_._1) // true goes to result
 
-        valid.map(t => MosaicRasterTile(null, t._2))
-
+        result.map(t => RasterTile(null, t._2, tileDataType)) // return valid tiles
     }
 
 }

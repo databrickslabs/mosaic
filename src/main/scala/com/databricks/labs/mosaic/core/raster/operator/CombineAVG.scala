@@ -1,24 +1,26 @@
 package com.databricks.labs.mosaic.core.raster.operator
 
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
+import com.databricks.labs.mosaic.core.raster.gdal.RasterGDAL
 import com.databricks.labs.mosaic.core.raster.operator.pixel.PixelCombineRasters
+import com.databricks.labs.mosaic.functions.ExprConfig
 
 /** CombineAVG is a helper object for combining rasters using average. */
 object CombineAVG {
 
     /**
-      * Creates a new raster using average of input rasters. The average is
+      * Creates a new tile using average of input rasters. The average is
       * computed as (sum of all rasters) / (number of rasters). It is applied to
       * all bands of the input rasters. Please note the data type of the output
-      * raster is double.
+      * tile is double.
       *
       * @param rasters
       *   The rasters to compute result for.
-      *
+      * @param exprConfigOpt
+      *   Option [[ExprConfig]]
       * @return
-      *   A new raster with average of input rasters.
+      *   A new tile with average of input rasters.
       */
-    def compute(rasters: Seq[MosaicRasterGDAL]): MosaicRasterGDAL = {
+    def compute(rasters: Seq[RasterGDAL], exprConfigOpt: Option[ExprConfig]): RasterGDAL = {
 
         val pythonFunc = """
                            |import numpy as np
@@ -32,7 +34,7 @@ object CombineAVG {
                            |    np.divide(pixel_sum, div, out=out_ar, casting='unsafe')
                            |    np.clip(out_ar, stacked_array.min(), stacked_array.max(), out=out_ar)
                            |""".stripMargin
-        PixelCombineRasters.combine(rasters, pythonFunc, "average")
+        PixelCombineRasters.combine(rasters, pythonFunc, "average", exprConfigOpt)
     }
 
 }

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# e.g. call `GDAL_VERSION=3.4.1 LIBPROJ_VERSION=7.1.0 SPARK_VERSION=3.4.1 CORES=4 ./build`
+
 set -e
 
 sed -e "s/%%GDAL_VERSION%%/$GDAL_VERSION/" \

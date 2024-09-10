@@ -10,18 +10,22 @@ trait RST_FromFileBehaviors extends QueryTest {
 
     // noinspection MapGetGet
     def behaviors(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("ERROR")
-        val mc = MosaicContext.build(indexSystem, geometryAPI)
-        mc.register()
-        val sc = spark
-        import mc.functions._
+        val sc = this.spark
         import sc.implicits._
+        sc.sparkContext.setLogLevel("ERROR")
 
-        val rastersInMemory = spark.read
+        // init
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register(sc)
+        import mc.functions._
+
+        val rasterDf = spark.read
             .format("binaryFile")
+            .option("pathGlobFilter", "*.TIF")
             .load("src/test/resources/modis")
+            .drop("content")
 
-        val gridTiles = rastersInMemory
+        val gridTiles = rasterDf
             .withColumn("tile", rst_fromfile($"path"))
             .withColumn("bbox", rst_boundingbox($"tile"))
             .withColumn("cent", st_centroid($"bbox"))
@@ -35,7 +39,7 @@ trait RST_FromFileBehaviors extends QueryTest {
 
         gridTiles.forall(identity) should be(true)
 
-        rastersInMemory.createOrReplaceTempView("source")
+        rasterDf.createOrReplaceTempView("source")
 
         val gridTilesSQL = spark
             .sql("""
