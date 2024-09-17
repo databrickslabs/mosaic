@@ -72,7 +72,7 @@ object FileUtils {
                     //scalastyle:on println
                     s"sudo rm -f $filePath" ! procLogger
                 }
-                err.length() == 0
+                err.length == 0
             }
     }
 

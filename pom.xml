@@ -254,10 +254,10 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <scala.version>2.12.10</scala.version>
+                <scala.version>2.12.15</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.4.1</spark.version>
-                <mosaic.version>0.4.3</mosaic.version>
+                <spark.version>3.5.0</spark.version>
+                <mosaic.version>0.5.0</mosaic.version>
             </properties>
             <build>
                 <plugins>
@@ -286,13 +286,12 @@
             </build>
         </profile>
         <profile>
-            <!-- local testing `mvn test -PskipScoverage -DskipTests=false -Dsuite=...` -->
             <id>skipScoverage</id>
             <properties>
-                <scala.version>2.12.10</scala.version>
+                <scala.version>2.12.15</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.4.1</spark.version>
-                <mosaic.version>0.4.3</mosaic.version>
+                <spark.version>3.5.0</spark.version>
+                <mosaic.version>0.5.0</mosaic.version>
                 <maven.compiler.source>1.8</maven.compiler.source>
                 <maven.compiler.target>1.8</maven.compiler.target>
             </properties>

@@ -211,7 +211,7 @@ object GDAL extends RasterTransform {
      *     bytes.
      *  - 0.4.2 - don't delete any fuse locations.
      */
-    @deprecated("0.4.3 recommend to let CleanUpManager handle")
+    @deprecated("spatial-utils series recommend to let CleanUpManager handle")
     def safeCleanUpRasterPath(aPath: String, raster: RasterGDAL, allowThisPathDelete: Boolean, uriDeepCheck: Boolean): Unit = {
         // (1) uri part
         val uriGdalOpt = PathUtils.parseGdalUriOpt(aPath, uriDeepCheck)
@@ -288,7 +288,7 @@ object GDAL extends RasterTransform {
                         val procLogger = ProcessLogger(_ => (), err append _)
                         if (keepRoot) s"${sudoToken}rm -rf $dir/*" ! procLogger
                         else s"${sudoToken}rm -rf $dir" ! procLogger
-                        if (err.length() > 0) Some(err.toString())
+                        if (err.length > 0) Some(err.toString)
                         else None
                     case age if age > 0  =>
                         FileUtils.deleteRecursivelyOlderThan(dirPath, age, keepRoot = keepRoot)

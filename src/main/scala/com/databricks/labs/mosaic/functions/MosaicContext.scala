@@ -1081,7 +1081,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
 object MosaicContext extends Logging {
 
-    val mosaicVersion: String = "0.4.3"
+    val mosaicVersion: String = "0.5.0"
     var _tmpDir: String = ""
     var _tmpPrefix: String = ""
 
@@ -1179,10 +1179,10 @@ object MosaicContext extends Logging {
               && !spark.conf.getAll.exists(_._1.startsWith("spark.databricks.clusterUsageTags."))
             )
 
-        if (dbrMajor != 13 && !isTest) {
+        if (dbrMajor != 14 && !isTest) {
             val msg = """|DEPRECATION ERROR:
-                         |    Mosaic v0.4.x series only supports Databricks Runtime 13.
-                         |    You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.""".stripMargin
+                         |    Mosaic v0.5.x series only supports Databricks Runtime 14.
+                         |    You can specify `%pip install 'databricks-mosaic<0.5,>=0.4'` for DBR < 14.""".stripMargin
 
             logError(msg)
             //scalastyle:off println
@@ -1196,7 +1196,7 @@ object MosaicContext extends Logging {
                          |  Please use a Databricks:
                          |      - Photon-enabled Runtime for performance benefits
                          |      - Runtime ML for spatial AI benefits
-                         |  Mosaic 0.4.x series restricts executing this cluster.""".stripMargin
+                         |  Mosaic 0.5.x series restricts executing this cluster.""".stripMargin
             logError(msg)
             //scalastyle:off println
             println(msg)

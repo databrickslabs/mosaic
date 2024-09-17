@@ -1,4 +1,7 @@
-from pyspark.sql.functions import _to_java_column, col
+from pyspark.sql.functions import col
+# TODO 3.5.0 `_to_java_column` only under column
+# from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
+from pyspark.sql.column import _to_java_column as pyspark_to_java_column
 
 from .context import MosaicContext, MosaicLibraryHandler
 from .utils import SparkTestCase
@@ -33,9 +36,9 @@ class TestMosaicContext(SparkTestCase):
             .withColumn("lon", col("id").cast("double"))
         )
         operator_1 = context.invoke_function(
-            "st_point", _to_java_column("lon"), _to_java_column("lat")
+            "st_point", pyspark_to_java_column("lon"), pyspark_to_java_column("lat")
         )
-        operator_2 = context.invoke_function("st_astext", _to_java_column("points"))
+        operator_2 = context.invoke_function("st_astext", pyspark_to_java_column("points"))
         result = (
             df.withColumn("points", operator_1)
             .withColumn("points", operator_2)
