@@ -1,0 +1,32 @@
+[project]
+name = "spatial_utils"
+version = "0.0.1"
+authors = [
+  { name="Michael Johns", email="mjohns@databricks.com" },
+]
+description = "Databricks Labs Spatial-Utils"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "geopandas <0.14.4,>=0.14",
+    "h3 <4.0,>=3.7",
+    "ipython <8.15,>=7.4.2",
+    "keplergl == 0.3.2",
+    "numpy <2.0,>=1.23"
+]
+
+[build-system]
+requires = [
+    "setuptools >= 61.0",
+    "pyspark <4.0,>=3.5"
+]
+build-backend = "setuptools.build_meta"
+
+[project.urls]
+Homepage = "https://github.com/databrickslabs/mosaic"
+Issues = "https://github.com/databrickslabs/mosaic/issues"

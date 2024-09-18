@@ -1,0 +1,6 @@
+/src/spatial_utils.egg-info/
+/build/
+/dist/
+/.venv/
+/.idea/
+/scripts/dev/upload-wheel.sh

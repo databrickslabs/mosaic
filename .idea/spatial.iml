@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src/spatial" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/spatial/grid" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/spatial/model" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/spatial/raster" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/spatial/uc" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/spatial/vector" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/spatial/viz" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
+      <excludeFolder url="file://$MODULE_DIR$/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/src/spatial_utils.egg-info" />
+    </content>
+    <orderEntry type="jdk" jdkName="Python 3.10 (spatial_utils) (2)" jdkType="Python SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
