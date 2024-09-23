@@ -134,7 +134,7 @@ test_that ("triangulation and interpolation functions behave as intended", {
     mutate(breaklines = array("LINESTRING EMPTY"))
 
   triangulation_sdf <- sdf %>%
-    mutate(triangles = st_triangulate(masspoints, breaklines, as.double(0.01)))
+    mutate(triangles = st_triangulate(masspoints, breaklines, as.double(0.00), as.double(0.01)))
 
   expect_equal(sdf_nrow(triangulation_sdf), 2)
 
@@ -152,6 +152,7 @@ test_that ("triangulation and interpolation functions behave as intended", {
       interpolated = st_interpolateelevation(
         masspoints,
         breaklines,
+        as.double(0.0),
         as.double(0.01),
         origin,
         xWidth,

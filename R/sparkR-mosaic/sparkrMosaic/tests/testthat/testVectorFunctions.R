@@ -109,7 +109,7 @@ sdf <- createDataFrame(
 
 sdf <- agg(groupBy(sdf), masspoints = collect_list(column("wkt")))
 sdf <- withColumn(sdf, "breaklines", expr("array('LINESTRING EMPTY')"))
-triangulation_sdf <- withColumn(sdf, "triangles", st_triangulate(column("masspoints"), column("breaklines"), lit(0.01)))
+triangulation_sdf <- withColumn(sdf, "triangles", st_triangulate(column("masspoints"), column("breaklines"), lit(0.0), lit(0.01)))
 cache(triangulation_sdf)
 expect_equal(SparkR::count(triangulation_sdf), 2)
 expected <- c("POLYGON Z((0 2 2, 2 1 0, 1 3 3, 0 2 2))", "POLYGON Z((1 3 3, 2 1 0, 3 2 1, 1 3 3))")
@@ -124,6 +124,7 @@ interpolation_sdf <- withColumn(interpolation_sdf, "ySize", lit(0.1))
 interpolation_sdf <- withColumn(interpolation_sdf, "interpolated", st_interpolateelevation(
   column("masspoints"),
   column("breaklines"),
+  lit(0.0),
   lit(0.01),
   column("origin"),
   column("xWidth"),

@@ -7,7 +7,6 @@ from .spark_test_case import SparkTestCase
 
 
 class MosaicTestCase(SparkTestCase):
-
     def setUp(self) -> None:
         return super().setUp()
 

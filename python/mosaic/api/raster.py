@@ -221,7 +221,8 @@ def rst_derivedband(
 def rst_dtmfromgeoms(
     points_array: ColumnOrName,
     lines_array: ColumnOrName,
-    tol: ColumnOrName,
+    merge_tolerance: ColumnOrName,
+    snap_tolerance: ColumnOrName,
     origin: ColumnOrName,
     x_width: ColumnOrName,
     y_width: ColumnOrName,
@@ -247,8 +248,10 @@ def rst_dtmfromgeoms(
         An array of mass points including Z-values.
     lines_array : Column
         An array of lines that are used as constraints during the triangulation process.
-    tol : Column
-        A snapping tolerance used to coalesce points in close proximity to each other.
+    merge_tolerance : Column
+        A tolerance used to coalesce points in close proximity to each other before performing triangulation.
+    snap_tolerance : Column
+        A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
     origin : Column
         The bottom-left corner of the grid. Use a negative value for `y_size` if you wish to supply a top-left origin.
     x_width : Column
@@ -271,7 +274,8 @@ def rst_dtmfromgeoms(
         "rst_dtmfromgeoms",
         pyspark_to_java_column(points_array),
         pyspark_to_java_column(lines_array),
-        pyspark_to_java_column(tol),
+        pyspark_to_java_column(merge_tolerance),
+        pyspark_to_java_column(snap_tolerance),
         pyspark_to_java_column(origin),
         pyspark_to_java_column(x_width),
         pyspark_to_java_column(y_width),

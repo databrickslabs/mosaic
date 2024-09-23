@@ -268,7 +268,8 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         )
         result = (
             points_df.crossJoin(lines_df)
-            .withColumn("tolerance", lit(0.5))
+            .withColumn("merge_tolerance", lit(0.0))
+            .withColumn("snap_tolerance", lit(0.01))
             .withColumn("origin", api.st_point(lit(348000.0), lit(462000.0)))
             .withColumn("grid_size_x", lit(1000))
             .withColumn("grid_size_y", lit(1000))
@@ -279,7 +280,8 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
                 api.rst_dtmfromgeoms(
                     "masspoints",
                     "breaklines",
-                    "tolerance",
+                    "merge_tolerance",
+                    "snap_tolerance",
                     "origin",
                     "grid_size_x",
                     "grid_size_y",
@@ -290,7 +292,8 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .drop(
                 "masspoints",
                 "breaklines",
-                "tolerance",
+                "merge_tolerance",
+                "snap_tolerance",
                 "origin",
                 "grid_size_x",
                 "grid_size_y",

@@ -50,7 +50,7 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
 
     override def getShellPoints: Seq[Seq[MosaicPointJTS]] = Seq(asSeq)
 
-    override def triangulate(breaklines: Seq[MosaicLineString], tolerance: Double): Seq[MosaicPolygon] = {
+    override def triangulate(breaklines: Seq[MosaicLineString], mergeTolerance: Double, snapTolerance: Double): Seq[MosaicPolygon] = {
         val triangulator = new ConformingDelaunayTriangulationBuilder()
         val geomFact = multiPoint.getFactory
 
@@ -59,12 +59,12 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
             val multiLineString = MosaicMultiLineStringJTS.fromSeq(breaklines)
             triangulator.setConstraints(multiLineString.getGeom)
         }
-        triangulator.setTolerance(0.0)
+        triangulator.setTolerance(mergeTolerance)
 
         val trianglesGeomCollection = triangulator.getTriangles(geomFact)
         val trianglePolygons = PolygonExtracter.getPolygons(trianglesGeomCollection).asScala.map(_.asInstanceOf[Polygon])
 
-        val postProcessedTrianglePolygons = postProcessTriangulation(trianglePolygons, MosaicMultiLineStringJTS.fromSeq(breaklines).getGeom, tolerance)
+        val postProcessedTrianglePolygons = postProcessTriangulation(trianglePolygons, MosaicMultiLineStringJTS.fromSeq(breaklines).getGeom, snapTolerance)
         postProcessedTrianglePolygons.map(MosaicPolygonJTS(_))
     }
 
@@ -98,7 +98,7 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
                         val originatingLineString = constraintLinesTree.query(new Envelope(c))
                             .iterator().asScala.toSeq
                             .map(_.asInstanceOf[LineString])
-                            .find(l => l.intersects(coordPoint.buffer(tolerance / 100)))
+                            .find(l => l.intersects(coordPoint.buffer(tolerance)))
                         originatingLineString match {
                             case Some(l) =>
                                 val indexedLine = new LengthIndexedLine(l)
@@ -113,8 +113,8 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
         )
     }
 
-    override def interpolateElevation(breaklines: Seq[MosaicLineString], gridPoints: MosaicMultiPoint, tolerance: Double): MosaicMultiPointJTS = {
-        val triangles = triangulate(breaklines, tolerance)
+    override def interpolateElevation(breaklines: Seq[MosaicLineString], gridPoints: MosaicMultiPoint, mergeTolerance: Double, snapTolerance: Double): MosaicMultiPointJTS = {
+        val triangles = triangulate(breaklines, mergeTolerance, snapTolerance)
             .asInstanceOf[Seq[MosaicPolygonJTS]]
 
         val tree = new STRtree(4)

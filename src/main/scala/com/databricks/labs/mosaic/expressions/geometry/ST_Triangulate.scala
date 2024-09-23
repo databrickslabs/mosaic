@@ -19,7 +19,8 @@ import java.util.Locale
 case class ST_Triangulate (
                               pointsArray: Expression,
                               linesArray: Expression,
-                              tolerance: Expression,
+                              mergeTolerance: Expression,
+                              snapTolerance: Expression,
                               expressionConfig: MosaicExpressionConfig
                           )
     extends CollectionGenerator
@@ -71,7 +72,10 @@ case class ST_Triangulate (
                             }
                 })
 
-        val triangles =  multiPointGeom.triangulate(linesGeom, tolerance.eval(input).asInstanceOf[Double])
+        val mergeToleranceVal = mergeTolerance.eval(input).asInstanceOf[Double]
+        val snapToleranceVal = snapTolerance.eval(input).asInstanceOf[Double]
+
+        val triangles =  multiPointGeom.triangulate(linesGeom, mergeToleranceVal, snapToleranceVal)
 
         val outputGeoms = triangles.map(
             geometryAPI.serialize(_, firstElementType)
@@ -80,10 +84,10 @@ case class ST_Triangulate (
         outputRows
     }
 
-    override def children: Seq[Expression] = Seq(pointsArray, linesArray, tolerance)
+    override def children: Seq[Expression] = Seq(pointsArray, linesArray, mergeTolerance, snapTolerance)
 
     override protected def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression =
-        copy(newChildren(0), newChildren(1), newChildren(2))
+        copy(newChildren(0), newChildren(1), newChildren(2), newChildren(3))
 }
 
 
@@ -91,12 +95,12 @@ object ST_Triangulate extends WithExpressionInfo {
 
     override def name: String = "st_triangulate"
 
-    override def usage: String = "_FUNC_(expr1, expr2, expr3) - Returns the triangulated irregular network of the points in `expr1` including `expr2` as breaklines with tolerance `expr3`."
+    override def usage: String = "_FUNC_(expr1, expr2, expr3, expr4) - Returns the triangulated irregular network of the points in `expr1` including `expr2` as breaklines with tolerance parameters `expr3` and `expr4`."
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b, c);
+          |      > SELECT _FUNC_(a, b, c, d);
           |        Point Z (...)
           |        Point Z (...)
           |        ...
@@ -104,7 +108,7 @@ object ST_Triangulate extends WithExpressionInfo {
           |  """.stripMargin
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_Triangulate](3, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[ST_Triangulate](4, expressionConfig)
     }
 
 }

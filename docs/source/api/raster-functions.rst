@@ -2,6 +2,7 @@
 Raster functions
 =================
 
+#####
 Intro
 #####
 Raster functions are available in mosaic if you have installed the optional dependency `GDAL`.

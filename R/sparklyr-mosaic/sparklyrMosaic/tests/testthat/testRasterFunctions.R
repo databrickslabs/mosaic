@@ -206,6 +206,7 @@ test_that ("a terrain model can be produced from point geometries", {
       tile = rst_dtmfromgeoms(
         masspoints,
         breaklines,
+        as.double(0.0),
         as.double(0.01),
         origin,
         xWidth,

@@ -128,7 +128,7 @@ class TestMultiPointJTS extends AnyFlatSpec {
     "MosaicMultiPointJTS" should "perform an unconstrained Delauny tringulation" in {
 
         val multiPoint = MosaicMultiPointJTS.fromWKT("MULTIPOINT Z (2 1 0, 3 2 1, 1 3 3, 0 2 2)").asInstanceOf[MosaicMultiPointJTS]
-        val triangulated = multiPoint.triangulate(Seq(emptyLineString), 0.01)
+        val triangulated = multiPoint.triangulate(Seq(emptyLineString), 0.00, 0.01)
         MosaicMultiPolygonJTS.fromSeq(triangulated).toWKT shouldBe "MULTIPOLYGON Z(((0 2 2, 2 1 0, 1 3 3, 0 2 2)), ((1 3 3, 2 1 0, 3 2 1, 1 3 3)))"
     }
 
@@ -143,7 +143,7 @@ class TestMultiPointJTS extends AnyFlatSpec {
         val multiPoint = MosaicMultiPointJTS.fromWKT("MULTIPOINT Z (2.5 1.5 0, 3.5 2.5 1, 1.5 3.5 3, 0.5 2.5 2)").asInstanceOf[MosaicMultiPointJTS]
         val origin = MosaicPointJTS.fromWKT("POINT (0 0)").asInstanceOf[MosaicPointJTS]
         val gridPoints = multiPoint.pointGrid(origin, 5, 5, 1, 1).intersection(multiPoint.convexHull).asInstanceOf[MosaicMultiPointJTS]
-        val z = multiPoint.interpolateElevation(Seq(emptyLineString), gridPoints, 0.01)
+        val z = multiPoint.interpolateElevation(Seq(emptyLineString), gridPoints, 0.00, 0.01)
         z.toWKT shouldBe "MULTIPOINT Z((1 3 2.5), (2 2 0.8333333333333334), (2 3 2.1666666666666665), (3 2 0.5))"
         z.asSeq.map(_.getZ) shouldBe Seq(2.5, 0.8333333333333334, 2.1666666666666665, 0.5)
     }

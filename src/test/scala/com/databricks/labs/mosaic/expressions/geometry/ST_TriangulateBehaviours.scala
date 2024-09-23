@@ -17,7 +17,8 @@ trait ST_TriangulateBehaviours extends QueryTest {
     val linesPath = "src/test/resources/binary/elevation/sd46_dtm_breakline.shp"
     val outputRegion = "POLYGON((348000 462000, 348000 461000, 349000 461000, 349000 462000, 348000 462000))"
     val buffer = 50.0
-    val tolerance = 1.0
+    val mergeTolerance = 0.0
+    val snapTolerance = 0.01
 
     def simpleTriangulateBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
 
@@ -38,7 +39,7 @@ trait ST_TriangulateBehaviours extends QueryTest {
             .groupBy()
             .agg(collect_list($"geom_0").as("masspoints"))
             .withColumn("breaklines", array().cast(ArrayType(StringType)))
-            .withColumn("mesh", st_triangulate($"masspoints", $"breaklines", lit(tolerance)))
+            .withColumn("mesh", st_triangulate($"masspoints", $"breaklines", lit(mergeTolerance), lit(snapTolerance)))
             .drop($"masspoints")
         noException should be thrownBy result.collect()
         result.count() shouldBe 4445
@@ -76,7 +77,7 @@ trait ST_TriangulateBehaviours extends QueryTest {
             .groupBy()
             .agg(collect_list($"geom_0").as("masspoints"))
             .crossJoin(linesDf)
-            .withColumn("mesh", st_triangulate($"masspoints", $"breaklines", lit(tolerance)))
+            .withColumn("mesh", st_triangulate($"masspoints", $"breaklines", lit(mergeTolerance), lit(snapTolerance)))
             .drop($"masspoints", $"breaklines")
 
         noException should be thrownBy result.collect()

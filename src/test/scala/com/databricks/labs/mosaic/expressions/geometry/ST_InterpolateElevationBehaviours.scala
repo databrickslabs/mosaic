@@ -20,7 +20,8 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
     val yWidth = 1000
     val xSize = 1.0
     val ySize = -1.0
-    val tolerance = 1.0
+    val mergeTolerance = 0.0
+    val snapTolerance = 0.01
     val origin = "POINT(348000 462000)"
 
     def simpleInterpolationBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
@@ -42,18 +43,19 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
             .groupBy()
             .agg(collect_list($"geom_0").as("masspoints"))
             .withColumn("breaklines", array().cast(ArrayType(StringType)))
-            .withColumn("tolerance", lit(tolerance))
+            .withColumn("mergeTolerance", lit(mergeTolerance))
+            .withColumn("snapTolerance", lit(snapTolerance))
             .withColumn("origin", st_geomfromwkt(lit(origin)))
             .withColumn("grid_size_x", lit(xWidth))
             .withColumn("grid_size_y", lit(yWidth))
             .withColumn("pixel_size_x", lit(xSize))
             .withColumn("pixel_size_y", lit(ySize))
             .withColumn("elevation", st_interpolateelevation(
-                $"masspoints", $"breaklines", $"tolerance",
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance",
                 $"origin", $"grid_size_x", $"grid_size_y",
                 $"pixel_size_x", $"pixel_size_y"))
             .drop(
-                $"masspoints", $"breaklines", $"tolerance", $"origin",
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"origin",
                 $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
             )
         noException should be thrownBy result.collect()
@@ -89,19 +91,20 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
             .groupBy()
             .agg(collect_list($"geom_0").as("masspoints"))
             .crossJoin(linesDf)
-            .withColumn("tolerance", lit(tolerance))
+            .withColumn("mergeTolerance", lit(mergeTolerance))
+            .withColumn("snapTolerance", lit(snapTolerance))
             .withColumn("origin", st_geomfromwkt(lit(origin)))
             .withColumn("grid_size_x", lit(xWidth))
             .withColumn("grid_size_y", lit(yWidth))
             .withColumn("pixel_size_x", lit(xSize))
             .withColumn("pixel_size_y", lit(ySize))
             .withColumn("interpolated_grid_point", st_interpolateelevation(
-                $"masspoints", $"breaklines", $"tolerance",
+                $"masspoints", $"breaklines",$"mergeTolerance", $"snapTolerance",
                 $"origin", $"grid_size_x", $"grid_size_y",
                 $"pixel_size_x", $"pixel_size_y"))
             .withColumn("elevation", st_z($"interpolated_grid_point"))
             .drop(
-                $"masspoints", $"breaklines", $"tolerance", $"origin",
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"origin",
                 $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
             )
             .cache()

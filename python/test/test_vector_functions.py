@@ -324,7 +324,7 @@ class TestVectorFunctions(MosaicTestCase):
         )
 
         triangulation_df = df.withColumn(
-            "triangles", api.st_triangulate("masspoints", "breaklines", lit(0.01))
+            "triangles", api.st_triangulate("masspoints", "breaklines", lit(0.0), lit(0.01))
         )
         triangulation_df.cache()
         self.assertEqual(triangulation_df.count(), 2)
@@ -347,6 +347,7 @@ class TestVectorFunctions(MosaicTestCase):
                 api.st_interpolateelevation(
                     "masspoints",
                     "breaklines",
+                    lit(0.0),
                     lit(0.01),
                     "origin",
                     "xWidth",

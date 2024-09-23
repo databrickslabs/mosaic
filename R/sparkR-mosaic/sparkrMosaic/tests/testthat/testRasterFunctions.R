@@ -163,7 +163,7 @@ sdf <- withColumn(sdf, "yWidth", lit(6L))
 sdf <- withColumn(sdf, "xSize", lit(0.1))
 sdf <- withColumn(sdf, "ySize", lit(0.1))
 sdf <- withColumn(sdf, "tile", rst_dtmfromgeoms(
-column("masspoints"), column("breaklines"), lit(0.01),
+column("masspoints"), column("breaklines"), lit(0.0), lit(0.01),
 column("origin"), column("xWidth"), column("yWidth"), column("xSize"), column("ySize"))
 )
 expect_equal(SparkR::count(sdf), 1)

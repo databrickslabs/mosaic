@@ -25,20 +25,24 @@ trait MosaicMultiPoint extends MosaicGeometry {
      * Triangulates this MultiPoint geometry with optional breaklines.
      *
      * @param breaklines The breaklines to use for the triangulation.
-     * @param tol The tolerance to use for the triangulation.
+     * @param mergeTolerance The tolerance to use to simplify the triangulation by merging nearby points.
+     * @param snapTolerance The tolerance to use for post-processing the results of the triangulation (snapping
+     *                      newly created points against their originating breaklines.
      * @return A sequence of MosaicPolygon geometries.
      */
-    def triangulate(breaklines: Seq[MosaicLineString], tol: Double): Seq[MosaicPolygon]
+    def triangulate(breaklines: Seq[MosaicLineString], mergeTolerance: Double, snapTolerance: Double): Seq[MosaicPolygon]
 
     /**
      * Interpolates the elevation of the grid points using the breaklines.
      *
      * @param breaklines The breaklines to use for the interpolation.
      * @param gridPoints The grid points to interpolate the elevation for.
-     * @param tolerance The tolerance to use for the interpolation.
+     * @param mergeTolerance The tolerance to use to simplify the triangulation by merging nearby points.
+     * @param snapTolerance The tolerance to use for post-processing the results of the triangulation (snapping
+     *                      newly created points against their originating breaklines.
      * @return A MosaicMultiPoint geometry with the interpolated elevation.
      */
-    def interpolateElevation(breaklines: Seq[MosaicLineString], gridPoints: MosaicMultiPoint, tolerance: Double) : MosaicMultiPoint
+    def interpolateElevation(breaklines: Seq[MosaicLineString], gridPoints: MosaicMultiPoint, mergeTolerance: Double, snapTolerance: Double) : MosaicMultiPoint
 
     /**
      * Creates a regular point grid from the origin point with the specified number of cells and cell sizes.

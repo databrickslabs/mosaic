@@ -618,7 +618,10 @@ def st_haversine(
 
 
 def st_triangulate(
-    points_array: ColumnOrName, lines_array: ColumnOrName, tol: ColumnOrName
+    points_array: ColumnOrName,
+    lines_array: ColumnOrName,
+    merge_tolerance: ColumnOrName,
+    snap_tolerance: ColumnOrName,
 ) -> Column:
     """
     Generate a triangulated surface mesh from the set of points `points_array` and constraint lines `lines_array`.
@@ -634,8 +637,10 @@ def st_triangulate(
         An array of mass points including Z-values.
     lines_array : Column
         An array of lines that are used as constraints during the triangulation process.
-    tol : Column
-        A snapping tolerance used to coalesce points in close proximity to each other.
+    merge_tolerance : Column
+        A tolerance used to coalesce points in close proximity to each other before performing triangulation.
+    snap_tolerance : Column
+        A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
 
     Returns
     -------
@@ -645,14 +650,16 @@ def st_triangulate(
         "st_triangulate",
         pyspark_to_java_column(points_array),
         pyspark_to_java_column(lines_array),
-        pyspark_to_java_column(tol),
+        pyspark_to_java_column(merge_tolerance),
+        pyspark_to_java_column(snap_tolerance),
     )
 
 
 def st_interpolateelevation(
     points_array: ColumnOrName,
     lines_array: ColumnOrName,
-    tol: ColumnOrName,
+    merge_tolerance: ColumnOrName,
+    snap_tolerance: ColumnOrName,
     origin: ColumnOrName,
     x_width: ColumnOrName,
     y_width: ColumnOrName,
@@ -678,8 +685,10 @@ def st_interpolateelevation(
         An array of mass points including Z-values.
     lines_array : Column
         An array of lines that are used as constraints during the triangulation process.
-    tol : Column
-        A snapping tolerance used to coalesce points in close proximity to each other.
+    merge_tolerance : Column
+        A tolerance used to coalesce points in close proximity to each other before performing triangulation.
+    snap_tolerance : Column
+        A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
     origin : Column
         The bottom-left corner of the grid. Use a negative value for `y_size` if you wish to supply a top-left origin.
     x_width : Column
@@ -701,7 +710,8 @@ def st_interpolateelevation(
         "st_interpolateelevation",
         pyspark_to_java_column(points_array),
         pyspark_to_java_column(lines_array),
-        pyspark_to_java_column(tol),
+        pyspark_to_java_column(merge_tolerance),
+        pyspark_to_java_column(snap_tolerance),
         pyspark_to_java_column(origin),
         pyspark_to_java_column(x_width),
         pyspark_to_java_column(y_width),

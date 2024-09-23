@@ -12,6 +12,8 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
 
     val pointsPath = "src/test/resources/binary/elevation/sd46_dtm_point.shp"
     val linesPath = "src/test/resources/binary/elevation/sd46_dtm_breakline.shp"
+    val mergeTolerance = 0.0
+    val snapTolerance = 0.01
 
     def simpleRasterizeTest(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
 
@@ -31,18 +33,19 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
             .groupBy()
             .agg(collect_list($"geom_0").as("masspoints"))
             .withColumn("breaklines", array().cast(ArrayType(StringType)))
-            .withColumn("tolerance", lit(1.0))
+            .withColumn("mergeTolerance", lit(mergeTolerance))
+            .withColumn("snapTolerance", lit(snapTolerance))
             .withColumn("origin", st_point(lit(348000.0), lit(462000.0)))
             .withColumn("grid_size_x", lit(1000))
             .withColumn("grid_size_y", lit(1000))
             .withColumn("pixel_size_x", lit(1.0))
             .withColumn("pixel_size_y", lit(-1.0))
             .withColumn("tile", rst_dtmfromgeoms(
-                $"masspoints", $"breaklines", $"tolerance",
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance",
                 $"origin", $"grid_size_x", $"grid_size_y",
                 $"pixel_size_x", $"pixel_size_y"))
             .drop(
-                $"masspoints", $"breaklines", $"tolerance", $"origin",
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"origin",
                 $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
             ).cache()
         noException should be thrownBy result.collect()
@@ -83,21 +86,23 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
             .groupBy()
             .agg(collect_list($"geom_0").as("masspoints"))
             .crossJoin(linesDf)
-            .withColumn("tolerance", lit(0.5))
+            .withColumn("mergeTolerance", lit(mergeTolerance))
+            .withColumn("snapTolerance", lit(snapTolerance))
             .withColumn("origin", st_point(lit(348000.0), lit(462000.0)))
             .withColumn("grid_size_x", lit(1000))
             .withColumn("grid_size_y", lit(1000))
             .withColumn("pixel_size_x", lit(1.0))
             .withColumn("pixel_size_y", lit(-1.0))
             .withColumn("tile", rst_dtmfromgeoms(
-                $"masspoints", $"breaklines", $"tolerance",
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance",
                 $"origin", $"grid_size_x", $"grid_size_y",
                 $"pixel_size_x", $"pixel_size_y"))
             .drop(
-                $"masspoints", $"breaklines", $"tolerance", $"origin",
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"origin",
                 $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
             ).cache()
         noException should be thrownBy result.collect()
+        result.select($"tile").show(truncate = false)
     }
 
     def multiRegionTriangulationRasterizeTest(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
@@ -151,17 +156,18 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
 
         val result = inputsDf
             .repartition(sc.sparkContext.defaultParallelism)
-            .withColumn("tolerance", lit(0.5))
+            .withColumn("mergeTolerance", lit(mergeTolerance))
+            .withColumn("snapTolerance", lit(snapTolerance))
             .withColumn("grid_size_x", lit(1000))
             .withColumn("grid_size_y", lit(1000))
             .withColumn("pixel_size_x", lit(1.0))
             .withColumn("pixel_size_y", lit(-1.0))
             .withColumn("tile", rst_dtmfromgeoms(
-                $"masspoints", $"breaklines", $"tolerance",
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance",
                 $"raster_origin", $"grid_size_x", $"grid_size_y",
                 $"pixel_size_x", $"pixel_size_y"))
             .drop(
-                $"masspoints", $"breaklines", $"tolerance", $"raster_origin",
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"raster_origin",
                 $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
             ).cache()
         noException should be thrownBy result.collect()

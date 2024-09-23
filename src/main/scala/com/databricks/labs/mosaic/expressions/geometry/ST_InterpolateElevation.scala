@@ -19,7 +19,8 @@ import java.util.Locale
 case class ST_InterpolateElevation(
     pointsArray: Expression,
     linesArray: Expression,
-    tolerance: Expression,
+    mergeTolerance: Expression,
+    snapTolerance: Expression,
     gridOrigin: Expression,
     gridWidthX: Expression,
     gridWidthY: Expression,
@@ -34,7 +35,7 @@ case class ST_InterpolateElevation(
     override def elementSchema: StructType = StructType(Seq(StructField("geom", firstElementType)))
 
     def firstElementType: DataType = pointsArray.dataType.asInstanceOf[ArrayType].elementType
-    def secondElementType: DataType = pointsArray.dataType.asInstanceOf[ArrayType].elementType
+    def secondElementType: DataType = linesArray.dataType.asInstanceOf[ArrayType].elementType
 
     def getGeometryAPI(expressionConfig: MosaicExpressionConfig): GeometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
 
@@ -75,12 +76,13 @@ case class ST_InterpolateElevation(
         val gridWidthYValue = gridWidthY.eval(input).asInstanceOf[Int]
         val gridSizeXValue = gridSizeX.eval(input).asInstanceOf[Double]
         val gridSizeYValue = gridSizeY.eval(input).asInstanceOf[Double]
-        val toleranceValue = tolerance.eval(input).asInstanceOf[Double]
+        val mergeToleranceValue = mergeTolerance.eval(input).asInstanceOf[Double]
+        val snapToleranceValue = snapTolerance.eval(input).asInstanceOf[Double]
 
         val gridPoints = multiPointGeom.pointGrid(origin, gridWidthXValue, gridWidthYValue, gridSizeXValue, gridSizeYValue)
 
         val interpolatedPoints = multiPointGeom
-            .interpolateElevation(linesGeom, gridPoints, toleranceValue)
+            .interpolateElevation(linesGeom, gridPoints, mergeToleranceValue, snapToleranceValue)
             .asSeq
 
         val serializedPoints = interpolatedPoints
@@ -92,18 +94,19 @@ case class ST_InterpolateElevation(
         outputRows
     }
 
-    override def children: Seq[Expression] = Seq(pointsArray, linesArray, tolerance, gridOrigin, gridWidthX, gridWidthY, gridSizeX, gridSizeY)
+    override def children: Seq[Expression] = Seq(pointsArray, linesArray, mergeTolerance, snapTolerance, gridOrigin, gridWidthX, gridWidthY, gridSizeX, gridSizeY)
 
     override protected def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression = {
         copy(
             pointsArray = newChildren(0),
             linesArray = newChildren(1),
-            tolerance = newChildren(2),
-            gridOrigin = newChildren(3),
-            gridWidthX = newChildren(4),
-            gridWidthY = newChildren(5),
-            gridSizeX = newChildren(6),
-            gridSizeY = newChildren(7)
+            mergeTolerance = newChildren(2),
+            snapTolerance = newChildren(3),
+            gridOrigin = newChildren(4),
+            gridWidthX = newChildren(5),
+            gridWidthY = newChildren(6),
+            gridSizeX = newChildren(7),
+            gridSizeY = newChildren(8)
         )
     }
 }
@@ -113,16 +116,16 @@ object ST_InterpolateElevation extends WithExpressionInfo {
     override def name: String = "st_interpolateelevation"
 
     override def usage: String = {
-        "_FUNC_(expr1, expr2, expr3, expr4, expr5, expr6, expr7, expr8) - Returns the interpolated heights " +
-            "of the points in the grid defined by `expr4`, `expr5`, `expr6`, `expr7` and `expr8`" +
+        "_FUNC_(expr1, expr2, expr3, expr4, expr5, expr6, expr7, expr8, expr9) - Returns the interpolated heights " +
+            "of the points in the grid defined by `expr5`, `expr6`, `expr7`, `expr8` and `expr9`" +
             "in the triangulated irregular network formed from the points in `expr1` " +
-            "including `expr2` as breaklines with tolerance `expr3`."
+            "including `expr2` as breaklines with tolerance parameters `expr3` and `expr4`."
     }
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b, c, d, e, f, g, h);
+          |      > SELECT _FUNC_(a, b, c, d, e, f, g, h, i);
           |        Point Z (...)
           |        Point Z (...)
           |        ...
@@ -131,7 +134,7 @@ object ST_InterpolateElevation extends WithExpressionInfo {
 
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[ST_InterpolateElevation](8, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[ST_InterpolateElevation](9, expressionConfig)
     }
 
 }
