@@ -8,9 +8,9 @@ import org.apache.spark.sql.adapters.Column
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
+import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DataType
 import org.apache.spark.unsafe.types.UTF8String
-import org.apache.spark.sql.functions._
 
 /**
   * SQL expression that returns the input geometry buffered by the radius.

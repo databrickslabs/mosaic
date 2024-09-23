@@ -1,8 +1,8 @@
 package com.databricks.labs.mosaic.core.crs
 
-import java.io.InputStream
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 
+import java.io.InputStream
 import scala.io.Codec
 
 /**

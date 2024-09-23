@@ -1,9 +1,9 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks.{getHexRowsDf, getWKTRowsDf}
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
+import com.databricks.labs.mosaic.test.mocks.{getHexRowsDf, getWKTRowsDf}
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext}
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions.lit
 import org.apache.spark.sql.types.StringType

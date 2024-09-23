@@ -1,8 +1,7 @@
 package com.databricks.labs.mosaic.core.types.model
 
-import org.locationtech.jts.geom.Coordinate
-
 import org.apache.spark.sql.catalyst.util.ArrayData
+import org.locationtech.jts.geom.Coordinate
 
 /**
   * A case class modeling 2D or 3D point instances. Coordinates are stored as an

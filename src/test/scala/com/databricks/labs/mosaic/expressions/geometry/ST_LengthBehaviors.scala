@@ -1,8 +1,8 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
-import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, CodeGenerator}
+import com.databricks.labs.mosaic.test.{MosaicSpatialQueryTest, mocks}
+import org.apache.spark.sql.catalyst.expressions.codegen.{CodeGenerator, CodegenContext}
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._

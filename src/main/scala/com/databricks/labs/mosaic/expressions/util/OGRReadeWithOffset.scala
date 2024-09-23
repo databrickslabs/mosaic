@@ -2,8 +2,8 @@ package com.databricks.labs.mosaic.expressions.util
 
 import com.databricks.labs.mosaic.datasource.{OGRFileFormat, Utils}
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, CollectionGenerator, Expression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, CollectionGenerator, Expression}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 

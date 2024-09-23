@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.core.types.model
 
 import com.databricks.labs.mosaic.core.types.InternalCoordType
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
-
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._

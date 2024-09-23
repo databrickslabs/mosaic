@@ -2,12 +2,12 @@ package com.databricks.labs.mosaic.datasource
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileStatus
-import org.apache.spark.sql.{QueryTest, SparkSession}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.execution.datasources.PartitionedFile
 import org.apache.spark.sql.sources.Filter
 import org.apache.spark.sql.test.SharedSparkSession
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.{QueryTest, SparkSession}
 import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.matchers.must.Matchers.{be, noException}
 

@@ -1,10 +1,7 @@
 package com.databricks.labs.mosaic.expressions.geometry
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
-import org.apache.spark.sql._
+import com.databricks.labs.mosaic.test.{MosaicSpatialQueryTest, mocks}
 import org.apache.spark.sql.functions._
 import org.scalatest.matchers.must.Matchers.contain
 import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper, noException}

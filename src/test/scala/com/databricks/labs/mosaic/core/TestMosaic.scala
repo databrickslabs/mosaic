@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.core
 
-import com.databricks.labs.mosaic.{H3, JTS}
 import com.databricks.labs.mosaic.core.index._
+import com.databricks.labs.mosaic.{H3, JTS}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers.be
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper

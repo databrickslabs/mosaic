@@ -1,10 +1,9 @@
 package com.databricks.labs.mosaic.core.geometry.multipolygon
 
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
+import org.apache.spark.sql.catalyst.InternalRow
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
-
-import org.apache.spark.sql.catalyst.InternalRow
 
 class TestMultiPolygonJTS extends AnyFlatSpec {
 

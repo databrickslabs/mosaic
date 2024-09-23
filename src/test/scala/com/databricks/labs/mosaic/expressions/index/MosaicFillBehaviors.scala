@@ -3,11 +3,10 @@ package com.databricks.labs.mosaic.expressions.index
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.{MosaicSpatialQueryTest, mocks}
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
+import com.databricks.labs.mosaic.test.{MosaicSpatialQueryTest, mocks}
 import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.functions.{size => arrayColumnSize}
+import org.apache.spark.sql.functions.{size => arrayColumnSize, _}
 import org.apache.spark.sql.types._
 import org.scalatest.matchers.should.Matchers._
 
@@ -182,8 +181,8 @@ trait MosaicFillBehaviors extends MosaicSpatialQueryTest {
         val mc = mosaicContext
         val sc = spark
         mc.register(sc)
-        import sc.implicits._
         import mc.functions._
+        import sc.implicits._
 
         val geom = Seq("POLYGON ((-3.26 52.72, -3.20 52.71, -3.21 52.75, -3.26 52.75, -3.26 52.72))").toDF("wkt")
         val geomProjected = Try(mc.getIndexSystem.crsID) match {

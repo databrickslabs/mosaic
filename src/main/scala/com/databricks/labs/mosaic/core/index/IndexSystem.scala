@@ -2,8 +2,8 @@ package com.databricks.labs.mosaic.core.index
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnum, MosaicChip}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
+import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnum, MosaicChip}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.osr.SpatialReference

@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.sql.extensions
 
-import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.MOSAIC_GDAL_NATIVE
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSessionExtensions
 

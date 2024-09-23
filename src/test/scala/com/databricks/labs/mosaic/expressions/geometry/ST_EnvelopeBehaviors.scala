@@ -13,8 +13,8 @@ trait ST_EnvelopeBehaviors extends MosaicSpatialQueryTest {
     def behavior(mc: MosaicContext): Unit = {
         val sc = spark
         mc.register(sc)
-        import sc.implicits._
         import mc.functions._
+        import sc.implicits._
 
         val input = List("POLYGON ((10 10, 20 10, 15 20, 10 10))").toDF("input_geom")
         val expected = List("POLYGON ((10 10, 20 10, 20 20, 10 20, 10 10))").toDF("result_geom")
@@ -28,8 +28,8 @@ trait ST_EnvelopeBehaviors extends MosaicSpatialQueryTest {
 
         val sc = spark
         mc.register(sc)
-        import sc.implicits._
         import mc.functions._
+        import sc.implicits._
 
         val result = mocks.getWKTRowsDf().select(st_envelope($"wkt"))
 

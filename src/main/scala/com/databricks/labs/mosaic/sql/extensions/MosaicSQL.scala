@@ -3,7 +3,6 @@ package com.databricks.labs.mosaic.sql.extensions
 import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.core.geometry.api.JTS
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
-import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSessionExtensions

@@ -1,13 +1,11 @@
 package com.databricks.labs.mosaic.sql
 
-import java.util.Locale
-
-import scala.util.Try
-
 import com.databricks.labs.mosaic.functions.MosaicContext
-
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
+
+import java.util.Locale
+import scala.util.Try
 
 object Prettifier {
 

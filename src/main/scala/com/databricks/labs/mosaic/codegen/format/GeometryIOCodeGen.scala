@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.codegen.format
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 
 trait GeometryIOCodeGen {

@@ -3,14 +3,11 @@ package com.databricks.labs.mosaic.models.knn
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, CustomIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
-import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
-import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.{be, contain, noException}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-
-import java.nio.file.Files
 
 trait SpatialKNNBehaviors { this: AnyFlatSpec =>
 
@@ -18,7 +15,6 @@ trait SpatialKNNBehaviors { this: AnyFlatSpec =>
         val mc = mosaicContext
         mc.register()
         val sc = spark
-        import sc.implicits._
 
         val (resolution, distanceThreshold) = mc.getIndexSystem match {
             case H3IndexSystem  => (3, 100.0)
@@ -78,7 +74,6 @@ trait SpatialKNNBehaviors { this: AnyFlatSpec =>
         val mc = mosaicContext
         mc.register()
         val sc = spark
-        import sc.implicits._
 
         val (resolution, distanceThreshold) = mc.getIndexSystem match {
             case H3IndexSystem  => (3, 100.0)

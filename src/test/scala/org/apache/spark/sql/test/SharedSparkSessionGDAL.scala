@@ -2,7 +2,7 @@ package org.apache.spark.sql.test
 
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.utils.FileUtils
-import com.databricks.labs.mosaic.{MOSAIC_GDAL_NATIVE, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
+import com.databricks.labs.mosaic._
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.gdal.gdal.gdal

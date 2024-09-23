@@ -2,11 +2,10 @@ package com.databricks.labs.mosaic.expressions.format
 
 import com.databricks.labs.mosaic.codegen.format.InternalTypeWrapper
 import com.databricks.labs.mosaic.core.types.JSONType
-
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
 import org.apache.spark.sql.types.{DataType, StringType}
 
 case class AsJSON(inGeometry: Expression) extends UnaryExpression with NullIntolerant {

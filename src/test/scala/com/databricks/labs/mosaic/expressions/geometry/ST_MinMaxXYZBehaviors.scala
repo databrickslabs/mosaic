@@ -2,13 +2,13 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks.getWKTRowsDf
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
+import com.databricks.labs.mosaic.test.mocks.getWKTRowsDf
+import org.apache.spark.sql.QueryTest.checkAnswer
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.expressions.codegen.CodeGenerator
 import org.apache.spark.sql.execution.WholeStageCodegenExec
 import org.apache.spark.sql.functions.col
-import org.apache.spark.sql.QueryTest.checkAnswer
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 

@@ -1,8 +1,7 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks
+import com.databricks.labs.mosaic.test.{MosaicSpatialQueryTest, mocks}
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.functions.{col, lit, struct}
 import org.apache.spark.sql.types._

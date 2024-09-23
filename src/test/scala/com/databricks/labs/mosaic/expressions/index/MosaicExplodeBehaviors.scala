@@ -1,10 +1,10 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.core.Mosaic
+import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.{mocks, MosaicSpatialQueryTest}
 import com.databricks.labs.mosaic.test.mocks.{getBoroughs, getWKTRowsDf}
+import com.databricks.labs.mosaic.test.{MosaicSpatialQueryTest, mocks}
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.functions._
@@ -415,8 +415,8 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
     def issue382(mosaicContext: MosaicContext): Unit = {
         assume(mosaicContext.getIndexSystem == H3IndexSystem)
         val sc = spark
-        import sc.implicits._
         import mosaicContext.functions._
+        import sc.implicits._
 
         val wkt = "POLYGON ((-8.522721910163417 53.40846416712235, -8.522828495418493 53.40871094834742," +
             " -8.523239522405696 53.40879676331252, -8.52334611088906 53.409043543609435," +

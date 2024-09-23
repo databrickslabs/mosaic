@@ -1,13 +1,13 @@
 package com.databricks.labs.mosaic.core.raster
 
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_TEST_MODE}
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
-import org.scalatest.matchers.should.Matchers._
 import org.gdal.gdal.{gdal => gdalJNI}
 import org.gdal.gdalconst
+import org.scalatest.matchers.should.Matchers._
 
 import scala.sys.process._
 import scala.util.Try

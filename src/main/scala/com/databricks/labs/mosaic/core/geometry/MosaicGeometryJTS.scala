@@ -14,15 +14,14 @@ import com.esotericsoftware.kryo.Kryo
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.algorithm.hull.ConcaveHull
 import org.locationtech.jts.geom.impl.CoordinateArraySequenceFactory
-import org.locationtech.jts.geom.{CoordinateSequence, Geometry, GeometryCollection, GeometryFactory}
 import org.locationtech.jts.geom.util.AffineTransformation
+import org.locationtech.jts.geom.{CoordinateSequence, Geometry, GeometryCollection, GeometryFactory}
 import org.locationtech.jts.io._
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
 import org.locationtech.jts.operation.buffer.{BufferOp, BufferParameters}
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
 
 import java.util
-import scala.collection.JavaConverters._
 
 
 abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {

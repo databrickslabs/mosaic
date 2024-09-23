@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.functions.MosaicRegistryBehaviors.mosaicContext
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.functions.{array, collect_list, explode, lit}
+import org.apache.spark.sql.functions.{array, collect_list, lit}
 import org.apache.spark.sql.types._
 import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers._

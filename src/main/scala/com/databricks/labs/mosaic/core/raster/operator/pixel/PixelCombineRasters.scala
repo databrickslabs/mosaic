@@ -3,7 +3,6 @@ package com.databricks.labs.mosaic.core.raster.operator.pixel
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
 import com.databricks.labs.mosaic.core.raster.operator.gdal.{GDALBuildVRT, GDALTranslate}
-import com.databricks.labs.mosaic.gdal.MosaicGDAL.defaultBlockSize
 import com.databricks.labs.mosaic.utils.PathUtils
 
 import java.io.File

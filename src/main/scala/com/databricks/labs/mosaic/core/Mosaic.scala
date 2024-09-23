@@ -7,11 +7,10 @@ import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineS
 import com.databricks.labs.mosaic.core.geometry.multipoint.MosaicMultiPoint
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.labs.mosaic.core.index.IndexSystem
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, MosaicChip}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
+import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, MosaicChip}
 
 import scala.annotation.tailrec
-import scala.util.{Failure, Success, Try}
 
 /**
   * Single abstracted logic for mosaic fill via [[IndexSystem]]. [[IndexSystem]]

@@ -1,11 +1,10 @@
 package com.databricks.labs.mosaic.functions.auxiliary
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.types.model.Coordinates
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-
-import org.apache.spark.sql.types.{ArrayType, BinaryType, BooleanType, DataType}
+import org.apache.spark.sql.types.BooleanType
 
 // Used for testing only
 object BadIndexSystem extends IndexSystem(BooleanType) {

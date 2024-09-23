@@ -2,8 +2,8 @@ package com.databricks.labs.mosaic.core.geometry.point
 
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
-import com.databricks.labs.mosaic.core.types.model.{Coordinates, _}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POINT
+import com.databricks.labs.mosaic.core.types.model.{Coordinates, _}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom._
 

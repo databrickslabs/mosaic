@@ -3,8 +3,8 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, QuaternaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, QuaternaryExpression}
 import org.apache.spark.sql.types.{DataType, DoubleType}
 
 case class ST_Haversine(lat1: Expression, lon1: Expression, lat2: Expression, lon2: Expression)

@@ -4,10 +4,9 @@ import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, Mo
 import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
-import com.databricks.labs.mosaic.core.raster.operator.rasterize.GDALRasterize
+import org.apache.spark.sql.catalyst.InternalRow
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
-import org.apache.spark.sql.catalyst.InternalRow
 
 //noinspection ScalaRedundantCast
 class TestMultiPointJTS extends AnyFlatSpec {

@@ -3,8 +3,8 @@ package com.databricks.labs.mosaic.core.geometry.multilinestring
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
-import com.databricks.labs.mosaic.core.types.model._
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING}
+import com.databricks.labs.mosaic.core.types.model._
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.geom._
 

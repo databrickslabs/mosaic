@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.functions.{collect_list, collect_set}
+import org.apache.spark.sql.functions.collect_list
 import org.scalatest.matchers.should.Matchers._
 
 trait RST_CombineAvgBehaviors extends QueryTest {

@@ -13,8 +13,8 @@ trait ST_UnaryUnionBehaviours extends MosaicSpatialQueryTest {
     def behavior(mc: MosaicContext): Unit = {
         val sc = spark
         mc.register(sc)
-        import sc.implicits._
         import mc.functions._
+        import sc.implicits._
 
         val input = List("MULTIPOLYGON (((10 10, 20 10, 20 20, 10 20, 10 10)), ((15 15, 25 15, 25 25, 15 25, 15 15)))").toDF("input_geom")
         val expected = List("POLYGON ((20 15, 20 10, 10 10, 10 20, 15 20, 15 25, 25 25, 25 15, 20 15))").toDF("result_geom")
@@ -28,8 +28,8 @@ trait ST_UnaryUnionBehaviours extends MosaicSpatialQueryTest {
 
         val sc = spark
         mc.register(sc)
-        import sc.implicits._
         import mc.functions._
+        import sc.implicits._
 
         val result = mocks.getWKTRowsDf().select(st_unaryunion($"wkt"))
 

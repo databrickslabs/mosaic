@@ -4,7 +4,6 @@ import com.databricks.labs.mosaic.expressions.raster
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.GenericArrayData
 import org.apache.spark.unsafe.types.UTF8String
-import org.gdal.ogr.ogr
 
 object Utils {
 

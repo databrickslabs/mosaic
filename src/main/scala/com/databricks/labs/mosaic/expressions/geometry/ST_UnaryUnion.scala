@@ -5,8 +5,8 @@ import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, Wi
 import com.databricks.labs.mosaic.expressions.geometry.base.UnaryVectorExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.expressions.codegen.CodegenContext
 import org.apache.spark.sql.types.DataType
 
 case class ST_UnaryUnion(

@@ -2,8 +2,8 @@ package com.databricks.labs.mosaic.core.index
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnum}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POLYGON}
+import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnum}
 import com.uber.h3core.H3Core
 import com.uber.h3core.util.GeoCoord
 import org.apache.spark.sql.types.LongType

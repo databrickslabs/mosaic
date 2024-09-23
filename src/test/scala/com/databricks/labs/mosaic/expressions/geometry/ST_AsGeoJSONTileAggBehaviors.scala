@@ -4,7 +4,6 @@ import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.{MosaicSpatialQueryTest, mocks}
 import org.apache.spark.sql.functions._
 import org.gdal.ogr.ogr
-import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper}
 
 trait ST_AsGeoJSONTileAggBehaviors extends MosaicSpatialQueryTest {

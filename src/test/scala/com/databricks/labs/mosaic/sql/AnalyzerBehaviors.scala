@@ -4,7 +4,6 @@ import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.{MosaicSpatialQueryTest, mocks}
 import org.scalatest.matchers.must.Matchers.{be, noException}
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 trait AnalyzerBehaviors extends MosaicSpatialQueryTest {
 

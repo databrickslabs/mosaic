@@ -1,14 +1,14 @@
 package com.databricks.labs.mosaic.functions
 
 import com.databricks.labs.mosaic.expressions.base.WithExpressionInfo
-import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, ExpressionInfo}
 import org.apache.spark.sql.catalyst.FunctionIdentifier
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, ExpressionInfo}
 
 import scala.collection.immutable
-import scala.reflect.runtime.universe
 import scala.reflect.ClassTag
+import scala.reflect.runtime.universe
 import scala.util.Try
 
 case class MosaicRegistry(registry: FunctionRegistry, database: Option[String] = None) {

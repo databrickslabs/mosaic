@@ -1,8 +1,8 @@
 package com.databricks.labs.mosaic.test
 
+import org.apache.spark.sql._
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfterAll, TestSuite}
-import org.apache.spark.sql._
 
 trait SparkSuite extends TestSuite with BeforeAndAfterAll {
 

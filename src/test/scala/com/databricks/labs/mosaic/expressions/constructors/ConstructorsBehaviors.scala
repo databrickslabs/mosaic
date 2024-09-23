@@ -1,14 +1,13 @@
 package com.databricks.labs.mosaic.expressions.constructors
 
-import scala.collection.JavaConverters._
-
 import com.databricks.labs.mosaic.functions.MosaicContext
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{Row, SparkSession}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
 
-import org.apache.spark.sql.{Row, SparkSession}
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
+import scala.collection.JavaConverters._
 
 trait ConstructorsBehaviors { this: AnyFlatSpec =>
 

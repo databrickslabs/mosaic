@@ -1,11 +1,11 @@
 package com.databricks.labs.mosaic.core.index
 
 import com.databricks.labs.mosaic.core.Mosaic.mosaicFill
-import com.databricks.labs.mosaic.core.geometry.api.{GeometryAPI, JTS}
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometryJTS
+import com.databricks.labs.mosaic.core.geometry.api.{GeometryAPI, JTS}
 import com.databricks.labs.mosaic.core.index.H3IndexSystem.indexToGeometry
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, MULTILINESTRING, MULTIPOINT, MULTIPOLYGON, POINT, POLYGON}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import com.uber.h3core.H3Core
 import org.apache.spark.sql.types.{BooleanType, LongType, StringType}
 import org.apache.spark.unsafe.types.UTF8String

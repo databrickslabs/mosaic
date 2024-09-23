@@ -2,10 +2,9 @@ package com.databricks.labs.mosaic.core.geometry.multilinestring
 
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
+import org.apache.spark.sql.catalyst.InternalRow
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
-
-import org.apache.spark.sql.catalyst.InternalRow
 
 //noinspection ScalaRedundantCast
 class TestMultiLineStringJTS extends AnyFlatSpec {

@@ -4,8 +4,8 @@ import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, Wi
 import com.databricks.labs.mosaic.expressions.raster.base.RasterToGridExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.DoubleType
 
 /** Returns the median value of the raster. */

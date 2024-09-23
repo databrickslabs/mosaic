@@ -1,16 +1,16 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import java.nio.file.Files
-
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
-import com.databricks.labs.mosaic.test.mocks.getBoroughs
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
+import com.databricks.labs.mosaic.test.mocks.getBoroughs
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.scalatest.matchers.should.Matchers._
+
+import java.nio.file.Files
 
 //noinspection ScalaDeprecation
 trait PointIndexBehaviors extends MosaicSpatialQueryTest {

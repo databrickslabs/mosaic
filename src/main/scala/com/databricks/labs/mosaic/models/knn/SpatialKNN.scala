@@ -4,9 +4,9 @@ import com.databricks.labs.mosaic.functions._
 import com.databricks.labs.mosaic.models.core.IterativeTransformer
 import com.databricks.labs.mosaic.models.util.CheckpointManager
 import org.apache.spark.internal.Logging
+import org.apache.spark.ml.Transformer
 import org.apache.spark.ml.param.{ParamMap, Params}
 import org.apache.spark.ml.util._
-import org.apache.spark.ml.Transformer
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._

@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.functions.{array, lit}
+import org.apache.spark.sql.functions.lit
 import org.scalatest.matchers.should.Matchers._
 
 trait RST_NDVIBehaviors extends QueryTest {

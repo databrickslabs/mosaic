@@ -3,10 +3,8 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.{MosaicSpatialQueryTest, mocks}
-import com.databricks.labs.mosaic.utils.SysUtils
 import org.apache.spark.sql.functions._
 import org.gdal.ogr.ogr
-import org.scalatest.matchers.must.Matchers.noException
 import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper}
 
 import java.nio.file.{Files, Paths}
