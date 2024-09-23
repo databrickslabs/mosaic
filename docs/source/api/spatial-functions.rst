@@ -1583,16 +1583,21 @@ st_transform
 st_triangulate
 **************
 
-.. function:: st_triangulate(pointsArray, linesArray, tolerance)
+.. function:: st_triangulate(pointsArray, linesArray, mergeTolerance, snapTolerance)
 
     Performs a conforming Delaunay triangulation using the points in :code:`pointsArray` including :code:`linesArray` as constraint / break lines.
 
-    :code:`tolerance` sets the tolerance for post-processing the results of the triangulation, i.e. matching
-    the vertices of the output triangles to input points / lines. This is necessary as the algorithm often returns null
-    height / Z values. Setting this to a large value may result in the incorrect Z values being assigned to the
-    output triangle vertices (especially when :code:`linesArray` contains very densely spaced segments).
-    Setting this value to zero may result in the output triangle vertices being assigned a null Z value.
-    The point-snapping tolerance of the triangulation algorithm is always zero (i.e. all points are considered for triangulation).
+    There are two 'tolerance' parameters for the algorithm.
+
+    - :code:`mergeTolerance` sets the point merging tolerance of the triangulation algorithm, i.e. before the initial
+      triangulation is performed, nearby points in :code:`pointsArray` can be merged in order to speed up the triangulation
+      process. A value of zero means all points are considered for triangulation.
+    - :code:`snapTolerance` sets the tolerance for post-processing the results of the triangulation, i.e. matching
+      the vertices of the output triangles to input points / lines. This is necessary as the algorithm often returns null
+      height / Z values. Setting this to a large value may result in the incorrect Z values being assigned to the
+      output triangle vertices (especially when :code:`linesArray` contains very densely spaced segments).
+      Setting this value to zero may result in the output triangle vertices being assigned a null Z value.
+    Both tolerance parameters are expressed in the same units as the projection of the input point geometries.
 
     This is a generator expression and the resulting DataFrame will contain one row per triangle returned by the algorithm.
 
@@ -1600,8 +1605,10 @@ st_triangulate
     :type pointsArray: Column (ArrayType(Geometry))
     :param linesArray: Array of geometries respresenting the lines to be used as constraints
     :type linesArray: Column (ArrayType(Geometry))
-    :param tolerance: A tolerance value for snapping nearby points together before executing the initial triangulation
-    :type tolerance: Column (DoubleType)
+    :param mergeTolerance: A tolerance used to coalesce points in close proximity to each other before performing triangulation.
+    :type mergeTolerance: Column (DoubleType)
+    :param snapTolerance: A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
+    :type snapTolerance: Column (DoubleType)
     :rtype: Column (Geometry)
 
     :example:
@@ -1609,15 +1616,20 @@ st_triangulate
 .. tabs::
    .. code-tab:: py
 
-
     df = (
-      spark.createDataFrame([{
-        'points': [
-          'POINT Z (2 1 0)', 'POINT Z (3 2 1)',
-          'POINT Z (1 3 3)', 'POINT Z (0 2 2)'
-          ], 'lines': ['LINESTRING EMPTY']
-        }])
-      .select(st_triangulate('points', 'lines', lit(0.01)))
+      spark.createDataFrame(
+        [
+          ["POINT Z (2 1 0)"],
+          ["POINT Z (3 2 1)"],
+          ["POINT Z (1 3 3)"],
+          ["POINT Z (0 2 2)"],
+        ],
+        ["wkt"],
+      )
+      .groupBy()
+      .agg(collect_list("wkt").alias("masspoints"))
+      .withColumn("breaklines", array(lit("LINESTRING EMPTY")))
+      .withColumn("triangles", st_triangulate("masspoints", "breaklines", lit(0.0), lit(0.01))
     )
     df.show(2, False)
     +---------------------------------------+
@@ -1629,36 +1641,72 @@ st_triangulate
 
    .. code-tab:: scala
 
-    val df = List("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))").toDF("wkt")
-      .withColumn("geom", st_setsrid(st_geomfromwkt(col("wkt")), lit(4326)))
-    df.select(st_astext(st_transform(col("geom"), lit(3857)))).show(1, false)
-    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    |convert_to(st_transform(geom, 3857))                                                                                                                                      |
-    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
-    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    val df = Seq(
+      Seq(
+        "POINT Z (2 1 0)", "POINT Z (3 2 1)",
+        "POINT Z (1 3 3)", "POINT Z (0 2 2)"
+      )
+    )
+    .toDF("masspoints")
+    .withColumn("breaklines", array().cast(ArrayType(StringType)))
+    .withColumn("triangles",
+      st_triangulate(
+        $"masspoints", $"breaklines",
+        lit(0.0), lit(0.01)
+      )
+    )
+
+    df.select(st_astext($"triangles")).show(2, false)
+    +------------------------------+
+    |st_astext(triangles)          |
+    +------------------------------+
+    |POLYGON ((0 2, 2 1, 1 3, 0 2))|
+    |POLYGON ((1 3, 2 1, 3 2, 1 3))|
+    +------------------------------+
 
    .. code-tab:: sql
 
-    select st_astext(st_transform(st_setsrid(st_geomfromwkt("MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"), 4326) as geom, 3857))
-    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    |convert_to(st_transform(geom, 3857))                                                                                                                                      |
-    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
-    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    SELECT
+      ST_TRIANGULATE(
+        ARRAY(
+          "POINT Z (2 1 0)",
+          "POINT Z (3 2 1)",
+          "POINT Z (1 3 3)",
+          "POINT Z (0 2 2)"
+        ),
+        ARRAY("LINESTRING EMPTY"),
+        DOUBLE(0.0), DOUBLE(0.01)
+      )
+    +---------------------------------------+
+    |triangles                              |
+    +---------------------------------------+
+    |POLYGON Z((0 2 2, 2 1 0, 1 3 3, 0 2 2))|
+    |POLYGON Z((1 3 3, 2 1 0, 3 2 1, 1 3 3))|
+    +---------------------------------------+
 
    .. code-tab:: r R
 
-    df <- createDataFrame(data.frame(wkt = "MULTIPOINT ((10 40), (40 30), (20 20), (30 10))"))
-    df <- withColumn(df, 'geom', st_setsrid(st_geomfromwkt(column('wkt')), lit(4326L)))
-
-    showDF(select(df, st_astext(st_transform(column('geom'), lit(3857L)))), truncate=F)
-    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    |convert_to(st_transform(geom, 3857))                                                                                                                                      |
-    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-    |MULTIPOINT ((1113194.9079327357 4865942.279503176), (4452779.631730943 3503549.843504374), (2226389.8158654715 2273030.926987689), (3339584.723798207 1118889.9748579597))|
-    +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-
+    sdf <- createDataFrame(
+      data.frame(
+        points = c(
+          "POINT Z (3 2 1)", "POINT Z (2 1 0)",
+          "POINT Z (1 3 3)", "POINT Z (0 2 2)"
+        )
+      )
+    )
+    sdf <- agg(groupBy(sdf), masspoints = collect_list(column("points")))
+    sdf <- withColumn(sdf, "breaklines", expr("array('LINESTRING EMPTY')"))
+    result <- select(sdf, st_triangulate(
+      column("masspoints"), column("breaklines"),
+      lit(0.0), lit(0.01))
+      )
+    showDF(result, truncate=F)
+    +---------------------------------------+
+    |triangles                              |
+    +---------------------------------------+
+    |POLYGON Z((0 2 2, 2 1 0, 1 3 3, 0 2 2))|
+    |POLYGON Z((1 3 3, 2 1 0, 3 2 1, 1 3 3))|
+    +---------------------------------------+
 
 st_translate
 ************
