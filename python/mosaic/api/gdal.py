@@ -1,9 +1,11 @@
-from .enable import refresh_context
-from .fuse import SetupMgr
-from mosaic.config import config
+import subprocess
+
 from pyspark.sql import SparkSession
 
-import subprocess
+from mosaic.config import config
+
+from .enable import refresh_context
+from .fuse import SetupMgr
 
 __all__ = [
     "setup_gdal",

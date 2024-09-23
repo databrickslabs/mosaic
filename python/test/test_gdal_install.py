@@ -1,4 +1,4 @@
-from .utils import SparkTestCase, GDALInstaller
+from .utils import GDALInstaller, SparkTestCase
 
 
 class TestGDALInstall(SparkTestCase):

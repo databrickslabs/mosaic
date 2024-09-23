@@ -1,8 +1,10 @@
-from test.context import api
-from test.context import config
+from test.context import api, config
+
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, to_json
+
 from mosaic import st_geomfromgeojson, st_point
+
 from .spark_test_case import SparkTestCase
 
 

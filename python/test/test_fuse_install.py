@@ -1,4 +1,4 @@
-from .utils import SparkTestCase, FuseInstaller
+from .utils import FuseInstaller, SparkTestCase
 
 
 class TestFuseInstall(SparkTestCase):

@@ -1,9 +1,9 @@
 import os
 import shutil
 import tempfile
-from pkg_resources import working_set, Requirement
-
 from test.context import api
+
+from pkg_resources import Requirement, working_set
 
 
 class GDALInstaller:

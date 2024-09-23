@@ -1,6 +1,6 @@
-import unittest
 import os
 import shutil
+import unittest
 import warnings
 from importlib.metadata import version
 

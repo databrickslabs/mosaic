@@ -1,7 +1,7 @@
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
-import os
 import requests
 
 __all__ = ["SetupMgr", "setup_fuse_install"]

@@ -4,14 +4,14 @@ import pandas as pd
 from IPython.core.magic import Magics, cell_magic, magics_class
 from keplergl import KeplerGl
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, conv, lower, lit, struct
+from pyspark.sql.functions import col, conv, lit, lower, struct
 
 from mosaic.api.accessors import st_astext, st_aswkt
-from mosaic.api.constructors import st_geomfromwkt, st_geomfromwkb
+from mosaic.api.constructors import st_geomfromwkb, st_geomfromwkt
 from mosaic.api.functions import (
-    st_centroid,
-    grid_pointascellid,
     grid_boundaryaswkb,
+    grid_pointascellid,
+    st_centroid,
     st_setsrid,
     st_transform,
     st_x,

@@ -1,6 +1,7 @@
+import os
+
 from .context import api
 from .utils import MosaicTestCaseWithGDAL
-import os
 
 
 class TestCheckpoint(MosaicTestCaseWithGDAL):

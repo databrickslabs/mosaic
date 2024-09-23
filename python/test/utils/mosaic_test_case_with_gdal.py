@@ -1,9 +1,10 @@
-from test.context import api
-from .mosaic_test_case import MosaicTestCase
-from pyspark.sql.dataframe import DataFrame
-
 import os
 import shutil
+from test.context import api
+
+from pyspark.sql.dataframe import DataFrame
+
+from .mosaic_test_case import MosaicTestCase
 
 
 class MosaicTestCaseWithGDAL(MosaicTestCase):
