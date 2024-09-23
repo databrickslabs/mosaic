@@ -483,6 +483,169 @@ rst_derivedband
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
+
+rst_dtmfromgeoms
+****************
+
+.. function:: rst_dtmfromgeoms(pointsArray, linesArray, mergeTolerance, snapTolerance, origin, xWidth, yWidth, xSize, ySize)
+
+    Generate a raster with interpolated elevations across a grid of points described by:
+
+    - :code:`origin`: a point geometry describing the bottom-left corner of the grid,
+    - :code:`xWidth` and :code:`yWidth`: the number of points in the grid in x and y directions,
+    - :code:`xSize` and :code:`ySize`: the space between grid points in the x and y directions.
+
+    :note: To generate a grid from a "top-left" :code:`origin`, use a negative value for :code:`ySize`.
+
+    The underlying algorithm first creates a surface mesh by triangulating :code:`pointsArray`
+    (including :code:`linesArray` as a set of constraint lines) then determines where each point
+    in the grid would lie on the surface mesh. Finally, it interpolates the
+    elevation of that point based on the surrounding triangle's vertices.
+
+    As with :code:`st_triangulate`, there are two 'tolerance' parameters for the algorithm:
+
+    - :code:`mergeTolerance` sets the point merging tolerance of the triangulation algorithm, i.e. before the initial
+      triangulation is performed, nearby points in :code:`pointsArray` can be merged in order to speed up the triangulation
+      process. A value of zero means all points are considered for triangulation.
+    - :code:`snapTolerance` sets the tolerance for post-processing the results of the triangulation, i.e. matching
+      the vertices of the output triangles to input points / lines. This is necessary as the algorithm often returns null
+      height / Z values. Setting this to a large value may result in the incorrect Z values being assigned to the
+      output triangle vertices (especially when :code:`linesArray` contains very densely spaced segments).
+      Setting this value to zero may result in the output triangle vertices being assigned a null Z value.
+    Both tolerance parameters are expressed in the same units as the projection of the input point geometries.
+
+    This is a generator expression and the resulting DataFrame will contain one row per point of the grid.
+
+    :param pointsArray: Array of geometries respresenting the points to be triangulated
+    :type pointsArray: Column (ArrayType(Geometry))
+    :param linesArray: Array of geometries respresenting the lines to be used as constraints
+    :type linesArray: Column (ArrayType(Geometry))
+    :param mergeTolerance: A tolerance used to coalesce points in close proximity to each other before performing triangulation.
+    :type mergeTolerance: Column (DoubleType)
+    :param snapTolerance: A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
+    :type snapTolerance: Column (DoubleType)
+    :param origin: A point geometry describing the bottom-left corner of the grid.
+    :type origin: Column (Geometry)
+    :param xWidth: The number of points in the grid in x direction.
+    :type xWidth: Column (IntegerType)
+    :param yWidth: The number of points in the grid in y direction.
+    :type yWidth: Column (IntegerType)
+    :param xSize: The spacing between each point on the grid's x-axis.
+    :type xSize: Column (DoubleType)
+    :param ySize: The spacing between each point on the grid's y-axis.
+    :type ySize: Column (DoubleType)
+    :rtype: Column (RasterTileType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df = (
+        spark.createDataFrame(
+            [
+                ["POINT Z (2 1 0)"],
+                ["POINT Z (3 2 1)"],
+                ["POINT Z (1 3 3)"],
+                ["POINT Z (0 2 2)"],
+            ],
+            ["wkt"],
+        )
+        .groupBy()
+        .agg(collect_list("wkt").alias("masspoints"))
+        .withColumn("breaklines", array(lit("LINESTRING EMPTY")))
+        .withColumn("origin", st_geomfromwkt(lit("POINT (0.6 1.8)")))
+        .withColumn("xWidth", lit(12))
+        .withColumn("yWidth", lit(6))
+        .withColumn("xSize", lit(0.1))
+        .withColumn("ySize", lit(0.1))
+    )
+    df.select(
+        rst_dtmfromgeoms(
+            "masspoints", "breaklines", lit(0.0), lit(0.01),
+            "origin", "xWidth", "yWidth", "xSize", "ySize"
+        )
+    ).show(truncate=False)
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |rst_dtmfromgeoms(masspoints, breaklines, 0.0, 0.01, origin, xWidth, yWidth, xSize, ySize)                                                                                                                                                                                                                                                                                                                                                              |
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |{NULL, /dbfs/tmp/mosaic/raster/checkpoint/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, {path -> /dbfs/tmp/mosaic/raster/checkpoint/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, last_error -> , all_parents -> , driver -> GTiff, parentPath -> /tmp/mosaic_tmp/mosaic5678582907307109410/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, last_command -> gdal_rasterize ATTRIBUTE=VALUES -of GTiff -co TILED=YES -co COMPRESS=DEFLATE}}|
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    val df = Seq(
+      Seq(
+        "POINT Z (2 1 0)", "POINT Z (3 2 1)",
+        "POINT Z (1 3 3)", "POINT Z (0 2 2)"
+      )
+    )
+    .toDF("masspoints")
+    .withColumn("breaklines", array().cast(ArrayType(StringType)))
+    .withColumn("origin", st_geomfromwkt(lit("POINT (0.6 1.8)")))
+    .withColumn("xWidth", lit(12))
+    .withColumn("yWidth", lit(6))
+    .withColumn("xSize", lit(0.1))
+    .withColumn("ySize", lit(0.1))
+
+    df.select(
+      rst_dtmfromgeoms(
+        $"masspoints", $"breaklines", lit(0.0), lit(0.01),
+        $"origin", $"xWidth", $"yWidth", $"xSize", $"ySize"
+      )
+    ).show(1, false)
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |rst_dtmfromgeoms(masspoints, breaklines, 0.0, 0.01, origin, xWidth, yWidth, xSize, ySize)                                                                                                                                                                                                                                                                                                                                                              |
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |{NULL, /dbfs/tmp/mosaic/raster/checkpoint/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, {path -> /dbfs/tmp/mosaic/raster/checkpoint/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, last_error -> , all_parents -> , driver -> GTiff, parentPath -> /tmp/mosaic_tmp/mosaic5678582907307109410/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, last_command -> gdal_rasterize ATTRIBUTE=VALUES -of GTiff -co TILED=YES -co COMPRESS=DEFLATE}}|
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT
+      RST_DTMFROMGEOMS(
+        ARRAY(
+          "POINT Z (2 1 0)",
+          "POINT Z (3 2 1)",
+          "POINT Z (1 3 3)",
+          "POINT Z (0 2 2)"
+        ),
+        ARRAY("LINESTRING EMPTY"),
+        DOUBLE(0.0), DOUBLE(0.01),
+        "POINT (0.6 1.8)", 12, 6, DOUBLE(0.1), DOUBLE(0.1)
+      ) AS tile
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |rst_dtmfromgeoms(masspoints, breaklines, 0.0, 0.01, origin, xWidth, yWidth, xSize, ySize)                                                                                                                                                                                                                                                                                                                                                              |
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |{NULL, /dbfs/tmp/mosaic/raster/checkpoint/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, {path -> /dbfs/tmp/mosaic/raster/checkpoint/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, last_error -> , all_parents -> , driver -> GTiff, parentPath -> /tmp/mosaic_tmp/mosaic5678582907307109410/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, last_command -> gdal_rasterize ATTRIBUTE=VALUES -of GTiff -co TILED=YES -co COMPRESS=DEFLATE}}|
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    sdf <- createDataFrame(
+      data.frame(
+        points = c(
+          "POINT Z (3 2 1)", "POINT Z (2 1 0)",
+          "POINT Z (1 3 3)", "POINT Z (0 2 2)"
+        )
+      )
+    )
+    sdf <- agg(groupBy(sdf), masspoints = collect_list(column("points")))
+    sdf <- withColumn(sdf, "breaklines", expr("array('LINESTRING EMPTY')"))
+    sdf <- select(sdf, rst_dtmfromgeoms(
+      column("masspoints"), column("breaklines"),
+      lit(0.0), lit(0.01),
+      lit("POINT (0.6 1.8)"), lit(12L), lit(6L), lit(0.1), lit(0.1)
+      )
+    )
+    showDF(sdf, n=1, truncate=F)
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |rst_dtmfromgeoms(masspoints, breaklines, 0.0, 0.01, POINT (0.6 1.8), 12, 6, 0.1, 0.1)                                                                                                                                                                                                                                                                                                                                                                  |
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |{NULL, /dbfs/tmp/mosaic/raster/checkpoint/raster_ab03a97f_9bc3_410c_80e1_adf6f75f46e2.GTiff, {path -> /dbfs/tmp/mosaic/raster/checkpoint/raster_ab03a97f_9bc3_410c_80e1_adf6f75f46e2.GTiff, last_error -> , all_parents -> , driver -> GTiff, parentPath -> /tmp/mosaic_tmp/mosaic8840676907961488874/raster_ab03a97f_9bc3_410c_80e1_adf6f75f46e2.GTiff, last_command -> gdal_rasterize ATTRIBUTE=VALUES -of GTiff -co TILED=YES -co COMPRESS=DEFLATE}}|
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
 rst_filter
 **********
 
