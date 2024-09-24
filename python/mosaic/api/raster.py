@@ -1,9 +1,11 @@
-from mosaic.config import config
-from mosaic.utils.types import ColumnOrName
+from typing import Any
+
 from pyspark.sql import Column
 from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
 from pyspark.sql.functions import lit
-from typing import Any
+
+from mosaic.config import config
+from mosaic.utils.types import ColumnOrName
 
 #######################
 # Raster functions    #
@@ -16,6 +18,7 @@ __all__ = [
     "rst_combineavg",
     "rst_convolve",
     "rst_derivedband",
+    "rst_dtmfromgeoms",
     "rst_frombands",
     "rst_fromcontent",
     "rst_fromfile",
@@ -214,6 +217,72 @@ def rst_derivedband(
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(python_func),
         pyspark_to_java_column(func_name),
+    )
+
+
+def rst_dtmfromgeoms(
+    points_array: ColumnOrName,
+    lines_array: ColumnOrName,
+    merge_tolerance: ColumnOrName,
+    snap_tolerance: ColumnOrName,
+    origin: ColumnOrName,
+    x_width: ColumnOrName,
+    y_width: ColumnOrName,
+    x_size: ColumnOrName,
+    y_size: ColumnOrName,
+) -> Column:
+    """
+    Generate a raster with interpolated elevations across a grid of points described by
+    `origin`, `x_width`, `y_width`, `x_size`, and `y_size`.
+
+    The underlying algorithm first creates a surface mesh by triangulating `points_array`
+    (including `lines_array` as a set of constraint lines) then determines where each point
+    in the grid would lie on the surface mesh. Finally, it interpolates the
+    elevation of that point based on the surrounding triangle's vertices.
+
+    Notes:
+    - Uses (x, y) _not_ (i, j) order to generate the grid (i.e. `origin` is assumed to be the bottom-left corner).
+    To generate a grid from a top-left `origin`, use a negative value for `y_size`.
+
+    Parameters
+    ----------
+    points_array : Column
+        An array of mass points including Z-values.
+    lines_array : Column
+        An array of lines that are used as constraints during the triangulation process.
+    merge_tolerance : Column
+        A tolerance used to coalesce points in close proximity to each other before performing triangulation.
+    snap_tolerance : Column
+        A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
+    origin : Column
+        The bottom-left corner of the grid. Use a negative value for `y_size` if you wish to supply a top-left origin.
+    x_width : Column
+        The number of points on the grid's x-axis
+    y_width : Column
+        The number of points on the grid's y-axis
+    x_size : Column
+        The spacing between each point on the grid's x-axis
+        (in meters or degrees depending on the projection of `points_array`)
+    y_size : Column
+        The spacing between each point on the grid's y-axis
+        (in meters or degrees depending on the projection of `points_array`)
+
+    Returns
+    -------
+    Column (RasterTileType)
+        Mosaic raster tile struct column.
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_dtmfromgeoms",
+        pyspark_to_java_column(points_array),
+        pyspark_to_java_column(lines_array),
+        pyspark_to_java_column(merge_tolerance),
+        pyspark_to_java_column(snap_tolerance),
+        pyspark_to_java_column(origin),
+        pyspark_to_java_column(x_width),
+        pyspark_to_java_column(y_width),
+        pyspark_to_java_column(x_size),
+        pyspark_to_java_column(y_size),
     )
 
 

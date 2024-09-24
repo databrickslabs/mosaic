@@ -13,7 +13,8 @@ import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import com.esotericsoftware.kryo.Kryo
 import org.apache.spark.sql.catalyst.InternalRow
 import org.locationtech.jts.algorithm.hull.ConcaveHull
-import org.locationtech.jts.geom.{Geometry, GeometryCollection, GeometryFactory}
+import org.locationtech.jts.geom.impl.CoordinateArraySequenceFactory
+import org.locationtech.jts.geom.{CoordinateSequence, Geometry, GeometryCollection, GeometryFactory}
 import org.locationtech.jts.geom.util.AffineTransformation
 import org.locationtech.jts.io._
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
@@ -21,12 +22,18 @@ import org.locationtech.jts.operation.buffer.{BufferOp, BufferParameters}
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
 
 import java.util
+import scala.collection.JavaConverters._
+
 
 abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def getNumGeometries: Int = geom.getNumGeometries
 
-    override def getDimension: Int = geom.getDimension
+    override def getDimension: Int = getCoordinateSequence.getDimension
+
+    private def getCoordinateSequence: CoordinateSequence = {
+        CoordinateArraySequenceFactory.instance().create(geom.getCoordinates)
+    }
 
     def compactGeometry: MosaicGeometryJTS = {
         val geometries = for (i <- 0 until getNumGeometries) yield geom.getGeometryN(i)
@@ -235,13 +242,17 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         MosaicGeometryJTS(unaryUnion)
     }
 
-    override def toWKT: String = new WKTWriter().write(geom)
+    override def toWKT: String = new WKTWriter(getDimension).write(geom)
+
+    override def toWKT(coordDims: Int): String = new WKTWriter(coordDims).write(geom)
 
     override def toJSON: String = new GeoJsonWriter().write(geom)
 
     override def toHEX: String = WKBWriter.toHex(toWKB)
 
-    override def toWKB: Array[Byte] = new WKBWriter().write(geom)
+    override def toWKB: Array[Byte] = new WKBWriter(getDimension).write(geom)
+
+    override def toWKB(coordDims: Int): Array[Byte] = new WKBWriter(coordDims).write(geom)
 
     override def numPoints: Int = geom.getNumPoints
 
@@ -252,6 +263,7 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
     override def transformCRSXY(sridTo: Int): MosaicGeometryJTS = super.transformCRSXY(sridTo, None).asInstanceOf[MosaicGeometryJTS]
 
     override def getAPI: GeometryAPI = JTS
+
 }
 
 object MosaicGeometryJTS extends GeometryReader {

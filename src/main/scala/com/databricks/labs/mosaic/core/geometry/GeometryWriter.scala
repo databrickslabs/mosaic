@@ -8,7 +8,11 @@ trait GeometryWriter {
 
     def toWKB: Array[Byte]
 
+    def toWKB(coordDims: Int): Array[Byte]
+
     def toWKT: String
+
+    def toWKT(coordDims: Int): String
 
     def toJSON: String
 

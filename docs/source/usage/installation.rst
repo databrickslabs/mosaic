@@ -16,49 +16,49 @@ Mosaic 0.4.x series only supports DBR 13.x DBRs. If running on a different DBR i
    DEPRECATION ERROR: Mosaic v0.4.x series only supports Databricks Runtime 13.
    You can specify :code:`%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.
 
-Mosaic 0.4.x series issues an ERROR on standard, non-Photon clusters `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`_ |
-`AWS <https://docs.databricks.com/runtime/index.html/>`_ |
-`GCP <https://docs.gcp.databricks.com/runtime/index.html/>`_:
+Mosaic 0.4.x series issues an ERROR on standard, non-Photon clusters `ADB <https://learn.microsoft.com/en-us/azure/databricks/runtime/>`__ |
+`AWS <https://docs.databricks.com/runtime/index.html/>`__ |
+`GCP <https://docs.gcp.databricks.com/runtime/index.html/>`__:
 
    DEPRECATION ERROR: Please use a Databricks Photon-enabled Runtime for performance benefits or Runtime ML for
    spatial AI benefits; Mosaic 0.4.x series restricts executing this cluster.
 
 As of Mosaic 0.4.0 / DBR 13.3 LTS (subject to change in follow-on releases):
 
-* `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_
+* `Assigned Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`__
    * Mosaic Python, SQL, R, and Scala APIs.
-* `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`_
-   * Mosaic Scala API (JVM) with Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`_.
+* `Shared Access Clusters <https://docs.databricks.com/en/compute/configure.html#access-modes>`__
+   * Mosaic Scala API (JVM) with Admin `allowlisting <https://docs.databricks.com/en/data-governance/unity-catalog/manage-privileges/allowlist.html>`__.
    * Mosaic Python bindings (to Mosaic Scala APIs) are blocked by Py4J Security on Shared Access Clusters.
-   * Mosaic SQL expressions cannot yet be registered due to `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_.
-     API changes, more `here <https://docs.databricks.com/en/udf/index.html>`_.
+   * Mosaic SQL expressions cannot yet be registered due to `Unity Catalog <https://www.databricks.com/product/unity-catalog>`__.
+     API changes, more `here <https://docs.databricks.com/en/udf/index.html>`__.
 
 .. note::
    Mosaic is a custom JVM library that extends spark, which has the following implications in DBR 13.3 LTS:
 
-   * `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ enforces process isolation which is difficult
+   * `Unity Catalog <https://www.databricks.com/product/unity-catalog>`__ enforces process isolation which is difficult
      to accomplish with custom JVM libraries; as such only built-in (aka platform provided) JVM APIs can be invoked from
      other supported languages in Shared Access Clusters.
-   * Clusters can read `Volumes <https://docs.databricks.com/en/connect/unity-catalog/volumes.html>`_ via relevant
+   * Clusters can read `Volumes <https://docs.databricks.com/en/connect/unity-catalog/volumes.html>`__ via relevant
      built-in (aka platform provided) readers and writers or via custom python calls which do not involve any custom JVM code.
 
 If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
-`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`_.
+`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`__.
 
 You will also need "Can Manage" permissions on this cluster in order to attach the
 Mosaic library to your cluster. A workspace administrator will be able to grant 
 these permissions and more information about cluster permissions can be found 
 in our documentation
-`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`_.
+`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`__.
 
 Package installation
 ####################
 
 Installation from PyPI
 **********************
-Python users can install the library directly from `PyPI <https://pypi.org/project/databricks-mosaic/>`_
-using the instructions `here <https://docs.databricks.com/libraries/cluster-libraries.html>`_
+Python users can install the library directly from `PyPI <https://pypi.org/project/databricks-mosaic/>`__
+using the instructions `here <https://docs.databricks.com/libraries/cluster-libraries.html>`__
 or from within a Databricks notebook using the :code:`%pip` magic command, e.g.
 
 .. code-block:: bash
@@ -72,11 +72,11 @@ if you need to install Mosaic 0.3 series for DBR 12.2 LTS, e.g.
 
     %pip install "databricks-mosaic<0.4,>=0.3"
 
-For Mosaic versions < 0.4 please use the `0.3 docs <https://databrickslabs.github.io/mosaic/v0.3.x/index.html>`_.
+For Mosaic versions < 0.4 please use the `0.3 docs <https://databrickslabs.github.io/mosaic/v0.3.x/index.html>`__.
 
 Installation from release artifacts
 ***********************************
-Alternatively, you can access the latest release artifacts `here <https://github.com/databrickslabs/mosaic/releases>`_
+Alternatively, you can access the latest release artifacts `here <https://github.com/databrickslabs/mosaic/releases>`__
 and manually attach the appropriate library to your cluster.
 
 Which artifact you choose to attach will depend on the language API you intend to use.
@@ -85,13 +85,13 @@ Which artifact you choose to attach will depend on the language API you intend t
 * For Scala users, take the Scala JAR (packaged with all necessary dependencies).
 * For R users, download the Scala JAR and the R bindings library [see the sparkR readme](R/sparkR-mosaic/README.md).
 
-Instructions for how to attach libraries to a Databricks cluster can be found `here <https://docs.databricks.com/libraries/cluster-libraries.html>`_.
+Instructions for how to attach libraries to a Databricks cluster can be found `here <https://docs.databricks.com/libraries/cluster-libraries.html>`__.
 
 Automated SQL registration
 **************************
 If you would like to use Mosaic's functions in pure SQL (in a SQL notebook, from a business intelligence tool,
 or via a middleware layer such as Geoserver, perhaps) then you can configure
-"Automatic SQL Registration" using the instructions `here <https://databrickslabs.github.io/mosaic/usage/automatic-sql-registration.html>`_.
+"Automatic SQL Registration" using the instructions `here <https://databrickslabs.github.io/mosaic/usage/automatic-sql-registration.html>`__.
 
 Enabling the Mosaic functions
 #############################
@@ -184,4 +184,4 @@ register the Mosaic SQL functions in your SparkSession from a Scala notebook cel
 
 .. warning::
     Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Spark Expressions), but not Shared Access due
-    to `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ API changes, more `here <https://docs.databricks.com/en/udf/index.html>`_.
+    to `Unity Catalog <https://www.databricks.com/product/unity-catalog>`__ API changes, more `here <https://docs.databricks.com/en/udf/index.html>`__.

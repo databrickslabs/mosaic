@@ -52,6 +52,7 @@ nbsphinx_execute = 'never'
 napoleon_use_admonition_for_notes = True
 sphinx_tabs_disable_tab_closing = True
 todo_include_todos = True
+suppress_warnings = ["autosectionlabel.*"]
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -64,27 +65,27 @@ html_theme = 'renku'
 html_theme_options = {
 
     # Set the name of the project to appear in the navigation.
-    'nav_title': f'Mosaic {release}',
+    # 'nav_title': f'Mosaic {release}',
 
     # Specify a base_url used to generate sitemap.xml. If not
     # specified, then no sitemap will be built.
     # 'base_url': 'https://project.github.io/project',
 
     # Set the color and the accent color
-    'color_primary': 'green',
-    'color_accent': 'green',
+    # 'color_primary': 'green',
+    # 'color_accent': 'green',
 
     # Set the repo location to get a badge with stats
-    'repo_url': 'https://github.com/databrickslabs/mosaic/',
-    'repo_name': 'Mosaic',
+    # 'repo_url': 'https://github.com/databrickslabs/mosaic/',
+    # 'repo_name': 'Mosaic',
 
-    'globaltoc_depth': 3,
+    # 'globaltoc_depth': 3,
     'globaltoc_collapse': False,
     'globaltoc_includehidden': True,    
-    'heroes': {'index': 'Simple, scalable geospatial analytics on Databricks',
-               'examples/index': 'examples and tutorials to get started with '
-                                 'Mosaic'},
-    "version_dropdown": True,
+    # 'heroes': {'index': 'Simple, scalable geospatial analytics on Databricks',
+    #            'examples/index': 'examples and tutorials to get started with '
+    #                              'Mosaic'},
+    # "version_dropdown": True,
     # "version_json": "../versions-v2.json",
 
 }
