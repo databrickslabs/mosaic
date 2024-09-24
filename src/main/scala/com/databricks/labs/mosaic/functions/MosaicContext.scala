@@ -1006,6 +1006,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))
 
         // Legacy API
+        @deprecated("Please use 'rst_tooverlappingtiles' expression instead.")
+        def rst_to_overlapping_tiles(raster: Column, width: Int, height: Int, overlap: Int): Column = rst_tooverlappingtiles(raster, width, height, overlap)
+        @deprecated("Please use 'rst_tooverlappingtiles' expression instead.")
+        def rst_to_overlapping_tiles(raster: Column, width: Column, height: Column, overlap: Column): Column = rst_tooverlappingtiles(raster, width, height, overlap)
         @deprecated("Please use 'st_intersects_agg' expression instead.")
         def st_intersects_aggregate(leftIndex: Column, rightIndex: Column): Column = st_intersects_agg(leftIndex, rightIndex)
         @deprecated("Please use 'st_intersection_agg' expression instead.")
