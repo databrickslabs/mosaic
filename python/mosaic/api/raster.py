@@ -67,6 +67,7 @@ __all__ = [
     "rst_summary",
     "rst_tessellate",
     "rst_transform",
+    "rst_type",
     "rst_to_overlapping_tiles",
     "rst_tryopen",
     "rst_updatetype",
@@ -1303,6 +1304,27 @@ def rst_summary(raster_tile: ColumnOrName) -> Column:
     )
 
 
+def rst_updatetype(raster_tile: ColumnOrName, data_type: ColumnOrName) -> Column:
+    """
+    Updates the data type of the raster.
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+    data_type : Column (StringType)
+        The data type for the updated raster.
+    Returns
+    -------
+    Column (RasterTileType)
+        Mosaic raster tile struct column.
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_updatetype",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(data_type),
+    )
+
+
 def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Column:
     """
     Clip the raster into raster tiles where each tile is a grid tile for the given resolution.
@@ -1393,6 +1415,50 @@ def rst_tryopen(raster_tile: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "rst_tryopen", pyspark_to_java_column(raster_tile)
+    )
+
+
+def rst_type(raster_tile: ColumnOrName) -> Column:
+    """
+    Returns the data type of `raster_tile`.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    Returns
+    -------
+    Column (StringType)
+        A string representing the data type.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_type", pyspark_to_java_column(raster_tile)
+    )
+
+
+def rst_updatetype(raster_tile: ColumnOrName, data_type: ColumnOrName) -> Column:
+    """
+    Updates the data type of the raster.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+    data_type : Column (StringType)
+        The data type for the updated raster.
+
+    Returns
+    -------
+    Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_updatetype",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(data_type),
     )
 
 

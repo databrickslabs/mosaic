@@ -56,7 +56,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .withColumn("rst_height", api.rst_height("tile"))
             .withColumn("rst_initnodata", api.rst_initnodata("tile"))
             .withColumn("rst_isempty", api.rst_isempty("tile"))
-            .withColumn("rst_mapalgebra", api.rst_mapalgebra(array("tile", "rst_initnodata"), lit('{"calc": "A+B", "A_index": 0, "B_index": 1}')))
+            .withColumn("rst_mapalgebra", api.rst_mapalgebra(array("tile_from_file", "rst_initnodata"), lit('{"calc": "A+B", "A_index": 0, "B_index": 1}')))
             .withColumn("rst_memsize", api.rst_memsize("tile"))
             .withColumn("rst_merge", api.rst_merge(array("tile", "tile")))
             .withColumn("rst_metadata", api.rst_metadata("tile"))
