@@ -43,6 +43,7 @@ test_that("scalar raster functions behave as intended", {
   sdf <- withColumn(sdf, "rst_worldtorastercoordx", rst_worldtorastercoordx(column("tile"), lit(0.0), lit(0.0)))
   sdf <- withColumn(sdf, "rst_worldtorastercoordy", rst_worldtorastercoordy(column("tile"), lit(0.0), lit(0.0)))
   sdf <- withColumn(sdf, "rst_worldtorastercoord", rst_worldtorastercoord(column("tile"), lit(0.0), lit(0.0)))
+  sdf <- withColumn(sdf, "rst_write", rst_write(column("tile"), lit("/tmp/mosaic_tmp/")))
 
   expect_no_error(write.df(sdf, source = "noop", mode = "overwrite"))
 })

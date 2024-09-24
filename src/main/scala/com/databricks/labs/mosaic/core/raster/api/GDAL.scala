@@ -186,10 +186,13 @@ object GDAL {
         )
     }
 
-    private def writeRasterString(raster: MosaicRasterGDAL): UTF8String = {
+    def writeRasterString(raster: MosaicRasterGDAL, path: Option[String] = None): UTF8String = {
         val uuid = UUID.randomUUID().toString
         val extension = GDAL.getExtension(raster.getDriversShortName)
-        val writePath = s"${getCheckpointPath}/$uuid.$extension"
+        val writePath = path match {
+            case Some(p) => p
+            case None => s"${getCheckpointPath}/$uuid.$extension"
+        }
         val outPath = raster.writeToPath(writePath)
         RasterCleaner.dispose(raster)
         UTF8String.fromString(outPath)

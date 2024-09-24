@@ -115,6 +115,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
                 "rst_worldtorastercoord",
                 api.rst_worldtorastercoord("tile", lit(0.0), lit(0.0)),
             )
+            .withColumn("rst_write", api.rst_write("tile", lit("/tmp/mosaic_tmp/")))
         )
         result.write.format("noop").mode("overwrite").save()
         self.assertEqual(result.count(), 1)

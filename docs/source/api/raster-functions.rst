@@ -3580,3 +3580,60 @@ rst_worldtorastercoordy
     +------------------------------------------------------------------------------------------------------------------+
     | 997                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
+
+rst_write
+*********
+
+.. function:: rst_write(input, dir)
+
+    Writes raster tiles from the input column to a specified directory.
+
+    :param input: A column containing the raster tile.
+    :type input: Column
+    :param dir: The directory, e.g. fuse, to write the tile's raster as file.
+    :type dir: Column(StringType)
+    :rtype: Column: RasterTileType
+
+.. note::
+  **Notes**
+    - Use :code:`RST_Write` to save a 'tile' column to a specified directory (e.g. fuse) location using its
+      already populated GDAL driver and tile information.
+    - Useful for formalizing the tile 'path' when writing a Lakehouse table. An example might be to turn on checkpointing
+      for internal data pipeline phase operations in which multiple interim tiles are populated, but at the end of the phase
+      use this function to set the final path to be used in the phase's persisted table. Then, you are free to delete
+      the internal tiles that accumulated in the configured checkpointing directory.
+..
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.select(rst_write("tile", <write_dir>).alias("tile")).limit(1).display()
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"tile":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.select(rst_write(col("tile", <write_dir>)).as("tile)).limit(1).show
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"tile":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT rst_write(tile, <write_dir>) as tile FROM table LIMIT 1
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"tile":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+

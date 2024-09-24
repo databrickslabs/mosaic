@@ -340,6 +340,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_WorldToRasterCoord](expressionConfig)
         mosaicRegistry.registerExpression[RST_WorldToRasterCoordX](expressionConfig)
         mosaicRegistry.registerExpression[RST_WorldToRasterCoordY](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Write](expressionConfig)
 
         /** Aggregators */
         registry.registerFunction(
@@ -833,7 +834,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_WorldToRasterCoordY(raster.expr, x.expr, y.expr, expressionConfig))
         def rst_worldtorastercoordy(raster: Column, x: Double, y: Double): Column =
             ColumnAdapter(RST_WorldToRasterCoordY(raster.expr, lit(x).expr, lit(y).expr, expressionConfig))
-
+        def rst_write(raster: Column, path: Column): Column =
+            ColumnAdapter(RST_Write(raster.expr, path.expr, expressionConfig))
+        def rst_write(raster: Column, path: String): Column =
+            ColumnAdapter(RST_Write(raster.expr, lit(path).expr, expressionConfig))
         /** Aggregators */
 
         def st_asgeojsontile_agg(geom: Column, attributes: Column): Column =
