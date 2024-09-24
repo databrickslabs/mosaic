@@ -95,8 +95,7 @@ def rst_avg(raster_tile: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_avg",
-        pyspark_to_java_column(raster_tile)
+        "rst_avg", pyspark_to_java_column(raster_tile)
     )
 
 
@@ -355,8 +354,9 @@ def rst_frombands(bands: ColumnOrName) -> Column:
         "rst_frombands", pyspark_to_java_column(bands)
     )
 
+
 def rst_fromcontent(
-        raster_bin: ColumnOrName, driver: ColumnOrName, size_in_mb: Any = -1
+    raster_bin: ColumnOrName, driver: ColumnOrName, size_in_mb: Any = -1
 ) -> Column:
     """
     Tiles the raster binary into tiles of the given size.
@@ -579,7 +579,9 @@ def rst_mapalgebra(raster_tile: ColumnOrName, json_spec: ColumnOrName) -> Column
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_mapalgebra", pyspark_to_java_column(raster_tile), pyspark_to_java_column(json_spec)
+        "rst_mapalgebra",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(json_spec),
     )
 
 
@@ -599,8 +601,7 @@ def rst_max(raster_tile: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_max",
-        pyspark_to_java_column(raster_tile)
+        "rst_max", pyspark_to_java_column(raster_tile)
     )
 
 
@@ -620,8 +621,7 @@ def rst_median(raster_tile: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_median",
-        pyspark_to_java_column(raster_tile)
+        "rst_median", pyspark_to_java_column(raster_tile)
     )
 
 
@@ -699,13 +699,12 @@ def rst_min(raster_tile: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_min",
-        pyspark_to_java_column(raster_tile)
+        "rst_min", pyspark_to_java_column(raster_tile)
     )
 
 
 def rst_ndvi(
-        raster_tile: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName
+    raster_tile: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName
 ) -> Column:
     """
     Computes the NDVI of the raster.
@@ -733,6 +732,7 @@ def rst_ndvi(
         pyspark_to_java_column(band1),
         pyspark_to_java_column(band2),
     )
+
 
 def rst_numbands(raster_tile: ColumnOrName) -> Column:
     """
@@ -1329,10 +1329,10 @@ def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Colum
 
 
 def rst_to_overlapping_tiles(
-        raster_tile: ColumnOrName,
-        width: ColumnOrName,
-        height: ColumnOrName,
-        overlap: ColumnOrName,
+    raster_tile: ColumnOrName,
+    width: ColumnOrName,
+    height: ColumnOrName,
+    overlap: ColumnOrName,
 ) -> Column:
     """
     Tiles the raster into tiles of the given size.

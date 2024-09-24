@@ -50,7 +50,7 @@ rst_avg
 
     Returns an array containing mean values for each band.
 
-    :param tile: A column containing the raster tile. 
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: ArrayType(DoubleType)
 
@@ -92,7 +92,7 @@ rst_bandmetadata
     Extract the metadata describing the raster band.
     Metadata is return as a map of key value pairs.
 
-    :param tile: A column containing the raster tile. 
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param band: The band number to extract metadata for.
     :type band: Column (IntegerType)
@@ -2616,7 +2616,7 @@ rst_separatebands
     +--------------------------------------------------------------------------------------------------------------------------------+
 
 rst_setnodata
-**********************
+*************
 
 .. function:: rst_setnodata(tile, nodata)
 
@@ -2667,6 +2667,49 @@ rst_setnodata
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
+
+rst_setsrid
+***********
+
+.. function:: rst_setsrid(tile, srid)
+
+    Set the SRID of the raster tile as an EPSG code.
+
+    :param tile: A column containing the raster tile.
+    :type tile: Column (RasterTileType)
+    :param srid: The SRID to set
+    :type srid: Column (IntegerType)
+    :rtype: Column: (RasterTileType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df.select(mos.rst_setsrid('tile', F.lit(9122))).display()
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    df.select(rst_setsrid(col("tile"), lit(9122))).show
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT rst_setsrid(tile, 9122) FROM table
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
 
 rst_skewx
 *********
