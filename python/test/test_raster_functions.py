@@ -59,7 +59,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .withColumn(
                 "rst_mapalgebra",
                 api.rst_mapalgebra(
-                    array("tile", "rst_initnodata"),
+                    array("tile_from_file", "rst_initnodata"),
                     lit('{"calc": "A+B", "A_index": 0, "B_index": 1}'),
                 ),
             )

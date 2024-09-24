@@ -68,7 +68,7 @@ __all__ = [
     "rst_tessellate",
     "rst_transform",
     "rst_tooverlappingtiles",
-    "rst_to_overlapping_tiles", # <- deprecated
+    "rst_to_overlapping_tiles",  # <- deprecated
     "rst_type",
     "rst_to_overlapping_tiles",
     "rst_tryopen",
@@ -755,7 +755,9 @@ def rst_numbands(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_pixelcount(raster_tile: ColumnOrName, count_nodata: Any = False, count_all: Any = False) -> Column:
+def rst_pixelcount(
+    raster_tile: ColumnOrName, count_nodata: Any = False, count_all: Any = False
+) -> Column:
     """
     Parameters
     ----------
@@ -776,7 +778,7 @@ def rst_pixelcount(raster_tile: ColumnOrName, count_nodata: Any = False, count_a
         count_nodata = lit(count_nodata)
 
     if type(count_all) == bool:
-            count_all = lit(count_all)
+        count_all = lit(count_all)
 
     return config.mosaic_context.invoke_function(
         "rst_pixelcount",
@@ -1366,10 +1368,10 @@ def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Colum
 
 
 def rst_tooverlappingtiles(
-        raster_tile: ColumnOrName,
-        width: ColumnOrName,
-        height: ColumnOrName,
-        overlap: ColumnOrName,
+    raster_tile: ColumnOrName,
+    width: ColumnOrName,
+    height: ColumnOrName,
+    overlap: ColumnOrName,
 ) -> Column:
     """
     Tiles the raster into tiles of the given size.
@@ -1388,12 +1390,11 @@ def rst_tooverlappingtiles(
 
 
 def rst_to_overlapping_tiles(
-        raster_tile: ColumnOrName,
-        width: ColumnOrName,
-        height: ColumnOrName,
-        overlap: ColumnOrName,
-    ) -> Column:
-
+    raster_tile: ColumnOrName,
+    width: ColumnOrName,
+    height: ColumnOrName,
+    overlap: ColumnOrName,
+) -> Column:
     return rst_tooverlappingtiles(raster_tile, width, height, overlap)
 
 
