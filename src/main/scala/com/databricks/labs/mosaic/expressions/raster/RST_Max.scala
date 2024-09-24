@@ -12,7 +12,7 @@ import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
 
-/** Returns the upper left x of the raster. */
+/** Returns the max value per band of the raster. */
 case class RST_Max(raster: Expression, expressionConfig: MosaicExpressionConfig)
     extends RasterExpression[RST_Max](raster, returnsRaster = false, expressionConfig)
       with NullIntolerant
@@ -20,7 +20,7 @@ case class RST_Max(raster: Expression, expressionConfig: MosaicExpressionConfig)
 
     override def dataType: DataType = ArrayType(DoubleType)
 
-    /** Returns the upper left x of the raster. */
+    /** Returns the max value per band of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
         val nBands = tile.raster.raster.GetRasterCount()
         val maxValues = (1 to nBands).map(tile.raster.getBand(_).maxPixelValue)
