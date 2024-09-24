@@ -4,16 +4,17 @@ import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, CustomIndexSystem,
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.mocks.getBoroughs
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
+import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.{be, contain, noException}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.nio.file.Files
 
-trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
+trait SpatialKNNBehaviors { this: AnyFlatSpec =>
 
-    def behavior(mosaicContext: MosaicContext): Unit = {
+    def noApproximation(mosaicContext: MosaicContext, spark: SparkSession): Unit = {
         val mc = mosaicContext
         mc.register()
         val sc = spark
@@ -28,7 +29,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
 
         val boroughs: DataFrame = getBoroughs(mc)
 
-        val tempLocation = Files.createTempDirectory("mosaic").toAbsolutePath.toString
+        val tempLocation = MosaicContext.tmpDir(null)
         spark.sparkContext.setCheckpointDir(tempLocation)
         spark.sparkContext.setLogLevel("ERROR")
 
@@ -73,7 +74,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
 
     }
 
-    def behaviorApproximate(mosaicContext: MosaicContext): Unit = {
+    def behaviorApproximate(mosaicContext: MosaicContext, spark: SparkSession): Unit = {
         val mc = mosaicContext
         mc.register()
         val sc = spark
@@ -93,7 +94,7 @@ trait SpatialKNNBehaviors extends MosaicSpatialQueryTest {
 
         val boroughs: DataFrame = getBoroughs(mc)
 
-        val tempLocation = Files.createTempDirectory("mosaic").toAbsolutePath.toString
+        val tempLocation = MosaicContext.tmpDir(null)
         spark.sparkContext.setCheckpointDir(tempLocation)
         spark.sparkContext.setLogLevel("ERROR")
 

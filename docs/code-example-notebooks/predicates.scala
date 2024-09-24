@@ -87,3 +87,36 @@ df.select(st_intersects($"p1", $"p2")).show(false)
 // MAGIC %r
 // MAGIC df <- createDataFrame(data.frame(p1 = "POLYGON ((0 0, 0 3, 3 3, 3 0))", p2 = "POLYGON ((2 2, 2 4, 4 4, 4 2))"))
 // MAGIC showDF(select(df, st_intersects(column("p1"), column("p2"))), truncate=F)
+
+// MAGIC %md 
+// MAGIC ### st_within
+
+// COMMAND ----------
+
+// MAGIC %python
+// MAGIC help(st_within)
+
+// COMMAND ----------
+
+// MAGIC %python
+// MAGIC df = spark.createDataFrame([{'point': 'POINT (25 15)', 'poly': 'POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))'}])
+// MAGIC df.select(st_within('point', 'poly')).show()
+
+// COMMAND ----------
+
+val df = List(("POINT (25 15)", "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")).toDF("point", "poly")
+df.select(st_within($"point", $"poly")).show()
+
+// COMMAND ----------
+
+// MAGIC %sql
+// MAGIC SELECT st_within("POINT (25 15)", "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))")
+
+// COMMAND ----------
+
+// MAGIC %r
+// MAGIC df <- createDataFrame(data.frame(point = c( "POINT (25 15)"), poly = "POLYGON ((30 10, 40 40, 20 40, 10 20, 30 10))"))
+// MAGIC showDF(select(df, st_within(column("point"), column("poly"))))
+
+// COMMAND ----------
+

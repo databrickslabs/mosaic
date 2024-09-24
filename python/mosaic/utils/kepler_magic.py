@@ -1,6 +1,5 @@
 import re
 
-import h3
 import pandas as pd
 from IPython.core.magic import Magics, cell_magic, magics_class
 from keplergl import KeplerGl
@@ -9,27 +8,33 @@ from pyspark.sql.functions import col, conv, lower, lit, struct
 
 from mosaic.api.accessors import st_astext, st_aswkt
 from mosaic.api.constructors import st_geomfromwkt, st_geomfromwkb
-from mosaic.api.functions import st_centroid, grid_pointascellid, grid_boundaryaswkb, st_setsrid, st_transform, st_x, st_y
+from mosaic.api.functions import (
+    st_centroid,
+    grid_pointascellid,
+    grid_boundaryaswkb,
+    st_setsrid,
+    st_transform,
+    st_x,
+    st_y,
+)
 from mosaic.config import config
 from mosaic.utils.kepler_config import mosaic_kepler_config
 
 
 @magics_class
 class MosaicKepler(Magics):
-
     """
     A magic command for visualizing data in KeplerGl.
     """
 
     def __init__(self, shell):
-      Magics.__init__(self, shell)
-      self.bng_crsid = 27700
-      self.osgb36_crsid = 27700
-      self.wgs84_crsid = 4326
+        Magics.__init__(self, shell)
+        self.bng_crsid = 27700
+        self.osgb36_crsid = 27700
+        self.wgs84_crsid = 4326
 
     @staticmethod
     def displayKepler(map_instance, height, width):
-
         """
         Display Kepler map instance in Jupyter notebook.
 
@@ -104,7 +109,6 @@ class MosaicKepler(Magics):
 
     @staticmethod
     def set_centroid(pandas_data, feature_type, feature_name):
-
         """
         Sets the centroid of the geometry column.
 
@@ -141,14 +145,8 @@ class MosaicKepler(Magics):
             tmp_sdf = tmp_sdf.withColumn(feature_name, grid_boundaryaswkb(feature_name))
 
         centroid = (
-            tmp_sdf.select(
-                st_centroid(feature_name).alias("centroid")
-            ).select(
-                struct(
-                    st_x("centroid").alias("x"),
-                    st_y("centroid").alias("y")
-                )
-            )
+            tmp_sdf.select(st_centroid(feature_name).alias("centroid"))
+            .select(struct(st_x("centroid").alias("x"), st_y("centroid").alias("y")))
             .limit(1)
             .collect()[0][0]
         )
@@ -159,7 +157,6 @@ class MosaicKepler(Magics):
 
     @cell_magic
     def mosaic_kepler(self, *args):
-
         """
         A magic command for visualizing data in KeplerGl.
 
@@ -215,14 +212,18 @@ class MosaicKepler(Magics):
                     feature_name, lower(conv(col(feature_name), 10, 16))
                 )
         elif feature_type == "bng":
-            data = (data
-                .withColumn(feature_name, grid_boundaryaswkb(feature_name))
+            data = (
+                data.withColumn(feature_name, grid_boundaryaswkb(feature_name))
                 .withColumn(feature_name, st_geomfromwkb(feature_name))
                 .withColumn(
                     feature_name,
-                    st_transform(st_setsrid(feature_name, lit(self.bng_crsid)), lit(self.wgs84_crsid))
+                    st_transform(
+                        st_setsrid(feature_name, lit(self.bng_crsid)),
+                        lit(self.wgs84_crsid),
+                    ),
                 )
-                .withColumn(feature_name, st_aswkt(feature_name)))
+                .withColumn(feature_name, st_aswkt(feature_name))
+            )
         elif feature_type == "geometry":
             data = data.withColumn(feature_name, st_astext(col(feature_name)))
         elif re.search("^geometry\(.*\)$", feature_type).start() != None:
@@ -231,13 +232,16 @@ class MosaicKepler(Magics):
                 crsid = self.bng_crsid
             else:
                 crsid = int(crsid)
-            data = (data
-                .withColumn(feature_name, st_geomfromwkt(st_aswkt(feature_name)))
+            data = (
+                data.withColumn(feature_name, st_geomfromwkt(st_aswkt(feature_name)))
                 .withColumn(
                     feature_name,
-                    st_transform(st_setsrid(feature_name, lit(crsid)), lit(self.wgs84_crsid))
+                    st_transform(
+                        st_setsrid(feature_name, lit(crsid)), lit(self.wgs84_crsid)
+                    ),
                 )
-                .withColumn(feature_name, st_aswkt(feature_name)))
+                .withColumn(feature_name, st_aswkt(feature_name))
+            )
         else:
             raise Exception(f"Unsupported geometry type: {feature_type}.")
 

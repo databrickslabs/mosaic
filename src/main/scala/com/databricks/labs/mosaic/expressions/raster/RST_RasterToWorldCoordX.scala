@@ -1,34 +1,37 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.MosaicRaster
+import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.Raster2ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types._
 
 /** Returns the world coordinates of the raster (x,y) pixel. */
 case class RST_RasterToWorldCoordX(
-    path: Expression,
+    raster: Expression,
     x: Expression,
     y: Expression,
     expressionConfig: MosaicExpressionConfig
-) extends Raster2ArgExpression[RST_RasterToWorldCoordX](path, x, y, DoubleType, expressionConfig)
+) extends Raster2ArgExpression[RST_RasterToWorldCoordX](raster, x, y, returnsRaster = false, expressionConfig)
       with NullIntolerant
       with CodegenFallback {
+
+    override def dataType: DataType = DoubleType
 
     /**
       * Returns the world coordinates of the raster x pixel by applying
       * GeoTransform. This ensures the projection of the raster is respected.
       */
-    override def rasterTransform(raster: MosaicRaster, arg1: Any, arg2: Any): Any = {
+    override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
         val x = arg1.asInstanceOf[Int]
         val y = arg2.asInstanceOf[Int]
-        val gt = raster.getRaster.GetGeoTransform()
+        val gt = tile.getRaster.getRaster.GetGeoTransform()
 
-        val (xGeo, _) = rasterAPI.toWorldCoord(gt, x, y)
+        val (xGeo, _) = GDAL.toWorldCoord(gt, x, y)
         xGeo
     }
 
@@ -41,13 +44,13 @@ object RST_RasterToWorldCoordX extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns the x coordinate of the pixel in world coordinates using geo transform of the raster.
+          |_FUNC_(expr1, expr2, expr3) - Returns the x coordinate of the pixel in world coordinates using geo transform of the raster tile.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b);
+          |      > SELECT _FUNC_(raster_tile, x, y);
           |        11.2
           |  """.stripMargin
 

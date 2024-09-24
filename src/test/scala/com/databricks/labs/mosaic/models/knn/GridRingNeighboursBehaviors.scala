@@ -11,7 +11,7 @@ import org.scalatest.matchers.should.Matchers._
 trait GridRingNeighboursBehaviors extends MosaicSpatialQueryTest {
 
     def leftTransform(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
         import sc.implicits._
 
@@ -81,7 +81,7 @@ trait GridRingNeighboursBehaviors extends MosaicSpatialQueryTest {
     }
 
     def resultTransform(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
         import sc.implicits._
 
@@ -150,7 +150,7 @@ trait GridRingNeighboursBehaviors extends MosaicSpatialQueryTest {
     }
 
     def transform(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
         import sc.implicits._
 

@@ -6,29 +6,85 @@ runs:
     - name: Setup R build environment
       shell: bash
       run: |
-        sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config libharfbuzz-dev libfribidi-dev 
-    - name: Download and unpack Spark
+        sudo apt-get update && sudo apt-get install -y curl libcurl4-openssl-dev pkg-config libharfbuzz-dev libfribidi-dev
+    - name: Configure python interpreter
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+    - name: Install python dependencies
       shell: bash
       run: |
-        sudo mkdir -p /usr/spark-download/raw
-        sudo mkdir -p /usr/spark-download/unzipped
-        sudo chown -R $USER: /usr/spark-download/
-        wget -P /usr/spark-download/raw https://archive.apache.org/dist/spark/spark-3.2.1/spark-3.2.1-bin-hadoop2.7.tgz 
-        tar zxvf /usr/spark-download/raw/spark-3.2.1-bin-hadoop2.7.tgz -C /usr/spark-download/unzipped
-
-
+        # - install pip libs
+        #   note: gdal requires the extra args
+        cd python
+        pip install build wheel pyspark==${{ matrix.spark }} numpy==${{ matrix.numpy }}
+        pip install --no-build-isolation --no-cache-dir --force-reinstall gdal==${{ matrix.gdal }}
+    - name: Create download location for Spark
+      shell: bash
+      run: |
+        sudo mkdir -p /usr/spark-download-${{ matrix.spark }}/unzipped
+        sudo mkdir -p /usr/spark-download-${{ matrix.spark }}/raw
+        sudo chown -R $USER: /usr/spark-download-${{ matrix.spark }}/
+    - name: Cache Spark download
+      id: cache-spark
+      uses: actions/cache@v3
+      with:
+        path: /usr/spark-download-${{ matrix.spark }}/unzipped
+        key: r_build-spark
+    - if: ${{ steps.cache-spark.outputs.cache-hit != 'true' }}
+      name: Download and unpack Spark
+      shell: bash
+      run: |
+        wget -P /usr/spark-download-${{ matrix.spark }}/raw https://archive.apache.org/dist/spark/spark-${{ matrix.spark }}/spark-${{ matrix.spark }}-bin-hadoop3.tgz
+        tar zxvf /usr/spark-download-${{ matrix.spark }}/raw/spark-${{ matrix.spark }}-bin-hadoop3.tgz -C /usr/spark-download-${{ matrix.spark }}/unzipped
+    - name: Create R environment
+      shell: bash
+      run: |
+        sudo mkdir -p /usr/lib/R/site-library
+        sudo chown -R $USER: /usr/lib/R/site-library
+    - name: Setup R
+      uses: r-lib/actions/setup-r@v2
+      with:
+        r-version: ${{ matrix.R }}
+        use-public-rspm: true
+    - name: Install R dependencies
+      shell: bash
+      run: |
+        cd R
+        Rscript --vanilla install_deps.R
+    - name: Generate R bindings
+      shell: bash
+      run: |
+        cd R
+        Rscript --vanilla generate_R_bindings.R ../src/main/scala/com/databricks/labs/mosaic/functions/MosaicContext.scala
+    - name: Build R docs
+      shell: bash
+      run: |
+        cd R
+        Rscript --vanilla generate_docs.R
+      env:
+        SPARK_HOME: /usr/spark-download-${{ matrix.spark }}/unzipped/spark-${{ matrix.spark }}-bin-hadoop3
     - name: Build R package
       shell: bash
       run: |
         cd R
-        sudo mkdir -p /usr/lib/R/site-library
-        sudo chown -R $USER: /usr/lib/R/site-library
         Rscript --vanilla build_r_package.R
-    - name: Test R package
+      env:
+        SPARK_HOME: /usr/spark-download-${{ matrix.spark }}/unzipped/spark-${{ matrix.spark }}-bin-hadoop3
+    - name: Test SparkR package
       shell: bash
       run: |
         cd R/sparkR-mosaic
         Rscript --vanilla tests.R
+      env:
+        SPARK_HOME: /usr/spark-download-${{ matrix.spark }}/unzipped/spark-${{ matrix.spark }}-bin-hadoop3
+    - name: Test sparklyr package
+      shell: bash
+      run: |
+        cd R/sparklyr-mosaic
+        Rscript --vanilla tests.R
+      env:
+        SPARK_HOME: /usr/spark-download-${{ matrix.spark }}/unzipped/spark-${{ matrix.spark }}-bin-hadoop3
     - name: Copy R artifacts to GH Actions run
       shell: bash
       run: |

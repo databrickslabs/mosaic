@@ -15,7 +15,7 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
 
     def xMinBehavior(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -38,7 +38,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
     }
 
     def xMaxBehavior(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -62,7 +62,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
     }
 
     def yMinBehavior(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -85,7 +85,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
     }
 
     def yMaxBehavior(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -109,7 +109,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
     }
 
     def xMinCodegen(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -131,7 +131,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
     }
 
     def xMaxCodegen(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -153,7 +153,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
     }
 
     def yMinCodegen(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -175,7 +175,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
     }
 
     def yMaxCodegen(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -197,7 +197,7 @@ trait ST_MinMaxXYZBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliary(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         val df = getWKTRowsDf().orderBy("id")
         val expr = ST_MinMaxXYZ(df.col("wkt").expr, mc.expressionConfig, "X", "MAX")

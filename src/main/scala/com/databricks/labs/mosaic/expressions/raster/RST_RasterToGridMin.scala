@@ -10,11 +10,11 @@ import org.apache.spark.sql.types.DoubleType
 
 /** Returns the minimum value of the raster in the grid cell. */
 case class RST_RasterToGridMin(
-    path: Expression,
+    raster: Expression,
     resolution: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterToGridExpression[RST_RasterToGridMin, Double](
-      path,
+      raster,
       resolution,
       DoubleType,
       expressionConfig
@@ -34,15 +34,15 @@ object RST_RasterToGridMin extends WithExpressionInfo {
 
     override def usage: String =
         """
-          |_FUNC_(expr1) - Returns a collection of grid index cells with the min pixel value per cell for each band of the raster.
-          |                The output type is array<array<struct<index: long, measure: double>>>.
-          |                Raster mask is taken into account and only valid pixels are used for the calculation.
+          |_FUNC_(expr1, expr2) - Returns a collection of grid index cells with the min pixel value per cell for each band of the raster tile.
+          |                       The output type is array<array<struct<index: long, measure: double>>>.
+          |                       Raster mask is taken into account and only valid pixels are used for the calculation.
           |""".stripMargin
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a);
+          |      > SELECT _FUNC_(raster_tile, 3);
           |        [[(11223344, 123.4), (11223345, 125.4), ...], [(11223344, 123.1), (11223344, 123.6) ...], ...]
           |  """.stripMargin
 

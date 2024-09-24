@@ -17,14 +17,11 @@
 enableMosaic <- function(
   geometryAPI="JTS"
   ,indexSystem="H3"
-  ,rasterAPI="GDAL"
 ){
   geometry_api <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.geometry.api.GeometryAPI", methodName="apply", geometryAPI)
   indexing_system <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.index.IndexSystemFactory", methodName="getIndexSystem", indexSystem)
   
-  raster_api <- sparkR.callJStatic(x="com.databricks.labs.mosaic.core.raster.api.RasterAPI", methodName="apply", rasterAPI)
-  
-  mosaic_context <- sparkR.newJObject(x="com.databricks.labs.mosaic.functions.MosaicContext", indexing_system, geometry_api, raster_api)
+  mosaic_context <- sparkR.newJObject(x="com.databricks.labs.mosaic.functions.MosaicContext", indexing_system, geometry_api)
   functions <<- sparkR.callJMethod(mosaic_context, "functions")
   # register the sql functions for use in sql() commands
   sparkR.callJMethod(mosaic_context, "register")

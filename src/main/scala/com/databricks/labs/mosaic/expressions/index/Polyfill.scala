@@ -61,7 +61,7 @@ case class Polyfill(geom: Expression, resolution: Expression, indexSystem: Index
         val resolutionVal: Int = indexSystem.getResolution(input2)
 
         val geometry = geometryAPI.geometry(input1, geom.dataType)
-        val indices = indexSystem.polyfill(geometry, resolutionVal, Some(geometryAPI))
+        val indices = indexSystem.polyfill(geometry, resolutionVal, geometryAPI)
 
         val formatted = indices.map(indexSystem.formatCellId)
         val serialized = ArrayData.toArrayData(formatted.toArray)

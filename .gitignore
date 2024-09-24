@@ -1,6 +1,7 @@
 #IntelliJ files
 .idea
 *.iml
+tmp_
 
 #VSCode files
 .vscode
@@ -65,6 +66,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 /python/test/.run/
+spatial_knn
 
 # Translations
 *.mo
@@ -157,3 +159,9 @@ spark-warehouse
 .DS_Store
 .Rproj.user
 docker/.m2/
+/python/notebooks/
+/scripts/m2/
+/python/mosaic_test/
+/python/checkpoint/
+/python/checkpoint-new/
+/scripts/docker/docker-build/ubuntu-22-spark-3.4/Dockerfile

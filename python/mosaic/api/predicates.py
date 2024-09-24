@@ -9,7 +9,7 @@ from mosaic.utils.types import ColumnOrName
 ######################
 
 
-__all__ = ["st_intersects", "st_contains"]
+__all__ = ["st_intersects", "st_contains", "st_within"]
 
 
 def st_intersects(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
@@ -24,10 +24,6 @@ def st_intersects(left_geom: ColumnOrName, right_geom: ColumnOrName) -> Column:
     Returns
     -------
     Column (BooleanType)
-
-    Notes
-    -----
-    Intersection logic will be dependent on the chosen geometry API (ESRI or JTS).
 
     """
     return config.mosaic_context.invoke_function(
@@ -53,6 +49,27 @@ def st_contains(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
     """
     return config.mosaic_context.invoke_function(
         "st_contains",
+        pyspark_to_java_column(geom1),
+        pyspark_to_java_column(geom2),
+    )
+
+
+def st_within(geom1: ColumnOrName, geom2: ColumnOrName) -> Column:
+    """
+    Returns `true` if geom1 'spatially' is within geom2.
+
+    Parameters
+    ----------
+    geom1 : Column
+    geom2 : Column
+
+    Returns
+    -------
+    Column (BooleanType)
+
+    """
+    return config.mosaic_context.invoke_function(
+        "st_within",
         pyspark_to_java_column(geom1),
         pyspark_to_java_column(geom2),
     )

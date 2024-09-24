@@ -68,7 +68,7 @@ case class IndexGeometry(indexID: Expression, format: Expression, indexSystem: I
         val indexGeometry = indexID.dataType match {
             case LongType    => indexSystem.indexToGeometry(input1.asInstanceOf[Long], geometryAPI)
             case IntegerType => indexSystem.indexToGeometry(input1.asInstanceOf[Int], geometryAPI)
-            case StringType  => indexSystem.indexToGeometry(input1.asInstanceOf[UTF8String].toString, geometryAPI)
+            case StringType  => indexSystem.indexToGeometry(indexSystem.parse(input1.asInstanceOf[UTF8String].toString), geometryAPI)
             case _           => throw new Error(s"${indexID.dataType} not supported.")
         }
         geometryAPI.serialize(indexGeometry, formatName)

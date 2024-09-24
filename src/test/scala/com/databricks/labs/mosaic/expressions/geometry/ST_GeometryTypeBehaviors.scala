@@ -15,7 +15,7 @@ import java.util.Locale
 trait ST_GeometryTypeBehaviors extends MosaicSpatialQueryTest {
 
     def wktTypesBehavior(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         val sc = spark
         import mc.functions._
@@ -48,7 +48,7 @@ trait ST_GeometryTypeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def wktTypesCodegen(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         val sc = spark
         import mc.functions._
@@ -79,7 +79,7 @@ trait ST_GeometryTypeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def hexTypesBehavior(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         val sc = spark
         import mc.functions._
@@ -114,7 +114,7 @@ trait ST_GeometryTypeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def hexTypesCodegen(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         val sc = spark
         import mc.functions._
@@ -143,7 +143,7 @@ trait ST_GeometryTypeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
 

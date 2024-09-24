@@ -15,7 +15,7 @@ import org.scalatest.matchers.should.Matchers._
 trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
 
     def wktDecompose(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -48,7 +48,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def wktDecomposeNoNulls(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -105,7 +105,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def wktDecomposeKeepCoreParamExpression(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
 
@@ -141,7 +141,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def lineDecompose(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -175,7 +175,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def lineDecomposeFirstPointOnBoundary(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
 
@@ -208,7 +208,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def wkbDecompose(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -241,7 +241,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def hexDecompose(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -274,7 +274,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def coordsDecompose(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -322,7 +322,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
         val sc = spark
@@ -383,7 +383,7 @@ trait MosaicExplodeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def issue360(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
 

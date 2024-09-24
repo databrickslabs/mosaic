@@ -20,7 +20,7 @@ import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper
 trait ST_IntersectionBehaviors extends QueryTest {
 
     def intersectionBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
@@ -31,7 +31,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
             .select(
               col("wkt"),
               col("id").alias("left_id"),
-              mosaic_explode(col("wkt"), resolution).alias("left_index"),
+              grid_tessellateexplode(col("wkt"), resolution).alias("left_index"),
               col("wkt").alias("left_wkt")
             )
 
@@ -43,7 +43,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
             .select(
               col("wkt"),
               col("id").alias("right_id"),
-              mosaic_explode(col("wkt"), resolution).alias("right_index"),
+              grid_tessellateexplode(col("wkt"), resolution).alias("right_index"),
               col("wkt").alias("right_wkt")
             )
 
@@ -58,20 +58,20 @@ trait ST_IntersectionBehaviors extends QueryTest {
               "right_id"
             )
             .agg(
-              st_intersection_aggregate(col("left_index"), col("right_index")).alias("agg_intersection"),
+              st_intersection_agg(col("left_index"), col("right_index")).alias("agg_intersection"),
               first("left_wkt").alias("left_wkt"),
               first("right_wkt").alias("right_wkt")
             )
             .withColumn("agg_area", st_area(col("agg_intersection")))
             .withColumn("flat_intersection", st_intersection(col("left_wkt"), col("right_wkt")))
             .withColumn("flat_area", st_area(col("flat_intersection")))
-            .withColumn("comparison", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)) // ESRI Spatial tolerance
+            .withColumn("comparison", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)) // Spatial tolerance
 
         result.select("comparison").collect().map(_.getBoolean(0)).forall(identity) shouldBe true
     }
 
     def intersectionAggBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         val sc = spark
         import mc.functions._
@@ -123,15 +123,50 @@ trait ST_IntersectionBehaviors extends QueryTest {
               col("left_index.index_id") === col("right_index.index_id")
             )
             .groupBy("left_row_id")
-            .agg(st_intersection_aggregate(col("left_index"), col("right_index")).alias("geom"))
+            .agg(st_intersection_agg(col("left_index"), col("right_index")).alias("geom"))
             .withColumn("area", st_area(col("geom")))
 
         (results.select("area").as[Double].collect().head -
             indexPolygon1.union(indexChip1).union(indexPolygon2).union(indexChip2).getArea) should be < 10e-8
+
+        left.createOrReplaceTempView("left")
+        right.createOrReplaceTempView("right")
+
+        val sqlResults = spark.sql(
+          """
+            |SELECT
+            |  left_row_id,
+            |  ST_Area(ST_Intersection_Agg(left_index, right_index)) AS area
+            |FROM left
+            |JOIN right
+            |ON left_index.index_id = right_index.index_id
+            |GROUP BY left_row_id
+            |""".stripMargin
+        )
+
+        (sqlResults.select("area").as[Double].collect().head -
+            indexPolygon1.union(indexChip1).union(indexPolygon2).union(indexChip2).getArea) should be < 10e-8
+
+        val sqlResults2 = spark.sql(
+          """
+            |SELECT
+            |  left_row_id,
+            |  ST_Area(ST_Intersection_Agg(left_index, right_index)) AS area
+            |FROM left
+            |JOIN right
+            |ON left_index.index_id = right_index.index_id
+            |GROUP BY left_row_id
+            |""".stripMargin
+        )
+
+        (sqlResults2.select("area").as[Double].collect().head -
+            indexPolygon1.union(indexChip1).union(indexPolygon2).union(indexChip2).getArea) should be < 10e-8
+
+        noException should be thrownBy st_intersection_agg(lit("POLYGON (1 1, 2 2, 3 3, 1 1)"), lit("POLYGON (1 1, 2 2, 3 3, 1 1)"))
     }
 
     def selfIntersectionBehaviour(indexSystem: IndexSystem, geometryAPI: GeometryAPI, resolution: Int): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         mc.register(spark)
@@ -142,7 +177,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
             .select(
               col("wkt"),
               col("id").alias("left_id"),
-              mosaic_explode(col("wkt"), resolution).alias("left_index"),
+              grid_tessellateexplode(col("wkt"), resolution).alias("left_index"),
               col("wkt").alias("left_wkt")
             )
 
@@ -164,20 +199,20 @@ trait ST_IntersectionBehaviors extends QueryTest {
               "right_id"
             )
             .agg(
-              st_intersection_aggregate(col("left_index"), col("right_index")).alias("agg_intersection"),
+              st_intersection_agg(col("left_index"), col("right_index")).alias("agg_intersection"),
               first("left_wkt").alias("left_wkt"),
               first("right_wkt").alias("right_wkt")
             )
             .withColumn("agg_area", st_area(col("agg_intersection")))
             .withColumn("flat_intersection", st_intersection(col("left_wkt"), col("right_wkt")))
             .withColumn("flat_area", st_area(col("flat_intersection")))
-            .withColumn("comparison", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)) // ESRI Spatial tolerance
+            .withColumn("comparison", abs(col("agg_area") - col("flat_area")) <= lit(1e-8)) // Spatial tolerance
 
         result.select("comparison").collect().map(_.getBoolean(0)).forall(identity) shouldBe true
     }
 
     def intersectionCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         val sc = spark
         import mc.functions._
@@ -203,7 +238,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
     }
 
     def auxiliaryMethods(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register(spark)
 
@@ -228,7 +263,7 @@ trait ST_IntersectionBehaviors extends QueryTest {
             case H3IndexSystem  => InternalRow.fromSeq(Seq(true, 622236750694711295L, Array.empty[Byte]))
         }
 
-        val stIntersectionAgg = ST_IntersectionAggregate(null, null, geometryAPI.name, indexSystem, 0, 0)
+        val stIntersectionAgg = ST_IntersectionAgg(null, null, geometryAPI.name, indexSystem, 0, 0)
         noException should be thrownBy stIntersectionAgg.getCellGeom(stringIDRow, ChipType(StringType))
         noException should be thrownBy stIntersectionAgg.getCellGeom(longIDRow, ChipType(LongType))
         an[Error] should be thrownBy stIntersectionAgg.getCellGeom(

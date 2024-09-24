@@ -24,7 +24,7 @@ trait ST_EnvelopeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def codegenCompilation(mc: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
 
         val sc = spark
         mc.register(sc)
@@ -47,7 +47,7 @@ trait ST_EnvelopeBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mc: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
 
         val sc = spark
         mc.register(sc)

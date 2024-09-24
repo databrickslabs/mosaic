@@ -2,14 +2,14 @@ package com.databricks.labs.mosaic.test
 
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfterAll, TestSuite}
-
 import org.apache.spark.sql._
 
 trait SparkSuite extends TestSuite with BeforeAndAfterAll {
 
     var sparkConf: SparkConf =
         new SparkConf(false)
-            .set("spark.executor.extraLibraryPath", "/usr/local/lib/gdal")
+            .set("spark.executor.extraLibraryPath", "/usr/lib/gdal")
+            .set("spark.sql.parquet.compression.codec", "uncompressed")
     @transient private var _sc: SparkContext = _
     @transient private var _spark: SparkSession = _
 
@@ -42,7 +42,7 @@ trait SparkSuite extends TestSuite with BeforeAndAfterAll {
 
     private def startSpark(): Unit = {
         _sc = new SparkContext("local[4]", "test", sparkConf)
-        _sc.setLogLevel("FATAL")
+        _sc.setLogLevel("ERROR")
         _spark = SparkSession.builder.config(sc.getConf).getOrCreate()
     }
 

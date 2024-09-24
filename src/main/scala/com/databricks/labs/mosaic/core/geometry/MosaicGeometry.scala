@@ -1,8 +1,12 @@
 package com.databricks.labs.mosaic.core.geometry
 
 import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
+import org.gdal.ogr.ogr
+import org.gdal.osr.SpatialReference
+import org.gdal.osr.osrConstants._
 import org.locationtech.proj4j._
 
 import java.util.Locale
@@ -37,6 +41,10 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def getCentroid: MosaicPoint
 
+    def getAnyPoint: MosaicPoint
+
+    def getDimension: Int
+
     def isEmpty: Boolean
 
     def getBoundary: MosaicGeometry
@@ -51,6 +59,10 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def buffer(distance: Double): MosaicGeometry
 
+    def buffer(distance: Double, bufferStyleParameters: String = ""): MosaicGeometry
+
+    def bufferCapStyle(distance: Double, capStyle: String): MosaicGeometry
+
     def simplify(tolerance: Double): MosaicGeometry
 
     def intersection(other: MosaicGeometry): MosaicGeometry
@@ -59,11 +71,23 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def envelope: MosaicGeometry
 
+    def extent: (Double, Double, Double, Double) = {
+        val env = envelope
+        (
+          env.minMaxCoord("X", "MIN"),
+          env.minMaxCoord("Y", "MIN"),
+          env.minMaxCoord("X", "MAX"),
+          env.minMaxCoord("Y", "MAX")
+        )
+    }
+
     def union(other: MosaicGeometry): MosaicGeometry
 
     def unaryUnion: MosaicGeometry
 
     def contains(other: MosaicGeometry): Boolean
+
+    def within(other: MosaicGeometry): Boolean
 
     def flatten: Seq[MosaicGeometry]
 
@@ -76,6 +100,9 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     def hashCode: Int
 
     def convexHull: MosaicGeometry
+
+    // Allow holes is set to false by default to match the behavior of the POSTGIS implementation
+    def concaveHull(lengthRatio: Double, allow_holes: Boolean = false): MosaicGeometry
 
     def minMaxCoord(dimension: String, func: String): Double = {
         val coordArray = this.getShellPoints.map(shell => {
@@ -96,6 +123,15 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
     }
 
     def transformCRSXY(sridTo: Int): MosaicGeometry
+
+    def osrTransformCRS(srcSR: SpatialReference, destSR: SpatialReference, geometryAPI: GeometryAPI): MosaicGeometry = {
+        if (srcSR.IsSame(destSR) == 1) return this
+        val ogcGeometry = ogr.CreateGeometryFromWkb(this.toWKB)
+        ogcGeometry.AssignSpatialReference(srcSR)
+        ogcGeometry.TransformTo(destSR)
+        val mosaicGeometry = geometryAPI.geometry(ogcGeometry.ExportToWkb, "WKB")
+        mosaicGeometry
+    }
 
     def transformCRSXY(sridTo: Int, sridFrom: Int): MosaicGeometry = {
         transformCRSXY(sridTo, Some(sridFrom))
@@ -127,6 +163,18 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def setSpatialReference(srid: Int): Unit
 
+    def getSpatialReferenceOSR: SpatialReference = {
+        val srID = getSpatialReference
+        if (srID == 0) {
+            null
+        } else {
+            val geomCRS = new SpatialReference()
+            geomCRS.ImportFromEPSG(srID)
+            geomCRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER)
+            geomCRS
+        }
+    }
+
     def hasValidCoords(crsBoundsProvider: CRSBoundsProvider, crsCode: String, which: String): Boolean = {
         val crsCodeIn = crsCode.split(":")
         val crsBounds = which.toLowerCase(Locale.ROOT) match {
@@ -139,5 +187,7 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
             crsBounds.lowerLeft.getY <= point.getY && point.getY <= crsBounds.upperRight.getY
         )
     }
+
+    def getAPI: GeometryAPI
 
 }

@@ -18,7 +18,7 @@ import scala.collection.JavaConverters._
 trait ST_SRIDBehaviors extends MosaicSpatialQueryTest {
 
     def SRIDBehaviour(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
         val mc = mosaicContext
         import mc.functions._
@@ -44,7 +44,7 @@ trait ST_SRIDBehaviors extends MosaicSpatialQueryTest {
             .select(as_json($"json").alias("json"))
             .where(!upper(st_geometrytype($"json")).isin("MULTILINESTRING", "MULTIPOLYGON"))
 
-        val result = sourceDf // ESRI GeoJSON issue
+        val result = sourceDf // GeoJSON issue
             .select(st_srid($"json"))
             .as[Int]
             .collect()
@@ -63,7 +63,7 @@ trait ST_SRIDBehaviors extends MosaicSpatialQueryTest {
     }
 
     def SRIDCodegen(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
         val mc = mosaicContext
         import mc.functions._
@@ -89,7 +89,7 @@ trait ST_SRIDBehaviors extends MosaicSpatialQueryTest {
             .select(as_json($"json").alias("json"))
             .where(!upper(st_geometrytype($"json")).isin("MULTILINESTRING", "MULTIPOLYGON"))
 
-        val results = sourceDf // ESRI GeoJSON issue
+        val results = sourceDf // GeoJSON issue
             .select(st_srid($"json"))
             .as[Int]
 
@@ -107,7 +107,7 @@ trait ST_SRIDBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
 

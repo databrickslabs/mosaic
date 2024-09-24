@@ -12,25 +12,27 @@ class MosaicLibraryHandler:
     _jar_filename = None
     _auto_attached_enabled = None
 
-    def __init__(self, spark):
+    def __init__(self, spark, log_info: bool = True):
         self.spark = spark
         self.sc = spark.sparkContext
-        self.sc.setLogLevel("info")
-        log4jLogger = self.sc._jvm.org.apache.log4j
-        LOGGER = log4jLogger.LogManager.getLogger(__class__.__name__)
+        LOGGER = None
+        if log_info:
+            log4jLogger = self.sc._jvm.org.apache.log4j
+            LOGGER = log4jLogger.LogManager.getLogger(__class__.__name__)
 
         if self.auto_attach_enabled:
-            LOGGER.info(f"Looking for Mosaic JAR at {self.mosaic_library_location}.")
-            if not os.path.exists(self.mosaic_library_location):
+            jar_path = self.mosaic_library_location
+            LOGGER and LOGGER.info(f"Looking for Mosaic JAR at {jar_path}.")
+            if not os.path.exists(jar_path):
                 raise FileNotFoundError(
-                    f"Mosaic JAR package {self._jar_filename} could not be located at {self.mosaic_library_location}."
+                    f"Mosaic JAR package {self._jar_filename} could not be located at {jar_path}."
                 )
-            LOGGER.info(f"Automatically attaching Mosaic JAR to cluster.")
+            LOGGER and LOGGER.info(f"Automatically attaching Mosaic JAR to cluster.")
             self.auto_attach()
 
     @property
     def auto_attach_enabled(self) -> bool:
-        if not self._auto_attached_enabled:
+        if self._auto_attached_enabled is None:
             try:
                 result = (
                     self.spark.conf.get("spark.databricks.labs.mosaic.jar.autoattach")
@@ -43,7 +45,7 @@ class MosaicLibraryHandler:
 
     @property
     def mosaic_library_location(self):
-        if not self._jar_path:
+        if self._jar_path is None:
             try:
                 self._jar_path = self.spark.conf.get(
                     "spark.databricks.labs.mosaic.jar.path"
@@ -52,11 +54,15 @@ class MosaicLibraryHandler:
             except Py4JJavaError as e:
                 self._jar_filename = f"mosaic-{importlib.metadata.version('databricks-mosaic')}-jar-with-dependencies.jar"
                 try:
-                    with importlib.resources.path("mosaic.lib", self._jar_filename) as p:
+                    with importlib.resources.path(
+                        "mosaic.lib", self._jar_filename
+                    ) as p:
                         self._jar_path = p.as_posix()
                 except FileNotFoundError as fnf:
                     self._jar_filename = f"mosaic-{importlib.metadata.version('databricks-mosaic')}-SNAPSHOT-jar-with-dependencies.jar"
-                    with importlib.resources.path("mosaic.lib", self._jar_filename) as p:
+                    with importlib.resources.path(
+                        "mosaic.lib", self._jar_filename
+                    ) as p:
                         self._jar_path = p.as_posix()
         return self._jar_path
 
@@ -77,11 +83,25 @@ class MosaicLibraryHandler:
         converters = self.sc._jvm.scala.collection.JavaConverters
 
         JarURI = JavaURI.create("file:" + self._jar_path)
-        lib = JavaJarId(
-            JarURI,
-            ManagedLibraryId.defaultOrganization(),
-            NoVersionModule.simpleString(),
-        )
+
+        try:
+            # This will fix the exception when running on Databricks Runtime 13.x+
+            optionClass = getattr(self.sc._jvm.scala, "Option$")
+            optionModule = getattr(optionClass, "MODULE$")
+            lib = JavaJarId(
+                JarURI,
+                ManagedLibraryId.defaultOrganization(),
+                NoVersionModule.simpleString(),
+                optionModule.apply(None),
+                optionModule.apply(None),
+            )
+        except:
+            lib = JavaJarId(
+                JarURI,
+                ManagedLibraryId.defaultOrganization(),
+                NoVersionModule.simpleString(),
+            )
+
         libSeq = converters.asScalaBufferConverter((lib,)).asScala().toSeq()
 
         context = DatabricksILoop.getSharedDriverContextIfExists().get()

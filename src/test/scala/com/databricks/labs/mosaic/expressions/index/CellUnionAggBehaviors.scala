@@ -11,7 +11,7 @@ import org.scalatest.matchers.should.Matchers._
 trait CellUnionAggBehaviors extends MosaicSpatialQueryTest {
 
     def behaviorComputedColumns(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -68,6 +68,16 @@ trait CellUnionAggBehaviors extends MosaicSpatialQueryTest {
 
         res.foreach { case (actual, expected) => actual.equalsTopo(expected) shouldEqual true }
 
+        in_df.createOrReplaceTempView("source")
+
+        //noException should be thrownBy spark
+            spark.sql("""with subquery (
+                | select grid_cell_union_agg(chip) as union_chip from source
+                | group by case_id, chip.index_id
+                |) select st_aswkt(union_chip.wkb) from subquery""".stripMargin)
+            .as[String]
+            .collect()
+
     }
 
     def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
@@ -76,7 +86,7 @@ trait CellUnionAggBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
         import sc.implicits._
         val mc = mosaicContext

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+sed -e "s/%%GDAL_VERSION%%/$GDAL_VERSION/" \
+    -e "s/%%LIBPROJ_VERSION%%/$LIBPROJ_VERSION/" \
+    -e "s/%%SPARK_VERSION%%/$SPARK_VERSION/" \
+    -e "s/%%CORES%%/$CORES/" "Dockerfile.template" > Dockerfile
+
+# use --no-cache to force clean build
+#docker build --no-cache -t "mosaic-dev:ubuntu22-gdal$GDAL_VERSION-spark$SPARK_VERSION" .
+docker build -t "mosaic-dev:ubuntu22-gdal$GDAL_VERSION-spark$SPARK_VERSION" .

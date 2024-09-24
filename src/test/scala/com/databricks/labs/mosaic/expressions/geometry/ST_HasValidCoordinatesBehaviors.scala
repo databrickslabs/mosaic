@@ -19,7 +19,7 @@ trait ST_HasValidCoordinatesBehaviors extends MosaicSpatialQueryTest {
 
     // noinspection AccessorLikeMethodIsUnit
     def hasValidCoordinatesBehaviours(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("FATAL") // <- otherwise asserted exceptions print
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -103,7 +103,7 @@ trait ST_HasValidCoordinatesBehaviors extends MosaicSpatialQueryTest {
     }
 
     def expressionCodegen(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         val sc = spark
         import mc.functions._
@@ -130,7 +130,7 @@ trait ST_HasValidCoordinatesBehaviors extends MosaicSpatialQueryTest {
 
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
 

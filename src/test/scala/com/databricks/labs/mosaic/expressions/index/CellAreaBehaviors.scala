@@ -11,7 +11,7 @@ import org.scalatest.matchers.should.Matchers._
 trait CellAreaBehaviors extends MosaicSpatialQueryTest {
 
     def behaviorComputedColumns(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -26,6 +26,17 @@ trait CellAreaBehaviors extends MosaicSpatialQueryTest {
 
         val result = Seq(cellId).toDF("cellId").select(grid_cellarea($"cellId")).collect()
         math.abs(result.head.getDouble(0) - Row(area).getDouble(0)) < 1e-6 shouldEqual true
+
+        Seq(cellId).toDF("cellId").createOrReplaceTempView("cellId")
+
+        val sqlResult = spark
+            .sql("""with subquery (
+                   | select grid_cellarea(cellId) as area from cellId
+                   |) select * from subquery""".stripMargin)
+            .as[Double]
+            .collect()
+
+        math.abs(sqlResult.head - area) < 1e-6 shouldEqual true
     }
 
     def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
@@ -34,7 +45,7 @@ trait CellAreaBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
         import sc.implicits._
         val mc = mosaicContext

@@ -38,7 +38,7 @@ object MosaicRegistryBehaviors extends MockFactory {
         ix.name _ when () returns H3.name
         val gapi = stub[GeometryAPI]
         gapi.name _ when () returns JTS.name
-        MosaicContext.build(ix, gapi, GDAL)
+        MosaicContext.build(ix, gapi)
     }
 
 }

@@ -2,18 +2,20 @@ name: build_scala
 on:
   push:
     branches:
-      - "scala/"
+      - "scala/**"
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
-        python: [ 3.8.10 ]
-        spark: [ 3.2.1 ]
-        R: [ 4.1.2 ]
+        python: [ 3.10.12 ]
+        numpy: [ 1.22.4 ]
+        gdal: [ 3.4.1 ]
+        spark: [ 3.4.1 ]
+        R: [ 4.2.2 ]
     steps:
       - name: checkout code
         uses: actions/checkout@v2
@@ -21,3 +23,7 @@ jobs:
         uses: ./.github/actions/scala_build
       - name: upload artefacts
         uses: ./.github/actions/upload_artefacts
+      - name: Publish test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

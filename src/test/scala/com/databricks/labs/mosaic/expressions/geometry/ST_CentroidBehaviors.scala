@@ -12,7 +12,7 @@ import org.scalatest.matchers.should.Matchers.{an, be, convertToAnyShouldWrapper
 trait ST_CentroidBehaviors extends MosaicSpatialQueryTest {
 
     def centroidBehavior(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         val sc = spark
@@ -47,10 +47,22 @@ trait ST_CentroidBehaviors extends MosaicSpatialQueryTest {
             .collect()
 
         sqlResult.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
+
+        val sqlResult2 = spark
+            .sql(
+                """with subquery (
+                  | select st_centroid2D(wkt) as coord from source
+                  |) select coord.col1, coord.col2 from subquery""".stripMargin)
+            .as[(Double, Double)]
+            .collect()
+
+        sqlResult2.zip(expected).foreach { case (l, r) => l.equals(r) shouldEqual true }
+
+        noException should be thrownBy st_centroid2D(lit("POLYGON (1 1, 2 2, 3 3, 1 1)"))
     }
 
     def centroidCodegen(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         val sc = spark
         import mc.functions._
@@ -80,7 +92,7 @@ trait ST_CentroidBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         mc.register(spark)
 

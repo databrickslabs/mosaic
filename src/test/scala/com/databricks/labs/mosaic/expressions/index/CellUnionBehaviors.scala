@@ -11,7 +11,7 @@ import org.scalatest.matchers.should.Matchers._
 trait CellUnionBehaviors extends MosaicSpatialQueryTest {
 
     def behaviorComputedColumns(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val mc = mosaicContext
         import mc.functions._
         mc.register(spark)
@@ -71,6 +71,22 @@ trait CellUnionBehaviors extends MosaicSpatialQueryTest {
             .map(r => (mc.getGeometryAPI.geometry(r._1, "WKT"), mc.getGeometryAPI.geometry(r._2, "WKT")))
 
         res.foreach { case (actual, expected) => actual.equalsTopo(expected) shouldEqual true }
+
+        leftDf.createOrReplaceTempView("left")
+
+        val sqlResult = spark
+            .sql("""with subquery (
+                   | select grid_cell_union(left_chip, left_chip) as chip from left
+                   |) select st_aswkt(chip.wkb) from subquery""".stripMargin)
+            .as[String]
+            .collect()
+
+        sqlResult.exists { r =>
+            mc.getGeometryAPI
+                .geometry(r, "WKT")
+                .equalsTopo(mc.getGeometryAPI.geometry("POLYGON ((0 0, 2 0, 2 1, 0 1, 0 0))", "WKT"))
+        } shouldEqual true
+
     }
 
     def columnFunctionSignatures(mosaicContext: MosaicContext): Unit = {
@@ -79,7 +95,7 @@ trait CellUnionBehaviors extends MosaicSpatialQueryTest {
     }
 
     def auxiliaryMethods(mosaicContext: MosaicContext): Unit = {
-        spark.sparkContext.setLogLevel("FATAL")
+        spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
         import sc.implicits._
         val mc = mosaicContext

@@ -1,14 +1,13 @@
 package com.databricks.labs.mosaic.test
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.geometry.api.{ESRI, JTS}
+import com.databricks.labs.mosaic.core.geometry.api.{GeometryAPI, JTS}
 import com.databricks.labs.mosaic.core.index._
 import com.databricks.labs.mosaic.functions.MosaicContext
-import org.apache.spark.sql.{DataFrame, QueryTest, SparkSession}
 import org.apache.spark.sql.catalyst.expressions.CodegenObjectFactoryMode
 import org.apache.spark.sql.catalyst.plans.PlanTest
 import org.apache.spark.sql.functions.col
 import org.apache.spark.sql.internal.SQLConf
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.scalatest._
 
 /**
@@ -17,13 +16,13 @@ import org.scalatest._
   */
 abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
 
-    private val geometryApis = Seq(ESRI, JTS)
+    private val geometryApis = Seq(JTS)
 
     private val indexSystems =
         Seq(
           H3IndexSystem,
           BNGIndexSystem,
-          new CustomIndexSystem(GridConf(-180, 180, -90, 90, 2, 360, 180))
+          CustomIndexSystem(GridConf(-180, 180, -90, 90, 2, 360, 180))
         )
 
     def checkGeometryTopo(
@@ -48,9 +47,10 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
               withSQLConf(
                 SQLConf.ADAPTIVE_EXECUTION_ENABLED.key -> "false",
                 SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "true",
-                SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString
+                SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString,
+                "spark.sql.parquet.compression.codec" -> "uncompressed"
               ) {
-                  spark.sparkContext.setLogLevel("FATAL")
+                  spark.sparkContext.setLogLevel("ERROR")
                   withMosaicContext(geom, is) {
                       testFun
                   }
@@ -70,9 +70,10 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
             super.test(testName + s" (no codegen) (${geom.name}, ${is.name})", testTags: _*)(
               withSQLConf(
                 SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
-                SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString
+                SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString,
+                "spark.sql.parquet.compression.codec" -> "uncompressed"
               ) {
-                  spark.sparkContext.setLogLevel("FATAL")
+                  spark.sparkContext.setLogLevel("ERROR")
                   withMosaicContext(geom, is) {
                       testFun
                   }
@@ -92,9 +93,10 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                   withSQLConf(
                     SQLConf.ADAPTIVE_EXECUTION_ENABLED.key -> "false",
                     SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "true",
-                    SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString
+                    SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.CODEGEN_ONLY.toString,
+                    "spark.sql.parquet.compression.codec" -> "uncompressed"
                   ) {
-                      spark.sparkContext.setLogLevel("FATAL")
+                      spark.sparkContext.setLogLevel("ERROR")
                       withMosaicContext(geom, is) {
                           testFun
                       }
@@ -114,9 +116,10 @@ abstract class MosaicSpatialQueryTest extends PlanTest with MosaicHelper {
                 super.test(testName + s" (no codegen) (${geom.name}, ${is.name})", testTags: _*)(
                   withSQLConf(
                     SQLConf.WHOLESTAGE_CODEGEN_ENABLED.key -> "false",
-                    SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString
+                    SQLConf.CODEGEN_FACTORY_MODE.key -> CodegenObjectFactoryMode.NO_CODEGEN.toString,
+                    "spark.sql.parquet.compression.codec" -> "uncompressed"
                   ) {
-                      spark.sparkContext.setLogLevel("FATAL")
+                      spark.sparkContext.setLogLevel("ERROR")
                       withMosaicContext(geom, is) {
                           testFun
                       }

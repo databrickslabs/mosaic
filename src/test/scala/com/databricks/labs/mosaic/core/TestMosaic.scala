@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.core
 
-import com.databricks.labs.mosaic.{ESRI, JTS}
+import com.databricks.labs.mosaic.{H3, JTS}
 import com.databricks.labs.mosaic.core.index._
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.must.Matchers.be
@@ -10,11 +10,11 @@ class TestMosaic extends AnyFunSuite {
 
     test("mosaicFill should not return duplicates with H3") {
         // This tests the fix for issue #243 https://github.com/databrickslabs/mosaic/issues/243
-        val geom = ESRI.geometry(
+        val geom = JTS.geometry(
           "POLYGON ((4.42 51.78, 4.38 51.78, 4.39 51.83, 4.40 51.83, 4.41 51.8303, 4.417 51.8295, 4.42 51.83, 4.44 51.81, 4.42 51.78))",
           "WKT"
         )
-        val result = Mosaic.mosaicFill(geom, 7, keepCoreGeom = true, H3IndexSystem, ESRI)
+        val result = Mosaic.mosaicFill(geom, 7, keepCoreGeom = true, H3IndexSystem, JTS)
 
         assert(result.length == 10)
         assert(result.map(x => x.index).distinct.length == 10)
@@ -41,10 +41,10 @@ class TestMosaic extends AnyFunSuite {
                 " -73.16000331309866 41.658357439331475, -73.15979488017096 41.65853007132134, -73.15923429499004 41.65899462327653," +
                 " -73.15902680427884 41.65916030197158, -73.15691038908221 41.6578889582749, -73.15478938601524 41.6566036161547," +
                 " -73.15203987512825 41.65493888808187))"
-        val geom = ESRI.geometry(polygon, "WKT")
+        val geom = JTS.geometry(polygon, "WKT")
         val conf = GridConf(-180, 180, -90, 90, 2, 360, 180)
         val grid = CustomIndexSystem(conf)
-        val result = Mosaic.geometryKRing(geom, 7, 1, grid, ESRI)
+        val result = Mosaic.geometryKRing(geom, 7, 1, grid, JTS)
 
         assert(result.nonEmpty)
     }
@@ -63,6 +63,20 @@ class TestMosaic extends AnyFunSuite {
 
         math.abs(chipArea - expectedArea) should be < 1e-8
 
+    }
+
+    test("MosaicFill should not return empty set for bounding box.") {
+        val wkt = "POLYGON (( -127.48832860406948 -0.0011265364650581968, " +
+            "-127.48832851537821 -0.0010988881177292488, -127.4883092423591 -0.0010984513060565016," +
+            " -127.48830933794375 -0.0011272500508798704, -127.48832860406948 -0.0011265364650581968))"
+
+        val bbox = JTS.geometry(wkt, "WKT")
+
+        val cells = Mosaic
+            .mosaicFill(bbox, 6, keepCoreGeom = false, H3, JTS)
+            .map(_.indexAsLong(H3))
+
+        cells.length should be > 0
     }
 
 }

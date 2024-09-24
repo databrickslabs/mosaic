@@ -1,10 +1,13 @@
 package com.databricks.labs.mosaic.core.geometry.api
 
+import com.databricks.labs.mosaic.MOSAIC_GEOMETRY_API
 import com.databricks.labs.mosaic.codegen.format._
+import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry._
 import com.databricks.labs.mosaic.core.geometry.point._
 import com.databricks.labs.mosaic.core.types._
 import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnum}
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
@@ -14,6 +17,20 @@ import java.util.Locale
 abstract class GeometryAPI(
     reader: GeometryReader
 ) extends Serializable {
+
+    def createBbox(xMin: Double, yMin: Double, xMax: Double, yMax: Double): MosaicGeometry = {
+        val p1 = fromGeoCoord(Coordinates(yMin, xMin))
+        val p2 = fromGeoCoord(Coordinates(yMax, xMin))
+        val p3 = fromGeoCoord(Coordinates(yMax, xMax))
+        val p4 = fromGeoCoord(Coordinates(yMin, xMax))
+        geometry(Seq(p1, p2, p3, p4, p1), GeometryTypeEnum.POLYGON)
+    }
+
+    def geographicExtent(spatialReferenceID: Int): MosaicGeometry = {
+        val bounds = CRSBoundsProvider(this).reprojectedBounds("EPSG", spatialReferenceID)
+        createBbox(bounds.lowerLeft.getX, bounds.lowerLeft.getY, bounds.upperRight.getX, bounds.upperRight.getY)
+    }
+
 
     def name: String
 
@@ -106,8 +123,12 @@ object GeometryAPI extends Serializable {
     def apply(name: String): GeometryAPI =
         name match {
             case "JTS"  => JTS
-            case "ESRI" => ESRI
             case _      => throw new Error(s"Unsupported API name: $name.")
         }
+
+    def apply(sparkSession: SparkSession): GeometryAPI = {
+        val apiName = sparkSession.conf.get(MOSAIC_GEOMETRY_API, "JTS")
+        apply(apiName)
+    }
 
 }

@@ -10,7 +10,12 @@ import org.apache.spark.unsafe.types.UTF8String
 import scala.util.{Success, Try}
 
 /** Implements the [[IndexSystem]] for any CRS system. */
+//noinspection ScalaWeakerAccess
 case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with Serializable {
+
+    override def crsID: Int = conf.crsID.getOrElse(
+      throw new Error("CRS ID is not defined for this index system")
+    )
 
     val name =
         f"CUSTOM(${conf.boundXMin}, ${conf.boundXMax}, ${conf.boundYMin}, ${conf.boundYMax}, ${conf.cellSplits}, ${conf.rootCellSizeX}, ${conf.rootCellSizeY})"
@@ -137,8 +142,8 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
       * @return
       *   A set of indices representing the input geometry.
       */
-    override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI]): Seq[Long] = {
-        require(geometryAPI.isDefined, "GeometryAPI cannot be None.")
+    override def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Seq[Long] = {
+//        require(geometryAPI.isDefined, "GeometryAPI cannot be None.")
         if (geometry.isEmpty) {
             return Seq[Long]()
         }
@@ -165,7 +170,7 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
 
         val result = cellCenters
             // Select only cells which center falls within the geometry
-            .filter(cell => geometry.contains(geometryAPI.get.fromGeoCoord(Coordinates(cell._2, cell._1))))
+            .filter(cell => geometry.contains(geometryAPI.fromGeoCoord(Coordinates(cell._2, cell._1))))
 
             // Extract cellIDs only
             .map(cell => pointToIndex(cell._1, cell._2, resolution))
@@ -227,18 +232,6 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
     }
 
     /**
-      * Get the geometry corresponding to the index with the input id.
-      *
-      * @param index
-      *   Id of the index whose geometry should be returned.
-      * @return
-      *   An instance of [[MosaicGeometry]] corresponding to index.
-      */
-    override def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry = {
-        indexToGeometry(index.toLong, geometryAPI)
-    }
-
-    /**
       * Get the index ID corresponding to the provided coordinates.
       *
       * @param x
@@ -253,7 +246,7 @@ case class CustomIndexSystem(conf: GridConf) extends IndexSystem(LongType) with 
     override def pointToIndex(x: Double, y: Double, resolution: Int): Long = {
         require(!x.isNaN && !x.isNaN, throw new IllegalStateException("NaN coordinates are not supported."))
         require(
-          resolution < conf.maxResolution,
+          resolution <= conf.maxResolution,
           throw new IllegalStateException(s"Resolution exceeds maximum resolution of ${conf.maxResolution}.")
         )
         require(

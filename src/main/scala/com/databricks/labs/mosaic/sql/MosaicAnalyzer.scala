@@ -7,29 +7,29 @@ import org.apache.spark.sql.types._
 
 import scala.util._
 
-class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
+case class MosaicAnalyzer(analyzerMosaicFrame: DataFrame) {
 
     val defaultSampleFraction = 0.01
 
-    def getOptimalResolution(sampleFraction: Double): Int = {
-        getOptimalResolution(SampleStrategy(sampleFraction = Some(sampleFraction)))
+    def getOptimalResolution(geometryColumn: String, sampleFraction: Double): Int = {
+        getOptimalResolution(geometryColumn, SampleStrategy(sampleFraction = Some(sampleFraction)))
     }
 
-    def getOptimalResolution: Int = getOptimalResolution(SampleStrategy())
+    def getOptimalResolution(geometryColumn: String): Int = getOptimalResolution(geometryColumn, SampleStrategy())
 
-    def getOptimalResolutionStr: String = getOptimalResolutionStr(SampleStrategy())
+    def getOptimalResolutionStr(geometryColumn: String): String = getOptimalResolutionStr(geometryColumn, SampleStrategy())
 
-    def getOptimalResolutionStr(sampleStrategy: SampleStrategy): String = {
-        val resolution = getOptimalResolution(sampleStrategy)
-        val mc = MosaicContext.context
+    def getOptimalResolutionStr(geometryColumn: String, sampleStrategy: SampleStrategy): String = {
+        val resolution = getOptimalResolution(geometryColumn, sampleStrategy)
+        val mc = MosaicContext.context()
         mc.getIndexSystem.getResolutionStr(resolution)
     }
 
-    def getOptimalResolution(sampleStrategy: SampleStrategy): Int = {
+    def getOptimalResolution(geometryColumn: String, sampleStrategy: SampleStrategy): Int = {
         val ss = SparkSession.builder().getOrCreate()
         import ss.implicits._
 
-        val metrics = getResolutionMetrics(sampleStrategy, 1, 100)
+        val metrics = getResolutionMetrics(geometryColumn, sampleStrategy, 1, 100)
             .select("resolution", "percentile_50_geometry_area")
             .as[(Int, Double)]
             .collect()
@@ -38,8 +38,13 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
         metrics(midInd)._1
     }
 
-    def getResolutionMetrics(sampleStrategy: SampleStrategy = SampleStrategy(), lowerLimit: Int = 5, upperLimit: Int = 500): DataFrame = {
-        val mosaicContext = MosaicContext.context
+    def getResolutionMetrics(
+        geometryColumn: String,
+        sampleStrategy: SampleStrategy = SampleStrategy(),
+        lowerLimit: Int = 5,
+        upperLimit: Int = 500
+    ): DataFrame = {
+        val mosaicContext = MosaicContext.context()
         import mosaicContext.functions._
         val spark = SparkSession.builder().getOrCreate()
 
@@ -47,7 +52,7 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
 
         val percentiles = analyzerMosaicFrame
             .transform(sampleStrategy.transformer)
-            .withColumn("area", st_area(analyzerMosaicFrame.getGeometryColumn))
+            .withColumn("area", st_area(col(geometryColumn)))
             .select(
               mean("area").alias("mean"),
               areaPercentile(0.25).alias("p25"),
@@ -57,11 +62,7 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
             .collect()
             .head
 
-        val meanIndexAreas = for (i <- mosaicContext.getIndexSystem.resolutions) yield (i, getMeanIndexArea(sampleStrategy, i))
-
-        if (percentiles.anyNull) {
-            throw MosaicSQLExceptions.NotEnoughGeometriesException
-        }
+        val meanIndexAreas = for (i <- mosaicContext.getIndexSystem.resolutions) yield (i, getMeanIndexArea(geometryColumn, sampleStrategy, i))
 
         val indexAreaRows = meanIndexAreas
             .map({ case (resolution, indexArea) =>
@@ -99,15 +100,15 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
             )
     }
 
-    private def getMeanIndexArea(sampleStrategy: SampleStrategy, resolution: Int): Double = {
-        val mosaicContext = MosaicContext.context
+    private def getMeanIndexArea(geometryColumn: String, sampleStrategy: SampleStrategy, resolution: Int): Double = {
+        val mosaicContext = MosaicContext.context()
         import mosaicContext.functions._
         val spark = SparkSession.builder().getOrCreate()
         import spark.implicits._
 
         val meanIndexAreaDf = analyzerMosaicFrame
             .transform(sampleStrategy.transformer)
-            .withColumn("centroid", st_centroid(analyzerMosaicFrame.getGeometryColumn))
+            .withColumn("centroid", st_centroid(col(geometryColumn)))
             .select(
               mean(
                 st_area(
@@ -122,14 +123,11 @@ class MosaicAnalyzer(analyzerMosaicFrame: MosaicFrame) {
               )
             )
 
-        Try(meanIndexAreaDf.as[Double].collect.head) match {
-            case Success(result) => result
-            case Failure(_)      => throw MosaicSQLExceptions.NotEnoughGeometriesException
-        }
+        Try(meanIndexAreaDf.as[Double].collect.head).toOption.getOrElse(0.0)
     }
 
-    def getOptimalResolution(sampleRows: Int): Int = {
-        getOptimalResolution(SampleStrategy(sampleRows = Some(sampleRows)))
+    def getOptimalResolution(geometryColumn: String, sampleRows: Int): Int = {
+        getOptimalResolution(geometryColumn, SampleStrategy(sampleRows = Some(sampleRows)))
     }
 
 }

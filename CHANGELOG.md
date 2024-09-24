@@ -1,5 +1,67 @@
+## v0.4.3 [DBR 13.3 LTS]
+- Pyspark requirement removed from python setup.cfg as it is supplied by DBR
+- Python version limited to "<3.11,>=3.10" for DBR
+- iPython dependency limited to "<8.11,>=7.4.2" for both DBR and keplergl-jupyter 
+- Expanded support for fuse-based checkpointing (persisted raster storage), managed through:
+  - spark config 'spark.databricks.labs.mosaic.raster.use.checkpoint' in addition to 'spark.databricks.labs.mosaic.raster.checkpoint'.
+  - python: `mos.enable_gdal(spark, with_checkpoint_path=path)`.
+  - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, path)`.
+
+## v0.4.2 [DBR 13.3 LTS]
+- Geopandas now fixed to "<0.14.4,>=0.14" due to conflict with minimum numpy version in geopandas 0.14.4.
+- H3 python changed from "==3.7.0" to "<4.0,>=3.7" to pick up patches.
+- Fixed an issue with fallback logic when deserializing subdatasets from a zip.
+- Adjusted data used to speed up a long-running test.
+- Streamlines setup_gdal and setup_fuse_install:
+    - init script and resource copy logic fixed to repo "main" (.so) / "latest" (.jar).
+    - added apt-get lock handling for native installs.
+    - removed support for UbuntuGIS PPA as GDAL version no longer compatible with jammy default (3.4.x).
+
+## v0.4.1 [DBR 13.3 LTS]
+- Fixed python bindings for MosaicAnalyzer functions.
+- Added tiller functions, ST_AsGeoJSONTile and ST_AsMVTTile, for creating GeoJSON and MVT tiles as aggregations of geometries.
+- Added filter and convolve functions for raster data.
+- Raster tile schema changed to be <tile:struct<index_id:bigint, tile:binary, metadata:map<string, string>>.
+- Raster tile metadata will contain driver, parentPath and path.
+- Raster tile metadata will contain warnings and errors in case of failures.
+- All raster functions ensure rasters are TILED and not STRIPED when appropriate.
+- GDAL cache memory has been decreased to 512MB to reduce memory usage and competition with Spark.
+- Add RST_MakeTiles that allows for different raster creations.
+- Rasters can now be passed as file pointers using checkpoint location.
+- Added logic to handle zarr format for raster data.
+- Added RST_SeparateBands to separate bands from a raster for NetCDF and Zarr formats.
+
+## v0.4.0 [DBR 13.3 LTS]
+- First release for DBR 13.3 LTS which is Ubuntu Jammy and Spark 3.4.1. Not backwards compatible, meaning it will not run on prior DBRs; requires either a Photon DBR or a ML Runtime (__Standard, non-Photon DBR no longer allowed__).
+- New `setup_fuse_install` function to meet various requirements arising with Unity Catalog + Shared Access clusters; removed the scala equivalent function, making artifact setup and install python-first for scala and Spark SQL. 
+- Removed OSS ESRI Geometry API for 0.4 series, JTS now the only vector provider.
+- MosaicAnalyzer functions now accept Spark DataFrames instead of MosaicFrame, which has been removed.
+- Docs for 0.3.x have been archived and linked from current docs; notebooks for 0.3.x have been separated from current notebooks.
+- This release targets Assigned (vs Shared Access) clusters and offers python and scala language bindings; SQL expressions will not register in this release within Unity Catalog.
+
+## v0.3.14 [DBR < 13]
+- Fixes for Warning and Error messages on mosaic_enable call.
+- Performance improvements for raster functions.
+- Fix support for GDAL configuration via spark config (use 'spark.databricks.labs.mosaic.gdal.' prefix).
+
+## v0.3.13
+- R bindings generation fixed and improved.
+- Remove usage of /vsimem/ drivers for GDAL due to memory leaks.
+- Add support for MapAlgebra expressions via RST_MapAlgebra.
+- Add support for custom combine python functions via RST_DerivedBand.
+- Improve test coverage.
+- Allow for GDAL configuration via spark config (use 'spark.databricks.labs.mosaic.gdal.' prefix).
+
 ## v0.3.12
 - Make JTS default Geometry Provider
+- Add raster tile functions.
+- Expand the support for raster manipulation.
+- Add abstractions for running distributed gdal_translate, gdalwarp, gdalcalc, etc.
+- Add RST_BoundingBox, RST_Clip, RST_CombineAvg, RST_CombineAvgAgg, RST_FromBands, RST_FromFile, RST_GetNoData,
+  RST_InitNoData, RST_Merge, RST_MergeAgg, RST_NDVI, RST_ReTile, RST_SetNoData, RST_Subdivide
+- Add RST_Tessellate that generates H3 tiles from rasters.
+- Add RST_ToOverlappingTiles that generates tiles with overlapping areas from rasters.
+- Add GDAL generic format reader.
 
 ## v0.3.11
 - Update the CONTRIBUTING.md to follow the standard process.

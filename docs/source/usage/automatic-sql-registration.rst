@@ -10,28 +10,36 @@ An example of when this might be useful would be connecting a business intellige
 to your Spark / Databricks cluster to perform spatial queries or integrating Spark
 with a geospatial middleware component such as [Geoserver](https://geoserver.org/).
 
+.. warning::
+    Mosaic 0.4.x SQL bindings for DBR 13 can register with Assigned clusters (as Spark Expressions), but not Shared Access due
+    to `Unity Catalog <https://www.databricks.com/product/unity-catalog>`_ API changes, more `here <https://docs.databricks.com/en/udf/index.html>`_.
+
 Pre-requisites
 **************
 
 In order to use Mosaic, you must have access to a Databricks cluster running
-Databricks Runtime 10.0 or higher (11.2 with photon or higher is recommended).
-If you have cluster creation permissions in your Databricks
+Databricks Runtime 13. If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
-`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`__.
+`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`_.
 
 You will also need "Can Manage" permissions on this cluster in order to attach init script
 to your cluster. A workspace administrator will be able to grant
 these permissions and more information about cluster permissions can be found 
 in our documentation
-`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`__.
+`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`_.
 
 Installation
 ************
 
 To install Mosaic on your Databricks cluster, take the following steps:
 
-#. Upload Mosaic jar to a dedicated dbfs location. E.g. dbfs:/FileStore/mosaic/jars/.
-#. Create an init script that fetches the mosaic jar and copies it to databricks/jars.
+#. Upload Mosaic jar to a dedicated fuse mount location. E.g. "dbfs:/FileStore/mosaic/jars/".
+
+#. Create an init script that fetches the mosaic jar and copies it to "databricks/jars".
+
+    You can also use the output from (0.4 series) python function :code:`setup_fuse_install`, e.g.
+    :code:`setup_fuse_intall(<to_fuse_dir>, jar_copy=True)` which can help to copy the JAR used in
+    the init script below.
 
     .. code-block:: bash
 
@@ -45,20 +53,21 @@ To install Mosaic on your Databricks cluster, take the following steps:
         #!/bin/bash
         #
         # File: mosaic-init.sh
-        # On cluster startup, this script will copy the Mosaic jars to the cluster's default jar directory.
+        # On cluster startup, this script will copy the Mosaic JAR to the cluster's default jar directory.
 
         cp /dbfs/FileStore/mosaic/jars/*.jar /databricks/jars
 
         EOF
 
-#. Configure the init script for the cluster following the instructions `here <https://docs.databricks.com/clusters/init-scripts.html#configure-a-cluster-scoped-init-script>`__.
-#. Add the following spark configuration values for your cluster following the instructions `here <https://docs.databricks.com/clusters/configure.html#spark-configuration>`__.
+#. Configure the init script for the cluster following the instructions `here <https://docs.databricks.com/clusters/init-scripts.html#configure-a-cluster-scoped-init-script>`_.
+
+#. Add the following spark configuration values for your cluster following the instructions `here <https://docs.databricks.com/clusters/configure.html#spark-configuration>`_.
 
     .. code-block:: bash
 
         # H3 or BNG
         spark.databricks.labs.mosaic.index.system H3
-        # JTS or ESRI
+        # JTS only
         spark.databricks.labs.mosaic.geometry.api JTS
         # MosaicSQL or MosaicSQLDefault, MosaicSQLDefault corresponds to (H3, JTS)
         spark.sql.extensions com.databricks.labs.mosaic.sql.extensions.MosaicSQL
@@ -66,13 +75,31 @@ To install Mosaic on your Databricks cluster, take the following steps:
 Testing
 *******
 
-To test the installation, create a new Python notebook and run the following command:
+To test the installation, create a new Python notebook and run the following commands (similar for :code:`grid_` and :code:`rst_`, not shown):
 
-.. code-block:: python
+.. code-block:: py
 
-    spark.sql("""show functions""").where("startswith(function, 'st_')").display()
+    sql("""SHOW FUNCTIONS""").where("startswith(function, 'st_')").display()
 
-You should see all the supported functions registered by Mosaic appear in the output.
+You should see all the supported :code:`ST_` functions registered by Mosaic appear in the output.
+
+.. figure:: ../images/functions_show.png
+   :figclass: doc-figure
+
+   Fig 1. Show Functions Example
+
+.. note::
+    You may see some :code:`ST_` functions from other libraries, so pay close attention to the provider;
+    also, function auto-complete in the UI may not list custom registered SQL expressions.
+
+.. code-block:: py
+
+    sql("""DESCRIBE FUNCTION st_buffer""")
+
+.. figure:: ../images/function_describe.png
+   :figclass: doc-figure
+
+   Fig 2. Describe Function Example
 
 .. warning::
     Issue 317: https://github.com/databrickslabs/mosaic/issues/317

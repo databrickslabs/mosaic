@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.core.geometry
 
+import com.databricks.labs.mosaic.core.geometry.api.{GeometryAPI, JTS}
 import com.databricks.labs.mosaic.core.geometry.geometrycollection.MosaicGeometryCollectionJTS
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringJTS
@@ -11,10 +12,12 @@ import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import com.esotericsoftware.kryo.Kryo
 import org.apache.spark.sql.catalyst.InternalRow
+import org.locationtech.jts.algorithm.hull.ConcaveHull
 import org.locationtech.jts.geom.{Geometry, GeometryCollection, GeometryFactory}
 import org.locationtech.jts.geom.util.AffineTransformation
 import org.locationtech.jts.io._
 import org.locationtech.jts.io.geojson.{GeoJsonReader, GeoJsonWriter}
+import org.locationtech.jts.operation.buffer.{BufferOp, BufferParameters}
 import org.locationtech.jts.simplify.DouglasPeuckerSimplifier
 
 import java.util
@@ -22,6 +25,8 @@ import java.util
 abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def getNumGeometries: Int = geom.getNumGeometries
+
+    override def getDimension: Int = geom.getDimension
 
     def compactGeometry: MosaicGeometryJTS = {
         val geometries = for (i <- 0 until getNumGeometries) yield geom.getGeometryN(i)
@@ -51,6 +56,16 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         MosaicPointJTS(centroid)
     }
 
+    override def getAnyPoint: MosaicPointJTS = {
+        // while this doesn't return the centroid but an arbitrary point via getCoordinate in JTS, 
+        // inlike getCentroid this supports a Z coordinate.
+
+        val coord = geom.getCoordinate
+        val gf = new GeometryFactory()
+        val point = gf.createPoint(coord)
+        MosaicPointJTS(point)
+    }
+
     override def isEmpty: Boolean = geom.isEmpty
 
     override def boundary: MosaicGeometryJTS = MosaicGeometryJTS(geom.getBoundary)
@@ -58,7 +73,50 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
     override def envelope: MosaicGeometryJTS = MosaicGeometryJTS(geom.getEnvelope)
 
     override def buffer(distance: Double): MosaicGeometryJTS = {
-        val buffered = geom.buffer(distance)
+        buffer(distance, "")
+    }
+
+    override def buffer(distance: Double, bufferStyleParameters: String): MosaicGeometryJTS = {
+
+        val gBuf = new BufferOp(geom)
+
+        if (bufferStyleParameters contains "=") {
+            val params = bufferStyleParameters
+                .split(" ")
+                .map(_.split("="))
+                .map { case Array(k, v) => (k, v) }
+                .toMap
+
+            if (params.contains("endcap")) {
+                val capStyle = params.getOrElse("endcap", "")
+                val capStyleConst = capStyle match {
+                    case "round"  => BufferParameters.CAP_ROUND
+                    case "flat"   => BufferParameters.CAP_FLAT
+                    case "square" => BufferParameters.CAP_SQUARE
+                    case _        => BufferParameters.CAP_ROUND
+                }
+                gBuf.setEndCapStyle(capStyleConst)
+            }
+            if (params.contains("quad_segs")) {
+                val quadSegs = params.getOrElse("quad_segs", "8")
+                gBuf.setQuadrantSegments(quadSegs.toInt)
+            }
+        }
+        val buffered = gBuf.getResultGeometry(distance)
+        buffered.setSRID(geom.getSRID)
+        MosaicGeometryJTS(buffered)
+    }
+
+    override def bufferCapStyle(distance: Double, capStyle: String): MosaicGeometryJTS = {
+        val capStyleConst = capStyle match {
+            case "round"  => BufferParameters.CAP_ROUND
+            case "flat"   => BufferParameters.CAP_FLAT
+            case "square" => BufferParameters.CAP_SQUARE
+            case _        => BufferParameters.CAP_ROUND
+        }
+        val gBuf = new BufferOp(geom)
+        gBuf.setEndCapStyle(capStyleConst)
+        val buffered = gBuf.getResultGeometry(distance)
         buffered.setSRID(geom.getSRID)
         MosaicGeometryJTS(buffered)
     }
@@ -131,6 +189,8 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def contains(geom2: MosaicGeometry): Boolean = geom.contains(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
 
+    override def within(geom2: MosaicGeometry): Boolean = geom.within(geom2.asInstanceOf[MosaicGeometryJTS].getGeom)
+
     def getGeom: Geometry = geom
 
     override def isValid: Boolean = geom.isValid
@@ -163,6 +223,12 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
         MosaicGeometryJTS(convexHull)
     }
 
+    override def concaveHull(lengthRatio: Double, allow_holes: Boolean = false): MosaicGeometryJTS = {
+        val concaveHull = ConcaveHull.concaveHullByLengthRatio(geom, lengthRatio, allow_holes)
+        concaveHull.setSRID(geom.getSRID)
+        MosaicGeometryJTS(concaveHull)
+    }
+
     override def unaryUnion: MosaicGeometryJTS = {
         val unaryUnion = geom.union()
         unaryUnion.setSRID(geom.getSRID)
@@ -185,6 +251,7 @@ abstract class MosaicGeometryJTS(geom: Geometry) extends MosaicGeometry {
 
     override def transformCRSXY(sridTo: Int): MosaicGeometryJTS = super.transformCRSXY(sridTo, None).asInstanceOf[MosaicGeometryJTS]
 
+    override def getAPI: GeometryAPI = JTS
 }
 
 object MosaicGeometryJTS extends GeometryReader {
@@ -194,7 +261,7 @@ object MosaicGeometryJTS extends GeometryReader {
 
     override def fromWKT(wkt: String): MosaicGeometryJTS = MosaicGeometryJTS(new WKTReader().read(wkt))
 
-    //noinspection DuplicatedCode
+    // noinspection DuplicatedCode
     def compactCollection(geometries: Seq[Geometry], srid: Int): Geometry = {
         def appendGeometries(geometries: util.ArrayList[Geometry], toAppend: Seq[Geometry]): Unit = {
             if (toAppend.length == 1 && !toAppend.head.isEmpty) {

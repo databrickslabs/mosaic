@@ -2,23 +2,25 @@ name: build main
 on:
   push:
     branches-ignore:
-      - "R/*"
-      - "r/*"
-      - "python/*"
-      - "scala/*"
+      - "R/**"
+      - "r/**"
+      - "python/**"
+      - "scala/**"
   pull_request:
     branches:
       - "**"
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
-        python: [ 3.8.10 ]
-        spark: [ 3.2.1 ]
-        R: [ 4.1.2 ]
+        python: [ 3.10.12 ]
+        numpy: [ 1.22.4 ]
+        gdal: [ 3.4.1 ]
+        spark: [ 3.4.1 ]
+        R: [ 4.2.2 ]
     steps:
       - name: checkout code
         uses: actions/checkout@v2
@@ -26,5 +28,7 @@ jobs:
         uses: ./.github/actions/scala_build
       - name: build python
         uses: ./.github/actions/python_build
+      - name: build R
+        uses: ./.github/actions/r_build
       - name: upload artefacts
         uses: ./.github/actions/upload_artefacts

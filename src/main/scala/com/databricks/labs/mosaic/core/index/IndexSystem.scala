@@ -6,12 +6,34 @@ import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnu
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum._
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+import org.gdal.osr.SpatialReference
 
 /**
   * Defines the API that all index systems need to respect for Mosaic to support
   * them.
   */
 abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
+
+    // Passthrough if not redefined
+    def isValid(cellID: Long): Boolean = true
+
+    def isCylindrical: Boolean = false
+
+    def crsID: Int
+
+    /**
+      * Returns the spatial reference of the index system. This is only
+      * available when GDAL is available. For proj4j please use crsID method.
+      *
+      * @return
+      *   SpatialReference
+      */
+    def osrSpatialRef: SpatialReference = {
+        val sr = new SpatialReference()
+        sr.ImportFromEPSG(crsID)
+        sr.SetAxisMappingStrategy(org.gdal.osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
+        sr
+    }
 
     def distance(cellId: Long, cellId2: Long): Long
 
@@ -125,6 +147,8 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
       */
     def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double
 
+    def alignToGrid(geometry: MosaicGeometry): MosaicGeometry = geometry
+
     /**
       * Returns a set of indices that represent the input geometry. Depending on
       * the index system this set may include only indices whose centroids fall
@@ -139,7 +163,7 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
       * @return
       *   A set of indices representing the input geometry.
       */
-    def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: Option[GeometryAPI] = None): Seq[Long]
+    def polyfill(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Seq[Long]
 
     /**
       * @see
@@ -197,16 +221,6 @@ abstract class IndexSystem(var cellIdType: DataType) extends Serializable {
       *   An instance of [[MosaicGeometry]] corresponding to index.
       */
     def indexToGeometry(index: Long, geometryAPI: GeometryAPI): MosaicGeometry
-
-    /**
-      * Get the geometry corresponding to the index with the input id.
-      *
-      * @param index
-      *   Id of the index whose geometry should be returned.
-      * @return
-      *   An instance of [[MosaicGeometry]] corresponding to index.
-      */
-    def indexToGeometry(index: String, geometryAPI: GeometryAPI): MosaicGeometry
 
     /**
       * Get the index ID corresponding to the provided coordinates.

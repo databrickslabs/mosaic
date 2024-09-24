@@ -1,6 +1,6 @@
 name: build mosaic scala
 description: build mosaic scala
-inputs: 
+inputs:
   skip_tests:
     description: 'Skip Scala Tests? true or false'
     default: 'false'
@@ -12,6 +12,29 @@ runs:
           with:
             java-version: '8'
             distribution: 'zulu'
+        - name: Configure python interpreter
+          uses: actions/setup-python@v2
+          with:
+            python-version: ${{ matrix.python }}
+        - name: Add packaged GDAL dependencies
+          shell: bash
+          run : |
+            # - update apt
+            sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-backports main universe multiverse restricted"
+            sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-updates main universe multiverse restricted"
+            sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-security main multiverse restricted universe"
+            sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main multiverse restricted universe"
+            sudo apt-get update -y
+            # - install natives
+            sudo apt-get install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
+            sudo apt-get install -y gdal-bin libgdal-dev python3-numpy python3-gdal zip unzip
+            # - install pip libs
+            pip install --upgrade pip
+            pip install gdal==${{ matrix.gdal }}
+            # - add the so files 
+            sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so
+            sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so.30
+            sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so.30.0.3
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
@@ -19,9 +42,7 @@ runs:
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
           shell: bash
-          run: sudo mvn -q clean install -DskipTests
-        - name: Publish test coverage
-          uses: codecov/codecov-action@v1
+          run: sudo mvn -q clean install -DskipTests -Dscoverage.skip
         - name: Copy Scala artifacts to GH Actions run
           shell: bash
           run: |
