@@ -397,7 +397,7 @@ def rst_mapalgebra(raster_tile: ColumnOrName, json_spec: ColumnOrName) -> Column
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_mapalgebra", pyspark_to_java_column(raster_tile, json_spec)
+        "rst_mapalgebra", pyspark_to_java_column(raster_tile), pyspark_to_java_column(json_spec)
     )
 
 
