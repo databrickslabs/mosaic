@@ -756,13 +756,15 @@ rst_fromcontent
 
     :param raster_bin: A column containing the raster data.
     :type raster_bin: Column (BinaryType)
+    :param driver: GDAL driver to use to open the raster.
+    :type driver: Column(StringType)
     :param size_in_MB: Optional parameter to specify the size of the raster tile in MB. Default is not to split the input.
     :type size_in_MB: Column (IntegerType)
     :rtype: Column: RasterTileType
 
 .. note::
 
-  Notes
+  **Notes**
     - The input raster must be a byte array in a BinaryType column.
     - The driver required to read the raster must be one supplied with GDAL.
     - If the size_in_MB parameter is specified, the raster will be split into tiles of the specified size.
