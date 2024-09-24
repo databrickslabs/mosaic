@@ -755,21 +755,34 @@ def rst_numbands(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_pixelcount(raster_tile: ColumnOrName) -> Column:
+def rst_pixelcount(raster_tile: ColumnOrName, count_nodata: Any = False, count_all: Any = False) -> Column:
     """
     Parameters
     ----------
     raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
-
+    count_nodata : Column(BooleanType)
+        If false do not include noData pixels in count (default is false).
+    count_all : Column(BooleanType)
+        If true, simply return bandX * bandY (default is false).
     Returns
     -------
     Column (ArrayType(LongType))
         Array containing valid pixel count values for each band.
 
     """
+
+    if type(count_nodata) == bool:
+        count_nodata = lit(count_nodata)
+
+    if type(count_all) == bool:
+            count_all = lit(count_all)
+
     return config.mosaic_context.invoke_function(
-        "rst_pixelcount", pyspark_to_java_column(raster_tile)
+        "rst_pixelcount",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(count_nodata),
+        pyspark_to_java_column(count_all),
     )
 
 

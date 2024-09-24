@@ -703,7 +703,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_convolve(raster: Column, kernel: Column): Column = ColumnAdapter(RST_Convolve(raster.expr, kernel.expr, expressionConfig))
         def rst_dtmfromgeoms(pointsArray: Column, linesArray: Column, mergeTol: Column, snapTol: Column, origin: Column, xWidth: Column, yWidth: Column, xSize: Column, ySize: Column): Column =
             ColumnAdapter(RST_DTMFromGeoms(pointsArray.expr, linesArray.expr, mergeTol.expr, snapTol.expr, origin.expr, xWidth.expr, yWidth.expr, xSize.expr, ySize.expr, expressionConfig))
-        def rst_pixelcount(raster: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, expressionConfig))
+        def rst_pixelcount(raster: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, lit(false).expr, lit(false).expr, expressionConfig))
+        def rst_pixelcount(raster: Column, countNoData: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, countNoData.expr, lit(false).expr, expressionConfig))
+        def rst_pixelcount(raster: Column, countNoData: Column, countAll: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, countNoData.expr, countAll.expr, expressionConfig))
         def rst_combineavg(rasterArray: Column): Column = ColumnAdapter(RST_CombineAvg(rasterArray.expr, expressionConfig))
         def rst_derivedband(raster: Column, pythonFunc: Column, funcName: Column): Column =
             ColumnAdapter(RST_DerivedBand(raster.expr, pythonFunc.expr, funcName.expr, expressionConfig))

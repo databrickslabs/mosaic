@@ -1737,15 +1737,35 @@ rst_numbands
     +---------------------+
 
 rst_pixelcount
-***************
+**************
 
-.. function:: rst_pixelcount(tile)
+.. function:: rst_pixelcount(tile, count_nodata, count_all)
 
-    Returns an array containing valid pixel count values for each band.
+    Returns an array containing pixel count values for each band; default excludes mask and nodata pixels.
     
     :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
+    :param count_nodata: A column to specify whether to count nodata pixels.
+    :type count_nodata: Column (BooleanType)
+    :param count_all: A column to specify whether to count all pixels.
+    :type count_all: Column (BooleanType)
     :rtype: Column: ArrayType(LongType)
+
+.. note::
+
+  Notes:
+
+  If pixel value is noData or mask value is 0.0, the pixel is not counted by default.
+
+  :code:`count_nodata`
+    - This is an optional param.
+    - if specified as true, include the noData (not mask) pixels in the count (default is false).
+
+  :code:`count_all`
+    - This is an optional param; as a positional arg, must also pass :code:`count_nodata`
+      (value of :code:`count_nodata` is ignored).
+    - if specified as true, simply return bandX * bandY in the count (default is false).
+..
 
     :example:
 
