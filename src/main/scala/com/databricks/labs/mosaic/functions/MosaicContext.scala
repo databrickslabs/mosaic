@@ -803,9 +803,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_FromFile(raster.expr, sizeInMB.expr, expressionConfig))
         def rst_fromfile(raster: Column, sizeInMB: Int): Column =
             ColumnAdapter(RST_FromFile(raster.expr, lit(sizeInMB).expr, expressionConfig))
-        def rst_to_overlapping_tiles(raster: Column, width: Int, height: Int, overlap: Int): Column =
+        def rst_tooverlappingtiles(raster: Column, width: Int, height: Int, overlap: Int): Column =
             ColumnAdapter(RST_ToOverlappingTiles(raster.expr, lit(width).expr, lit(height).expr, lit(overlap).expr, expressionConfig))
-        def rst_to_overlapping_tiles(raster: Column, width: Column, height: Column, overlap: Column): Column =
+        def rst_tooverlappingtiles(raster: Column, width: Column, height: Column, overlap: Column): Column =
             ColumnAdapter(RST_ToOverlappingTiles(raster.expr, width.expr, height.expr, overlap.expr, expressionConfig))
         def rst_tryopen(raster: Column): Column = ColumnAdapter(RST_TryOpen(raster.expr, expressionConfig))
         def rst_subdivide(raster: Column, sizeInMB: Column): Column =

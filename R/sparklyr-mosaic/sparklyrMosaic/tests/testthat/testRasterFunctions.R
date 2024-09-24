@@ -95,7 +95,7 @@ test_that("raster flatmap functions behave as intended", {
   expect_equal(sdf_nrow(tessellate_sdf), 63)
 
   overlap_sdf <- generate_singleband_raster_df() %>%
-    mutate(rst_to_overlapping_tiles = rst_to_overlapping_tiles(tile, 200L, 200L, 10L))
+    mutate(rst_tooverlappingtiles = rst_tooverlappingtiles(tile, 200L, 200L, 10L))
 
   expect_no_error(spark_write_source(overlap_sdf, "noop", mode = "overwrite"))
   expect_equal(sdf_nrow(overlap_sdf), 87)
@@ -105,7 +105,7 @@ test_that("raster flatmap functions behave as intended", {
 test_that("raster aggregation functions behave as intended", {
   collection_sdf <- generate_singleband_raster_df() %>%
     mutate(extent = st_astext(rst_boundingbox(tile))) %>%
-    mutate(tile = rst_to_overlapping_tiles(tile, 200L, 200L, 10L))
+    mutate(tile = rst_tooverlappingtiles(tile, 200L, 200L, 10L))
 
   merge_sdf <- collection_sdf %>%
     group_by(path) %>%
@@ -167,7 +167,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   indexed_raster_sdf <- sdf_sql(sc, "SELECT tile, element_at(rst_metadata(tile), 'NC_GLOBAL#GDAL_MOSAIC_BAND_INDEX') as timestep FROM raster") %>%
     filter(timestep == 21L) %>%
     mutate(tile = rst_setsrid(tile, 4326L)) %>%
-    mutate(tile = rst_to_overlapping_tiles(tile, 20L, 20L, 10L)) %>%
+    mutate(tile = rst_tooverlappingtiles(tile, 20L, 20L, 10L)) %>%
     mutate(tile = rst_tessellate(tile, target_resolution))
 
   clipped_sdf <- indexed_raster_sdf %>%

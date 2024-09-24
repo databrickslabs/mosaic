@@ -67,7 +67,8 @@ __all__ = [
     "rst_summary",
     "rst_tessellate",
     "rst_transform",
-    "rst_to_overlapping_tiles",
+    "rst_tooverlappingtiles",
+    "rst_to_overlapping_tiles", # <- deprecated
     "rst_tryopen",
     "rst_updatetype",
     "rst_upperleftx",
@@ -1328,11 +1329,11 @@ def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Colum
     )
 
 
-def rst_to_overlapping_tiles(
-    raster_tile: ColumnOrName,
-    width: ColumnOrName,
-    height: ColumnOrName,
-    overlap: ColumnOrName,
+def rst_tooverlappingtiles(
+        raster_tile: ColumnOrName,
+        width: ColumnOrName,
+        height: ColumnOrName,
+        overlap: ColumnOrName,
 ) -> Column:
     """
     Tiles the raster into tiles of the given size.
@@ -1342,12 +1343,22 @@ def rst_to_overlapping_tiles(
     """
 
     return config.mosaic_context.invoke_function(
-        "rst_to_overlapping_tiles",
+        "rst_tooverlappingtiles",
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(width),
         pyspark_to_java_column(height),
         pyspark_to_java_column(overlap),
     )
+
+
+def rst_to_overlapping_tiles(
+        raster_tile: ColumnOrName,
+        width: ColumnOrName,
+        height: ColumnOrName,
+        overlap: ColumnOrName,
+    ) -> Column:
+
+    return rst_tooverlappingtiles(raster_tile, width, height, overlap)
 
 
 def rst_transform(raster_tile: ColumnOrName, srid: ColumnOrName) -> Column:
