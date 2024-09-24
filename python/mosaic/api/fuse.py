@@ -1,7 +1,7 @@
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
-import os
 import requests
 
 __all__ = ["SetupMgr", "setup_fuse_install"]
@@ -12,6 +12,7 @@ class SetupMgr:
     """
     Defaults mirror setup_gdal.
     """
+
     to_fuse_dir: str
     script_in_name: str = "mosaic-gdal-init.sh"
     script_out_name: str = "mosaic-gdal-init.sh"
@@ -29,7 +30,9 @@ class SetupMgr:
 
         # - start with the un-configured script (from repo)
         #   this is using a different (repo) folder in 0.4.2+ (to allow prior versions to work)
-        GITHUB_CONTENT_TAG_URL = "https://raw.githubusercontent.com/databrickslabs/mosaic/main"
+        GITHUB_CONTENT_TAG_URL = (
+            "https://raw.githubusercontent.com/databrickslabs/mosaic/main"
+        )
         script_url = f"{GITHUB_CONTENT_TAG_URL}/scripts/0.4.2/{self.script_in_name}"
         script = None
         root_path = None
@@ -41,8 +44,8 @@ class SetupMgr:
             # - up 4 parents [0..3]
             # - api [0] -> mosaic [1] -> python [2] -> mosaic [3]
             root_path = Path(__file__).parents[3]
-            script_path = root_path / 'scripts' / '0.4.2' / self.script_in_name
-            script = script_path.read_text(encoding='utf-8')
+            script_path = root_path / "scripts" / "0.4.2" / self.script_in_name
+            script = script_path.read_text(encoding="utf-8")
 
         # - tokens used in script
         SCRIPT_FUSE_DIR_TOKEN = "FUSE_DIR='__FUSE_DIR__'"  # <- ' added
@@ -63,7 +66,7 @@ class SetupMgr:
 
         # - write the configured init script
         script_out_path = Path(self.to_fuse_dir) / self.script_out_name
-        script_out_path.write_text(script, encoding='utf-8')
+        script_out_path.write_text(script, encoding="utf-8")
 
         # --- end of script config ---
 
@@ -89,7 +92,9 @@ class SetupMgr:
                         )
                     resource_version = latest.split("/tag/v_")[1].split('"')[0]
                     # download jar
-                    jar_filename = f"mosaic-{resource_version}-jar-with-dependencies.jar"
+                    jar_filename = (
+                        f"mosaic-{resource_version}-jar-with-dependencies.jar"
+                    )
                     jar_path = f"{self.to_fuse_dir}/{jar_filename}"
                     with requests.Session() as s:
                         r = s.get(
@@ -102,14 +107,16 @@ class SetupMgr:
                         resource_statuses[jar_filename] = r.status_code
                 else:
                     # test_mode (use local resources)
-                    lib_path = root_path / 'python' / 'mosaic' / 'lib'
+                    lib_path = root_path / "python" / "mosaic" / "lib"
                     src_jar_path = None
                     for p in lib_path.iterdir():
-                        if p.name.startswith('mosaic-') and p.name.endswith('-jar-with-dependencies.jar'):
+                        if p.name.startswith("mosaic-") and p.name.endswith(
+                            "-jar-with-dependencies.jar"
+                        ):
                             src_jar_path = p
                             break
                     if src_jar_path:
-                        dst_jar_path = Path(f'{self.to_fuse_dir}/{src_jar_path.name}')
+                        dst_jar_path = Path(f"{self.to_fuse_dir}/{src_jar_path.name}")
                         dst_jar_path.write_bytes(src_jar_path.read_bytes())
 
             # - handle so copy
@@ -117,7 +124,7 @@ class SetupMgr:
                 so_names = [
                     "libgdalalljni.so",
                     "libgdalalljni.so.30",
-                    "libgdalalljni.so.30.0.3"
+                    "libgdalalljni.so.30.0.3",
                 ]
                 if not test_mode:
                     with requests.Session() as s:
@@ -133,10 +140,10 @@ class SetupMgr:
                             resource_statuses[so_filename] = r.status_code
                 else:
                     # test_mode (use local resources)
-                    resources_path = root_path / 'resources' / 'gdal' / 'jammy'
+                    resources_path = root_path / "resources" / "gdal" / "jammy"
                     for so_filename in so_names:
                         src_so_path = resources_path / so_filename
-                        dst_so_path = Path(f'{self.to_fuse_dir}/{so_filename}')
+                        dst_so_path = Path(f"{self.to_fuse_dir}/{so_filename}")
                         dst_so_path.write_bytes(src_so_path.read_bytes())
 
         # - echo status
@@ -162,7 +169,7 @@ class SetupMgr:
         print("\n")
 
         if not any(resource_statuses) or all(
-                value == 200 for value in resource_statuses.values()
+            value == 200 for value in resource_statuses.values()
         ):
             return True
         else:
@@ -170,11 +177,11 @@ class SetupMgr:
 
 
 def setup_fuse_install(
-        to_fuse_dir: str,
-        script_out_name: str = "mosaic-fuse-init.sh",
-        jar_copy: bool = True,
-        jni_so_copy: bool = True,
-        test_mode: bool = False
+    to_fuse_dir: str,
+    script_out_name: str = "mosaic-fuse-init.sh",
+    jar_copy: bool = True,
+    jni_so_copy: bool = True,
+    test_mode: bool = False,
 ) -> bool:
     """
     [1]  if `jar_copy=True`

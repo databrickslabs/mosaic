@@ -1,9 +1,11 @@
-from mosaic.config import config
-from mosaic.utils.types import ColumnOrName
+from typing import Any
+
 from pyspark.sql import Column
 from pyspark.sql.functions import _to_java_column as pyspark_to_java_column
 from pyspark.sql.functions import lit
-from typing import Any
+
+from mosaic.config import config
+from mosaic.utils.types import ColumnOrName
 
 #######################
 # Raster functions    #
@@ -16,6 +18,7 @@ __all__ = [
     "rst_combineavg",
     "rst_convolve",
     "rst_derivedband",
+    "rst_dtmfromgeoms",
     "rst_frombands",
     "rst_fromcontent",
     "rst_fromfile",
@@ -45,6 +48,7 @@ __all__ = [
     "rst_rastertoworldcoord",
     "rst_retile",
     "rst_rotation",
+    "rst_type",
     "rst_scalex",
     "rst_scaley",
     "rst_separatebands",
@@ -60,6 +64,7 @@ __all__ = [
     "rst_transform",
     "rst_to_overlapping_tiles",
     "rst_tryopen",
+    "rst_updatetype",
     "rst_upperleftx",
     "rst_upperlefty",
     "rst_width",
@@ -215,6 +220,72 @@ def rst_derivedband(
     )
 
 
+def rst_dtmfromgeoms(
+    points_array: ColumnOrName,
+    lines_array: ColumnOrName,
+    merge_tolerance: ColumnOrName,
+    snap_tolerance: ColumnOrName,
+    origin: ColumnOrName,
+    x_width: ColumnOrName,
+    y_width: ColumnOrName,
+    x_size: ColumnOrName,
+    y_size: ColumnOrName,
+) -> Column:
+    """
+    Generate a raster with interpolated elevations across a grid of points described by
+    `origin`, `x_width`, `y_width`, `x_size`, and `y_size`.
+
+    The underlying algorithm first creates a surface mesh by triangulating `points_array`
+    (including `lines_array` as a set of constraint lines) then determines where each point
+    in the grid would lie on the surface mesh. Finally, it interpolates the
+    elevation of that point based on the surrounding triangle's vertices.
+
+    Notes:
+    - Uses (x, y) _not_ (i, j) order to generate the grid (i.e. `origin` is assumed to be the bottom-left corner).
+    To generate a grid from a top-left `origin`, use a negative value for `y_size`.
+
+    Parameters
+    ----------
+    points_array : Column
+        An array of mass points including Z-values.
+    lines_array : Column
+        An array of lines that are used as constraints during the triangulation process.
+    merge_tolerance : Column
+        A tolerance used to coalesce points in close proximity to each other before performing triangulation.
+    snap_tolerance : Column
+        A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
+    origin : Column
+        The bottom-left corner of the grid. Use a negative value for `y_size` if you wish to supply a top-left origin.
+    x_width : Column
+        The number of points on the grid's x-axis
+    y_width : Column
+        The number of points on the grid's y-axis
+    x_size : Column
+        The spacing between each point on the grid's x-axis
+        (in meters or degrees depending on the projection of `points_array`)
+    y_size : Column
+        The spacing between each point on the grid's y-axis
+        (in meters or degrees depending on the projection of `points_array`)
+
+    Returns
+    -------
+    Column (RasterTileType)
+        Mosaic raster tile struct column.
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_dtmfromgeoms",
+        pyspark_to_java_column(points_array),
+        pyspark_to_java_column(lines_array),
+        pyspark_to_java_column(merge_tolerance),
+        pyspark_to_java_column(snap_tolerance),
+        pyspark_to_java_column(origin),
+        pyspark_to_java_column(x_width),
+        pyspark_to_java_column(y_width),
+        pyspark_to_java_column(x_size),
+        pyspark_to_java_column(y_size),
+    )
+
+
 def rst_georeference(raster_tile: ColumnOrName) -> Column:
     """
     Returns GeoTransform of the raster as a GT array of doubles.
@@ -345,8 +416,12 @@ def rst_isempty(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_maketiles(input: ColumnOrName, driver: Any = "no_driver", size_in_mb: Any = -1,
-                  with_checkpoint: Any = False) -> Column:
+def rst_maketiles(
+    input: ColumnOrName,
+    driver: Any = "no_driver",
+    size_in_mb: Any = -1,
+    with_checkpoint: Any = False,
+) -> Column:
     """
     Tiles the raster into tiles of the given size.
     :param input: If the raster is stored on disc, the path
@@ -696,7 +771,7 @@ def rst_rastertogridmin(raster_tile: ColumnOrName, resolution: ColumnOrName) -> 
 
 
 def rst_rastertoworldcoord(
-        raster_tile: ColumnOrName, x: ColumnOrName, y: ColumnOrName
+    raster_tile: ColumnOrName, x: ColumnOrName, y: ColumnOrName
 ) -> Column:
     """
     Computes the world coordinates of the raster pixel at the given x and y coordinates.
@@ -1171,6 +1246,24 @@ def rst_to_overlapping_tiles(
     )
 
 
+def rst_type(raster_tile: ColumnOrName) -> Column:
+    """
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    Returns
+    -------
+    Column (ArrayType[StringType])
+        The data type of each band of the raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_type", pyspark_to_java_column(raster_tile)
+    )
+
+
 def rst_tryopen(raster_tile: ColumnOrName) -> Column:
     """
     Tries to open the raster and returns a flag indicating if the raster can be opened.
@@ -1213,6 +1306,30 @@ def rst_subdivide(raster_tile: ColumnOrName, size_in_mb: ColumnOrName) -> Column
         "rst_subdivide",
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(size_in_mb),
+    )
+
+
+def rst_updatetype(raster_tile: ColumnOrName, data_type: ColumnOrName) -> Column:
+    """
+    Updates the data type of the raster.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+    data_type : Column (StringType)
+        The data type for the updated raster.
+
+    Returns
+    -------
+    Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_updatetype",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(data_type),
     )
 
 

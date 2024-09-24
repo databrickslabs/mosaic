@@ -1,5 +1,6 @@
-from pyspark.sql import SparkSession, DataFrame, SQLContext
 from typing import *
+
+from pyspark.sql import DataFrame, SparkSession, SQLContext
 
 
 class MosaicAnalyzer:

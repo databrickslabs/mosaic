@@ -63,7 +63,7 @@ object VectorClipper {
 
         val projectedGeom = geometry.osrTransformCRS(srcCrs, dstCrs, geometryAPI)
 
-        val geom = ogr.CreateGeometryFromWkb(projectedGeom.toWKB)
+        val geom = ogr.CreateGeometryFromWkb(projectedGeom.toWKB(2))
 
         val geomLayer = shpDataSource.CreateLayer("geom")
 

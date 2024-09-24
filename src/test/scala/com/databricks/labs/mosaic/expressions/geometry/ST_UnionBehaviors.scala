@@ -77,6 +77,44 @@ trait ST_UnionBehaviors extends QueryTest {
         results.zip(expected).foreach { case (l, r) => l.equalsTopo(r) shouldEqual true }
     }
 
+    def unionAggPointsBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("ERROR")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+        mc.register(spark)
+
+        val polygonRows = List(
+            List(1L, "POINT Z (10 10 10)"),
+            List(1L, "POINT Z (15 15 15)")
+        )
+        val rows = polygonRows.map { x => Row(x: _*) }
+        val rdd = spark.sparkContext.makeRDD(rows)
+        val schema = StructType(
+            Seq(
+                StructField("row_id", LongType),
+                StructField("polygons", StringType)
+            )
+        )
+
+        val polygons = spark.createDataFrame(rdd, schema)
+        val expected = List("MULTIPOINT ((10 10), (15 15))")
+            .map(mc.getGeometryAPI.geometry(_, "WKT"))
+
+        val results = polygons
+            .groupBy($"row_id")
+            .agg(
+                st_union_agg($"polygons").alias("result")
+            )
+            .select($"result")
+            .as[Array[Byte]]
+            .collect()
+            .map(mc.getGeometryAPI.geometry(_, "WKB"))
+
+        results.zip(expected).foreach { case (l, r) => l.equalsTopo(r) shouldEqual true }
+    }
+
     def unionCodegen(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
         spark.sparkContext.setLogLevel("ERROR")
         val mc = MosaicContext.build(indexSystem, geometryAPI)

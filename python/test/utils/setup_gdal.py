@@ -1,9 +1,9 @@
 import os
 import shutil
 import tempfile
-from pkg_resources import working_set, Requirement
-
 from test.context import api
+
+from pkg_resources import Requirement, working_set
 
 
 class GDALInstaller:
@@ -20,7 +20,7 @@ class GDALInstaller:
             to_fuse_dir=self._temp_dir,
             script_out_name=self.GDAL_INIT_SCRIPT_FILENAME,
             jni_so_copy=False,
-            test_mode=True
+            test_mode=True,
         )
 
     def list_files(self) -> list[str]:
