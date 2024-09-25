@@ -193,7 +193,7 @@ rst_boundingbox
 rst_clip
 ********
 
-.. function:: rst_clip(tile, geometry)
+.. function:: rst_clip(tile, geometry, cutline_all_touched)
 
     Clips :code:`tile` with :code:`geometry`, provided in a supported encoding (WKB, WKT or GeoJSON).
 
@@ -201,14 +201,25 @@ rst_clip
     :type tile: Column (RasterTileType)
     :param geometry: A column containing the geometry to clip the raster to.
     :type geometry: Column (GeometryType)
+    :param cutline_all_touched: A column to specify pixels boundary behavior.
+    :type cutline_all_touched: Column (BooleanType)
     :rtype: Column: RasterTileType
 
 .. note::
-  Notes
+  **Notes**
 
-    :code:`geometry` is expected to be:
-      - in the same coordinate reference system as the raster.
+    The :code:`geometry` parameter is expected to be:
+      - expressed in the same coordinate reference system as the raster.
       - a polygon or a multipolygon.
+
+    The :code:`cutline_all_touched` parameter:
+      - Optional: default is true. this is a GDAL warp config for the operation.
+      - If set to true, the pixels touching the geometry are included in the clip,
+        regardless of half-in or half-out; this is important for tessellation behaviors.
+      - If set to false, only at least half-in pixels are included in the clip.
+
+    The actual GDAL command to clip looks something like the following (after some setup):
+      :code:`"gdalwarp -wo CUTLINE_ALL_TOUCHED=<TRUE|FALSE> -cutline <GEOMETRY> -crop_to_cutline"`
 
     The output raster tiles will have:
       - the same extent as the input geometry.

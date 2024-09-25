@@ -147,18 +147,20 @@ def rst_boundingbox(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName) -> Column:
+def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName, cutline_all_touched: Any = True) -> Column:
     """
-    Clips the raster to the given supported geometry (WKT, WKB, GeoJSON).
-    The result is Mosaic raster tile struct column to the clipped raster.
-    The result is stored in the checkpoint directory.
+    Clips `raster_tile` to the given supported `geometry` (WKT, WKB, GeoJSON).
+    The result is a Mosaic raster tile representing the clipped raster.
 
     Parameters
     ----------
     raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
     geometry : Column (StringType)
-        The geometry to clip the raster to.
+        The geometry to clip the tile to.
+    cutline_all_touched : Column (BooleanType)
+        optional override to specify whether any pixels touching
+        cutline should be included vs half-in only, default is true
 
     Returns
     -------
@@ -166,10 +168,14 @@ def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName) -> Column:
         Mosaic raster tile struct column.
 
     """
+    if type(cutline_all_touched) == bool:
+        cutline_all_touched = lit(cutline_all_touched)
+
     return config.mosaic_context.invoke_function(
         "rst_clip",
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(geometry),
+        pyspark_to_java_column(cutline_all_touched)
     )
 
 

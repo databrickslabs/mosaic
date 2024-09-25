@@ -81,6 +81,13 @@ case class MosaicRasterGDAL(
         val gt = getGeoTransform
 
         val sourceCRS = getSpatialReference
+
+        val destCRSEPSGCode = (destCRS.GetAuthorityName(null), destCRS.GetAuthorityCode(null)) match {
+            case (null, _) => 0
+            case (name: String, code: String) if name == "EPSG" => code.toInt
+            case _ => 0
+        }
+
         val transform = new osr.CoordinateTransformation(sourceCRS, destCRS)
 
         val bbox = geometryAPI.geometry(
@@ -96,7 +103,9 @@ case class MosaicRasterGDAL(
         val geom1 = org.gdal.ogr.ogr.CreateGeometryFromWkb(bbox.toWKB)
         geom1.Transform(transform)
 
-        geometryAPI.geometry(geom1.ExportToWkb(), "WKB")
+        val mosaicGeom = geometryAPI.geometry(geom1.ExportToWkb(), "WKB")
+        mosaicGeom.setSpatialReference(destCRSEPSGCode)
+        mosaicGeom
     }
 
     /** @return The diagonal size of a raster. */
