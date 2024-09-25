@@ -1,12 +1,57 @@
 ## v0.4.3 [DBR 13.3 LTS]
+
+This is the final mainline release of Mosaic. Future development will be focused on the planned spatial-utils library, which will be a successor to Mosaic and will include new features and improvements. The first release of spatial-utils is expected in the coming months.
+
+We will continue to maintain Mosaic for the foreseeable future, including bug fixes and security updates. However, we recommend that users start transitioning to spatial-utils as soon as possible to take advantage of the new features and improvements that will be available in that library.
+
+This release includes a number of enhancements and fixes, detailed below.
+
+### Raster checkpointing is enabled by default
+Fuse-based checkpointing for raster operations is now enabled by default and managed through:
+- spark configs `spark.databricks.labs.mosaic.raster.use.checkpoint` and `spark.databricks.labs.mosaic.raster.checkpoint`.
+- python: `mos.enable_gdal(spark, with_checkpoint_path=path)`.
+- scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, path)`.
+  
+This feature is designed to improve performance and reduce memory usage for raster operations by writing intermediate data to a fuse directory. This is particularly useful for large rasters or when working with many rasters in a single operation. 
+
+We plan further enhancements to this feature (including automatic cleanup of checkpoint locations) as part of the first release of spatial-utils.
+
+### Enhancements and fixes to the raster processing APIs
+  - Added `RST_Write`, a function that permits writing each raster 'tile' in a DataFrame to a specified location (e.g. fuse directory) using the appropriate GDAL driver and tile data / path. This is useful for formalizing the path when writing a Lakehouse table and allows removal of interim checkpointed data.
+  - Python bindings added for `RST_Avg`, `RST_Max`, `RST_Median`, `RST_Min`, and `RST_PixelCount`.
+  - `RST_PixelCount` now supports optional 'countNoData' and 'countMask' parameters (defaults are false, can now be true) to optionally get full pixel counts where mask is 0.0 and noData is what is configured in the tile.
+  - `RST_Clip` now exposes the GDAL Warp option `CUTLINE_ALL_TOUCHED` which determines whether or not any given pixel is included whether the clipping geometry crosses the centre point of the pixel (false) or any part of the pixel (true). The default is true but this is now configurable.
+  - Within clipping operations such as `RST_Clip` we now correctly set the CRS in the generated Shapefile Feature Layer used for clipping. This means that the CRS of the input geometry will be respected when clipping rasters.
+  - Added two new functions for getting and upcasting the datatype of a raster band: `RST_Type` and `RST_UpdateType`. Use these for ensuring that the datatype of a raster is appropriate for the operations being performed, e.g. upcasting the types of integer-typed input rasters before performing raster algebra like NDVI calculations where the result needs to be a float.
+  - The logic underpinning `RST_MemSize` (and related operations) has been updated to fall back to estimating based on the raster dimensions and data types of each band if the raster is held in-memory.
+  - `RST_To_Overlapping_Tiles` is renamed `RST_ToOverlappingTiles`. The original expression remains but is marked as deprecated.
+  - `RST_WorldToRasterCoordY` now returns the correct `y` value (was returning `x`)
+  - Docs added for expression `RST_SetSRID`.
+  - Docs updated for `RST_FromContent` to capture the optional 'driver' parameter.
+
+### Dependency management
+Updates to and pinning of Python language and dependency versions:
 - Pyspark requirement removed from python setup.cfg as it is supplied by DBR
 - Python version limited to "<3.11,>=3.10" for DBR
-- iPython dependency limited to "<8.11,>=7.4.2" for both DBR and keplergl-jupyter 
-- Expanded support for fuse-based checkpointing (persisted raster storage), managed through:
-  - spark config 'spark.databricks.labs.mosaic.raster.use.checkpoint' in addition to 'spark.databricks.labs.mosaic.raster.checkpoint'.
-  - python: `mos.enable_gdal(spark, with_checkpoint_path=path)`.
-  - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, path)`.
-- Python bindings added for `rst_avg`, `rst_max`, `rst_median`, `rst_min`, and `rst_pixelcount`. 
+- iPython dependency limited to "<8.11,>=7.4.2" for both DBR and keplergl-jupyter
+- numpy now limited to "<2.0,>=1.21.5" to match DBR minimum
+
+### Surface mesh APIs
+A set of experimental APIs for for creating and working with surface meshes (i.e. triangulated irregular networks) have been added to Mosaic. Users can now generate a conforming Delaunay triangulation over point data (optionally including 'break' lines as hard constraints), interpolate elevation over a regular grid and rasterize the results to produce terrain models.
+  - `ST_Triangulate` performs a conforming Delaunay triangulation using a set of mass points and break lines. 
+  - `ST_InterpolateElevation` computes the interpolated elevations of a grid of points.
+  - `RST_DTMFromGeoms` burns the interpolated elevations into a raster.
+
+### British National Grid
+Two fixes have been made to the British National Grid indexing system:
+- Corrected a typo in the grid letter array used to perform lookups.
+- Updated the logic used for identifying quadrants when these are specified in a grid reference
+
+### Documentation
+A few updates to our documentation and examples library:
+- An example walkthrough has been added for arbitrary GDAL Warp and Transform operations using a pyspark UDF (see the section "API Documentation / Rasterio + GDAL UDFs")
+- The Python "Quickstart Notebook" has been updated to use the `MosaicAnalyzer` class (added after `MosaicFrame` was deprecated)
+
 
 ## v0.4.2 [DBR 13.3 LTS]
 - Geopandas now fixed to "<0.14.4,>=0.14" due to conflict with minimum numpy version in geopandas 0.14.4.
