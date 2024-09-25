@@ -42,7 +42,7 @@ object GDALTranslate {
           "all_parents" -> raster.getParentPath
         )
         raster
-            .copy(raster = result, createInfo = createInfo, memSize = size)
+            .copy(raster = result, createInfo = createInfo)
             .flushCache()
     }
 

@@ -38,7 +38,7 @@ object GDALWarp {
           "last_error" -> errorMsg,
           "all_parents" -> rasters.map(_.getParentPath).mkString(";")
         )
-        rasters.head.copy(raster = result, createInfo = createInfo, memSize = size).flushCache()
+        rasters.head.copy(raster = result, createInfo = createInfo).flushCache()
     }
 
 }

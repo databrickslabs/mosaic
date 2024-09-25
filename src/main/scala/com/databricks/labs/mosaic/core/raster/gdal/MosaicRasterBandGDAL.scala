@@ -89,6 +89,37 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
 
     /**
       * @return
+      *   Returns the estimated number of bytes in each pixel.
+      */
+    def dataTypeBytes: Int = {
+        val pixelMemSizeMap = Map(
+            gdalconstConstants.GDT_Byte -> 1,
+            gdalconstConstants.GDT_UInt16 -> 2,
+            gdalconstConstants.GDT_Int16 -> 2,
+            gdalconstConstants.GDT_UInt32 -> 4,
+            gdalconstConstants.GDT_Int32 -> 4,
+            gdalconstConstants.GDT_Float32 -> 4,
+            gdalconstConstants.GDT_Float64 -> 8,
+            gdalconstConstants.GDT_CInt16 -> 2,
+            gdalconstConstants.GDT_CInt32 -> 4,
+            gdalconstConstants.GDT_CFloat32 -> 4,
+            gdalconstConstants.GDT_CFloat64 -> 8
+        )
+        if (pixelMemSizeMap.contains(dataType)) pixelMemSizeMap(dataType) else 0
+    }
+
+    /**
+     * @return
+     *   Returns the estimated size in memory of the band.
+     */
+    def estimatedSizeInMem: Int = {
+        val pixelMemSize = dataTypeBytes
+        val pixelCount = xSize * ySize
+        pixelMemSize * pixelCount
+    }
+
+    /**
+      * @return
       *   Returns the band's x size.
       */
     def xSize: Int = Try(band.GetXSize).getOrElse(0)

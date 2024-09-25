@@ -120,7 +120,7 @@ object GDAL {
                       inputDT: DataType
                   ): MosaicRasterGDAL = {
         if (inputRaster == null) {
-            MosaicRasterGDAL(null, createInfo, -1)
+            MosaicRasterGDAL(null, createInfo)
         } else {
             inputDT match {
                 case _: StringType =>
@@ -153,7 +153,7 @@ object GDAL {
             val zippedPath = s"/vsizip/$parentPath"
             MosaicRasterGDAL.readRaster(bytes, createInfo + ("path" -> zippedPath))
         } catch {
-            case _: Throwable => MosaicRasterGDAL(null, createInfo, -1)
+            case _: Throwable => MosaicRasterGDAL(null, createInfo)
         }
     }
 
