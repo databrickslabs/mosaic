@@ -67,6 +67,8 @@ __all__ = [
     "rst_summary",
     "rst_tessellate",
     "rst_transform",
+    "rst_tooverlappingtiles",
+    "rst_to_overlapping_tiles",  # <- deprecated
     "rst_type",
     "rst_to_overlapping_tiles",
     "rst_tryopen",
@@ -77,6 +79,7 @@ __all__ = [
     "rst_worldtorastercoord",
     "rst_worldtorastercoordx",
     "rst_worldtorastercoordy",
+    "rst_write",
 ]
 
 
@@ -96,8 +99,7 @@ def rst_avg(raster_tile: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_avg",
-        pyspark_to_java_column(raster_tile)
+        "rst_avg", pyspark_to_java_column(raster_tile)
     )
 
 
@@ -145,18 +147,22 @@ def rst_boundingbox(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName) -> Column:
+def rst_clip(
+    raster_tile: ColumnOrName, geometry: ColumnOrName, cutline_all_touched: Any = True
+) -> Column:
     """
-    Clips the raster to the given supported geometry (WKT, WKB, GeoJSON).
-    The result is Mosaic raster tile struct column to the clipped raster.
-    The result is stored in the checkpoint directory.
+    Clips `raster_tile` to the given supported `geometry` (WKT, WKB, GeoJSON).
+    The result is a Mosaic raster tile representing the clipped raster.
 
     Parameters
     ----------
     raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
     geometry : Column (StringType)
-        The geometry to clip the raster to.
+        The geometry to clip the tile to.
+    cutline_all_touched : Column (BooleanType)
+        optional override to specify whether any pixels touching
+        cutline should be included vs half-in only, default is true
 
     Returns
     -------
@@ -164,10 +170,14 @@ def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName) -> Column:
         Mosaic raster tile struct column.
 
     """
+    if type(cutline_all_touched) == bool:
+        cutline_all_touched = lit(cutline_all_touched)
+
     return config.mosaic_context.invoke_function(
         "rst_clip",
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(geometry),
+        pyspark_to_java_column(cutline_all_touched),
     )
 
 
@@ -356,8 +366,9 @@ def rst_frombands(bands: ColumnOrName) -> Column:
         "rst_frombands", pyspark_to_java_column(bands)
     )
 
+
 def rst_fromcontent(
-        raster_bin: ColumnOrName, driver: ColumnOrName, size_in_mb: Any = -1
+    raster_bin: ColumnOrName, driver: ColumnOrName, size_in_mb: Any = -1
 ) -> Column:
     """
     Tiles the raster binary into tiles of the given size.
@@ -580,7 +591,9 @@ def rst_mapalgebra(raster_tile: ColumnOrName, json_spec: ColumnOrName) -> Column
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_mapalgebra", pyspark_to_java_column(raster_tile), pyspark_to_java_column(json_spec)
+        "rst_mapalgebra",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(json_spec),
     )
 
 
@@ -600,8 +613,7 @@ def rst_max(raster_tile: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_max",
-        pyspark_to_java_column(raster_tile)
+        "rst_max", pyspark_to_java_column(raster_tile)
     )
 
 
@@ -621,8 +633,7 @@ def rst_median(raster_tile: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_median",
-        pyspark_to_java_column(raster_tile)
+        "rst_median", pyspark_to_java_column(raster_tile)
     )
 
 
@@ -700,13 +711,12 @@ def rst_min(raster_tile: ColumnOrName) -> Column:
 
     """
     return config.mosaic_context.invoke_function(
-        "rst_min",
-        pyspark_to_java_column(raster_tile)
+        "rst_min", pyspark_to_java_column(raster_tile)
     )
 
 
 def rst_ndvi(
-        raster_tile: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName
+    raster_tile: ColumnOrName, band1: ColumnOrName, band2: ColumnOrName
 ) -> Column:
     """
     Computes the NDVI of the raster.
@@ -735,6 +745,7 @@ def rst_ndvi(
         pyspark_to_java_column(band2),
     )
 
+
 def rst_numbands(raster_tile: ColumnOrName) -> Column:
     """
     Parameters
@@ -753,21 +764,36 @@ def rst_numbands(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_pixelcount(raster_tile: ColumnOrName) -> Column:
+def rst_pixelcount(
+    raster_tile: ColumnOrName, count_nodata: Any = False, count_all: Any = False
+) -> Column:
     """
     Parameters
     ----------
     raster_tile : Column (RasterTileType)
         Mosaic raster tile struct column.
-
+    count_nodata : Column(BooleanType)
+        If false do not include noData pixels in count (default is false).
+    count_all : Column(BooleanType)
+        If true, simply return bandX * bandY (default is false).
     Returns
     -------
     Column (ArrayType(LongType))
         Array containing valid pixel count values for each band.
 
     """
+
+    if type(count_nodata) == bool:
+        count_nodata = lit(count_nodata)
+
+    if type(count_all) == bool:
+        count_all = lit(count_all)
+
     return config.mosaic_context.invoke_function(
-        "rst_pixelcount", pyspark_to_java_column(raster_tile)
+        "rst_pixelcount",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(count_nodata),
+        pyspark_to_java_column(count_all),
     )
 
 
@@ -1350,11 +1376,11 @@ def rst_tessellate(raster_tile: ColumnOrName, resolution: ColumnOrName) -> Colum
     )
 
 
-def rst_to_overlapping_tiles(
-        raster_tile: ColumnOrName,
-        width: ColumnOrName,
-        height: ColumnOrName,
-        overlap: ColumnOrName,
+def rst_tooverlappingtiles(
+    raster_tile: ColumnOrName,
+    width: ColumnOrName,
+    height: ColumnOrName,
+    overlap: ColumnOrName,
 ) -> Column:
     """
     Tiles the raster into tiles of the given size.
@@ -1364,12 +1390,21 @@ def rst_to_overlapping_tiles(
     """
 
     return config.mosaic_context.invoke_function(
-        "rst_to_overlapping_tiles",
+        "rst_tooverlappingtiles",
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(width),
         pyspark_to_java_column(height),
         pyspark_to_java_column(overlap),
     )
+
+
+def rst_to_overlapping_tiles(
+    raster_tile: ColumnOrName,
+    width: ColumnOrName,
+    height: ColumnOrName,
+    overlap: ColumnOrName,
+) -> Column:
+    return rst_tooverlappingtiles(raster_tile, width, height, overlap)
 
 
 def rst_transform(raster_tile: ColumnOrName, srid: ColumnOrName) -> Column:
@@ -1607,4 +1642,26 @@ def rst_worldtorastercoordy(
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(x),
         pyspark_to_java_column(y),
+    )
+
+
+def rst_write(raster_tile: ColumnOrName, path: ColumnOrName) -> Column:
+    """
+     Write rasters to the given director `path`.
+
+     Parameters
+     ----------
+     raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+    path : Column (StringType)
+        The path to write the raster.
+
+     Returns
+     -------
+     Column (RasterTileType)
+             The raster with an updated location at `path`.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_write", pyspark_to_java_column(raster_tile), pyspark_to_java_column(path)
     )

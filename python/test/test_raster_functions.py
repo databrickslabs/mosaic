@@ -56,7 +56,13 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .withColumn("rst_height", api.rst_height("tile"))
             .withColumn("rst_initnodata", api.rst_initnodata("tile"))
             .withColumn("rst_isempty", api.rst_isempty("tile"))
-            .withColumn("rst_mapalgebra", api.rst_mapalgebra(array("tile_from_file", "rst_initnodata"), lit('{"calc": "A+B", "A_index": 0, "B_index": 1}')))
+            .withColumn(
+                "rst_mapalgebra",
+                api.rst_mapalgebra(
+                    array("tile_from_file", "rst_initnodata"),
+                    lit('{"calc": "A+B", "A_index": 0, "B_index": 1}'),
+                ),
+            )
             .withColumn("rst_memsize", api.rst_memsize("tile"))
             .withColumn("rst_merge", api.rst_merge(array("tile", "tile")))
             .withColumn("rst_metadata", api.rst_metadata("tile"))
@@ -109,6 +115,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
                 "rst_worldtorastercoord",
                 api.rst_worldtorastercoord("tile", lit(0.0), lit(0.0)),
             )
+            .withColumn("rst_write", api.rst_write("tile", lit("/tmp/mosaic_tmp/")))
         )
         result.write.format("noop").mode("overwrite").save()
         self.assertEqual(result.count(), 1)
@@ -137,8 +144,8 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         overlap_result = (
             self.generate_singleband_raster_df()
             .withColumn(
-                "rst_to_overlapping_tiles",
-                api.rst_to_overlapping_tiles("tile", lit(200), lit(200), lit(10)),
+                "rst_tooverlappingtiles",
+                api.rst_tooverlappingtiles("tile", lit(200), lit(200), lit(10)),
             )
             .withColumn("rst_subdatasets", api.rst_subdatasets("tile"))
         )
@@ -151,15 +158,16 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             self.generate_singleband_raster_df()
             .withColumn("extent", api.st_astext(api.rst_boundingbox("tile")))
             .withColumn(
-                "rst_to_overlapping_tiles",
-                api.rst_to_overlapping_tiles("tile", lit(200), lit(200), lit(10)),
+                "tile",
+                api.rst_tooverlappingtiles("tile", lit(200), lit(200), lit(10)),
             )
         )
 
         merge_result = (
             collection.groupBy("path")
-            .agg(api.rst_merge_agg("tile").alias("tile"))
-            .withColumn("extent", api.st_astext(api.rst_boundingbox("tile")))
+            .agg(api.rst_merge_agg("tile").alias("merge_tile"))
+            .withColumn("extent", api.st_astext(api.rst_boundingbox("merge_tile")))
+            .cache()
         )
 
         self.assertEqual(merge_result.count(), 1)
@@ -219,7 +227,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .withColumn("tile", api.rst_setsrid("tile", lit(4326)))
             .where(col("timestep") == 21)
             .withColumn(
-                "tile", api.rst_to_overlapping_tiles("tile", lit(20), lit(20), lit(10))
+                "tile", api.rst_tooverlappingtiles("tile", lit(20), lit(20), lit(10))
             )
             .repartition(self.spark.sparkContext.defaultParallelism)
         )
@@ -245,7 +253,6 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         self.assertEqual(merged_precipitation.count(), 1)
 
     def test_dtmfromgeoms(self):
-
         outputRegion = "POLYGON((348000 462000, 348000 461000, 349000 461000, 349000 462000, 348000 462000))"
 
         points_df = (

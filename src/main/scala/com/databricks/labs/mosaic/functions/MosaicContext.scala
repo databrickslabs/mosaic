@@ -340,6 +340,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_WorldToRasterCoord](expressionConfig)
         mosaicRegistry.registerExpression[RST_WorldToRasterCoordX](expressionConfig)
         mosaicRegistry.registerExpression[RST_WorldToRasterCoordY](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Write](expressionConfig)
 
         /** Aggregators */
         registry.registerFunction(
@@ -699,11 +700,15 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_bandmetadata(raster: Column, band: Int): Column =
             ColumnAdapter(RST_BandMetaData(raster.expr, lit(band).expr, expressionConfig))
         def rst_boundingbox(raster: Column): Column = ColumnAdapter(RST_BoundingBox(raster.expr, expressionConfig))
-        def rst_clip(raster: Column, geometry: Column): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, expressionConfig))
+        def rst_clip(raster: Column, geometry: Column): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, lit(true).expr, expressionConfig))
+        def rst_clip(raster: Column, geometry: Column, cutline: Boolean): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, lit(cutline).expr, expressionConfig))
+        def rst_clip(raster: Column, geometry: Column, cutline: Column): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, cutline.expr, expressionConfig))
         def rst_convolve(raster: Column, kernel: Column): Column = ColumnAdapter(RST_Convolve(raster.expr, kernel.expr, expressionConfig))
         def rst_dtmfromgeoms(pointsArray: Column, linesArray: Column, mergeTol: Column, snapTol: Column, origin: Column, xWidth: Column, yWidth: Column, xSize: Column, ySize: Column): Column =
             ColumnAdapter(RST_DTMFromGeoms(pointsArray.expr, linesArray.expr, mergeTol.expr, snapTol.expr, origin.expr, xWidth.expr, yWidth.expr, xSize.expr, ySize.expr, expressionConfig))
-        def rst_pixelcount(raster: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, expressionConfig))
+        def rst_pixelcount(raster: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, lit(false).expr, lit(false).expr, expressionConfig))
+        def rst_pixelcount(raster: Column, countNoData: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, countNoData.expr, lit(false).expr, expressionConfig))
+        def rst_pixelcount(raster: Column, countNoData: Column, countAll: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, countNoData.expr, countAll.expr, expressionConfig))
         def rst_combineavg(rasterArray: Column): Column = ColumnAdapter(RST_CombineAvg(rasterArray.expr, expressionConfig))
         def rst_derivedband(raster: Column, pythonFunc: Column, funcName: Column): Column =
             ColumnAdapter(RST_DerivedBand(raster.expr, pythonFunc.expr, funcName.expr, expressionConfig))
@@ -803,9 +808,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_FromFile(raster.expr, sizeInMB.expr, expressionConfig))
         def rst_fromfile(raster: Column, sizeInMB: Int): Column =
             ColumnAdapter(RST_FromFile(raster.expr, lit(sizeInMB).expr, expressionConfig))
-        def rst_to_overlapping_tiles(raster: Column, width: Int, height: Int, overlap: Int): Column =
+        def rst_tooverlappingtiles(raster: Column, width: Int, height: Int, overlap: Int): Column =
             ColumnAdapter(RST_ToOverlappingTiles(raster.expr, lit(width).expr, lit(height).expr, lit(overlap).expr, expressionConfig))
-        def rst_to_overlapping_tiles(raster: Column, width: Column, height: Column, overlap: Column): Column =
+        def rst_tooverlappingtiles(raster: Column, width: Column, height: Column, overlap: Column): Column =
             ColumnAdapter(RST_ToOverlappingTiles(raster.expr, width.expr, height.expr, overlap.expr, expressionConfig))
         def rst_tryopen(raster: Column): Column = ColumnAdapter(RST_TryOpen(raster.expr, expressionConfig))
         def rst_subdivide(raster: Column, sizeInMB: Column): Column =
@@ -831,7 +836,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_WorldToRasterCoordY(raster.expr, x.expr, y.expr, expressionConfig))
         def rst_worldtorastercoordy(raster: Column, x: Double, y: Double): Column =
             ColumnAdapter(RST_WorldToRasterCoordY(raster.expr, lit(x).expr, lit(y).expr, expressionConfig))
-
+        def rst_write(raster: Column, path: Column): Column =
+            ColumnAdapter(RST_Write(raster.expr, path.expr, expressionConfig))
+        def rst_write(raster: Column, path: String): Column =
+            ColumnAdapter(RST_Write(raster.expr, lit(path).expr, expressionConfig))
         /** Aggregators */
 
         def st_asgeojsontile_agg(geom: Column, attributes: Column): Column =
@@ -1006,6 +1014,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def try_sql(inCol: Column): Column = ColumnAdapter(TrySql(inCol.expr))
 
         // Legacy API
+        @deprecated("Please use 'rst_tooverlappingtiles' expression instead.")
+        def rst_to_overlapping_tiles(raster: Column, width: Int, height: Int, overlap: Int): Column = rst_tooverlappingtiles(raster, width, height, overlap)
+        @deprecated("Please use 'rst_tooverlappingtiles' expression instead.")
+        def rst_to_overlapping_tiles(raster: Column, width: Column, height: Column, overlap: Column): Column = rst_tooverlappingtiles(raster, width, height, overlap)
         @deprecated("Please use 'st_intersects_agg' expression instead.")
         def st_intersects_aggregate(leftIndex: Column, rightIndex: Column): Column = st_intersects_agg(leftIndex, rightIndex)
         @deprecated("Please use 'st_intersection_agg' expression instead.")

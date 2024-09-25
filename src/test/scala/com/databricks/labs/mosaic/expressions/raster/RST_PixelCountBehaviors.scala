@@ -31,8 +31,9 @@ trait RST_PixelCountBehaviors extends QueryTest {
             .withColumn("tile", rst_tessellate($"tile", lit(3)))
             .createOrReplaceTempView("source")
 
+        // TODO: modified to 3 args... should this be revisited?
         noException should be thrownBy spark.sql("""
-                                                   |select rst_pixelcount(tile) from source
+                                                   |select rst_pixelcount(tile,false,false) from source
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory

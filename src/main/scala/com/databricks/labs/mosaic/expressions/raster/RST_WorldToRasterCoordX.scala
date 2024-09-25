@@ -28,8 +28,9 @@ case class RST_WorldToRasterCoordX(
       */
     override def rasterTransform(tile: MosaicRasterTile, arg1: Any, arg2: Any): Any = {
         val xGeo = arg1.asInstanceOf[Double]
+        val yGeo = arg2.asInstanceOf[Double]
         val gt = tile.getRaster.getRaster.GetGeoTransform()
-        GDAL.fromWorldCoord(gt, xGeo, 0)._1
+        GDAL.fromWorldCoord(gt, xGeo, yGeo)._1
     }
 
 }

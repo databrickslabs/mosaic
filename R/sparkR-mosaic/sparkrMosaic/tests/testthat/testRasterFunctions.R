@@ -43,6 +43,7 @@ test_that("scalar raster functions behave as intended", {
   sdf <- withColumn(sdf, "rst_worldtorastercoordx", rst_worldtorastercoordx(column("tile"), lit(0.0), lit(0.0)))
   sdf <- withColumn(sdf, "rst_worldtorastercoordy", rst_worldtorastercoordy(column("tile"), lit(0.0), lit(0.0)))
   sdf <- withColumn(sdf, "rst_worldtorastercoord", rst_worldtorastercoord(column("tile"), lit(0.0), lit(0.0)))
+  sdf <- withColumn(sdf, "rst_write", rst_write(column("tile"), lit("/tmp/mosaic_tmp/")))
 
   expect_no_error(write.df(sdf, source = "noop", mode = "overwrite"))
 })
@@ -67,7 +68,7 @@ test_that("raster flatmap functions behave as intended", {
   expect_equal(nrow(tessellate_sdf), 63)
 
   overlap_sdf <- generate_singleband_raster_df()
-  overlap_sdf <- withColumn(overlap_sdf, "rst_to_overlapping_tiles", rst_to_overlapping_tiles(column("tile"), lit(200L), lit(200L), lit(10L)))
+  overlap_sdf <- withColumn(overlap_sdf, "rst_tooverlappingtiles", rst_tooverlappingtiles(column("tile"), lit(200L), lit(200L), lit(10L)))
 
   expect_no_error(write.df(overlap_sdf, source = "noop", mode = "overwrite"))
   expect_equal(nrow(overlap_sdf), 87)
@@ -76,7 +77,7 @@ test_that("raster flatmap functions behave as intended", {
 test_that("raster aggregation functions behave as intended", {
   collection_sdf <- generate_singleband_raster_df()
   collection_sdf <- withColumn(collection_sdf, "extent", st_astext(rst_boundingbox(column("tile"))))
-  collection_sdf <- withColumn(collection_sdf, "tile", rst_to_overlapping_tiles(column("tile"), lit(200L), lit(200L), lit(10L)))
+  collection_sdf <- withColumn(collection_sdf, "tile", rst_tooverlappingtiles(column("tile"), lit(200L), lit(200L), lit(10L)))
 
   merge_sdf <- summarize(
     groupBy(collection_sdf, "path"),
@@ -127,7 +128,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   raster_sdf <- withColumn(raster_sdf, "timestep", element_at(rst_metadata(column("tile")), "NC_GLOBAL#GDAL_MOSAIC_BAND_INDEX"))
   raster_sdf <- where(raster_sdf, "timestep = 21")
   raster_sdf <- withColumn(raster_sdf, "tile", rst_setsrid(column("tile"), lit(4326L)))
-  raster_sdf <- withColumn(raster_sdf, "tile", rst_to_overlapping_tiles(column("tile"), lit(20L), lit(20L), lit(10L)))
+  raster_sdf <- withColumn(raster_sdf, "tile", rst_tooverlappingtiles(column("tile"), lit(20L), lit(20L), lit(10L)))
   raster_sdf <- withColumn(raster_sdf, "tile", rst_tessellate(column("tile"), lit(target_resolution)))
 
   clipped_sdf <- join(raster_sdf, census_sdf, raster_sdf$tile.index_id == census_sdf$index_id)

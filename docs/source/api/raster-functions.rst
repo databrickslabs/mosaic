@@ -50,7 +50,7 @@ rst_avg
 
     Returns an array containing mean values for each band.
 
-    :param tile: A column containing the raster tile. 
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: ArrayType(DoubleType)
 
@@ -92,7 +92,7 @@ rst_bandmetadata
     Extract the metadata describing the raster band.
     Metadata is return as a map of key value pairs.
 
-    :param tile: A column containing the raster tile. 
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param band: The band number to extract metadata for.
     :type band: Column (IntegerType)
@@ -193,7 +193,7 @@ rst_boundingbox
 rst_clip
 ********
 
-.. function:: rst_clip(tile, geometry)
+.. function:: rst_clip(tile, geometry, cutline_all_touched)
 
     Clips :code:`tile` with :code:`geometry`, provided in a supported encoding (WKB, WKT or GeoJSON).
 
@@ -201,21 +201,35 @@ rst_clip
     :type tile: Column (RasterTileType)
     :param geometry: A column containing the geometry to clip the raster to.
     :type geometry: Column (GeometryType)
+    :param cutline_all_touched: A column to specify pixels boundary behavior.
+    :type cutline_all_touched: Column (BooleanType)
     :rtype: Column: RasterTileType
 
 .. note::
-  Notes
+  **Notes**
+    Geometry input
+      The :code:`geometry` parameter is expected to be a polygon or a multipolygon.
 
-    :code:`geometry` is expected to be:
-      - in the same coordinate reference system as the raster.
-      - a polygon or a multipolygon.
+    Cutline handling
+      The :code:`cutline_all_touched` parameter:
 
-    The output raster tiles will have:
-      - the same extent as the input geometry.
-      - the same number of bands as the input raster.
-      - the same pixel data type as the input raster.
-      - the same pixel size as the input raster.
-      - the same coordinate reference system as the input raster.
+      - Optional: default is true. This is a GDAL warp config for the operation.
+      - If set to true, the pixels touching the geometry are included in the clip,
+        regardless of half-in or half-out; this is important for tessellation behaviors.
+      - If set to false, only at least half-in pixels are included in the clip.
+      - More information can be found `here <https://gdal.org/en/latest/api/gdalwarp_cpp.html>`__
+
+      The actual GDAL command employed to perform the clipping operation is as follows:
+      :code:`"gdalwarp -wo CUTLINE_ALL_TOUCHED=<TRUE|FALSE> -cutline <GEOMETRY> -crop_to_cutline"`
+
+    Output
+      Output raster tiles will have:
+
+        - the same extent as the input geometry.
+        - the same number of bands as the input raster.
+        - the same pixel data type as the input raster.
+        - the same pixel size as the input raster.
+        - the same coordinate reference system as the input raster.
 ..
 
     :example:
@@ -1737,15 +1751,35 @@ rst_numbands
     +---------------------+
 
 rst_pixelcount
-***************
+**************
 
-.. function:: rst_pixelcount(tile)
+.. function:: rst_pixelcount(tile, count_nodata, count_all)
 
-    Returns an array containing valid pixel count values for each band.
+    Returns an array containing pixel count values for each band; default excludes mask and nodata pixels.
     
     :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
+    :param count_nodata: A column to specify whether to count nodata pixels.
+    :type count_nodata: Column (BooleanType)
+    :param count_all: A column to specify whether to count all pixels.
+    :type count_all: Column (BooleanType)
     :rtype: Column: ArrayType(LongType)
+
+.. note::
+
+  Notes:
+
+  If pixel value is noData or mask value is 0.0, the pixel is not counted by default.
+
+  :code:`count_nodata`
+    - This is an optional param.
+    - if specified as true, include the noData (not mask) pixels in the count (default is false).
+
+  :code:`count_all`
+    - This is an optional param; as a positional arg, must also pass :code:`count_nodata`
+      (value of :code:`count_nodata` is ignored).
+    - if specified as true, simply return bandX * bandY in the count (default is false).
+..
 
     :example:
 
@@ -2616,7 +2650,7 @@ rst_separatebands
     +--------------------------------------------------------------------------------------------------------------------------------+
 
 rst_setnodata
-**********************
+*************
 
 .. function:: rst_setnodata(tile, nodata)
 
@@ -2667,6 +2701,49 @@ rst_setnodata
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
+
+rst_setsrid
+***********
+
+.. function:: rst_setsrid(tile, srid)
+
+    Set the SRID of the raster tile as an EPSG code.
+
+    :param tile: A column containing the raster tile.
+    :type tile: Column (RasterTileType)
+    :param srid: The SRID to set
+    :type srid: Column (IntegerType)
+    :rtype: Column: (RasterTileType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df.select(mos.rst_setsrid('tile', F.lit(9122))).display()
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    df.select(rst_setsrid(col("tile"), lit(9122))).show
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT rst_setsrid(tile, 9122) FROM table
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
 
 rst_skewx
 *********
@@ -3517,3 +3594,60 @@ rst_worldtorastercoordy
     +------------------------------------------------------------------------------------------------------------------+
     | 997                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
+
+rst_write
+*********
+
+.. function:: rst_write(input, dir)
+
+    Writes raster tiles from the input column to a specified directory.
+
+    :param input: A column containing the raster tile.
+    :type input: Column
+    :param dir: The directory, e.g. fuse, to write the tile's raster as file.
+    :type dir: Column(StringType)
+    :rtype: Column: RasterTileType
+
+.. note::
+  **Notes**
+    - Use :code:`RST_Write` to save a 'tile' column to a specified directory (e.g. fuse) location using its
+      already populated GDAL driver and tile information.
+    - Useful for formalizing the tile 'path' when writing a Lakehouse table. An example might be to turn on checkpointing
+      for internal data pipeline phase operations in which multiple interim tiles are populated, but at the end of the phase
+      use this function to set the final path to be used in the phase's persisted table. Then, you are free to delete
+      the internal tiles that accumulated in the configured checkpointing directory.
+..
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.select(rst_write("tile", <write_dir>).alias("tile")).limit(1).display()
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"tile":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.select(rst_write(col("tile", <write_dir>)).as("tile)).limit(1).show
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"tile":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT rst_write(tile, <write_dir>) as tile FROM table LIMIT 1
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"tile":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
