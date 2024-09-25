@@ -147,7 +147,9 @@ def rst_boundingbox(raster_tile: ColumnOrName) -> Column:
     )
 
 
-def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName, cutline_all_touched: Any = True) -> Column:
+def rst_clip(
+    raster_tile: ColumnOrName, geometry: ColumnOrName, cutline_all_touched: Any = True
+) -> Column:
     """
     Clips `raster_tile` to the given supported `geometry` (WKT, WKB, GeoJSON).
     The result is a Mosaic raster tile representing the clipped raster.
@@ -175,7 +177,7 @@ def rst_clip(raster_tile: ColumnOrName, geometry: ColumnOrName, cutline_all_touc
         "rst_clip",
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(geometry),
-        pyspark_to_java_column(cutline_all_touched)
+        pyspark_to_java_column(cutline_all_touched),
     )
 
 
