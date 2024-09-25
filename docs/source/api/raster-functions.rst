@@ -207,26 +207,29 @@ rst_clip
 
 .. note::
   **Notes**
+    Geometry input
+      The :code:`geometry` parameter is expected to be a polygon or a multipolygon.
 
-    The :code:`geometry` parameter is expected to be:
-      - expressed in the same coordinate reference system as the raster.
-      - a polygon or a multipolygon.
+    Cutline handling
+      The :code:`cutline_all_touched` parameter:
 
-    The :code:`cutline_all_touched` parameter:
-      - Optional: default is true. this is a GDAL warp config for the operation.
+      - Optional: default is true. This is a GDAL warp config for the operation.
       - If set to true, the pixels touching the geometry are included in the clip,
         regardless of half-in or half-out; this is important for tessellation behaviors.
       - If set to false, only at least half-in pixels are included in the clip.
+      - More information can be found `here <https://gdal.org/en/latest/api/gdalwarp_cpp.html>`__
 
-    The actual GDAL command to clip looks something like the following (after some setup):
+      The actual GDAL command employed to perform the clipping operation is as follows:
       :code:`"gdalwarp -wo CUTLINE_ALL_TOUCHED=<TRUE|FALSE> -cutline <GEOMETRY> -crop_to_cutline"`
 
-    The output raster tiles will have:
-      - the same extent as the input geometry.
-      - the same number of bands as the input raster.
-      - the same pixel data type as the input raster.
-      - the same pixel size as the input raster.
-      - the same coordinate reference system as the input raster.
+    Output
+      Output raster tiles will have:
+
+        - the same extent as the input geometry.
+        - the same number of bands as the input raster.
+        - the same pixel data type as the input raster.
+        - the same pixel size as the input raster.
+        - the same coordinate reference system as the input raster.
 ..
 
     :example:
