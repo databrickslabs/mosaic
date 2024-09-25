@@ -392,7 +392,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
             encode(eLetter, 0, 0, 0, 0, 1, -1)
         } else {
             val suffix = index.slice(index.length - 2, index.length)
-            val quadrant: Int = if (quadrants.contains(suffix)) quadrants.indexOf(suffix) else 0
+            val quadrant: Int = if (quadrants.contains(suffix) && index.length > 2) quadrants.indexOf(suffix) else 0
             val binDigits = if (quadrant > 0) index.drop(2).dropRight(2) else index.drop(2)
             if (binDigits.isEmpty) {
                 encode(eLetter, nLetter, 0, 0, quadrant, 1, -2)
@@ -537,7 +537,7 @@ object BNGIndexSystem extends IndexSystem(StringType) with Serializable {
         math.abs((x1 - x2) / edgeSize) + math.abs((y1 - y2) / edgeSize)
     }
 
-    private def encode(eLetter: Int, nLetter: Int, eBin: Int, nBin: Int, quadrant: Int, nPositions: Int, resolution: Int): Long = {
+    def encode(eLetter: Int, nLetter: Int, eBin: Int, nBin: Int, quadrant: Int, nPositions: Int, resolution: Int): Long = {
         val idPlaceholder = math.pow(10, 5 + 2 * nPositions - 2) // 1(##)(##)(#...#)(#...#)(#)
         val eLetterShift = math.pow(10, 3 + 2 * nPositions - 2) // (##)(##)(#...#)(#...#)(#)
         val nLetterShift = math.pow(10, 1 + 2 * nPositions - 2) // (##)(#...#)(#...#)(#)
