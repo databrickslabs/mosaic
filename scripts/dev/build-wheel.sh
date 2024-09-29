@@ -4,5 +4,5 @@
 # - this will also install dependencies
 pip install --upgrade pip
 pip install --upgrade build setuptools wheel
-pip install .
+pip install -v .
 python3 -m build . --wheel
