@@ -628,7 +628,15 @@ case class MosaicRasterGDAL(
     def writeToPath(newPath: String, dispose: Boolean = true): String = {
         if (isSubDataset) {
             val driver = raster.GetDriver()
-            val ds = driver.CreateCopy(newPath, this.flushCache().getRaster, 1)
+
+            //test to see if path is in a fuse location
+            val outPath = if (PathUtils.isFuseLocation(newPath)) {
+                PathUtils.createTmpFilePath(getRasterFileExtension)
+            } else {
+                newPath
+            }
+
+            val ds = driver.CreateCopy(outPath, this.flushCache().getRaster, 1)
             if (ds == null) {
                 val error = gdal.GetLastErrorMsg()
                 throw new Exception(s"Error writing raster to path: $error")
@@ -636,6 +644,9 @@ case class MosaicRasterGDAL(
             ds.FlushCache()
             ds.delete()
             if (dispose) RasterCleaner.dispose(this)
+            if (outPath != newPath) {
+                Files.move(Paths.get(outPath), Paths.get(newPath), StandardCopyOption.REPLACE_EXISTING)
+            }
             newPath
         } else {
             val thisPath = Paths.get(this.path)
