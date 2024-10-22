@@ -17,7 +17,7 @@ import org.gdal.osr
 import org.gdal.osr.SpatialReference
 import org.locationtech.proj4j.CRSFactory
 
-import java.nio.file.{Files, Paths, StandardCopyOption}
+import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.util.{Locale, Vector => JVector}
 import scala.collection.JavaConverters.dictionaryAsScalaMapConverter
 import scala.util.{Failure, Success, Try}
@@ -602,7 +602,7 @@ case class MosaicRasterGDAL(
         }
         val byteArray = FileUtils.readBytes(readPath)
         if (dispose) RasterCleaner.dispose(this)
-        if (readPath != PathUtils.getCleanPath(parentPath)) {
+        if (readPath != PathUtils.getCleanPath(parentPath) && PathUtils.isTmpLocation(readPath)) {
             Files.deleteIfExists(Paths.get(readPath))
             if (readPath.endsWith(".zip")) {
                 val nonZipPath = readPath.replace(".zip", "")
@@ -651,7 +651,10 @@ case class MosaicRasterGDAL(
         } else {
             val thisPath = Paths.get(this.path)
             val fromDir = thisPath.getParent
-            val toDir = Paths.get(newPath).getParent
+            val toDir = Paths.get(newPath) match {
+                case p: Path if Files.isDirectory(p) => p
+                case p: Path => p.getParent()
+            }
             val stemRegex = PathUtils.getStemRegex(this.path)
             PathUtils.wildcardCopy(fromDir.toString, toDir.toString, stemRegex)
             if (dispose) RasterCleaner.dispose(this)

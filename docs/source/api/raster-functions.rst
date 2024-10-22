@@ -26,19 +26,14 @@ e.g. :code:`spark.read.format("gdal")`
     * The Mosaic raster tile schema changed in v0.4.1 to the following:
       :code:`<tile:struct<index_id:bigint, tile:binary, metadata:map<string, string>>`. All APIs that use tiles now follow
       this schema.
-    * The function :ref:`rst_maketiles` allows for the raster tile schema to hold either a path pointer (string)
-      or a byte array representation of the source raster. It also supports optional checkpointing for increased
-      performance during chains of raster operations.
-
-Updates to the raster features for 0.4.1
-----------------------------------------
-
-  * Scala does not have a :code:`df.display()` method while python does. In practice you would most often call
-    :code:`display(df)` in scala for a prettier output, but for brevity, we write :code:`df.show` in scala.
+    * Mosaic can write rasters from a DataFrame to a target directory in DBFS using the function :ref:`rst_write`
 
 .. note:: For mosaic versions > 0.4.0 you can use the revamped setup_gdal function or new setup_fuse_install.
     These functions will configure an init script in your preferred Workspace, Volume, or DBFS location to install GDAL
     on your cluster. See :doc:`Install and Enable GDAL with Mosaic </usage/install-gdal>` for more details.
+
+.. note:: For complex operations and / or working with large rasters, Mosaic offers the option option of employing checkpointing
+    to write intermediate results to disk. Follow the instructions in :doc:`Checkpointing </usage/raster-checkpointing>` to enable this feature.
 
 Functions
 #########

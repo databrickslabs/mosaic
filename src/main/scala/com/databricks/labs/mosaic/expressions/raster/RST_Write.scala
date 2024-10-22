@@ -44,7 +44,7 @@ case class RST_Write(
     // serialize data type
     override def dataType: DataType = {
         require(dirExpr.isInstanceOf[Literal])
-        RasterTileType(expressionConfig.getCellIdType, StringType, useCheckpoint = false)
+        RasterTileType(expressionConfig.getCellIdType, inputExpr, expressionConfig.isRasterUseCheckpoint)
     }
 
     /**

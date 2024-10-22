@@ -1,11 +1,11 @@
 package com.databricks.labs.mosaic.expressions.raster
 
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.utils.FileUtils
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.scalatest.matchers.should.Matchers.{be, convertToAnyShouldWrapper}
 
 import java.nio.file.{Files, Paths}
@@ -25,7 +25,7 @@ trait RST_WriteBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val writeDir = "/tmp/mosaic_tmp/write-tile"
+        val writeDir = "/mnt/mosaic_tmp/write-tile"
         val writeDirJava = Paths.get(writeDir)
         Try(FileUtils.deleteRecursively(writeDir, keepRoot = false))
         Files.createDirectories(writeDirJava)
@@ -42,13 +42,12 @@ trait RST_WriteBehaviors extends QueryTest {
             .filter(!rst_isempty($"tile"))
             .select(rst_write($"tile", writeDir))
             .first()
-            .asInstanceOf[GenericRowWithSchema].get(0)
 
-        val createInfo1 = gridTiles1.asInstanceOf[GenericRowWithSchema].getAs[Map[String, String]](2)
+        val createInfo1 = gridTiles1.getStruct(0).getAs[Map[String, String]](2)
         val path1Java = Paths.get(createInfo1("path"))
 
-        Files.list(path1Java.getParent).count() should be (1)
-        Try(FileUtils.deleteRecursively(writeDir, keepRoot = false))
+        Files.list(path1Java.getParent).count() shouldBe 1
+        FileUtils.deleteRecursively(writeDir, keepRoot = false)
         Files.createDirectories(writeDirJava)
         Files.list(Paths.get(writeDir)).count() should be (0)
 
@@ -63,16 +62,19 @@ trait RST_WriteBehaviors extends QueryTest {
                   |)
                   |select rst_write(tile, '$writeDir') as result
                   |from subquery
-                  |where not rst_isempty(tile)
                   |""".stripMargin)
             .first()
-            .asInstanceOf[GenericRowWithSchema].get(0)
 
-        val createInfo2 = gridTilesSQL.asInstanceOf[GenericRowWithSchema].getAs[Map[String, String]](2)
+        val createInfo2 = gridTilesSQL.getStruct(0).getAs[Map[String, String]](2)
         val path2Java = Paths.get(createInfo2("path"))
 
         // should equal 2: original file plus file written during checkpointing
-        Files.list(path2Java.getParent).count() should be (2)
+
+        val expectedFileCount = spark.conf.get(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT) match {
+            case "true" => 2
+            case _ => 1
+        }
+        Files.list(path2Java.getParent).count() should be (expectedFileCount)
         Try(FileUtils.deleteRecursively(writeDir, keepRoot = false))
         Files.createDirectories(writeDirJava)
         Files.list(Paths.get(writeDir)).count() should be (0)

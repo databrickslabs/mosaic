@@ -102,7 +102,6 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
                 $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
             ).cache()
         noException should be thrownBy result.collect()
-        result.select($"tile").show(truncate = false)
     }
 
     def multiRegionTriangulationRasterizeTest(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
