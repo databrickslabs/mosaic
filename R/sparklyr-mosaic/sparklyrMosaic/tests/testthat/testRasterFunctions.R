@@ -71,7 +71,7 @@ test_that("scalar raster functions behave as intended", {
     mutate(rst_worldtorastercoordx = rst_worldtorastercoordx(tile, as.double(0.0), as.double(0.0))) %>%
     mutate(rst_worldtorastercoordy = rst_worldtorastercoordy(tile, as.double(0.0), as.double(0.0))) %>%
     mutate(rst_worldtorastercoord = rst_worldtorastercoord(tile, as.double(0.0), as.double(0.0))) %>%
-    mutate(rst_write = rst_write(tile, "/tmp/mosaic_tmp"))
+    mutate(rst_write = rst_write(tile, "/mnt/mosaic_tmp/write-raster"))
 
   expect_no_error(spark_write_source(sdf, "noop", mode = "overwrite"))
 })
