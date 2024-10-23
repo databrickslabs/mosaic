@@ -27,6 +27,8 @@ class ST_UnionTest extends QueryTest with SharedSparkSession with ST_UnionBehavi
     test("Testing stUnionAgg (H3, JTS) NO_CODEGEN") { noCodegen { unionAggBehavior(H3IndexSystem, JTS) } }
     test("Testing stUnionAgg (BNG, JTS) NO_CODEGEN") { noCodegen { unionAggBehavior(BNGIndexSystem, JTS) } }
     test("Testing stUnion (H3, JTS) CODEGEN compilation") { codegenOnly { unionCodegen(H3IndexSystem, JTS) } }
+    test("Testing stUnionAgg (H3, JTS) NO_CODEGEN (Points)") { noCodegen { unionAggPointsBehavior(H3IndexSystem, JTS) } }
+    test("Testing stUnionAgg (BNG, JTS) NO_CODEGEN (Points)") { noCodegen { unionAggPointsBehavior(BNGIndexSystem, JTS) } }
     test("Testing stUnion (BNG, JTS) CODEGEN compilation") { codegenOnly { unionCodegen(BNGIndexSystem, JTS) } }
     test("Testing stUnion (H3, JTS) CODEGEN_ONLY") { codegenOnly { unionBehavior(H3IndexSystem, JTS) } }
     test("Testing stUnion (BNG, JTS) CODEGEN_ONLY") { codegenOnly { unionBehavior(BNGIndexSystem, JTS) } }

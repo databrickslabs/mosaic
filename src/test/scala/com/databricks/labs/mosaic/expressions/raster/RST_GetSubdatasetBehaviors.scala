@@ -49,4 +49,35 @@ trait RST_GetSubdatasetBehaviors extends QueryTest {
 
     }
 
+    def behaviorsSubdivide(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+        spark.sparkContext.setLogLevel("ERROR")
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register()
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+
+        val rasters = spark.read
+            .format("gdal")
+            .option("driverName", "NetCDF")
+            .load("src/test/resources/binary/netcdf-coral")
+
+        val rasterCount = rasters.count.toInt
+        rasterCount shouldBe 10
+
+        val subdatasetDF = rasters
+            .select(rst_getsubdataset($"tile", lit("bleaching_alert_area")).alias("tile"))
+
+        val subdatasetCount = subdatasetDF.count.toInt
+        subdatasetCount shouldBe 10
+
+        val subdivideDF = subdatasetDF
+            .select(rst_subdivide($"tile", lit(8)).alias("tile"))
+
+        noException should be thrownBy subdivideDF.write.format("noop").mode("overwrite").save()
+        val paths = subdivideDF.select($"tile.raster").as[String].collect
+        paths.size shouldBe 40
+
+    }
+
 }

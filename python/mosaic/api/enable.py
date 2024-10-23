@@ -74,14 +74,14 @@ def enable_mosaic(
     if not jar_autoattach:
         spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
         print("...set 'spark.databricks.labs.mosaic.jar.autoattach' to false")
-        config.jar_autoattach=False
+        config.jar_autoattach = False
     if jar_path is not None:
         spark.conf.set("spark.databricks.labs.mosaic.jar.path", jar_path)
         print(f"...set 'spark.databricks.labs.mosaic.jar.path' to '{jar_path}'")
-        config.jar_path=jar_path
+        config.jar_path = jar_path
     if log_info:
         spark.sparkContext.setLogLevel("info")
-        config.log_info=True
+        config.log_info = True
 
     # Config global objects
     # - add MosaicContext after MosaicLibraryHandler

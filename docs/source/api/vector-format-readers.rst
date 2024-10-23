@@ -2,9 +2,9 @@
 Vector Format Readers
 =====================
 
-
+#####
 Intro
-################
+#####
 Mosaic provides spark readers for vector files supported by GDAL OGR drivers.
 Only the drivers that are built by default are supported.
 Here are some common useful file formats:
@@ -35,7 +35,7 @@ Additionally, for convenience, Mosaic provides specific readers for Shapefile an
     * :code:`spark.read.format("shapefile")` reader for Shapefiles natively in Spark.
 
 spark.read.format("ogr")
-*************************
+************************
 A base Spark SQL data source for reading GDAL vector data sources.
 The output of the reader is a DataFrame with inferred schema.
 The schema is inferred from both features and fields in the vector file.
@@ -55,7 +55,8 @@ The reader supports the following options:
     * layerNumber - number of the layer to read (IntegerType), zero-indexed
 
 
-.. function:: spark.read.format("ogr").load(path)
+.. function:: load(path)
+    :module: spark.read.format("ogr")
 
     Loads a vector file and returns the result as a :class:`DataFrame`.
 
@@ -128,7 +129,8 @@ and parsed into expected types on execution. The reader supports the following o
     * layerNumber - number of the layer to read (IntegerType), zero-indexed [pass as String]
 
 
-.. function:: mos.read().format("multi_read_ogr").load(path)
+.. function:: load(path)
+    :module: mos.read().format("multi_read_ogr")
 
     Loads a vector file and returns the result as a :class:`DataFrame`.
 
@@ -175,7 +177,7 @@ and parsed into expected types on execution. The reader supports the following o
 
 
 spark.read.format("geo_db")
-*****************************
+***************************
 Mosaic provides a reader for GeoDB files natively in Spark.
 The output of the reader is a DataFrame with inferred schema.
 Only 1 file per task is read. For parallel reading of large files use the multi_read_ogr reader.
@@ -186,7 +188,8 @@ The reader supports the following options:
     * layerNumber - number of the layer to read (IntegerType), zero-indexed
     * vsizip - if the vector files are zipped files, set this to true (BooleanType)
 
-.. function:: spark.read.format("geo_db").load(path)
+.. function:: load(path)
+    :module: spark.read.format("geo_db")
 
     Loads a GeoDB file and returns the result as a :class:`DataFrame`.
 
@@ -234,7 +237,7 @@ The reader supports the following options:
 
 
 spark.read.format("shapefile")
-********************************
+******************************
 Mosaic provides a reader for Shapefiles natively in Spark.
 The output of the reader is a DataFrame with inferred schema.
 Only 1 file per task is read. For parallel reading of large files use the multi_read_ogr reader.
@@ -245,7 +248,8 @@ The reader supports the following options:
     * layerNumber - number of the layer to read (IntegerType), zero-indexed
     * vsizip - if the vector files are zipped files, set this to true (BooleanType)
 
-.. function:: spark.read.format("shapefile").load(path)
+.. function:: load(path)
+    :module: spark.read.format("shapefile")
 
     Loads a Shapefile and returns the result as a :class:`DataFrame`.
 
@@ -291,6 +295,7 @@ The reader supports the following options:
     These must be supplied as a :code:`String`.
     Also, you can supply function signature values as :code:`String`.
 
+################
 Vector File UDFs
 ################
 

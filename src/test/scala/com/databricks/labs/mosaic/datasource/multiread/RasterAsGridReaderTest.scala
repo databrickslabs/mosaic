@@ -5,10 +5,13 @@ import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
+import org.scalatest.Tag
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.an
 
 import java.nio.file.{Files, Paths}
+
+object ExcludeLocalTag extends Tag("ExcludeIfLocal")
 
 class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSessionGDAL {
 
@@ -33,7 +36,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
     }
 
-    test("Read grib with Raster As Grid Reader") {
+    test("Read grib with Raster As Grid Reader", ExcludeLocalTag) {
         assume(System.getProperty("os.name") == "Linux")
         MosaicContext.build(H3IndexSystem, JTS)
 

@@ -1,4 +1,4 @@
-from pyspark.sql import SparkSession, DataFrame, SQLContext
+from pyspark.sql import DataFrame, SparkSession, SQLContext
 
 
 class MosaicDataFrameReader:

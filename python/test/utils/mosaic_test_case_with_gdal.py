@@ -1,9 +1,10 @@
-from test.context import api
-from .mosaic_test_case import MosaicTestCase
-from pyspark.sql.dataframe import DataFrame
-
 import os
 import shutil
+from test.context import api
+
+from pyspark.sql.dataframe import DataFrame
+
+from .mosaic_test_case import MosaicTestCase
 
 
 class MosaicTestCaseWithGDAL(MosaicTestCase):
@@ -24,7 +25,9 @@ class MosaicTestCaseWithGDAL(MosaicTestCase):
             os.makedirs(cls.check_dir)
         if not os.path.exists(cls.new_check_dir):
             os.makedirs(cls.new_check_dir)
-        cls.spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", cls.check_dir)
+        cls.spark.conf.set(
+            "spark.databricks.labs.mosaic.raster.checkpoint", cls.check_dir
+        )
 
         api.enable_mosaic(cls.spark)
         api.enable_gdal(cls.spark)

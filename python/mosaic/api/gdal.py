@@ -1,23 +1,31 @@
-from .enable import refresh_context
-from .fuse import SetupMgr
-from mosaic.config import config
-from pyspark.sql import SparkSession
-
 import subprocess
 
+from pyspark.sql import SparkSession
+
+from mosaic.config import config
+
+from .enable import refresh_context
+from .fuse import SetupMgr
+
 __all__ = [
-    "setup_gdal", "enable_gdal",
-    "update_checkpoint_path", "set_checkpoint_on", "set_checkpoint_off",
-    "has_context", "is_use_checkpoint", "get_checkpoint_path", "reset_checkpoint",
-    "get_checkpoint_path_default"
+    "setup_gdal",
+    "enable_gdal",
+    "update_checkpoint_path",
+    "set_checkpoint_on",
+    "set_checkpoint_off",
+    "has_context",
+    "is_use_checkpoint",
+    "get_checkpoint_path",
+    "reset_checkpoint",
+    "get_checkpoint_path_default",
 ]
 
 
 def setup_gdal(
-        to_fuse_dir: str = "/Workspace/Shared/geospatial/mosaic/gdal/jammy/0.4.2",
-        script_out_name: str = "mosaic-gdal-init.sh",
-        jni_so_copy: bool = False,
-        test_mode: bool = False
+    to_fuse_dir: str = "/Workspace/Shared/geospatial/mosaic/gdal/jammy/0.4.2",
+    script_out_name: str = "mosaic-gdal-init.sh",
+    jni_so_copy: bool = False,
+    test_mode: bool = False,
 ) -> bool:
     """
     Prepare GDAL init script and shared objects required for GDAL to run on spark.
@@ -50,9 +58,7 @@ def setup_gdal(
     True unless resources fail to download.
     """
     setup_mgr = SetupMgr(
-        to_fuse_dir,
-        script_out_name=script_out_name,
-        jni_so_copy=jni_so_copy
+        to_fuse_dir, script_out_name=script_out_name, jni_so_copy=jni_so_copy
     )
     return setup_mgr.configure(test_mode=test_mode)
 
@@ -76,15 +82,21 @@ def enable_gdal(spark: SparkSession, with_checkpoint_path: str = None) -> None:
     try:
         if with_checkpoint_path is not None:
             spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "true")
-            spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", with_checkpoint_path)
+            spark.conf.set(
+                "spark.databricks.labs.mosaic.raster.checkpoint", with_checkpoint_path
+            )
             refresh_context()
-            config.mosaic_context.jEnableGDAL(spark, with_checkpoint_path=with_checkpoint_path)
+            config.mosaic_context.jEnableGDAL(
+                spark, with_checkpoint_path=with_checkpoint_path
+            )
         else:
             config.mosaic_context.jEnableGDAL(spark)
 
         print("GDAL enabled.\n")
         if with_checkpoint_path:
-            print(f"checkpoint path '{with_checkpoint_path}' configured for this session.")
+            print(
+                f"checkpoint path '{with_checkpoint_path}' configured for this session."
+            )
         result = subprocess.run(["gdalinfo", "--version"], stdout=subprocess.PIPE)
         print(result.stdout.decode() + "\n")
     except Exception as e:
@@ -108,7 +120,7 @@ def update_checkpoint_path(spark: SparkSession, path: str):
     """
     spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", path)
     refresh_context()
-    config.mosaic_context.jUpdateCheckpointPath(spark,path)
+    config.mosaic_context.jUpdateCheckpointPath(spark, path)
 
 
 def set_checkpoint_off(spark: SparkSession):
@@ -139,7 +151,9 @@ def reset_checkpoint(spark: SparkSession):
     :param spark: session to use.
     """
     spark.conf.set("spark.databricks.labs.mosaic.raster.use.checkpoint", "false")
-    spark.conf.set("spark.databricks.labs.mosaic.raster.checkpoint", get_checkpoint_path_default())
+    spark.conf.set(
+        "spark.databricks.labs.mosaic.raster.checkpoint", get_checkpoint_path_default()
+    )
     refresh_context()
     config.mosaic_context.jResetCheckpoint(spark)
 

@@ -102,7 +102,7 @@ The python bindings can be tested using [unittest](https://docs.python.org/3/lib
 - Move to the `python/` directory and install the project and its dependencies:
     `pip install . && pip install pyspark==<project_spark_version>`
   (where 'project_spark_version' corresponds to the version of Spark 
-  used for the target Databricks Runtime, e.g. `3.2.1`.
+  used for the target Databricks Runtime, e.g. `3.4.1` for DBR 13.3 LTS.
 - Run the tests using `unittest`: `python -m unittest`
 
 The project wheel file can be built with [build](https://pypa-build.readthedocs.io/en/stable/).

@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.utils
 
+import com.databricks.labs.mosaic.MOSAIC_RASTER_TMP_PREFIX_DEFAULT
 import com.databricks.labs.mosaic.functions.MosaicContext
 
 import java.nio.file.{Files, Path, Paths}
@@ -207,6 +208,18 @@ object PathUtils {
             case _ => false
         }
         isFuse
+    }
+
+    /**
+      * Test for whether path is in the temp location.
+      * @param path
+      *   Provided path.
+      * @return
+      *   True if path is in a temp location.
+      */
+    def isTmpLocation(path: String): Boolean = {
+        val p = getCleanPath(path)
+        p.startsWith(MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
     }
 
     /**

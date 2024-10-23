@@ -8,17 +8,17 @@ In order to use Mosaic 0.4 series, you must have access to a Databricks cluster 
 Databricks Runtime 13.3 LTS.
 If you have cluster creation permissions in your Databricks
 workspace, you can create a cluster using the instructions
-`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`_.
+`here <https://docs.databricks.com/clusters/create.html#use-the-cluster-ui>`__.
 
 You will also need "Can Manage" permissions on this cluster in order to attach the
 Mosaic library to your cluster. A workspace administrator will be able to grant 
 these permissions and more information about cluster permissions can be found 
 in our documentation
-`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`_.
+`here <https://docs.databricks.com/security/access-control/cluster-acl.html#cluster-level-permissions>`__.
 
 .. warning::
     These instructions assume an Assigned cluster is being used (vs a Shared Access cluster),
-    more on access modes `here <https://docs.databricks.com/en/compute/configure.html#access-modes>`_.
+    more on access modes `here <https://docs.databricks.com/en/compute/configure.html#access-modes>`__.
 
 GDAL Installation
 ####################
@@ -131,7 +131,7 @@ GDAL is configured as follows in `MosaicGDAL <https://github.com/databrickslabs/
    * - GDAL_VRT_ENABLE_PYTHON
      - "YES"
    * - GDAL_DISABLE_READDIR_ON_OPEN
-     - "TRUE"
+     - "EMPTY_DIR"
    * - CPL_TMPDIR
      - "<CPL_TMPDIR>"
    * - GDAL_PAM_PROXY_DIR

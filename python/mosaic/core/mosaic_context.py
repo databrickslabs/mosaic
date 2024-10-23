@@ -1,4 +1,5 @@
 from typing import Any
+
 from py4j.java_gateway import JavaClass, JavaObject
 from py4j.protocol import Py4JJavaError
 from pyspark.sql import SparkSession
@@ -17,19 +18,29 @@ class MosaicContext:
     def __init__(self, spark: SparkSession):
         sc = spark.sparkContext
 
-        self._mosaicContextClass = getattr(sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext")
+        self._mosaicContextClass = getattr(
+            sc._jvm.com.databricks.labs.mosaic.functions, "MosaicContext"
+        )
         self._mosaicPackageRef = getattr(sc._jvm.com.databricks.labs.mosaic, "package$")
         self._mosaicPackageObject = getattr(self._mosaicPackageRef, "MODULE$")
-        self._mosaicGDALObject = getattr(sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL")
-        self._indexSystemFactory = getattr(sc._jvm.com.databricks.labs.mosaic.core.index, "IndexSystemFactory")
+        self._mosaicGDALObject = getattr(
+            sc._jvm.com.databricks.labs.mosaic.gdal, "MosaicGDAL"
+        )
+        self._indexSystemFactory = getattr(
+            sc._jvm.com.databricks.labs.mosaic.core.index, "IndexSystemFactory"
+        )
 
         try:
-            self._geometry_api = spark.conf.get("spark.databricks.labs.mosaic.geometry.api")
+            self._geometry_api = spark.conf.get(
+                "spark.databricks.labs.mosaic.geometry.api"
+            )
         except Py4JJavaError as e:
             self._geometry_api = "JTS"
 
         try:
-            self._index_system = spark.conf.get("spark.databricks.labs.mosaic.index.system")
+            self._index_system = spark.conf.get(
+                "spark.databricks.labs.mosaic.index.system"
+            )
         except Py4JJavaError as e:
             self._index_system = "H3"
 
@@ -98,10 +109,11 @@ class MosaicContext:
         :param with_checkpoint_path: optional checkpoint path, default is None.
         """
         if with_checkpoint_path:
-            self._mosaicGDALObject.enableGDALWithCheckpoint(spark._jsparkSession, with_checkpoint_path)
+            self._mosaicGDALObject.enableGDALWithCheckpoint(
+                spark._jsparkSession, with_checkpoint_path
+            )
         else:
             self._mosaicGDALObject.enableGDAL(spark._jsparkSession)
-
 
     def jUpdateCheckpointPath(self, spark: SparkSession, path: str):
         """

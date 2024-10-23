@@ -850,7 +850,7 @@ grid_cellkringexplode
    </div>
 
 grid_cell_intersection
-**************
+**********************
 
 .. function:: grid_cell_intersection(left_chip, right_chip)
 
@@ -906,7 +906,7 @@ grid_cell_intersection
     +--------------------------------------------------------+
 
 grid_cell_union
-**************
+***************
 
 .. function:: grid_cell_union(left_chip, right_chip)
 

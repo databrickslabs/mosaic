@@ -34,7 +34,7 @@ object GDALBuildVRT {
           "all_parents" -> rasters.map(_.getParentPath).mkString(";")
         )
         // VRT files are just meta files, mem size doesnt make much sense so we keep -1
-        MosaicRasterGDAL(result, createInfo, -1).flushCache()
+        MosaicRasterGDAL(result, createInfo).flushCache()
     }
 
 }

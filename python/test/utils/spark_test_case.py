@@ -1,6 +1,7 @@
-import unittest
 import os
 import shutil
+import unittest
+import warnings
 from importlib.metadata import version
 
 from pyspark.sql import SparkSession
@@ -41,7 +42,9 @@ class SparkTestCase(unittest.TestCase):
         )
         cls.spark.conf.set("spark.databricks.labs.mosaic.test.mode", "true")
         cls.spark.conf.set("spark.databricks.labs.mosaic.jar.autoattach", "false")
-        cls.spark.conf.set("spark.databricks.labs.mosaic.raster.tmp.prefix", cls.tmp_dir)
+        cls.spark.conf.set(
+            "spark.databricks.labs.mosaic.raster.tmp.prefix", cls.tmp_dir
+        )
         cls.spark.sparkContext.setLogLevel("ERROR")
 
     @classmethod
@@ -52,3 +55,5 @@ class SparkTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         self.spark.sparkContext.setLogLevel("ERROR")
+        warnings.filterwarnings("ignore", category=ResourceWarning)
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
