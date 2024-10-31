@@ -8,7 +8,7 @@ import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.operator.rasterize.GDALRasterize
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.MULTIPOINT
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
+import com.databricks.labs.mosaic.core.types.model.{MosaicRasterTile, TriangulationSplitPointTypeEnum}
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpressionSerialization
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -27,11 +27,13 @@ case class RST_DTMFromGeoms(
                           linesArray: Expression,
                           mergeTolerance: Expression,
                           snapTolerance: Expression,
+                          splitPointFinder: Expression,
                           gridOrigin: Expression,
                           gridWidthX: Expression,
                           gridWidthY: Expression,
                           gridSizeX: Expression,
                           gridSizeY: Expression,
+                          noData: Expression,
                           expressionConfig: MosaicExpressionConfig
                       ) extends Expression with Serializable with RasterExpressionSerialization with CodegenFallback
 {
@@ -82,6 +84,9 @@ case class RST_DTMFromGeoms(
                 })
         }
 
+        val splitPointFinderValue =
+            TriangulationSplitPointTypeEnum.fromString(splitPointFinder.eval(input).asInstanceOf[UTF8String].toString)
+
         val origin = geometryAPI.geometry(gridOrigin.eval(input), gridOrigin.dataType).asInstanceOf[MosaicPoint]
         val gridWidthXValue = gridWidthX.eval(input).asInstanceOf[Int]
         val gridWidthYValue = gridWidthY.eval(input).asInstanceOf[Int]
@@ -93,11 +98,13 @@ case class RST_DTMFromGeoms(
         val gridPoints = multiPointGeom.pointGrid(origin, gridWidthXValue, gridWidthYValue, gridSizeXValue, gridSizeYValue)
 
         val interpolatedPoints = multiPointGeom
-            .interpolateElevation(linesGeom, gridPoints, mergeToleranceValue, snapToleranceValue)
+            .interpolateElevation(linesGeom, gridPoints, mergeToleranceValue, snapToleranceValue, splitPointFinderValue)
             .asSeq
 
+        val noDataValue = noData.eval(input).asInstanceOf[Double]
+
         val outputRaster = GDALRasterize.executeRasterize(
-          interpolatedPoints, None, origin, gridWidthXValue, gridWidthYValue, gridSizeXValue, gridSizeYValue
+          interpolatedPoints, None, origin, gridWidthXValue, gridWidthYValue, gridSizeXValue, gridSizeYValue, noDataValue
         )
 
         val outputRow = MosaicRasterTile(null, outputRaster).serialize(StringType)
@@ -107,7 +114,11 @@ case class RST_DTMFromGeoms(
     override def dataType: DataType = RasterTileType(
         expressionConfig.getCellIdType, StringType, expressionConfig.isRasterUseCheckpoint)
 
-    override def children: Seq[Expression] = Seq(pointsArray, linesArray, mergeTolerance, snapTolerance, gridOrigin, gridWidthX, gridWidthY, gridSizeX, gridSizeY)
+    override def children: Seq[Expression] = Seq(
+        pointsArray, linesArray,
+        mergeTolerance, snapTolerance, splitPointFinder,
+        gridOrigin, gridWidthX, gridWidthY, gridSizeX, gridSizeY, noData
+    )
 
     override protected def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression = {
         copy(
@@ -115,11 +126,13 @@ case class RST_DTMFromGeoms(
             linesArray = newChildren(1),
             mergeTolerance = newChildren(2),
             snapTolerance = newChildren(3),
-            gridOrigin = newChildren(4),
-            gridWidthX = newChildren(5),
-            gridWidthY = newChildren(6),
-            gridSizeX = newChildren(7),
-            gridSizeY = newChildren(8)
+            splitPointFinder = newChildren(4),
+            gridOrigin = newChildren(5),
+            gridWidthX = newChildren(6),
+            gridWidthY = newChildren(7),
+            gridSizeX = newChildren(8),
+            gridSizeY = newChildren(9),
+            noData = newChildren(10)
         )
     }
 
@@ -131,22 +144,23 @@ object RST_DTMFromGeoms extends WithExpressionInfo {
     override def name: String = "rst_dtmfromgeoms"
 
     override def usage: String = {
-        "_FUNC_(expr1, expr2, expr3, expr4, expr5, expr6, expr7, expr8, expr9) - Returns the interpolated heights " +
-            "of the points in the grid defined by `expr5`, `expr6`, `expr7`, `expr8` and `expr9`" +
+        "_FUNC_(expr1, expr2, expr3, expr4, expr5, expr6, expr7, expr8, expr9, expr10, expr11) - Returns the interpolated heights " +
+            "of the points in the grid defined by `expr6`, `expr7`, `expr8`, `expr9` and `expr10`" +
             "in the triangulated irregular network formed from the points in `expr1` " +
-            "including `expr2` as breaklines with tolerance parameters `expr3` and  `expr4` as a raster in GeoTIFF format."
+            "including `expr2` as breaklines with tolerance parameters `expr3` and  `expr4` " +
+            "employing the split point insertion algorithm `expr5` as a raster in GeoTIFF format with noDataValue `expr11`."
     }
 
     override def example: String =
         """
           |    Examples:
-          |      > SELECT _FUNC_(a, b, c, d, e, f, g, h, i);
+          |      > SELECT _FUNC_(a, b, c, d, e, f, g, h, i, j, k);
           |        {index_id, raster_tile, parentPath, driver}
           |  """.stripMargin
 
 
     override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_DTMFromGeoms](9, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[RST_DTMFromGeoms](11, expressionConfig)
     }
 
 }

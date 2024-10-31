@@ -41,7 +41,7 @@ object GDALRasterize {
         yWidth: Int,
         xSize: Double,
         ySize: Double,
-        noDataValue: Int = (-99999)
+        noDataValue: Double = Double.NaN
     ): MosaicRasterGDAL = {
 
         gdal.AllRegister()

@@ -10,9 +10,9 @@ class RST_DTMFromGeomsTest extends QueryTest with SharedSparkSessionGDAL with RS
             assume(System.getProperty("os.name") == "Linux")
             simpleRasterizeTest(H3IndexSystem, JTS)
     }
-    test("Testing RST_DTMFromGeoms for conforming triangulation with manual GDAL registration (H3, JTS).") {
+    test("Testing RST_DTMFromGeoms for conforming triangulation with manual GDAL registration (BNG, JTS).") {
             assume(System.getProperty("os.name") == "Linux")
-            conformedTriangulationRasterizeTest(H3IndexSystem, JTS)
+            conformedTriangulationRasterizeTest(BNGIndexSystem, JTS)
     }
 
     registerIgnoredTest("Ignored due to resource / duration")(
