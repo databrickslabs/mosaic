@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.types.model.TriangulationSplitPointTypeEnum
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.functions.{array, collect_list, lit}
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
@@ -12,8 +13,10 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
 
     val pointsPath = "src/test/resources/binary/elevation/sd46_dtm_point.shp"
     val linesPath = "src/test/resources/binary/elevation/sd46_dtm_breakline.shp"
-    val mergeTolerance = 0.0
+    val mergeTolerance = 1e-6
     val snapTolerance = 0.01
+    val splitPointFinder = TriangulationSplitPointTypeEnum.NONENCROACHING
+    val noData = -9999.0
 
     def simpleRasterizeTest(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
 
@@ -35,18 +38,21 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
             .withColumn("breaklines", array().cast(ArrayType(StringType)))
             .withColumn("mergeTolerance", lit(mergeTolerance))
             .withColumn("snapTolerance", lit(snapTolerance))
+            .withColumn("splitPointFinder", lit(splitPointFinder.toString))
             .withColumn("origin", st_point(lit(348000.0), lit(462000.0)))
             .withColumn("grid_size_x", lit(1000))
             .withColumn("grid_size_y", lit(1000))
             .withColumn("pixel_size_x", lit(1.0))
             .withColumn("pixel_size_y", lit(-1.0))
+            .withColumn("noData", lit(noData))
             .withColumn("tile", rst_dtmfromgeoms(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance",
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
                 $"origin", $"grid_size_x", $"grid_size_y",
-                $"pixel_size_x", $"pixel_size_y"))
+                $"pixel_size_x", $"pixel_size_y", $"noData"))
             .drop(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"origin",
-                $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
+                $"origin", $"grid_size_x", $"grid_size_y",
+                $"pixel_size_x", $"pixel_size_y", $"noData"
             ).cache()
         noException should be thrownBy result.collect()
 
@@ -88,18 +94,21 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
             .crossJoin(linesDf)
             .withColumn("mergeTolerance", lit(mergeTolerance))
             .withColumn("snapTolerance", lit(snapTolerance))
+            .withColumn("splitPointFinder", lit(splitPointFinder.toString))
             .withColumn("origin", st_point(lit(348000.0), lit(462000.0)))
             .withColumn("grid_size_x", lit(1000))
             .withColumn("grid_size_y", lit(1000))
             .withColumn("pixel_size_x", lit(1.0))
             .withColumn("pixel_size_y", lit(-1.0))
+            .withColumn("noData", lit(noData))
             .withColumn("tile", rst_dtmfromgeoms(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance",
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
                 $"origin", $"grid_size_x", $"grid_size_y",
-                $"pixel_size_x", $"pixel_size_y"))
+                $"pixel_size_x", $"pixel_size_y", $"noData"))
             .drop(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"origin",
-                $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
+                $"origin", $"grid_size_x", $"grid_size_y",
+                $"pixel_size_x", $"pixel_size_y", $"noData"
             ).cache()
         noException should be thrownBy result.collect()
     }
@@ -152,22 +161,26 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
 
         val inputsDf = pointsDf
             .join(linesDf, Seq("index_id", "raster_origin"), "left")
+            .withColumn("index_id", $"index_id".cast(StringType))
 
         val result = inputsDf
             .repartition(sc.sparkContext.defaultParallelism)
             .withColumn("mergeTolerance", lit(mergeTolerance))
             .withColumn("snapTolerance", lit(snapTolerance))
+            .withColumn("splitPointFinder", lit(splitPointFinder.toString))
             .withColumn("grid_size_x", lit(1000))
             .withColumn("grid_size_y", lit(1000))
             .withColumn("pixel_size_x", lit(1.0))
             .withColumn("pixel_size_y", lit(-1.0))
+            .withColumn("noData", lit(noData))
             .withColumn("tile", rst_dtmfromgeoms(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance",
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
                 $"raster_origin", $"grid_size_x", $"grid_size_y",
-                $"pixel_size_x", $"pixel_size_y"))
+                $"pixel_size_x", $"pixel_size_y", $"noData"))
             .drop(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"raster_origin",
-                $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
+                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
+                $"raster_origin", $"grid_size_x", $"grid_size_y",
+                $"pixel_size_x", $"pixel_size_y", $"noData"
             ).cache()
         noException should be thrownBy result.collect()
         result.count() shouldBe inputsDf.count()

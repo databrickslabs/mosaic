@@ -491,7 +491,7 @@ rst_derivedband
 rst_dtmfromgeoms
 ****************
 
-.. function:: rst_dtmfromgeoms(pointsArray, linesArray, mergeTolerance, snapTolerance, origin, xWidth, yWidth, xSize, ySize)
+.. function:: rst_dtmfromgeoms(pointsArray, linesArray, mergeTolerance, snapTolerance, splitPointFinder, origin, xWidth, yWidth, xSize, ySize, noData)
 
     Generate a raster with interpolated elevations across a grid of points described by:
 
@@ -518,6 +518,13 @@ rst_dtmfromgeoms
       Setting this value to zero may result in the output triangle vertices being assigned a null Z value.
     Both tolerance parameters are expressed in the same units as the projection of the input point geometries.
 
+    Additionally, you have control over the algorithm used to find split points on the constraint lines. The recommended
+    default option here is the "NONENCROACHING" algorithm. You can also use the "MIDPOINT" algorithm if you find the
+    constraint fitting process fails to converge. For full details of these options see the JTS reference
+    `here <https://locationtech.github.io/jts/javadoc/org/locationtech/jts/triangulate/ConstraintSplitPointFinder.html>`__.
+
+    The :code:`noData` value of the output raster can be set using the :code:`noData` parameter.
+
     This is a generator expression and the resulting DataFrame will contain one row per point of the grid.
 
     :param pointsArray: Array of geometries respresenting the points to be triangulated
@@ -528,6 +535,8 @@ rst_dtmfromgeoms
     :type mergeTolerance: Column (DoubleType)
     :param snapTolerance: A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
     :type snapTolerance: Column (DoubleType)
+    :param splitPointFinder: Algorithm used for finding split points on constraint lines. Options are "NONENCROACHING" and "MIDPOINT".
+    :type splitPointFinder: Column (StringType)
     :param origin: A point geometry describing the bottom-left corner of the grid.
     :type origin: Column (Geometry)
     :param xWidth: The number of points in the grid in x direction.
@@ -538,6 +547,8 @@ rst_dtmfromgeoms
     :type xSize: Column (DoubleType)
     :param ySize: The spacing between each point on the grid's y-axis.
     :type ySize: Column (DoubleType)
+    :param noData: The no-data value of the output raster.
+    :type noData: Column (DoubleType)
     :rtype: Column (RasterTileType)
 
     :example:
@@ -567,7 +578,8 @@ rst_dtmfromgeoms
     df.select(
         rst_dtmfromgeoms(
             "masspoints", "breaklines", lit(0.0), lit(0.01),
-            "origin", "xWidth", "yWidth", "xSize", "ySize"
+            "origin", "xWidth", "yWidth", "xSize", "ySize",
+            split_point_finder="NONENCROACHING", no_data_value=-9999.0
         )
     ).show(truncate=False)
     +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -594,8 +606,10 @@ rst_dtmfromgeoms
 
     df.select(
       rst_dtmfromgeoms(
-        $"masspoints", $"breaklines", lit(0.0), lit(0.01),
-        $"origin", $"xWidth", $"yWidth", $"xSize", $"ySize"
+        $"masspoints", $"breaklines",
+        lit(0.0), lit(0.01), lit("NONENCROACHING")
+        $"origin", $"xWidth", $"yWidth",
+        $"xSize", $"ySize", lit(-9999.0)
       )
     ).show(1, false)
     +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -615,8 +629,9 @@ rst_dtmfromgeoms
           "POINT Z (0 2 2)"
         ),
         ARRAY("LINESTRING EMPTY"),
-        DOUBLE(0.0), DOUBLE(0.01),
-        "POINT (0.6 1.8)", 12, 6, DOUBLE(0.1), DOUBLE(0.1)
+        DOUBLE(0.0), DOUBLE(0.01), "NONENCROACHING",
+        "POINT (0.6 1.8)", 12, 6,
+        DOUBLE(0.1), DOUBLE(0.1), DOUBLE(-9999.0)
       ) AS tile
     +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
     |rst_dtmfromgeoms(masspoints, breaklines, 0.0, 0.01, origin, xWidth, yWidth, xSize, ySize)                                                                                                                                                                                                                                                                                                                                                              |
@@ -638,8 +653,9 @@ rst_dtmfromgeoms
     sdf <- withColumn(sdf, "breaklines", expr("array('LINESTRING EMPTY')"))
     sdf <- select(sdf, rst_dtmfromgeoms(
       column("masspoints"), column("breaklines"),
-      lit(0.0), lit(0.01),
-      lit("POINT (0.6 1.8)"), lit(12L), lit(6L), lit(0.1), lit(0.1)
+      lit(0.0), lit(0.01), lit("NONENCROACHING"),
+      lit("POINT (0.6 1.8)"), lit(12L), lit(6L),
+      lit(0.1), lit(0.1), lit(-9999.0)
       )
     )
     showDF(sdf, n=1, truncate=F)

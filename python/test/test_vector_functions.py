@@ -325,7 +325,9 @@ class TestVectorFunctions(MosaicTestCase):
 
         triangulation_df = df.withColumn(
             "triangles",
-            api.st_triangulate("masspoints", "breaklines", lit(0.0), lit(0.01)),
+            api.st_triangulate(
+                "masspoints", "breaklines", lit(0.0), lit(0.01), lit("NONENCROACHING")
+            ),
         )
         triangulation_df.cache()
         self.assertEqual(triangulation_df.count(), 2)
@@ -338,7 +340,7 @@ class TestVectorFunctions(MosaicTestCase):
         )
 
         interpolation_df = (
-            df.withColumn("origin", api.st_geomfromwkt(lit("POINT (0.6 1.8)")))
+            df.withColumn("origin", api.st_geomfromwkt(lit("POINT (0.55 1.75)")))
             .withColumn("xWidth", lit(12))
             .withColumn("yWidth", lit(6))
             .withColumn("xSize", lit(0.1))
@@ -355,6 +357,7 @@ class TestVectorFunctions(MosaicTestCase):
                     "yWidth",
                     "xSize",
                     "ySize",
+                    lit("NONENCROACHING"),
                 ),
             )
         )
@@ -362,6 +365,6 @@ class TestVectorFunctions(MosaicTestCase):
         interpolation_df.cache()
         self.assertEqual(interpolation_df.count(), 12 * 6)
         self.assertIn(
-            "POINT Z(0.6 2 1.8)",
+            "POINT Z(1.6 1.8 1.2)",
             [r["interpolated"] for r in interpolation_df.collect()],
         )

@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.types.model.TriangulationSplitPointTypeEnum
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.functions.MosaicRegistryBehaviors.mosaicContext
 import org.apache.spark.sql.functions._
@@ -22,6 +23,7 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
     val ySize = -1.0
     val mergeTolerance = 0.0
     val snapTolerance = 0.01
+    val splitPointFinder = TriangulationSplitPointTypeEnum.NONENCROACHING
     val origin = "POINT(348000 462000)"
 
     def simpleInterpolationBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
@@ -45,18 +47,22 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
             .withColumn("breaklines", array().cast(ArrayType(StringType)))
             .withColumn("mergeTolerance", lit(mergeTolerance))
             .withColumn("snapTolerance", lit(snapTolerance))
+            .withColumn("splitPointFinder", lit(splitPointFinder.toString))
             .withColumn("origin", st_geomfromwkt(lit(origin)))
             .withColumn("grid_size_x", lit(xWidth))
             .withColumn("grid_size_y", lit(yWidth))
             .withColumn("pixel_size_x", lit(xSize))
             .withColumn("pixel_size_y", lit(ySize))
             .withColumn("elevation", st_interpolateelevation(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance",
+                $"masspoints", $"breaklines",
+                $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
                 $"origin", $"grid_size_x", $"grid_size_y",
                 $"pixel_size_x", $"pixel_size_y"))
             .drop(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"origin",
-                $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
+                $"masspoints", $"breaklines",
+                $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
+                $"origin", $"grid_size_x", $"grid_size_y",
+                $"pixel_size_x", $"pixel_size_y"
             )
         noException should be thrownBy result.collect()
         result.count() shouldBe 1000000L
@@ -93,19 +99,23 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
             .crossJoin(linesDf)
             .withColumn("mergeTolerance", lit(mergeTolerance))
             .withColumn("snapTolerance", lit(snapTolerance))
+            .withColumn("splitPointFinder", lit(splitPointFinder.toString))
             .withColumn("origin", st_geomfromwkt(lit(origin)))
             .withColumn("grid_size_x", lit(xWidth))
             .withColumn("grid_size_y", lit(yWidth))
             .withColumn("pixel_size_x", lit(xSize))
             .withColumn("pixel_size_y", lit(ySize))
             .withColumn("interpolated_grid_point", st_interpolateelevation(
-                $"masspoints", $"breaklines",$"mergeTolerance", $"snapTolerance",
+                $"masspoints", $"breaklines",
+                $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
                 $"origin", $"grid_size_x", $"grid_size_y",
                 $"pixel_size_x", $"pixel_size_y"))
             .withColumn("elevation", st_z($"interpolated_grid_point"))
             .drop(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"origin",
-                $"grid_size_x", $"grid_size_y", $"pixel_size_x", $"pixel_size_y"
+                $"masspoints", $"breaklines",
+                $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
+                $"origin", $"grid_size_x", $"grid_size_y",
+                $"pixel_size_x", $"pixel_size_y"
             )
             .cache()
         noException should be thrownBy result.collect()

@@ -1,3 +1,5 @@
+import numpy as np
+
 from typing import Any
 
 from pyspark.sql import Column
@@ -267,6 +269,8 @@ def rst_dtmfromgeoms(
     y_width: ColumnOrName,
     x_size: ColumnOrName,
     y_size: ColumnOrName,
+    split_point_finder: str = "NONENCROACHING",
+    no_data_value: float = np.nan,
 ) -> Column:
     """
     Generate a raster with interpolated elevations across a grid of points described by
@@ -303,6 +307,11 @@ def rst_dtmfromgeoms(
     y_size : Column
         The spacing between each point on the grid's y-axis
         (in meters or degrees depending on the projection of `points_array`)
+    split_point_finder : String
+        (Optional) The split point finding algorithm used to incorporate `lines_array` into the triangulation.
+        Default is "NONENCROACHING", alternative is "MIDPOINT".
+    no_data_value : Float
+        (Optional) The nodata value to assign to the output raster. Must be a Double Type value. Default is NaN.
 
     Returns
     -------
@@ -315,11 +324,13 @@ def rst_dtmfromgeoms(
         pyspark_to_java_column(lines_array),
         pyspark_to_java_column(merge_tolerance),
         pyspark_to_java_column(snap_tolerance),
+        pyspark_to_java_column(lit(split_point_finder)),
         pyspark_to_java_column(origin),
         pyspark_to_java_column(x_width),
         pyspark_to_java_column(y_width),
         pyspark_to_java_column(x_size),
         pyspark_to_java_column(y_size),
+        pyspark_to_java_column(lit(no_data_value)),
     )
 
 

@@ -8,7 +8,7 @@ generate_singleband_raster_df <- function() {
 
 test_that("mosaic can read single-band GeoTiff", {
   sdf <- generate_singleband_raster_df()
-  
+
   row <- first(sdf)
   expect_equal(row$length, 1067862L)
   expect_equal(row$x_size, 2400)
@@ -158,14 +158,16 @@ sdf <- createDataFrame(
 
 sdf <- agg(groupBy(sdf), masspoints = collect_list(column("wkt")))
 sdf <- withColumn(sdf, "breaklines", expr("array('LINESTRING EMPTY')"))
+sdf <- withColumn(sdf, "splitPointFinder", lit("NONENCROACHING"))
 sdf <- withColumn(sdf, "origin", st_geomfromwkt(lit("POINT (0.6 1.8)")))
 sdf <- withColumn(sdf, "xWidth", lit(12L))
 sdf <- withColumn(sdf, "yWidth", lit(6L))
 sdf <- withColumn(sdf, "xSize", lit(0.1))
 sdf <- withColumn(sdf, "ySize", lit(0.1))
+sdf <- withColumn(sdf, "noData", lit(-9999.0))
 sdf <- withColumn(sdf, "tile", rst_dtmfromgeoms(
-column("masspoints"), column("breaklines"), lit(0.0), lit(0.01),
-column("origin"), column("xWidth"), column("yWidth"), column("xSize"), column("ySize"))
-)
+column("masspoints"), column("breaklines"), lit(0.0), lit(0.01), column("splitPointFinder"),
+column("origin"), column("xWidth"), column("yWidth"), column("xSize"), column("ySize"), column("noData")
+))
 expect_equal(SparkR::count(sdf), 1)
 })

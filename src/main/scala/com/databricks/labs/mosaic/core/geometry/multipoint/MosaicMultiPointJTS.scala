@@ -5,6 +5,7 @@ import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, Mo
 import com.databricks.labs.mosaic.core.geometry.multilinestring.MosaicMultiLineStringJTS
 import com.databricks.labs.mosaic.core.geometry.point.{MosaicPoint, MosaicPointJTS}
 import com.databricks.labs.mosaic.core.geometry.polygon.{MosaicPolygon, MosaicPolygonJTS}
+import com.databricks.labs.mosaic.core.geometry.triangulation.JTSConformingDelaunayTriangulationBuilder
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOINT, POINT}
 import com.databricks.labs.mosaic.core.types.model._
 import org.apache.spark.sql.catalyst.InternalRow
@@ -12,7 +13,6 @@ import org.locationtech.jts.geom._
 import org.locationtech.jts.geom.util.{LinearComponentExtracter, PolygonExtracter}
 import org.locationtech.jts.index.strtree.STRtree
 import org.locationtech.jts.linearref.LengthIndexedLine
-import org.locationtech.jts.triangulate.ConformingDelaunayTriangulationBuilder
 
 import scala.collection.JavaConverters._
 
@@ -50,18 +50,17 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
 
     override def getShellPoints: Seq[Seq[MosaicPointJTS]] = Seq(asSeq)
 
-    override def triangulate(breaklines: Seq[MosaicLineString], mergeTolerance: Double, snapTolerance: Double): Seq[MosaicPolygon] = {
-        val triangulator = new ConformingDelaunayTriangulationBuilder()
-        val geomFact = multiPoint.getFactory
+    override def triangulate(breaklines: Seq[MosaicLineString], mergeTolerance: Double, snapTolerance: Double, splitPointFinder: TriangulationSplitPointTypeEnum.Value): Seq[MosaicPolygon] = {
 
-        triangulator.setSites(multiPoint)
+        val triangulator = JTSConformingDelaunayTriangulationBuilder(multiPoint)
+        val geomFact = multiPoint.getFactory
         if (breaklines.nonEmpty) {
-            val multiLineString = MosaicMultiLineStringJTS.fromSeq(breaklines)
-            triangulator.setConstraints(multiLineString.getGeom)
+            triangulator.setConstraints(MosaicMultiLineStringJTS.fromSeq(breaklines).getGeom)
         }
+
         triangulator.setTolerance(mergeTolerance)
 
-        val trianglesGeomCollection = triangulator.getTriangles(geomFact)
+        val trianglesGeomCollection = triangulator.getTriangles
         val trianglePolygons = PolygonExtracter.getPolygons(trianglesGeomCollection).asScala.map(_.asInstanceOf[Polygon])
 
         val postProcessedTrianglePolygons = postProcessTriangulation(trianglePolygons, MosaicMultiLineStringJTS.fromSeq(breaklines).getGeom, snapTolerance)
@@ -113,8 +112,11 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
         )
     }
 
-    override def interpolateElevation(breaklines: Seq[MosaicLineString], gridPoints: MosaicMultiPoint, mergeTolerance: Double, snapTolerance: Double): MosaicMultiPointJTS = {
-        val triangles = triangulate(breaklines, mergeTolerance, snapTolerance)
+    override def interpolateElevation(
+                                         breaklines: Seq[MosaicLineString], gridPoints: MosaicMultiPoint,
+                                         mergeTolerance: Double, snapTolerance: Double,
+                                         splitPointFinder: TriangulationSplitPointTypeEnum.Value): MosaicMultiPointJTS = {
+        val triangles = triangulate(breaklines, mergeTolerance, snapTolerance, splitPointFinder)
             .asInstanceOf[Seq[MosaicPolygonJTS]]
 
         val tree = new STRtree(4)
@@ -144,8 +146,8 @@ class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(mult
 
     override def pointGrid(origin: MosaicPoint, xCells: Int, yCells: Int, xSize: Double, ySize: Double): MosaicMultiPointJTS = {
         val gridPoints = for (i <- 0 until xCells; j <- 0 until yCells) yield {
-            val x = origin.getX + i * xSize
-            val y = origin.getY + j * ySize
+            val x = origin.getX + i * xSize + xSize / 2
+            val y = origin.getY + j * ySize + ySize / 2
             val gridPoint = MosaicPointJTS(multiPoint.getFactory.createPoint(new Coordinate(x, y)))
             gridPoint.setSpatialReference(getSpatialReference)
             gridPoint

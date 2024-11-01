@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.expressions.raster
 
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_READ_IN_MEMORY, MOSAIC_RASTER_READ_STRATEGY}
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
@@ -16,10 +17,13 @@ trait RST_SetSRIDBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
+        val modisPath = this.getClass.getResource("/modis/").getPath
+
         val rastersInMemory = spark.read
             .format("gdal")
-            .option("raster_storage", "in-memory")
-            .load("src/test/resources/modis")
+            .option(MOSAIC_RASTER_READ_STRATEGY, MOSAIC_RASTER_READ_IN_MEMORY)
+            .option("pathGlobFilter", "*.TIF")
+            .load(modisPath)
 
         val df = rastersInMemory
             .withColumn("result", rst_setsrid($"tile", lit(4326)))

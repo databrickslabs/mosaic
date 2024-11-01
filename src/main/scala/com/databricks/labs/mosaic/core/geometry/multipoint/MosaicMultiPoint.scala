@@ -5,6 +5,7 @@ import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygon
+import com.databricks.labs.mosaic.core.types.model.TriangulationSplitPointTypeEnum
 
 trait MosaicMultiPoint extends MosaicGeometry {
 
@@ -30,7 +31,7 @@ trait MosaicMultiPoint extends MosaicGeometry {
      *                      newly created points against their originating breaklines.
      * @return A sequence of MosaicPolygon geometries.
      */
-    def triangulate(breaklines: Seq[MosaicLineString], mergeTolerance: Double, snapTolerance: Double): Seq[MosaicPolygon]
+    def triangulate(breaklines: Seq[MosaicLineString], mergeTolerance: Double, snapTolerance: Double, splitPointFinder: TriangulationSplitPointTypeEnum.Value): Seq[MosaicPolygon]
 
     /**
      * Interpolates the elevation of the grid points using the breaklines.
@@ -40,9 +41,10 @@ trait MosaicMultiPoint extends MosaicGeometry {
      * @param mergeTolerance The tolerance to use to simplify the triangulation by merging nearby points.
      * @param snapTolerance The tolerance to use for post-processing the results of the triangulation (snapping
      *                      newly created points against their originating breaklines.
+     * @param splitPointFinder The method to use to find split points to include `breaklines` in the triangulation.
      * @return A MosaicMultiPoint geometry with the interpolated elevation.
      */
-    def interpolateElevation(breaklines: Seq[MosaicLineString], gridPoints: MosaicMultiPoint, mergeTolerance: Double, snapTolerance: Double) : MosaicMultiPoint
+    def interpolateElevation(breaklines: Seq[MosaicLineString], gridPoints: MosaicMultiPoint, mergeTolerance: Double, snapTolerance: Double, splitPointFinder: TriangulationSplitPointTypeEnum.Value) : MosaicMultiPoint
 
     /**
      * Creates a regular point grid from the origin point with the specified number of cells and cell sizes.
