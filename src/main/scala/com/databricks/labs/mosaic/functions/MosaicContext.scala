@@ -626,8 +626,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_HasValidCoordinates(geom.expr, crsCode.expr, which.expr, expressionConfig))
         def st_interpolateelevation(pointsArray: Column, linesArray: Column, mergetol: Column, snaptol: Column, splitPointFinder: Column, origin: Column, xWidth: Column, yWidth: Column, xSize: Column, ySize: Column): Column =
             ColumnAdapter(geometry.ST_InterpolateElevation(pointsArray.expr, linesArray.expr, mergetol.expr, snaptol.expr, splitPointFinder.expr, origin.expr, xWidth.expr, yWidth.expr, xSize.expr, ySize.expr, expressionConfig))
-        def st_interpolateelevation(pointsArray: Column, linesArray: Column, mergetol: Column, snaptol: Column, origin: Column, xWidth: Column, yWidth: Column, xSize: Column, ySize: Column): Column =
-            ColumnAdapter(geometry.ST_InterpolateElevation(pointsArray.expr, linesArray.expr, mergetol.expr, snaptol.expr, lit("NONENCROACHING").expr, origin.expr, xWidth.expr, yWidth.expr, xSize.expr, ySize.expr, expressionConfig))
         def st_intersection(left: Column, right: Column): Column = ColumnAdapter(ST_Intersection(left.expr, right.expr, expressionConfig))
         def st_isvalid(geom: Column): Column = ColumnAdapter(ST_IsValid(geom.expr, expressionConfig))
         def st_length(geom: Column): Column = ColumnAdapter(ST_Length(geom.expr, expressionConfig))
@@ -651,8 +649,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(ST_Translate(geom1.expr, xd.expr, yd.expr, expressionConfig))
         def st_triangulate(pointsArray: Column, linesArray: Column, mergeTol: Column, snapTol: Column, splitPointFinder: Column): Column =
             ColumnAdapter(ST_Triangulate(pointsArray.expr, linesArray.expr, mergeTol.expr, snapTol.expr, splitPointFinder.expr, expressionConfig))
-        def st_triangulate(pointsArray: Column, linesArray: Column, mergeTol: Column, snapTol: Column): Column =
-            ColumnAdapter(ST_Triangulate(pointsArray.expr, linesArray.expr, mergeTol.expr, snapTol.expr, lit("NONENCROACHING").expr, expressionConfig))
         def st_x(geom: Column): Column = ColumnAdapter(ST_X(geom.expr, expressionConfig))
         def st_y(geom: Column): Column = ColumnAdapter(ST_Y(geom.expr, expressionConfig))
         def st_z(geom: Column): Column = ColumnAdapter(ST_Z(geom.expr, expressionConfig))
@@ -710,8 +706,6 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_convolve(raster: Column, kernel: Column): Column = ColumnAdapter(RST_Convolve(raster.expr, kernel.expr, expressionConfig))
         def rst_dtmfromgeoms(pointsArray: Column, linesArray: Column, mergeTol: Column, snapTol: Column, splitPointFinder: Column, origin: Column, xWidth: Column, yWidth: Column, xSize: Column, ySize: Column, noData: Column): Column =
             ColumnAdapter(RST_DTMFromGeoms(pointsArray.expr, linesArray.expr, mergeTol.expr, snapTol.expr, splitPointFinder.expr, origin.expr, xWidth.expr, yWidth.expr, xSize.expr, ySize.expr, noData.expr, expressionConfig))
-        def rst_dtmfromgeoms(pointsArray: Column, linesArray: Column, mergeTol: Column, snapTol: Column, origin: Column, xWidth: Column, yWidth: Column, xSize: Column, ySize: Column, noData: Column): Column =
-            ColumnAdapter(RST_DTMFromGeoms(pointsArray.expr, linesArray.expr, mergeTol.expr, snapTol.expr, lit("NONENCROACHING").expr, origin.expr, xWidth.expr, yWidth.expr, xSize.expr, ySize.expr, noData.expr, expressionConfig))
         def rst_pixelcount(raster: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, lit(false).expr, lit(false).expr, expressionConfig))
         def rst_pixelcount(raster: Column, countNoData: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, countNoData.expr, lit(false).expr, expressionConfig))
         def rst_pixelcount(raster: Column, countNoData: Column, countAll: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, countNoData.expr, countAll.expr, expressionConfig))

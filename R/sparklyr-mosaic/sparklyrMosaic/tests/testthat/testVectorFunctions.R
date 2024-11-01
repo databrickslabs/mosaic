@@ -134,7 +134,7 @@ test_that ("triangulation and interpolation functions behave as intended", {
     mutate(breaklines = array("LINESTRING EMPTY"))
 
   triangulation_sdf <- sdf %>%
-    mutate(triangles = st_triangulate(masspoints, breaklines, as.double(0.00), as.double(0.01)))
+    mutate(triangles = st_triangulate(masspoints, breaklines, as.double(0.00), as.double(0.01), "NONENCROACHING"))
 
   expect_equal(sdf_nrow(triangulation_sdf), 2)
 
@@ -144,7 +144,7 @@ test_that ("triangulation and interpolation functions behave as intended", {
 
   interpolation_sdf <- sdf %>%
     mutate(
-      origin = st_geomfromwkt("POINT (0.6 1.8)"),
+      origin = st_geomfromwkt("POINT (0.55 1.75)"),
       xWidth = 12L,
       yWidth = 6L,
       xSize = as.double(0.1),
@@ -152,8 +152,9 @@ test_that ("triangulation and interpolation functions behave as intended", {
       interpolated = st_interpolateelevation(
         masspoints,
         breaklines,
-        as.double(0.0),
         as.double(0.01),
+        as.double(0.01),
+        "NONENCROACHING",
         origin,
         xWidth,
         yWidth,
@@ -163,5 +164,5 @@ test_that ("triangulation and interpolation functions behave as intended", {
     )
   expect_equal(sdf_nrow(interpolation_sdf), 6 * 12)
   expect_contains(sdf_collect(interpolation_sdf)$interpolated,
-                  "POINT Z(0.6 2 1.8)")
+                  "POINT Z(1.6 1.8 1.2)")
 })

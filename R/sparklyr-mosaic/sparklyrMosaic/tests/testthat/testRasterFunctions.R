@@ -209,11 +209,13 @@ test_that ("a terrain model can be produced from point geometries", {
         breaklines,
         as.double(0.0),
         as.double(0.01),
+        "NONENCROACHING",
         origin,
         xWidth,
         yWidth,
         xSize,
-        ySize
+        ySize,
+        as.double(-9999.0)
       )
     )
   expect_equal(sdf_nrow(sdf), 1)

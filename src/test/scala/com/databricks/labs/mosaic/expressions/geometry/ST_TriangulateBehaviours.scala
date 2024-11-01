@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.types.model.TriangulationSplitPointTypeEnum
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.functions._
@@ -18,6 +19,7 @@ trait ST_TriangulateBehaviours extends QueryTest {
     val buffer = 50.0
     val mergeTolerance = 1e-2
     val snapTolerance = 0.01
+    val splitPointFinder = TriangulationSplitPointTypeEnum.NONENCROACHING
 
     def simpleTriangulateBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
 
@@ -38,7 +40,7 @@ trait ST_TriangulateBehaviours extends QueryTest {
             .groupBy()
             .agg(collect_list($"geom_0").as("masspoints"))
             .withColumn("breaklines", array().cast(ArrayType(StringType)))
-            .withColumn("mesh", st_triangulate($"masspoints", $"breaklines", lit(mergeTolerance), lit(snapTolerance)))
+            .withColumn("mesh", st_triangulate($"masspoints", $"breaklines", lit(mergeTolerance), lit(snapTolerance), lit(splitPointFinder.toString)))
             .drop($"masspoints")
         noException should be thrownBy result.collect()
         result.count() shouldBe 4453
@@ -76,7 +78,7 @@ trait ST_TriangulateBehaviours extends QueryTest {
             .groupBy()
             .agg(collect_list($"geom_0").as("masspoints"))
             .crossJoin(linesDf)
-            .withColumn("mesh", st_triangulate($"masspoints", $"breaklines", lit(mergeTolerance), lit(snapTolerance)))
+            .withColumn("mesh", st_triangulate($"masspoints", $"breaklines", lit(mergeTolerance), lit(snapTolerance), lit(splitPointFinder.toString)))
             .drop($"masspoints", $"breaklines")
 
         noException should be thrownBy result.collect()
