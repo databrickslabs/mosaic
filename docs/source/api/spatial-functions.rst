@@ -881,7 +881,7 @@ st_haversine
 st_interpolateelevation
 ***********************
 
-.. function:: st_interpolateelevation(pointsArray, linesArray, mergeTolerance, snapTolerance, origin, xWidth, yWidth, xSize, ySize)
+.. function:: st_interpolateelevation(pointsArray, linesArray, mergeTolerance, snapTolerance, splitPointFinder, origin, xWidth, yWidth, xSize, ySize)
 
     Compute interpolated elevations across a grid of points described by:
 
@@ -908,6 +908,11 @@ st_interpolateelevation
       Setting this value to zero may result in the output triangle vertices being assigned a null Z value.
     Both tolerance parameters are expressed in the same units as the projection of the input point geometries.
 
+    Additionally, you have control over the algorithm used to find split points on the constraint lines. The recommended
+    default option here is the "NONENCROACHING" algorithm. You can also use the "MIDPOINT" algorithm if you find the
+    constraint fitting process fails to converge. For full details of these options see the JTS reference
+    `here <https://locationtech.github.io/jts/javadoc/org/locationtech/jts/triangulate/ConstraintSplitPointFinder.html>`__.
+
     This is a generator expression and the resulting DataFrame will contain one row per point of the grid.
 
     :param pointsArray: Array of geometries respresenting the points to be triangulated
@@ -919,6 +924,8 @@ st_interpolateelevation
     :param snapTolerance: A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
     :type snapTolerance: Column (DoubleType)
     :param origin: A point geometry describing the bottom-left corner of the grid.
+    :param splitPointFinder: Algorithm used for finding split points on constraint lines. Options are "NONENCROACHING" and "MIDPOINT".
+    :type splitPointFinder: Column (StringType)
     :type origin: Column (Geometry)
     :param xWidth: The number of points in the grid in x direction.
     :type xWidth: Column (IntegerType)
@@ -957,7 +964,8 @@ st_interpolateelevation
     df.select(
         st_interpolateelevation(
             "masspoints", "breaklines", lit(0.0), lit(0.01),
-            "origin", "xWidth", "yWidth", "xSize", "ySize"
+            "origin", "xWidth", "yWidth", "xSize", "ySize",
+            split_point_finder="NONENCROACHING"
         )
     ).show(4, truncate=False)
     +--------------------------------------------------+
@@ -987,7 +995,8 @@ st_interpolateelevation
 
     df.select(
       st_interpolateelevation(
-        $"masspoints", $"breaklines", lit(0.0), lit(0.01),
+        $"masspoints", $"breaklines",
+        lit(0.0), lit(0.01), lit("NONENCROACHING"),
         $"origin", $"xWidth", $"yWidth", $"xSize", $"ySize"
       )
     ).show(4, false)
@@ -1011,7 +1020,7 @@ st_interpolateelevation
           "POINT Z (0 2 2)"
         ),
         ARRAY("LINESTRING EMPTY"),
-        DOUBLE(0.0), DOUBLE(0.01),
+        DOUBLE(0.0), DOUBLE(0.01), "NONENCROACHING",
         "POINT (0.6 1.8)", 12, 6, DOUBLE(0.1), DOUBLE(0.1)
       )
     +--------------------------------------------------+
@@ -1037,7 +1046,7 @@ st_interpolateelevation
     sdf <- withColumn(sdf, "breaklines", expr("array('LINESTRING EMPTY')"))
     sdf <- select(sdf, st_interpolateelevation(
       column("masspoints"), column("breaklines"),
-      lit(0.0), lit(0.01),
+      lit(0.0), lit(0.01), lit("NONENCROACHING"),
       lit("POINT (0.6 1.8)"), lit(12L), lit(6L), lit(0.1), lit(0.1)
       )
     )
@@ -1757,7 +1766,7 @@ st_transform
 st_triangulate
 **************
 
-.. function:: st_triangulate(pointsArray, linesArray, mergeTolerance, snapTolerance)
+.. function:: st_triangulate(pointsArray, linesArray, mergeTolerance, snapTolerance, splitPointFinder)
 
     Performs a conforming Delaunay triangulation using the points in :code:`pointsArray` including :code:`linesArray` as constraint / break lines.
 
@@ -1773,6 +1782,11 @@ st_triangulate
       Setting this value to zero may result in the output triangle vertices being assigned a null Z value.
     Both tolerance parameters are expressed in the same units as the projection of the input point geometries.
 
+    Additionally, you have control over the algorithm used to find split points on the constraint lines. The recommended
+    default option here is the "NONENCROACHING" algorithm. You can also use the "MIDPOINT" algorithm if you find the
+    constraint fitting process fails to converge. For full details of these options see the JTS reference
+    `here <https://locationtech.github.io/jts/javadoc/org/locationtech/jts/triangulate/ConstraintSplitPointFinder.html>`__.
+
     This is a generator expression and the resulting DataFrame will contain one row per triangle returned by the algorithm.
 
     :param pointsArray: Array of geometries respresenting the points to be triangulated
@@ -1783,6 +1797,8 @@ st_triangulate
     :type mergeTolerance: Column (DoubleType)
     :param snapTolerance: A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
     :type snapTolerance: Column (DoubleType)
+    :param splitPointFinder: Algorithm used for finding split points on constraint lines. Options are "NONENCROACHING" and "MIDPOINT".
+    :type splitPointFinder: Column (StringType)
     :rtype: Column (Geometry)
 
     :example:
@@ -1803,7 +1819,7 @@ st_triangulate
       .groupBy()
       .agg(collect_list("wkt").alias("masspoints"))
       .withColumn("breaklines", array(lit("LINESTRING EMPTY")))
-      .withColumn("triangles", st_triangulate("masspoints", "breaklines", lit(0.0), lit(0.01))
+      .withColumn("triangles", st_triangulate("masspoints", "breaklines", lit(0.0), lit(0.01), "NONENCROACHING"))
     )
     df.show(2, False)
     +---------------------------------------+
@@ -1826,7 +1842,7 @@ st_triangulate
     .withColumn("triangles",
       st_triangulate(
         $"masspoints", $"breaklines",
-        lit(0.0), lit(0.01)
+        lit(0.0), lit(0.01), lit("NONENCROACHING")
       )
     )
 
@@ -1849,7 +1865,8 @@ st_triangulate
           "POINT Z (0 2 2)"
         ),
         ARRAY("LINESTRING EMPTY"),
-        DOUBLE(0.0), DOUBLE(0.01)
+        DOUBLE(0.0), DOUBLE(0.01),
+        "NONENCROACHING"
       )
     +---------------------------------------+
     |triangles                              |
@@ -1872,7 +1889,7 @@ st_triangulate
     sdf <- withColumn(sdf, "breaklines", expr("array('LINESTRING EMPTY')"))
     result <- select(sdf, st_triangulate(
       column("masspoints"), column("breaklines"),
-      lit(0.0), lit(0.01))
+      lit(0.0), lit(0.01), lit("NONENCROACHING")
       )
     showDF(result, truncate=F)
     +---------------------------------------+
