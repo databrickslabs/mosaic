@@ -622,6 +622,7 @@ def st_triangulate(
     lines_array: ColumnOrName,
     merge_tolerance: ColumnOrName,
     snap_tolerance: ColumnOrName,
+    split_point_finder: str = "NONENCROACHING",
 ) -> Column:
     """
     Generate a triangulated surface mesh from the set of points `points_array` and constraint lines `lines_array`.
@@ -641,6 +642,9 @@ def st_triangulate(
         A tolerance used to coalesce points in close proximity to each other before performing triangulation.
     snap_tolerance : Column
         A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
+    split_point_finder : String
+        (Optional) The split point finding algorithm used to incorporate `lines_array` into the triangulation.
+        Default is "NONENCROACHING", alternative is "MIDPOINT".
 
     Returns
     -------
@@ -652,6 +656,7 @@ def st_triangulate(
         pyspark_to_java_column(lines_array),
         pyspark_to_java_column(merge_tolerance),
         pyspark_to_java_column(snap_tolerance),
+        pyspark_to_java_column(lit(split_point_finder)),
     )
 
 
@@ -665,6 +670,7 @@ def st_interpolateelevation(
     y_width: ColumnOrName,
     x_size: ColumnOrName,
     y_size: ColumnOrName,
+    split_point_finder: str = "NONENCROACHING",
 ) -> Column:
     """
     Compute interpolated elevations across a grid of points described by
@@ -701,6 +707,9 @@ def st_interpolateelevation(
     y_size : Column
         The spacing between each point on the grid's y-axis
         (in meters or degrees depending on the projection of `points_array`)
+    split_point_finder : String
+        (Optional) The split point finding algorithm used to incorporate `lines_array` into the triangulation.
+        Default is "NONENCROACHING", alternative is "MIDPOINT".
 
     Returns
     -------
@@ -712,6 +721,7 @@ def st_interpolateelevation(
         pyspark_to_java_column(lines_array),
         pyspark_to_java_column(merge_tolerance),
         pyspark_to_java_column(snap_tolerance),
+        pyspark_to_java_column(lit(split_point_finder)),
         pyspark_to_java_column(origin),
         pyspark_to_java_column(x_width),
         pyspark_to_java_column(y_width),

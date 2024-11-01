@@ -115,7 +115,9 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
                 "rst_worldtorastercoord",
                 api.rst_worldtorastercoord("tile", lit(0.0), lit(0.0)),
             )
-            .withColumn("rst_write", api.rst_write("tile", lit("/mnt/mosaic_tmp/write-tile")))
+            .withColumn(
+                "rst_write", api.rst_write("tile", lit("/mnt/mosaic_tmp/write-tile"))
+            )
         )
         result.write.format("noop").mode("overwrite").save()
         self.assertEqual(result.count(), 1)
@@ -300,6 +302,8 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
                     "grid_size_y",
                     "pixel_size_x",
                     "pixel_size_y",
+                    "NONENCROACHING",
+                    -9999.0,
                 ),
             )
             .drop(
