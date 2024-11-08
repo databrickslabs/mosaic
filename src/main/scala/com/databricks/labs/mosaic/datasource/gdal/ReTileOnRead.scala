@@ -15,8 +15,6 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
 
-import java.nio.file.{Files, Paths}
-
 /** An object defining the retiling read strategy for the GDAL file format. */
 object ReTileOnRead extends ReadStrategy {
 
@@ -141,7 +139,8 @@ object ReTileOnRead extends ReadStrategy {
             row
         })
 
-        Files.deleteIfExists(Paths.get(tmpPath))
+        PathUtils.cleanUpPath(tmpPath)
+//        Try(Files.deleteIfExists(Paths.get(tmpPath)))
 
         rows.iterator
     }

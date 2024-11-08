@@ -82,6 +82,7 @@ object BalancedSubdivision {
         tile: MosaicRasterTile,
         sizeInMb: Int
     ): Seq[MosaicRasterTile] = {
+        if (sizeInMb <= 0) return Seq(tile)
         val numSplits = getNumSplits(tile.getRaster, sizeInMb)
         val (x, y) = tile.getRaster.getDimensions
         val (tileX, tileY) = getTileSize(x, y, numSplits)
