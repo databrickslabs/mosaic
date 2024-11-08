@@ -740,8 +740,6 @@ object MosaicRasterGDAL extends RasterReader {
                 drivers.add(driverShortName)
                 gdal.OpenEx(path, OF_READONLY, drivers)
             case None                  => gdal.Open(path, OF_READONLY)
-//                gdal.OpenEx(path, OF_READONLY | OF_SHARED, drivers)
-//            case None                  => gdal.Open(path, OF_READONLY | OF_SHARED)
         }
     }
 
