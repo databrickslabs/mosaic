@@ -1,8 +1,8 @@
 package org.apache.spark.sql.test
 
+import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.utils.FileUtils
-import com.databricks.labs.mosaic._
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{Args, CompositeStatus, Status}

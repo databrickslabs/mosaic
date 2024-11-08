@@ -1,7 +1,7 @@
 package com.databricks.labs.mosaic.datasource.multiread
 
-import com.databricks.labs.mosaic.MOSAIC_RASTER_READ_STRATEGY
 import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_READ_STRATEGY, MOSAIC_RASTER_RE_TILE_ON_READ}
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
@@ -39,31 +39,27 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         val config = getConfig
         val resolution = config("resolution").toInt
         val nPartitions = getNPartitions(config)
-        val readStrategy = config("retile") match {
-            case "true" => "retile_on_read"
-            case _      => "in_memory"
-        }
-        val tileSize = config("sizeInMB").toInt
+
+        val tileSizeInMB = config("sizeInMB").toInt
 
         val nCores = nWorkers * workerNCores
         val stageCoefficient = math.ceil(math.log(nCores) / math.log(4))
 
-        val firstStageSize = (tileSize * math.pow(4, stageCoefficient)).toInt
+        val firstStageSize = (tileSizeInMB * math.pow(4, stageCoefficient)).toInt
 
         val pathsDf = sparkSession.read
             .format("gdal")
             .option("extensions", config("extensions"))
-            .option(MOSAIC_RASTER_READ_STRATEGY, readStrategy)
+            .option(MOSAIC_RASTER_READ_STRATEGY, MOSAIC_RASTER_RE_TILE_ON_READ)
             .option("vsizip", config("vsizip"))
             .option("sizeInMB", firstStageSize)
+            .options(extraOptions)
             .load(paths: _*)
             .repartition(nPartitions)
 
+        val retiledDf = retileRaster(pathsDf, config)
+
         val rasterToGridCombiner = getRasterToGridFunc(config("combiner"))
-
-        val rasterDf = resolveRaster(pathsDf, config)
-
-        val retiledDf = retileRaster(rasterDf, config)
 
         val loadedDf = retiledDf
             .withColumn(
