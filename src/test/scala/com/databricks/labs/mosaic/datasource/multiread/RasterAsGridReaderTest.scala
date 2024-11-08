@@ -17,7 +17,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
     test("Read netcdf with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
-//        assume(checkpointingEnabled)
+        assume(checkpointingEnabled)
         val mc = MosaicContext.build(H3IndexSystem, JTS)
         mc.register(spark)
 
