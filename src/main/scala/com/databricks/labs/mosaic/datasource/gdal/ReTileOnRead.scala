@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.retile.BalancedSubdivision
@@ -13,8 +14,6 @@ import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
-
-import java.nio.file.{Files, Paths}
 
 /** An object defining the retiling read strategy for the GDAL file format. */
 object ReTileOnRead extends ReadStrategy {
@@ -89,11 +88,34 @@ object ReTileOnRead extends ReadStrategy {
         options: Map[String, String],
         indexSystem: IndexSystem
     ): Iterator[InternalRow] = {
-        val inPath = status.getPath.toString
         val uuid = getUUID(status)
         val sizeInMB = options.getOrElse("sizeInMB", "16").toInt
 
-        var tmpPath = PathUtils.copyToTmpWithRetry(inPath, 5)
+        val inPath = status.getPath.toString
+        val tmpPath = options.getOrElse("readSubdataset", "false").toBoolean match {
+            case true =>
+                val readRaster = GDAL.raster(status.getPath.toString, status.getPath.toString)
+                val subDatasets = readRaster.subdatasets
+                if (subDatasets.isEmpty) {
+                    throw new RuntimeException(s"Option 'readSubdataset' was set to 'true' but no subdatasets were found in ${status.getPath.toString}")
+                }
+                if (options.contains("subdatasetName")) {
+                    val subdatasetName = options("subdatasetName")
+                    if (!subDatasets.contains(subdatasetName)) {
+                        throw new RuntimeException(s"Subdataset $subdatasetName not found in ${status.getPath.toString}")
+                    }
+
+                    val subdatasetPath = PathUtils.createTmpFilePath(readRaster.getRasterFileExtension)
+                    readRaster.getSubdataset(subdatasetName).writeToPath(subdatasetPath)
+                    readRaster.destroy()
+                    subdatasetPath
+                }
+                else {
+                    throw new RuntimeException(s"Option 'readSubdataset' was set to 'true' but 'subdatasetName' was not provided for ${status.getPath.toString}")
+                }
+            case false => PathUtils.copyToTmpWithRetry(inPath, 5)
+        }
+
         val tiles = localSubdivide(tmpPath, inPath, sizeInMB)
 
         val rows = tiles.map(tile => {
@@ -117,7 +139,8 @@ object ReTileOnRead extends ReadStrategy {
             row
         })
 
-        Files.deleteIfExists(Paths.get(tmpPath))
+        PathUtils.cleanUpPath(tmpPath)
+//        Try(Files.deleteIfExists(Paths.get(tmpPath)))
 
         rows.iterator
     }

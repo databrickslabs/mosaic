@@ -17,22 +17,27 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
     test("Read netcdf with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
-        MosaicContext.build(H3IndexSystem, JTS)
+        assume(checkpointingEnabled)
+        val mc = MosaicContext.build(H3IndexSystem, JTS)
+        mc.register(spark)
+
 
         val netcdf = "/binary/netcdf-coral/"
-        val filePath = getClass.getResource(netcdf).getPath
+        val filePath = this.getClass.getResource(netcdf).getPath
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
-            .option("retile", "true")
-            .option("tileSize", "10")
+            .option("sizeInMB", "16")
+            .option("resolution", "0")
             .option("readSubdataset", "true")
-            .option("subdataset", "1")
+            .option("subdatasetName", "bleaching_alert_area")
+            .option("retile", "true")
+            .option("tileSize", "600")
             .option("kRingInterpolate", "3")
+            .option("combiner", "avg")
             .load(filePath)
             .select("measure")
-            .queryExecution
-            .executedPlan
+            .take(1)
 
     }
 
@@ -45,10 +50,12 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("sizeInMB", "16")
+            .option("resolution", "0")
             .option("extensions", "grib")
             .option("combiner", "min")
             .option("retile", "true")
-            .option("tileSize", "10")
+            .option("tileSize", "100")
             .option("kRingInterpolate", "3")
             .load(filePath)
             .select("measure")
@@ -65,8 +72,11 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("sizeInMB", "16")
+            .option("resolution", "0")
+            .option("retile", "true")
+            .option("tileSize", "100")
             .option("combiner", "max")
-            .option("tileSize", "10")
             .option("kRingInterpolate", "3")
             .load(filePath)
             .select("measure")

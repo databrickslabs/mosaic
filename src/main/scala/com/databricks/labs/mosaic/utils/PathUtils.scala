@@ -3,7 +3,9 @@ package com.databricks.labs.mosaic.utils
 import com.databricks.labs.mosaic.MOSAIC_RASTER_TMP_PREFIX_DEFAULT
 import com.databricks.labs.mosaic.functions.MosaicContext
 
+import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{Files, Path, Paths}
+import java.time.Clock
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
@@ -40,11 +42,33 @@ object PathUtils {
             Try(Files.deleteIfExists(Paths.get(zipPath.replace(".zip", ""))))
         }
         Try(Files.deleteIfExists(Paths.get(zipPath)))
+        collectEmptyTmpDirs()
+    }
+
+    private def collectEmptyTmpDirs(): Unit = this.synchronized {
+        // iterate over all the directories in the temp location and delete any that are empty
+        // and older than 10 seconds
+        // This needs to be thread safe so we don't try and probe a directory
+        // that has been deleted in another thread
+        val tmpDir = Paths.get(MosaicContext.tmpDir(null)).getParent
+        if (Files.exists(tmpDir)) {
+            tmpDir.toFile
+                .listFiles
+                .filter(_.isDirectory)
+                .filter({ f =>
+                    val attrs = Files.readAttributes(Paths.get(f.getAbsolutePath), classOf[BasicFileAttributes])
+                    val lastModifiedTime = attrs.lastModifiedTime().toInstant
+                    Clock.systemDefaultZone().instant().minusSeconds(10).isAfter(lastModifiedTime)
+                })
+                .filter(_.listFiles.isEmpty)
+                .foreach({ f => Try(f.delete()) })
+        }
     }
 
     /**
       * Copy provided path to tmp.
-      * @param inPath
+     *
+     * @param inPath
       *   Path to copy from.
       * @return
       *   The copied path.
@@ -151,6 +175,8 @@ object PathUtils {
         val vsiPrefix = if (isZip) VSI_ZIP_TOKEN else ""
         s"$format:$vsiPrefix$filePath:$subdataset"
     }
+
+
 
     /**
       * Clean path.

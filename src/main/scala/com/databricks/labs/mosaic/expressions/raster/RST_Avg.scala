@@ -31,7 +31,7 @@ case class RST_Avg(tileExpr: Expression, expressionConfig: MosaicExpressionConfi
         // parse json from gdalinfo
         val json = parse(gdalInfo).extract[Map[String, Any]]
         val meanValues = json("bands").asInstanceOf[List[Map[String, Any]]].map { band =>
-            band("mean").asInstanceOf[Double]
+            band.getOrElse("mean", Double.NaN).asInstanceOf[Double]
         }
         ArrayData.toArrayData(meanValues.toArray)
     }

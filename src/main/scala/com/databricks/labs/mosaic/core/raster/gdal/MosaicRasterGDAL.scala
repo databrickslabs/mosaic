@@ -175,11 +175,15 @@ case class MosaicRasterGDAL(
     def isEmpty: Boolean = {
         val bands = getBands
         if (bands.isEmpty) {
-            subdatasets.values
-                .filter(_.toLowerCase(Locale.ROOT).startsWith(getDriversShortName.toLowerCase(Locale.ROOT)))
-                .flatMap(bp => readRaster(createInfo + ("path" -> bp)).getBands)
-                .takeWhile(_.isEmpty)
-                .nonEmpty
+            if (subdatasets.values.isEmpty) {
+                true
+            } else {
+                subdatasets.values
+                    .filter(_.toLowerCase(Locale.ROOT).startsWith(getDriversShortName.toLowerCase(Locale.ROOT)))
+                    .flatMap(bp => readRaster(createInfo + ("path" -> bp)).getBands)
+                    .takeWhile(_.isEmpty)
+                    .nonEmpty
+            }
         } else {
             bands.takeWhile(_.isEmpty).nonEmpty
         }
@@ -530,9 +534,10 @@ case class MosaicRasterGDAL(
       */
     def cleanUp(): Unit = {
         // 0.4.4 - don't delete any checkpointing or fuse locations.
-        if (PathUtils.isTmpLocation(path)) {
-            Try(gdal.GetDriverByName(getDriversShortName).Delete(path))
-            PathUtils.cleanUpPath(path)
+        {
+            if (PathUtils.isTmpLocation(path)) {
+                PathUtils.cleanUpPath(path)
+            }
         }
     }
 
@@ -544,6 +549,9 @@ case class MosaicRasterGDAL(
         val raster = getRaster
         if (raster != null) {
             raster.FlushCache()
+            for (band <- getBands) {
+                band.band.delete()
+            }
             raster.delete()
         }
     }
@@ -730,8 +738,8 @@ object MosaicRasterGDAL extends RasterReader {
             case Some(driverShortName) =>
                 val drivers = new JVector[String]()
                 drivers.add(driverShortName)
-                gdal.OpenEx(path, GA_ReadOnly, drivers)
-            case None                  => gdal.Open(path, GA_ReadOnly)
+                gdal.OpenEx(path, OF_READONLY, drivers)
+            case None                  => gdal.Open(path, OF_READONLY)
         }
     }
 

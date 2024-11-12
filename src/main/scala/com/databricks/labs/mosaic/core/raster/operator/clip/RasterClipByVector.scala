@@ -65,6 +65,7 @@ object RasterClipByVector {
         )
 
         VectorClipper.cleanUpClipper(shapeFileName)
+        PathUtils.cleanUpPath(shapeFileName)
 
         result
     }
