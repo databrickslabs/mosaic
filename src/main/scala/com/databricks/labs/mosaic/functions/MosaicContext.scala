@@ -276,6 +276,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         )
 
         /** RasterAPI dependent functions */
+        mosaicRegistry.registerExpression[RST_AsFormat](expressionConfig)
         mosaicRegistry.registerExpression[RST_Avg](expressionConfig)
         mosaicRegistry.registerExpression[RST_BandMetaData](expressionConfig)
         mosaicRegistry.registerExpression[RST_BoundingBox](expressionConfig)
@@ -285,6 +286,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         mosaicRegistry.registerExpression[RST_DerivedBand](expressionConfig)
         mosaicRegistry.registerExpression[RST_DTMFromGeoms](expressionConfig)
         mosaicRegistry.registerExpression[RST_Filter](expressionConfig)
+        mosaicRegistry.registerExpression[RST_Format](expressionConfig)
         mosaicRegistry.registerExpression[RST_GeoReference](expressionConfig)
         mosaicRegistry.registerExpression[RST_GetNoData](expressionConfig)
         mosaicRegistry.registerExpression[RST_GetSubdataset](expressionConfig)
@@ -695,6 +697,10 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def st_within(geom1: Column, geom2: Column): Column = ColumnAdapter(ST_Within(geom1.expr, geom2.expr, expressionConfig))
 
         /** RasterAPI dependent functions */
+        def rst_asformat(raster: Column, driver: Column): Column =
+            ColumnAdapter(RST_AsFormat(raster.expr, driver.expr, expressionConfig))
+        def rst_asformat(raster: Column, driver: String): Column =
+            ColumnAdapter(RST_AsFormat(raster.expr, lit(driver).expr, expressionConfig))
         def rst_bandmetadata(raster: Column, band: Column): Column =
             ColumnAdapter(RST_BandMetaData(raster.expr, band.expr, expressionConfig))
         def rst_bandmetadata(raster: Column, band: Int): Column =
@@ -716,6 +722,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
             ColumnAdapter(RST_Filter(raster.expr, kernelSize.expr, operation.expr, expressionConfig))
         def rst_filter(raster: Column, kernelSize: Int, operation: String): Column =
             ColumnAdapter(RST_Filter(raster.expr, lit(kernelSize).expr, lit(operation).expr, expressionConfig))
+        def rst_format(raster: Column): Column =
+            ColumnAdapter(RST_Format(raster.expr, expressionConfig))
         def rst_georeference(raster: Column): Column = ColumnAdapter(RST_GeoReference(raster.expr, expressionConfig))
         def rst_getnodata(raster: Column): Column = ColumnAdapter(RST_GetNoData(raster.expr, expressionConfig))
         def rst_getsubdataset(raster: Column, subdatasetName: Column): Column =

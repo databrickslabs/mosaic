@@ -59,9 +59,15 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
 
         val retiledDf = retileRaster(pathsDf, config)
 
+        val convertToFormat = if (config("convertToFormat").isEmpty) {
+            col("tile.metadata").getItem("driver") // which should be a noop
+        } else {
+            lit(config("convertToFormat"))
+        }
         val rasterToGridCombiner = getRasterToGridFunc(config("combiner"))
 
         val loadedDf = retiledDf
+            .withColumn("tile", rst_asformat(col("tile"), convertToFormat))
             .withColumn(
               "tile",
               rst_tessellate(col("tile"), lit(resolution))
@@ -225,7 +231,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
           "retile" -> this.extraOptions.getOrElse("retile", "false"),
           "tileSize" -> this.extraOptions.getOrElse("tileSize", "-1"),
           "sizeInMB" -> this.extraOptions.getOrElse("sizeInMB", "-1"),
-          "kRingInterpolate" -> this.extraOptions.getOrElse("kRingInterpolate", "0")
+          "kRingInterpolate" -> this.extraOptions.getOrElse("kRingInterpolate", "0"),
+          "convertToFormat" -> this.extraOptions.getOrElse("convertToFormat", "")
         )
     }
 

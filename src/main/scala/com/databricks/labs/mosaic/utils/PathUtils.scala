@@ -318,7 +318,9 @@ object PathUtils {
             val destination = Paths.get(copyToPath, path.getFileName.toString)
             // noinspection SimplifyBooleanMatch
             if (Files.isDirectory(path)) FileUtils.copyDirectory(path.toFile, destination.toFile)
-            else FileUtils.copyFile(path.toFile, destination.toFile)
+            else if (path.toFile != destination.toFile) {
+                FileUtils.copyFile(path.toFile, destination.toFile)
+            }
         }
     }
 
