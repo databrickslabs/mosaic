@@ -148,9 +148,19 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
       */
     def computeMinMax: Seq[Double] = {
         val minMaxVals = Array.fill[Double](2)(0)
-        Try(band.ComputeRasterMinMax(minMaxVals, 0))
-            .map(_ => minMaxVals.toSeq)
-            .getOrElse(Seq(Double.NaN, Double.NaN))
+        // will GDAL refuse to compute these stats?
+        if (band.GetXSize() == 1 || band.GetYSize() == 1) {
+            val validPixels = values.filter(_ != noDataValue)
+            if (validPixels.isEmpty) {
+                return Seq(Double.NaN, Double.NaN)
+            } else {
+                Seq(validPixels.min, validPixels.max)
+            }
+        } else {
+            Try(band.ComputeRasterMinMax(minMaxVals, 0))
+                .map(_ => minMaxVals.toSeq)
+                .getOrElse(Seq(Double.NaN, Double.NaN))
+        }
     }
 
     /**
