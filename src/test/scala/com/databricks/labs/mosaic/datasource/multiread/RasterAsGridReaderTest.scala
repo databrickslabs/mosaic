@@ -7,7 +7,7 @@ import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.Tag
 import org.scalatest.matchers.must.Matchers.{be, noException}
-import org.scalatest.matchers.should.Matchers.an
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
 
 import java.nio.file.{Files, Paths}
 
@@ -38,6 +38,36 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .load(filePath)
             .select("measure")
             .take(1)
+
+    }
+
+    test("Read ECMWF netcdf with Raster As Grid Reader") {
+        assume(System.getProperty("os.name") == "Linux")
+        assume(checkpointingEnabled)
+        val mc = MosaicContext.build(H3IndexSystem, JTS)
+        mc.register(spark)
+
+
+        val netcdf = "/binary/netcdf-ECMWF/"
+        val filePath = this.getClass.getResource(netcdf).getPath
+
+        val result = MosaicContext.read
+            .format("raster_to_grid")
+            .option("sizeInMB", "16")
+            .option("convertToFormat", "GTiff")
+            .option("resolution", "0")
+            .option("readSubdataset", "true")
+            .option("subdatasetName", "t2m")
+            .option("retile", "true")
+            .option("tileSize", "600")
+            .option("combiner", "avg")
+            .load(filePath)
+            .select("measure")
+            .cache()
+
+        result.count shouldBe 1098
+
+        noException should be thrownBy result.take(1)
 
     }
 

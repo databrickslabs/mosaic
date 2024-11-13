@@ -14,6 +14,7 @@ from mosaic.utils.types import ColumnOrName
 #######################
 
 __all__ = [
+    "rst_asformat",
     "rst_avg",
     "rst_bandmetadata",
     "rst_boundingbox",
@@ -23,6 +24,7 @@ __all__ = [
     "rst_derivedband",
     "rst_dtmfromgeoms",
     "rst_filter",
+    "rst_format",
     "rst_frombands",
     "rst_fromcontent",
     "rst_fromfile",
@@ -83,6 +85,30 @@ __all__ = [
     "rst_worldtorastercoordy",
     "rst_write",
 ]
+
+
+def rst_asformat(raster_tile: ColumnOrName, driver: ColumnOrName) -> Column:
+    """
+    Translates the raster to the specified format.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+    driver : Column (StringType)
+        The format driver to use.
+
+    Returns
+    -------
+    Column (RasterTileType)
+        The updated raster.
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_asformat",
+        pyspark_to_java_column(raster_tile),
+        pyspark_to_java_column(driver),
+    )
 
 
 def rst_avg(raster_tile: ColumnOrName) -> Column:
@@ -353,6 +379,26 @@ def rst_filter(raster_tile: ColumnOrName, kernel_size: Any, operation: Any) -> C
         pyspark_to_java_column(raster_tile),
         pyspark_to_java_column(kernel_size),
         pyspark_to_java_column(operation),
+    )
+
+
+def rst_format(raster_tile: ColumnOrName) -> Column:
+    """
+    Returns the format of the raster.
+
+    Parameters
+    ----------
+    raster_tile : Column (RasterTileType)
+        Mosaic raster tile struct column.
+
+    Returns
+    -------
+    Column (StringType)
+        The format of the raster (driver required for reading).
+
+    """
+    return config.mosaic_context.invoke_function(
+        "rst_format", pyspark_to_java_column(raster_tile)
     )
 
 

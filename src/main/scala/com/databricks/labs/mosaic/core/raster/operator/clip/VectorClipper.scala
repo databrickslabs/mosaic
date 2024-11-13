@@ -22,7 +22,7 @@ object VectorClipper {
       *   The shapefile name.
       */
     private def getShapefileName: String = {
-        val shapeFileName = PathUtils.createTmpFilePath(".shp")
+        val shapeFileName = PathUtils.createTmpFilePath("shp")
         shapeFileName
     }
 
