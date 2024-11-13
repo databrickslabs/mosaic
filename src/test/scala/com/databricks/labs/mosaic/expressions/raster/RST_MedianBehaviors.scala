@@ -9,7 +9,8 @@ import org.scalatest.matchers.should.Matchers._
 
 trait RST_MedianBehaviors extends QueryTest {
 
-    def behavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+    def largeAreaBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         mc.register()
         val sc = spark
@@ -48,5 +49,39 @@ trait RST_MedianBehaviors extends QueryTest {
                                                      |""".stripMargin)
 
     }
+
+    def smallAreaBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
+
+        val mc = MosaicContext.build(indexSystem, geometryAPI)
+        mc.register()
+        val sc = spark
+        import mc.functions._
+        import sc.implicits._
+
+        val testRegion = "Polygon ((-8151524 1216659, -8151061 1216659, -8151061 1217123, -8151524 1217123, -8151524 1216659))"
+
+        val rastersInMemory = spark.read
+            .format("gdal")
+            .option("raster_storage", "in-memory")
+            .load("src/test/resources/modis")
+
+        rastersInMemory.createOrReplaceTempView("source")
+
+        val df = rastersInMemory
+            .withColumn("tile", rst_clip($"tile", st_buffer(lit(testRegion), lit(-20))))
+            .withColumn("result", rst_median($"tile"))
+            .select("result")
+            .select(explode($"result").as("result"))
+
+        noException should be thrownBy spark.sql("""
+                                                   |select rst_median(tile) from source
+                                                   |""".stripMargin)
+
+        val result = df.as[Double].collect().max
+
+        result should be > 0.0
+
+    }
+
 
 }

@@ -22,11 +22,18 @@ class RST_MedianTest extends QueryTest with SharedSparkSessionGDAL with RST_Medi
 
     // These tests are not index system nor geometry API specific.
     // Only testing one pairing is sufficient.
-    test("Testing rst_median behavior with H3IndexSystem and JTS") {
+    test("Testing rst_median behavior with H3IndexSystem and JTS (tessellation case)") {
         noCodegen {
             assume(System.getProperty("os.name") == "Linux")
-            behavior(H3IndexSystem, JTS)
+            largeAreaBehavior(H3IndexSystem, JTS)
         }
+    }
+
+        test("Testing rst_median behavior with H3IndexSystem and JTS (small area case)") {
+            noCodegen {
+                assume(System.getProperty("os.name") == "Linux")
+                smallAreaBehavior(H3IndexSystem, JTS)
+            }
     }
 
 }
