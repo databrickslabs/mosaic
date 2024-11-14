@@ -1,15 +1,32 @@
 package org.apache.spark.sql.test
 
+import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.utils.FileUtils
-import com.databricks.labs.mosaic.{MOSAIC_GDAL_NATIVE, MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT, MOSAIC_TEST_MODE}
+
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
-import org.gdal.gdal.gdal
+import org.scalatest.{Args, CompositeStatus, Status}
 
 import scala.util.Try
 
 trait SharedSparkSessionGDAL extends SharedSparkSession {
+
+
+    var checkpointingEnabled: Boolean = _
+    def checkpointingStatus: String = if (checkpointingEnabled) "enabled" else "disabled"
+
+    override protected def runTest(testName: String, args: Args): Status = {
+        val statuses = for (checkpointing <- Seq(true, false)) yield {
+            checkpointingEnabled = checkpointing
+            spark.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, checkpointing)
+            spark.sparkContext.setLogLevel("INFO")
+            logInfo(s"Raster checkpointing is $checkpointingStatus")
+            spark.sparkContext.setLogLevel("ERROR")
+            super.runTest(testName, args)
+        }
+        new CompositeStatus(statuses.toSet)
+    }
 
     override def sparkConf: SparkConf = {
         super.sparkConf
@@ -32,9 +49,6 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
 
     override def beforeEach(): Unit = {
         super.beforeEach()
-        sparkConf.set(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT)
-        MosaicGDAL.enableGDAL(this.spark)
-        gdal.AllRegister()
     }
 
 }

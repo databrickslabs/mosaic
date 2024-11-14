@@ -33,12 +33,29 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         resultExecutors.foreach(s => s should include("GDAL"))
     }
 
-    test("Verify that checkpoint is not used.") {
-        spark.conf.get(MOSAIC_TEST_MODE) shouldBe "true"
-        MosaicGDAL.isUseCheckpoint shouldBe false
+    test("Verify memsize handling") {
+        val createInfo = Map(
+            "path" -> "no_path",
+            "parentPath" -> "no_path",
+            "driver" -> "GTiff"
+        )
+        val null_raster = MosaicRasterGDAL(null, createInfo)
+        null_raster.getMemSize should be(-1)
+
+        val np_content = spark.read.format("binaryFile")
+            .load("src/test/resources/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
+            .select("content").first.getAs[Array[Byte]](0)
+        val np_raster = MosaicRasterGDAL.readRaster(np_content, createInfo)
+//        val np_raster = RasterIO.readRasterHydratedFromContent(np_content, createInfo, getExprConfigOpt)
+        np_raster.getMemSize > 0 should be(true)
+        info(s"np_content length? ${np_content.length}")
+        info(s"np_raster memsize? ${np_raster.getMemSize}")
+
+        null_raster.destroy()
+        np_raster.destroy()
     }
 
-    test("Read raster metadata from GeoTIFF file.") {
+    test("Read tile metadata from GeoTIFF file.") {
         assume(System.getProperty("os.name") == "Linux")
         
         val createInfo = Map(
@@ -147,7 +164,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           "parentPath" -> "",
           "driver" -> "GTiff"
         )
-        var result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "avg").flushCache()
+        var result = MosaicRasterGDAL(ds, createInfo).filter(5, "avg").flushCache()
 
         var resultValues = result.getBand(1).values
 
@@ -174,7 +191,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         // mode
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "mode").flushCache()
+        result = MosaicRasterGDAL(ds, createInfo).filter(5, "mode").flushCache()
 
         resultValues = result.getBand(1).values
 
@@ -227,7 +244,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         // median
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "median").flushCache()
+        result = MosaicRasterGDAL(ds, createInfo).filter(5, "median").flushCache()
 
         resultValues = result.getBand(1).values
 
@@ -266,7 +283,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         // min filter
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "min").flushCache()
+        result = MosaicRasterGDAL(ds, createInfo).filter(5, "min").flushCache()
 
         resultValues = result.getBand(1).values
 
@@ -305,7 +322,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         // max filter
 
-        result = MosaicRasterGDAL(ds, createInfo, -1).filter(5, "max").flushCache()
+        result = MosaicRasterGDAL(ds, createInfo).filter(5, "max").flushCache()
 
         resultValues = result.getBand(1).values
 

@@ -70,6 +70,56 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
 
     /**
       * @return
+      *   Returns the band's data type as a string.
+      */
+    def dataTypeHuman: String = Try(band.getDataType).getOrElse(0) match {
+        case gdalconstConstants.GDT_Byte  => "Byte"
+        case gdalconstConstants.GDT_UInt16 => "UInt16"
+        case gdalconstConstants.GDT_Int16 => "Int16"
+        case gdalconstConstants.GDT_UInt32 => "UInt32"
+        case gdalconstConstants.GDT_Int32 => "Int32"
+        case gdalconstConstants.GDT_Float32 => "Float32"
+        case gdalconstConstants.GDT_Float64 => "Float64"
+        case gdalconstConstants.GDT_CInt16=> "ComplexInt16"
+        case gdalconstConstants.GDT_CInt32=> "ComplexInt32"
+        case gdalconstConstants.GDT_CFloat32=> "ComplexFloat32"
+        case gdalconstConstants.GDT_CFloat64=> "ComplexFloat64"
+        case _  => "Unknown"
+    }
+
+    /**
+      * @return
+      *   Returns the estimated number of bytes in each pixel.
+      */
+    def dataTypeBytes: Int = {
+        val pixelMemSizeMap = Map(
+            gdalconstConstants.GDT_Byte -> 1,
+            gdalconstConstants.GDT_UInt16 -> 2,
+            gdalconstConstants.GDT_Int16 -> 2,
+            gdalconstConstants.GDT_UInt32 -> 4,
+            gdalconstConstants.GDT_Int32 -> 4,
+            gdalconstConstants.GDT_Float32 -> 4,
+            gdalconstConstants.GDT_Float64 -> 8,
+            gdalconstConstants.GDT_CInt16 -> 2,
+            gdalconstConstants.GDT_CInt32 -> 4,
+            gdalconstConstants.GDT_CFloat32 -> 4,
+            gdalconstConstants.GDT_CFloat64 -> 8
+        )
+        if (pixelMemSizeMap.contains(dataType)) pixelMemSizeMap(dataType) else 0
+    }
+
+    /**
+     * @return
+     *   Returns the estimated size in memory of the band.
+     */
+    def estimatedSizeInMem: Int = {
+        val pixelMemSize = dataTypeBytes
+        val pixelCount = xSize * ySize
+        pixelMemSize * pixelCount
+    }
+
+    /**
+      * @return
       *   Returns the band's x size.
       */
     def xSize: Int = Try(band.GetXSize).getOrElse(0)
@@ -98,9 +148,19 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
       */
     def computeMinMax: Seq[Double] = {
         val minMaxVals = Array.fill[Double](2)(0)
-        Try(band.ComputeRasterMinMax(minMaxVals, 0))
-            .map(_ => minMaxVals.toSeq)
-            .getOrElse(Seq(Double.NaN, Double.NaN))
+        // will GDAL refuse to compute these stats?
+        if (band.GetXSize() == 1 || band.GetYSize() == 1) {
+            val validPixels = values.filter(_ != noDataValue)
+            if (validPixels.isEmpty) {
+                return Seq(Double.NaN, Double.NaN)
+            } else {
+                Seq(validPixels.min, validPixels.max)
+            }
+        } else {
+            Try(band.ComputeRasterMinMax(minMaxVals, 0))
+                .map(_ => minMaxVals.toSeq)
+                .getOrElse(Seq(Double.NaN, Double.NaN))
+        }
     }
 
     /**
@@ -223,25 +283,36 @@ case class MosaicRasterBandGDAL(band: Band, id: Int) {
     /**
       * Counts the number of pixels in the band. The mask is used to determine
       * if a pixel is valid. If pixel value is noData or mask value is 0.0, the
-      * pixel is not counted.
-      *
+      * pixel is not counted by default.
+      * @param countNoData
+      *   If specified as true, include the noData (default is false).
+      * @param countAll
+      *   If specified as true, simply return bandX * bandY (default is false).
       * @return
       *   Returns the band's pixel count.
       */
-    def pixelCount: Int = {
-        val line = Array.ofDim[Double](band.GetXSize())
-        val maskLine = Array.ofDim[Double](band.GetXSize())
-        var count = 0
-        for (y <- 0 until band.GetYSize()) {
-            band.ReadRaster(0, y, band.GetXSize(), 1, line)
-            val maskRead = band.GetMaskBand().ReadRaster(0, y, band.GetXSize(), 1, maskLine)
-            if (maskRead != gdalconstConstants.CE_None) {
-                count = count + line.count(_ != noDataValue)
-            } else {
-                count = count + line.zip(maskLine).count { case (pixel, mask) => pixel != noDataValue && mask != 0.0 }
+    def pixelCount(countNoData: Boolean = false, countAll: Boolean = false): Int = {
+        if (countAll) {
+            // all pixels returned
+            band.GetXSize() * band.GetYSize()
+        } else {
+            // nodata not included (default)
+            val line = Array.ofDim[Double](band.GetXSize())
+            var count = 0
+            for (y <- 0 until band.GetYSize()) {
+                band.ReadRaster(0, y, band.GetXSize(), 1, line)
+                val maskLine = Array.ofDim[Double](band.GetXSize())
+                val maskRead = band.GetMaskBand().ReadRaster(0, y, band.GetXSize(), 1, maskLine)
+                if (maskRead != gdalconstConstants.CE_None) {
+                    count = count + line.count(pixel => countNoData || pixel != noDataValue)
+                } else {
+                    count = count + line.zip(maskLine).count {
+                        case (pixel, mask) => mask != 0.0 && (countNoData || pixel != noDataValue)
+                    }
+                }
             }
+            count
         }
-        count
     }
 
     /**

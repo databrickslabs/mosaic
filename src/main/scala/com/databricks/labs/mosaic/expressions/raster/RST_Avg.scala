@@ -12,7 +12,7 @@ import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
 
-/** Returns the upper left x of the raster. */
+/** Returns the avg value per band of the raster. */
 case class RST_Avg(tileExpr: Expression, expressionConfig: MosaicExpressionConfig)
     extends RasterExpression[RST_Avg](tileExpr, returnsRaster = false, expressionConfig)
       with NullIntolerant
@@ -20,7 +20,7 @@ case class RST_Avg(tileExpr: Expression, expressionConfig: MosaicExpressionConfi
 
     override def dataType: DataType = ArrayType(DoubleType)
 
-    /** Returns the upper left x of the raster. */
+    /** Returns the avg value per band of the raster. */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
         import org.json4s._
         import org.json4s.jackson.JsonMethods._
@@ -30,10 +30,10 @@ case class RST_Avg(tileExpr: Expression, expressionConfig: MosaicExpressionConfi
         val gdalInfo = GDALInfo.executeInfo(tile.raster, command)
         // parse json from gdalinfo
         val json = parse(gdalInfo).extract[Map[String, Any]]
-        val maxValues = json("bands").asInstanceOf[List[Map[String, Any]]].map { band =>
-            band("mean").asInstanceOf[Double]
+        val meanValues = json("bands").asInstanceOf[List[Map[String, Any]]].map { band =>
+            band.getOrElse("mean", Double.NaN).asInstanceOf[Double]
         }
-        ArrayData.toArrayData(maxValues.toArray)
+        ArrayData.toArrayData(meanValues.toArray)
     }
 
 }

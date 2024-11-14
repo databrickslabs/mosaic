@@ -8,6 +8,7 @@ generate_singleband_raster_df <- function() {
 
 test_that("mosaic can read single-band GeoTiff", {
   sdf <- generate_singleband_raster_df()
+
   row <- first(sdf)
   expect_equal(row$length, 1067862L)
   expect_equal(row$x_size, 2400)
@@ -34,12 +35,15 @@ test_that("scalar raster functions behave as intended", {
   sdf <- withColumn(sdf, "rst_scaley", rst_scaley(column("tile")))
   sdf <- withColumn(sdf, "rst_srid", rst_srid(column("tile")))
   sdf <- withColumn(sdf, "rst_summary", rst_summary(column("tile")))
+  sdf <- withColumn(sdf, "rst_type", rst_type(column("tile")))
+  sdf <- withColumn(sdf, "rst_updatetype", rst_updatetype(column("tile"), lit("Float32")))
   sdf <- withColumn(sdf, "rst_upperleftx", rst_upperleftx(column("tile")))
   sdf <- withColumn(sdf, "rst_upperlefty", rst_upperlefty(column("tile")))
   sdf <- withColumn(sdf, "rst_width", rst_width(column("tile")))
   sdf <- withColumn(sdf, "rst_worldtorastercoordx", rst_worldtorastercoordx(column("tile"), lit(0.0), lit(0.0)))
   sdf <- withColumn(sdf, "rst_worldtorastercoordy", rst_worldtorastercoordy(column("tile"), lit(0.0), lit(0.0)))
   sdf <- withColumn(sdf, "rst_worldtorastercoord", rst_worldtorastercoord(column("tile"), lit(0.0), lit(0.0)))
+  sdf <- withColumn(sdf, "rst_write", rst_write(column("tile"), lit("/mnt/mosaic_tmp/write-raster")))
 
   expect_no_error(write.df(sdf, source = "noop", mode = "overwrite"))
 })
@@ -64,7 +68,7 @@ test_that("raster flatmap functions behave as intended", {
   expect_equal(nrow(tessellate_sdf), 63)
 
   overlap_sdf <- generate_singleband_raster_df()
-  overlap_sdf <- withColumn(overlap_sdf, "rst_to_overlapping_tiles", rst_to_overlapping_tiles(column("tile"), lit(200L), lit(200L), lit(10L)))
+  overlap_sdf <- withColumn(overlap_sdf, "rst_tooverlappingtiles", rst_tooverlappingtiles(column("tile"), lit(200L), lit(200L), lit(10L)))
 
   expect_no_error(write.df(overlap_sdf, source = "noop", mode = "overwrite"))
   expect_equal(nrow(overlap_sdf), 87)
@@ -73,7 +77,7 @@ test_that("raster flatmap functions behave as intended", {
 test_that("raster aggregation functions behave as intended", {
   collection_sdf <- generate_singleband_raster_df()
   collection_sdf <- withColumn(collection_sdf, "extent", st_astext(rst_boundingbox(column("tile"))))
-  collection_sdf <- withColumn(collection_sdf, "tile", rst_to_overlapping_tiles(column("tile"), lit(200L), lit(200L), lit(10L)))
+  collection_sdf <- withColumn(collection_sdf, "tile", rst_tooverlappingtiles(column("tile"), lit(200L), lit(200L), lit(10L)))
 
   merge_sdf <- summarize(
     groupBy(collection_sdf, "path"),
@@ -124,7 +128,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   raster_sdf <- withColumn(raster_sdf, "timestep", element_at(rst_metadata(column("tile")), "NC_GLOBAL#GDAL_MOSAIC_BAND_INDEX"))
   raster_sdf <- where(raster_sdf, "timestep = 21")
   raster_sdf <- withColumn(raster_sdf, "tile", rst_setsrid(column("tile"), lit(4326L)))
-  raster_sdf <- withColumn(raster_sdf, "tile", rst_to_overlapping_tiles(column("tile"), lit(20L), lit(20L), lit(10L)))
+  raster_sdf <- withColumn(raster_sdf, "tile", rst_tooverlappingtiles(column("tile"), lit(20L), lit(20L), lit(10L)))
   raster_sdf <- withColumn(raster_sdf, "tile", rst_tessellate(column("tile"), lit(target_resolution)))
 
   clipped_sdf <- join(raster_sdf, census_sdf, raster_sdf$tile.index_id == census_sdf$index_id)
@@ -137,4 +141,33 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
 
   expect_equal(nrow(merged_precipitation), 1)
 
+})
+
+test_that("a terrain model can be produced from point geometries", {
+
+sdf <- createDataFrame(
+  data.frame(
+    wkt = c(
+      "POINT Z (3 2 1)",
+      "POINT Z (2 1 0)",
+      "POINT Z (1 3 3)",
+      "POINT Z (0 2 2)"
+    )
+  )
+)
+
+sdf <- agg(groupBy(sdf), masspoints = collect_list(column("wkt")))
+sdf <- withColumn(sdf, "breaklines", expr("array('LINESTRING EMPTY')"))
+sdf <- withColumn(sdf, "splitPointFinder", lit("NONENCROACHING"))
+sdf <- withColumn(sdf, "origin", st_geomfromwkt(lit("POINT (0.6 1.8)")))
+sdf <- withColumn(sdf, "xWidth", lit(12L))
+sdf <- withColumn(sdf, "yWidth", lit(6L))
+sdf <- withColumn(sdf, "xSize", lit(0.1))
+sdf <- withColumn(sdf, "ySize", lit(0.1))
+sdf <- withColumn(sdf, "noData", lit(-9999.0))
+sdf <- withColumn(sdf, "tile", rst_dtmfromgeoms(
+column("masspoints"), column("breaklines"), lit(0.0), lit(0.01), column("splitPointFinder"),
+column("origin"), column("xWidth"), column("yWidth"), column("xSize"), column("ySize"), column("noData")
+))
+expect_equal(SparkR::count(sdf), 1)
 })

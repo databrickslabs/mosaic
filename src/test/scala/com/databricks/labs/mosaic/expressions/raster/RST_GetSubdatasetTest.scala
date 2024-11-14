@@ -29,4 +29,11 @@ class RST_GetSubdatasetTest extends QueryTest with SharedSparkSessionGDAL with R
         }
     }
 
+    test("Testing RST_GetSubdataset -> RST_Subdivide with manual GDAL registration (H3, JTS).") {
+        noCodegen {
+            assume(System.getProperty("os.name") == "Linux")
+            behaviorsSubdivide(H3IndexSystem, JTS)
+        }
+    }
+
 }

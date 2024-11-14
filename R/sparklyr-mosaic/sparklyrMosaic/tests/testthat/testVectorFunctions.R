@@ -1,14 +1,12 @@
 options(warn = -1)
 
 test_that("scalar vector functions behave as intended", {
-
   sdf_raw <- sdf_copy_to(
     sc,
     data.frame(
       wkt = "POLYGON ((2 1, 1 2, 2 3, 2 1))",
-      point_wkt = "POINT (1 1)"
+      point_wkt = "POINT (1 1)")
     )
-  )
 
   sdf <- sdf_raw %>% mutate(
     st_area = st_area(wkt),
@@ -24,7 +22,12 @@ test_that("scalar vector functions behave as intended", {
     st_rotate = st_rotate(wkt, 1L),
     st_centroid = st_centroid(wkt),
     st_numpoints = st_numpoints(wkt),
-    st_haversine = st_haversine(as.double(0.0), as.double(90.0), as.double(0.0), as.double(0.0)),
+    st_haversine = st_haversine(
+      as.double(0.0),
+      as.double(90.0),
+      as.double(0.0),
+      as.double(0.0)
+    ),
     st_isvalid = st_isvalid(wkt),
     st_hasvalidcoordinates = st_hasvalidcoordinates(wkt, "EPSG:2192", "bounds"),
     st_intersects = st_intersects(wkt, wkt),
@@ -75,33 +78,28 @@ test_that("scalar vector functions behave as intended", {
 })
 
 test_that("aggregate vector functions behave as intended", {
-
   inputGJ <- read_file("data/boroughs.geojson")
   sdf <- sdf_sql(sc, "SELECT id as location_id FROM range(1)") %>%
     mutate(geometry = st_geomfromgeojson(inputGJ))
   expect_equal(sdf_nrow(sdf), 1)
 
   sdf.l <- sdf %>%
-    select(
-      left_id = location_id,
-      left_geom = geometry
-    ) %>%
+    select(left_id = location_id, left_geom = geometry) %>%
     mutate(left_index = mosaic_explode(left_geom, 11L))
 
   sdf.r <- sdf %>%
-    select(
-      right_id = location_id,
-      right_geom = geometry
-    ) %>%
+    select(right_id = location_id, right_geom = geometry) %>%
     mutate(right_geom = st_translate(
       right_geom,
       st_area(right_geom) * runif(n()) * 0.1,
-      st_area(right_geom) * runif(n()) * 0.1)
-    ) %>%
+      st_area(right_geom) * runif(n()) * 0.1
+    )) %>%
     mutate(right_index = mosaic_explode(right_geom, 11L))
 
   sdf.intersection <- sdf.l %>%
-    inner_join(sdf.r, by = c("left_index" = "right_index"), keep = TRUE) %>%
+    inner_join(sdf.r,
+               by = c("left_index" = "right_index"),
+               keep = TRUE) %>%
     group_by(left_id, right_id) %>%
     summarise(
       agg_intersects = st_intersects_agg(left_index, right_index),
@@ -123,4 +121,48 @@ test_that("aggregate vector functions behave as intended", {
   expect_true(sdf.intersection %>% head(1) %>% sdf_collect %>% .$comparison_intersection)
 
 
+})
+
+test_that ("triangulation and interpolation functions behave as intended", {
+  sdf <- sdf_copy_to(sc, data.frame(
+    wkt = c("POINT Z (3 2 1)", "POINT Z (2 1 0)", "POINT Z (1 3 3)", "POINT Z (0 2 2)")
+  ))
+
+  sdf <- sdf %>%
+    group_by() %>%
+    summarise(masspoints = collect_list(wkt)) %>%
+    mutate(breaklines = array("LINESTRING EMPTY"))
+
+  triangulation_sdf <- sdf %>%
+    mutate(triangles = st_triangulate(masspoints, breaklines, as.double(0.00), as.double(0.01), "NONENCROACHING"))
+
+  expect_equal(sdf_nrow(triangulation_sdf), 2)
+
+  expected <- c("POLYGON Z((0 2 2, 2 1 0, 1 3 3, 0 2 2))",
+                "POLYGON Z((1 3 3, 2 1 0, 3 2 1, 1 3 3))")
+  expect_contains(expected, sdf_collect(triangulation_sdf)$triangles[0])
+
+  interpolation_sdf <- sdf %>%
+    mutate(
+      origin = st_geomfromwkt("POINT (0.55 1.75)"),
+      xWidth = 12L,
+      yWidth = 6L,
+      xSize = as.double(0.1),
+      ySize = as.double(0.1),
+      interpolated = st_interpolateelevation(
+        masspoints,
+        breaklines,
+        as.double(0.01),
+        as.double(0.01),
+        "NONENCROACHING",
+        origin,
+        xWidth,
+        yWidth,
+        xSize,
+        ySize
+      )
+    )
+  expect_equal(sdf_nrow(interpolation_sdf), 6 * 12)
+  expect_contains(sdf_collect(interpolation_sdf)$interpolated,
+                  "POINT Z(1.6 1.8 1.2)")
 })

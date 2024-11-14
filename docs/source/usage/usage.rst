@@ -11,4 +11,5 @@ Usage
    quickstart
    kepler
    automatic-sql-registration
+   raster-checkpointing
 

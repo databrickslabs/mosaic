@@ -25,7 +25,16 @@ class RST_ClipTest extends QueryTest with SharedSparkSessionGDAL with RST_ClipBe
     test("Testing RST_Clip with manual GDAL registration (H3, JTS).") {
         noCodegen {
             assume(System.getProperty("os.name") == "Linux")
-            behaviors(H3IndexSystem, JTS)
+            basicBehaviour(H3IndexSystem, JTS)
+        }
+    }
+
+    // These tests are not index system nor geometry API specific.
+    // Only testing one pairing is sufficient.
+    test("Testing RST_Clip with different cutline options with manual GDAL registration (H3, JTS).") {
+        noCodegen {
+            assume(System.getProperty("os.name") == "Linux")
+            cutlineBehaviour(H3IndexSystem, JTS)
         }
     }
 

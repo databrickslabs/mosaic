@@ -23,9 +23,6 @@ case class RST_ReTile(
       with NullIntolerant
       with CodegenFallback {
 
-    /** @return provided raster data type (assumes that was handled for checkpointing.)*/
-    override def dataType: DataType = rasterExpr.dataType
-
     /**
       * Returns a set of new rasters with the specified tile size (tileWidth x
       * tileHeight).

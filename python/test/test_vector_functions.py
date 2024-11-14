@@ -1,6 +1,15 @@
 import random
 
-from pyspark.sql.functions import abs, col, concat, first, lit, sqrt
+from pyspark.sql.functions import (
+    abs,
+    array,
+    col,
+    collect_list,
+    concat,
+    first,
+    lit,
+    sqrt,
+)
 
 from .context import api
 from .utils import MosaicTestCase
@@ -61,7 +70,8 @@ class TestVectorFunctions(MosaicTestCase):
             .withColumn("st_buffer", api.st_buffer("wkt", lit(1.1)))
             .withColumn(
                 "st_buffer_optparams",
-                api.st_buffer("wkt", lit(1.1), lit("endcap=square quad_segs=2")))
+                api.st_buffer("wkt", lit(1.1), lit("endcap=square quad_segs=2")),
+            )
             .withColumn("st_bufferloop", api.st_bufferloop("wkt", lit(1.1), lit(1.2)))
             .withColumn("st_perimeter", api.st_perimeter("wkt"))
             .withColumn("st_convexhull", api.st_convexhull("wkt"))
@@ -296,3 +306,65 @@ class TestVectorFunctions(MosaicTestCase):
 
         union = df_chips.groupBy("chips.index_id").agg(api.grid_cell_union_agg("chips"))
         self.assertEqual(union.count() >= 0, True)
+
+    def test_triangulate_interpolate(self):
+        df = (
+            self.spark.createDataFrame(
+                [
+                    ["POINT Z (2 1 0)"],
+                    ["POINT Z (3 2 1)"],
+                    ["POINT Z (1 3 3)"],
+                    ["POINT Z (0 2 2)"],
+                ],
+                ["wkt"],
+            )
+            .groupBy()
+            .agg(collect_list("wkt").alias("masspoints"))
+            .withColumn("breaklines", array(lit("LINESTRING EMPTY")))
+        )
+
+        triangulation_df = df.withColumn(
+            "triangles",
+            api.st_triangulate(
+                "masspoints", "breaklines", lit(0.0), lit(0.01), lit("NONENCROACHING")
+            ),
+        )
+        triangulation_df.cache()
+        self.assertEqual(triangulation_df.count(), 2)
+        self.assertSetEqual(
+            {r["triangles"] for r in triangulation_df.collect()},
+            {
+                "POLYGON Z((0 2 2, 2 1 0, 1 3 3, 0 2 2))",
+                "POLYGON Z((1 3 3, 2 1 0, 3 2 1, 1 3 3))",
+            },
+        )
+
+        interpolation_df = (
+            df.withColumn("origin", api.st_geomfromwkt(lit("POINT (0.55 1.75)")))
+            .withColumn("xWidth", lit(12))
+            .withColumn("yWidth", lit(6))
+            .withColumn("xSize", lit(0.1))
+            .withColumn("ySize", lit(0.1))
+            .withColumn(
+                "interpolated",
+                api.st_interpolateelevation(
+                    "masspoints",
+                    "breaklines",
+                    lit(0.0),
+                    lit(0.01),
+                    "origin",
+                    "xWidth",
+                    "yWidth",
+                    "xSize",
+                    "ySize",
+                    lit("NONENCROACHING"),
+                ),
+            )
+        )
+
+        interpolation_df.cache()
+        self.assertEqual(interpolation_df.count(), 12 * 6)
+        self.assertIn(
+            "POINT Z(1.6 1.8 1.2)",
+            [r["interpolated"] for r in interpolation_df.collect()],
+        )

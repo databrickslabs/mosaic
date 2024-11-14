@@ -31,6 +31,10 @@ case class MosaicRasterTile(
 
     def getDriver: String = driver
 
+    def setDriver(value: String): MosaicRasterTile = {
+        new MosaicRasterTile(index, raster.copy(createInfo = raster.createInfo.updated("driver", value)))
+    }
+
     def driver: String = raster.createInfo("driver")
 
     def getRaster: MosaicRasterGDAL = raster

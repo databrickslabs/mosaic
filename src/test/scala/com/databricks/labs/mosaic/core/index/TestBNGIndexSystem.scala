@@ -81,6 +81,9 @@ class TestBNGIndexSystem extends AnyFunSuite {
         BNGIndexSystem.parse("TQ") shouldBe 105010
         BNGIndexSystem.format(105010) shouldBe "TQ"
 
+        BNGIndexSystem.parse("NW") shouldBe BNGIndexSystem.encode(1, 5, 0, 0, 0, 1, -2)
+        BNGIndexSystem.format(105010) shouldBe "TQ"
+
         BNGIndexSystem.parse("TQNW") shouldBe 105012
         BNGIndexSystem.format(105012) shouldBe "TQNW"
 

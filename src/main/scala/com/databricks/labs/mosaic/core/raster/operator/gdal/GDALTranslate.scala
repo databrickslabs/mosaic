@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterGDAL, MosaicRast
 import org.gdal.gdal.{TranslateOptions, gdal}
 
 import java.nio.file.{Files, Paths}
+import scala.util.Try
 
 /** GDALTranslate is a wrapper for the GDAL Translate command. */
 object GDALTranslate {
@@ -32,7 +33,14 @@ object GDALTranslate {
         val translateOptions = new TranslateOptions(translateOptionsVec)
         val result = gdal.Translate(outputPath, raster.getRaster, translateOptions)
         val errorMsg = gdal.GetLastErrorMsg
-        val size = Files.size(Paths.get(outputPath))
+        val size = Try(Files.size(Paths.get(outputPath))).getOrElse(
+            {
+                val msg = "Error during GDAL translate operation: " +
+                    s"file ${raster.getPath} could not be translated to $outputPath " +
+                    s"with command '$effectiveCommand'. GDAL returned error: $errorMsg"
+                throw new Exception(msg)
+            }
+        )
         val createInfo = Map(
           "path" -> outputPath,
           "parentPath" -> raster.getParentPath,
@@ -42,7 +50,7 @@ object GDALTranslate {
           "all_parents" -> raster.getParentPath
         )
         raster
-            .copy(raster = result, createInfo = createInfo, memSize = size)
+            .copy(raster = result, createInfo = createInfo)
             .flushCache()
     }
 

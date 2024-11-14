@@ -1,11 +1,13 @@
 package com.databricks.labs.mosaic.core.geometry.multipoint
 
+import com.databricks.labs.mosaic.core.geometry.linestring.{MosaicLineString, MosaicLineStringJTS}
+import com.databricks.labs.mosaic.core.geometry.multipolygon.MosaicMultiPolygonJTS
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPointJTS
 import com.databricks.labs.mosaic.core.geometry.polygon.MosaicPolygonJTS
+import com.databricks.labs.mosaic.core.types.model.TriangulationSplitPointTypeEnum
+import org.apache.spark.sql.catalyst.InternalRow
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers._
-
-import org.apache.spark.sql.catalyst.InternalRow
 
 //noinspection ScalaRedundantCast
 class TestMultiPointJTS extends AnyFlatSpec {
@@ -119,6 +121,31 @@ class TestMultiPointJTS extends AnyFlatSpec {
         // MosaicMultiPointJTS
         multiPoint.getBoundary.getSpatialReference shouldBe srid
         multiPoint.mapXY({ (x: Double, y: Double) => (x * 2, y / 2) }).getSpatialReference shouldBe srid
+    }
+
+    private val emptyLineString = MosaicLineStringJTS.fromWKT("LINESTRING EMPTY").asInstanceOf[MosaicLineString]
+
+    "MosaicMultiPointJTS" should "perform an unconstrained Delauny tringulation" in {
+
+        val multiPoint = MosaicMultiPointJTS.fromWKT("MULTIPOINT Z (2 1 0, 3 2 1, 1 3 3, 0 2 2)").asInstanceOf[MosaicMultiPointJTS]
+        val triangulated = multiPoint.triangulate(Seq(emptyLineString), 0.00, 0.01, TriangulationSplitPointTypeEnum.NONENCROACHING)
+        MosaicMultiPolygonJTS.fromSeq(triangulated).toWKT shouldBe "MULTIPOLYGON Z(((0 2 2, 2 1 0, 1 3 3, 0 2 2)), ((1 3 3, 2 1 0, 3 2 1, 1 3 3)))"
+    }
+
+    "MosaicMultiPointJTS" should "generate an equally spaced grid of points for use in elevation interpolation" in {
+        val origin = MosaicPointJTS.fromWKT("POINT (-0.5 -0.5)").asInstanceOf[MosaicPointJTS]
+        val grid = MosaicMultiPointJTS.fromWKT("MULTIPOINT (0 0, 0 1, 0 2, 1 0, 1 1, 1 2, 2 0, 2 1, 2 2)").asInstanceOf[MosaicMultiPointJTS]
+        val generatedGrid = grid.pointGrid(origin, 3, 3, 1.0, 1.0)
+        generatedGrid.toWKT shouldBe grid.toWKT
+    }
+
+    "MosaicMultiPointJTS" should "perform elevation interpolation" in {
+        val multiPoint = MosaicMultiPointJTS.fromWKT("MULTIPOINT Z (2.5 1.5 0, 3.5 2.5 1, 1.5 3.5 3, 0.5 2.5 2)").asInstanceOf[MosaicMultiPointJTS]
+        val origin = MosaicPointJTS.fromWKT("POINT (-0.5 -0.5)").asInstanceOf[MosaicPointJTS]
+        val gridPoints = multiPoint.pointGrid(origin, 5, 5, 1, 1).intersection(multiPoint.convexHull).asInstanceOf[MosaicMultiPointJTS]
+        val z = multiPoint.interpolateElevation(Seq(emptyLineString), gridPoints, 0.00, 0.01, TriangulationSplitPointTypeEnum.NONENCROACHING)
+        z.toWKT shouldBe "MULTIPOINT Z((1 3 2.5), (2 2 0.8333333333333334), (2 3 2.1666666666666665), (3 2 0.5))"
+        z.asSeq.map(_.getZ) shouldBe Seq(2.5, 0.8333333333333334, 2.1666666666666665, 0.5)
     }
 
 }

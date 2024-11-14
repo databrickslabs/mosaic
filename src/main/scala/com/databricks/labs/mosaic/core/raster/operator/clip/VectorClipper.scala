@@ -22,7 +22,7 @@ object VectorClipper {
       *   The shapefile name.
       */
     private def getShapefileName: String = {
-        val shapeFileName = PathUtils.createTmpFilePath(".shp")
+        val shapeFileName = PathUtils.createTmpFilePath("shp")
         shapeFileName
     }
 
@@ -63,9 +63,10 @@ object VectorClipper {
 
         val projectedGeom = geometry.osrTransformCRS(srcCrs, dstCrs, geometryAPI)
 
-        val geom = ogr.CreateGeometryFromWkb(projectedGeom.toWKB)
+        val geom = ogr.CreateGeometryFromWkb(projectedGeom.toWKB(2))
+        geom.AssignSpatialReference(dstCrs)
 
-        val geomLayer = shpDataSource.CreateLayer("geom")
+        val geomLayer = shpDataSource.CreateLayer("geom", dstCrs)
 
         val idField = new org.gdal.ogr.FieldDefn("id", OFTInteger)
         geomLayer.CreateField(idField)

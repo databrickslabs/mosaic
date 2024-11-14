@@ -48,6 +48,8 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
 
     def getRasterUseCheckpoint: String = configs.getOrElse(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT)
 
+    def getTmpPrefix: String = configs.getOrElse(MOSAIC_RASTER_TMP_PREFIX, MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
+
     def isRasterUseCheckpoint: Boolean = {
         Try(getRasterUseCheckpoint == "true").getOrElse(false)
     }
@@ -57,8 +59,6 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
     def getIndexSystem: String = configs.getOrElse(MOSAIC_INDEX_SYSTEM, H3.name)
     
     def getRasterBlockSize: Int = configs.getOrElse(MOSAIC_RASTER_BLOCKSIZE, MOSAIC_RASTER_BLOCKSIZE_DEFAULT).toInt
-    
-    def getTmpPrefix: String = configs.getOrElse(MOSAIC_RASTER_TMP_PREFIX, "/tmp")
 
     def setGDALConf(conf: RuntimeConfig): MosaicExpressionConfig = {
         val toAdd = conf.getAll.filter(_._1.startsWith(MOSAIC_GDAL_PREFIX))
@@ -108,7 +108,7 @@ object MosaicExpressionConfig {
             .setIndexSystem(spark.conf.get(MOSAIC_INDEX_SYSTEM, H3.name))
             .setRasterCheckpoint(spark.conf.get(MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_CHECKPOINT_DEFAULT))
             .setRasterUseCheckpoint(spark.conf.get(MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT_DEFAULT))
-            .setTmpPrefix(spark.conf.get(MOSAIC_RASTER_TMP_PREFIX, "/tmp"))
+            .setTmpPrefix(spark.conf.get(MOSAIC_RASTER_TMP_PREFIX, MOSAIC_RASTER_TMP_PREFIX_DEFAULT))
             .setGDALConf(spark.conf)
     }
 

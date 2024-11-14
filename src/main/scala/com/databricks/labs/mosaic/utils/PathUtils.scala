@@ -1,8 +1,11 @@
 package com.databricks.labs.mosaic.utils
 
+import com.databricks.labs.mosaic.MOSAIC_RASTER_TMP_PREFIX_DEFAULT
 import com.databricks.labs.mosaic.functions.MosaicContext
 
+import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{Files, Path, Paths}
+import java.time.Clock
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
@@ -39,11 +42,33 @@ object PathUtils {
             Try(Files.deleteIfExists(Paths.get(zipPath.replace(".zip", ""))))
         }
         Try(Files.deleteIfExists(Paths.get(zipPath)))
+        collectEmptyTmpDirs()
+    }
+
+    private def collectEmptyTmpDirs(): Unit = this.synchronized {
+        // iterate over all the directories in the temp location and delete any that are empty
+        // and older than 10 seconds
+        // This needs to be thread safe so we don't try and probe a directory
+        // that has been deleted in another thread
+        val tmpDir = Paths.get(MosaicContext.tmpDir(null)).getParent
+        if (Files.exists(tmpDir)) {
+            tmpDir.toFile
+                .listFiles
+                .filter(_.isDirectory)
+                .filter({ f =>
+                    val attrs = Files.readAttributes(Paths.get(f.getAbsolutePath), classOf[BasicFileAttributes])
+                    val lastModifiedTime = attrs.lastModifiedTime().toInstant
+                    Clock.systemDefaultZone().instant().minusSeconds(10).isAfter(lastModifiedTime)
+                })
+                .filter(_.listFiles.isEmpty)
+                .foreach({ f => Try(f.delete()) })
+        }
     }
 
     /**
       * Copy provided path to tmp.
-      * @param inPath
+     *
+     * @param inPath
       *   Path to copy from.
       * @return
       *   The copied path.
@@ -151,6 +176,8 @@ object PathUtils {
         s"$format:$vsiPrefix$filePath:$subdataset"
     }
 
+
+
     /**
       * Clean path.
       * - handles fuse paths.
@@ -207,6 +234,18 @@ object PathUtils {
             case _ => false
         }
         isFuse
+    }
+
+    /**
+      * Test for whether path is in the temp location.
+      * @param path
+      *   Provided path.
+      * @return
+      *   True if path is in a temp location.
+      */
+    def isTmpLocation(path: String): Boolean = {
+        val p = getCleanPath(path)
+        p.startsWith(MOSAIC_RASTER_TMP_PREFIX_DEFAULT)
     }
 
     /**
@@ -278,8 +317,14 @@ object PathUtils {
         for (path <- toCopy) {
             val destination = Paths.get(copyToPath, path.getFileName.toString)
             // noinspection SimplifyBooleanMatch
-            if (Files.isDirectory(path)) FileUtils.copyDirectory(path.toFile, destination.toFile)
-            else FileUtils.copyFile(path.toFile, destination.toFile)
+            if (path != destination) {
+                if (Files.isDirectory(path)) {
+                    FileUtils.copyDirectory(path.toFile, destination.toFile)
+                }
+                else {
+                    FileUtils.copyFile(path.toFile, destination.toFile)
+                }
+            }
         }
     }
 

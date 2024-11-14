@@ -1,3 +1,9 @@
 **/.Rhistory
 **/*.tar.gz
+**/*.Rproj
 /sparklyr-mosaic/metastore_db/
+/sparklyr-mosaic/mosaic_checkpoint/
+/sparklyr-mosaic/mosaic_tmp/
+/sparkr-mosaic/metastore_db/
+/sparkr-mosaic/mosaic_checkpoint/
+/sparkr-mosaic/mosaic_tmp/

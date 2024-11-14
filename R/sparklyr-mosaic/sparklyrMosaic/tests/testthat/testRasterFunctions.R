@@ -29,9 +29,9 @@ test_that("scalar raster functions behave as intended", {
     mutate(rst_boundingbox = rst_boundingbox(tile)) %>%
     mutate(rst_boundingbox = st_buffer(rst_boundingbox, -0.001)) %>%
     mutate(rst_clip = rst_clip(tile, rst_boundingbox)) %>%
-    mutate(rst_combineavg = rst_combineavg(array(tile, rst_clip))) %>%
-    mutate(rst_frombands = rst_frombands(array(tile, tile))) %>%
     mutate(rst_fromfile = rst_fromfile(path, -1L)) %>%
+    mutate(rst_combineavg = rst_combineavg(array(rst_fromfile, rst_clip))) %>%
+    mutate(rst_frombands = rst_frombands(array(tile, tile))) %>%
     mutate(rst_georeference = rst_georeference(tile)) %>%
     mutate(rst_getnodata = rst_getnodata(tile)) %>%
     mutate(rst_subdatasets = rst_subdatasets(tile)) %>%
@@ -63,12 +63,15 @@ test_that("scalar raster functions behave as intended", {
     mutate(rst_scaley = rst_scaley(tile)) %>%
     mutate(rst_srid = rst_srid(tile)) %>%
     mutate(rst_summary = rst_summary(tile)) %>%
+    mutate(rst_type = rst_type(tile)) %>%
+    mutate(rst_updatetype = rst_updatetype(tile, "Float32")) %>%
     mutate(rst_upperleftx = rst_upperleftx(tile)) %>%
     mutate(rst_upperlefty = rst_upperlefty(tile)) %>%
     mutate(rst_width = rst_width(tile)) %>%
     mutate(rst_worldtorastercoordx = rst_worldtorastercoordx(tile, as.double(0.0), as.double(0.0))) %>%
     mutate(rst_worldtorastercoordy = rst_worldtorastercoordy(tile, as.double(0.0), as.double(0.0))) %>%
-    mutate(rst_worldtorastercoord = rst_worldtorastercoord(tile, as.double(0.0), as.double(0.0)))
+    mutate(rst_worldtorastercoord = rst_worldtorastercoord(tile, as.double(0.0), as.double(0.0))) %>%
+    mutate(rst_write = rst_write(tile, "/mnt/mosaic_tmp/write-raster"))
 
   expect_no_error(spark_write_source(sdf, "noop", mode = "overwrite"))
 })
@@ -93,7 +96,7 @@ test_that("raster flatmap functions behave as intended", {
   expect_equal(sdf_nrow(tessellate_sdf), 63)
 
   overlap_sdf <- generate_singleband_raster_df() %>%
-    mutate(rst_to_overlapping_tiles = rst_to_overlapping_tiles(tile, 200L, 200L, 10L))
+    mutate(rst_tooverlappingtiles = rst_tooverlappingtiles(tile, 200L, 200L, 10L))
 
   expect_no_error(spark_write_source(overlap_sdf, "noop", mode = "overwrite"))
   expect_equal(sdf_nrow(overlap_sdf), 87)
@@ -103,7 +106,7 @@ test_that("raster flatmap functions behave as intended", {
 test_that("raster aggregation functions behave as intended", {
   collection_sdf <- generate_singleband_raster_df() %>%
     mutate(extent = st_astext(rst_boundingbox(tile))) %>%
-    mutate(tile = rst_to_overlapping_tiles(tile, 200L, 200L, 10L))
+    mutate(tile = rst_tooverlappingtiles(tile, 200L, 200L, 10L))
 
   merge_sdf <- collection_sdf %>%
     group_by(path) %>%
@@ -165,7 +168,7 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
   indexed_raster_sdf <- sdf_sql(sc, "SELECT tile, element_at(rst_metadata(tile), 'NC_GLOBAL#GDAL_MOSAIC_BAND_INDEX') as timestep FROM raster") %>%
     filter(timestep == 21L) %>%
     mutate(tile = rst_setsrid(tile, 4326L)) %>%
-    mutate(tile = rst_to_overlapping_tiles(tile, 20L, 20L, 10L)) %>%
+    mutate(tile = rst_tooverlappingtiles(tile, 20L, 20L, 10L)) %>%
     mutate(tile = rst_tessellate(tile, target_resolution))
 
   clipped_sdf <- indexed_raster_sdf %>%
@@ -173,9 +176,48 @@ test_that("the tessellate-join-clip-merge flow works on NetCDF files", {
     inner_join(census_sdf, by = "index_id") %>%
     mutate(tile = rst_clip(tile, wkb))
 
+
   merged_precipitation <- clipped_sdf %>%
     group_by(region_keys, timestep) %>%
     summarise(tile = rst_merge_agg(tile))
 
   expect_equal(sdf_nrow(merged_precipitation), 1)
+})
+
+test_that ("a terrain model can be produced from point geometries", {
+
+  sdf <- sdf_copy_to(sc, data.frame(
+      wkt = c(
+        "POINT Z (3 2 1)",
+        "POINT Z (2 1 0)",
+        "POINT Z (1 3 3)",
+        "POINT Z (0 2 2)"
+      )
+    )
+  ) %>%
+    group_by() %>%
+    summarise(masspoints = collect_list("wkt")) %>%
+    mutate(
+      breaklines = array("LINESTRING EMPTY"),
+      origin = st_geomfromwkt("POINT (0.6 1.8)"),
+      xWidth = 12L,
+      yWidth = 6L,
+      xSize = as.double(0.1),
+      ySize = as.double(0.1),
+      tile = rst_dtmfromgeoms(
+        masspoints,
+        breaklines,
+        as.double(0.0),
+        as.double(0.01),
+        "NONENCROACHING",
+        origin,
+        xWidth,
+        yWidth,
+        xSize,
+        ySize,
+        as.double(-9999.0)
+      )
+    )
+  expect_equal(sdf_nrow(sdf), 1)
+
 })

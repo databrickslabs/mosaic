@@ -12,70 +12,72 @@ from mosaic.utils.types import ColumnOrName, as_typed_col
 #####################
 
 __all__ = [
-    "st_area",
-    "st_length",
-    "st_perimeter",
-    "st_convexhull",
-    "st_concavehull",
-    "st_buffer",
-    "st_bufferloop",
-    "st_dimension",
-    "st_dump",
-    "st_envelope",
-    "st_srid",
-    "st_setsrid",
-    "st_transform",
-    "st_hasvalidcoordinates",
-    "st_translate",
-    "st_scale",
-    "st_rotate",
-    "st_centroid",
-    "st_centroid2D",
-    "st_numpoints",
-    "st_isvalid",
-    "st_distance",
-    "st_haversine",
-    "st_intersection",
-    "st_difference",
-    "st_simplify",
-    "st_union",
-    "st_unaryunion",
-    "st_updatesrid",
-    "st_geometrytype",
-    "st_xmin",
-    "st_xmax",
-    "st_ymin",
-    "st_ymax",
-    "st_zmin",
-    "st_zmax",
-    "st_x",
-    "st_y",
-    "st_z",
     "flatten_polygons",
-    "grid_boundaryaswkb",
     "grid_boundary",
+    "grid_boundaryaswkb",
+    "grid_cell_intersection",
+    "grid_cell_union",
+    "grid_cellarea",
+    "grid_cellkloop",
+    "grid_cellkloopexplode",
+    "grid_cellkring",
+    "grid_cellkringexplode",
+    "grid_geometrykloop",
+    "grid_geometrykloopexplode",
+    "grid_geometrykring",
+    "grid_geometrykringexplode",
     "grid_longlatascellid",
     "grid_pointascellid",
     "grid_polyfill",
     "grid_tessellate",
     "grid_tessellateexplode",
-    "grid_cellarea",
-    "grid_cell_intersection",
-    "grid_cell_union",
-    "grid_cellkring",
-    "grid_cellkloop",
-    "grid_cellkringexplode",
-    "grid_cellkloopexplode",
-    "grid_geometrykring",
-    "grid_geometrykloop",
-    "grid_geometrykringexplode",
-    "grid_geometrykloopexplode",
-    "point_index_geom",
-    "point_index_lonlat",
     "index_geometry",
-    "polyfill",
     "mosaic_explode",
     "mosaicfill",
+    "point_index_geom",
+    "point_index_lonlat",
+    "polyfill",
+    "st_area",
+    "st_buffer",
+    "st_bufferloop",
+    "st_centroid",
+    "st_centroid2D",
+    "st_concavehull",
+    "st_convexhull",
+    "st_difference",
+    "st_dimension",
+    "st_distance",
+    "st_dump",
+    "st_envelope",
+    "st_geometrytype",
+    "st_hasvalidcoordinates",
+    "st_haversine",
+    "st_interpolateelevation",
+    "st_intersection",
+    "st_isvalid",
+    "st_length",
+    "st_numpoints",
+    "st_perimeter",
+    "st_rotate",
+    "st_scale",
+    "st_setsrid",
+    "st_simplify",
+    "st_srid",
+    "st_transform",
+    "st_translate",
+    "st_triangulate",
+    "st_unaryunion",
+    "st_union",
+    "st_updatesrid",
+    "st_x",
+    "st_xmax",
+    "st_xmin",
+    "st_y",
+    "st_ymax",
+    "st_ymin",
+    "st_z",
+    "st_zmax",
+    "st_zmin",
 ]
 
 
@@ -198,9 +200,9 @@ def st_concavehull(
 
 
 def st_buffer(
-        geom: ColumnOrName,
-        radius: ColumnOrName,
-        buffer_style_parameters: Any = "",
+    geom: ColumnOrName,
+    radius: ColumnOrName,
+    buffer_style_parameters: Any = "",
 ) -> Column:
     """
     Compute the buffered geometry based on geom and radius.
@@ -612,6 +614,119 @@ def st_haversine(
         pyspark_to_java_column(lng1),
         pyspark_to_java_column(lat2),
         pyspark_to_java_column(lng2),
+    )
+
+
+def st_triangulate(
+    points_array: ColumnOrName,
+    lines_array: ColumnOrName,
+    merge_tolerance: ColumnOrName,
+    snap_tolerance: ColumnOrName,
+    split_point_finder: str = "NONENCROACHING",
+) -> Column:
+    """
+    Generate a triangulated surface mesh from the set of points `points_array` and constraint lines `lines_array`.
+
+    Returns one row per triangle in the mesh.
+
+    Notes:
+    - `lines_array` can be an empty array if no constraints are needed.
+
+    Parameters
+    ----------
+    points_array : Column
+        An array of mass points including Z-values.
+    lines_array : Column
+        An array of lines that are used as constraints during the triangulation process.
+    merge_tolerance : Column
+        A tolerance used to coalesce points in close proximity to each other before performing triangulation.
+    snap_tolerance : Column
+        A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
+    split_point_finder : String
+        (Optional) The split point finding algorithm used to incorporate `lines_array` into the triangulation.
+        Default is "NONENCROACHING", alternative is "MIDPOINT".
+
+    Returns
+    -------
+    Column (DoubleType)
+    """
+    return config.mosaic_context.invoke_function(
+        "st_triangulate",
+        pyspark_to_java_column(points_array),
+        pyspark_to_java_column(lines_array),
+        pyspark_to_java_column(merge_tolerance),
+        pyspark_to_java_column(snap_tolerance),
+        pyspark_to_java_column(lit(split_point_finder)),
+    )
+
+
+def st_interpolateelevation(
+    points_array: ColumnOrName,
+    lines_array: ColumnOrName,
+    merge_tolerance: ColumnOrName,
+    snap_tolerance: ColumnOrName,
+    origin: ColumnOrName,
+    x_width: ColumnOrName,
+    y_width: ColumnOrName,
+    x_size: ColumnOrName,
+    y_size: ColumnOrName,
+    split_point_finder: str = "NONENCROACHING",
+) -> Column:
+    """
+    Compute interpolated elevations across a grid of points described by
+    `origin`, `x_width`, `y_width`, `x_size`, and `y_size`.
+
+    The underlying algorithm first creates a surface mesh by triangulating `points_array`
+    (including `lines_array` as a set of constraint lines) then determines where each point
+    in the grid would lie on the surface mesh. Finally, it interpolates the
+    elevation of that point based on the surrounding triangle's vertices.
+
+    Notes:
+    - Uses (x, y) _not_ (i, j) order to generate the grid (i.e. `origin` is assumed to be the bottom-left corner).
+    To generate a grid from a top-left `origin`, use a negative value for `y_size`.
+
+    Parameters
+    ----------
+    points_array : Column
+        An array of mass points including Z-values.
+    lines_array : Column
+        An array of lines that are used as constraints during the triangulation process.
+    merge_tolerance : Column
+        A tolerance used to coalesce points in close proximity to each other before performing triangulation.
+    snap_tolerance : Column
+        A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
+    origin : Column
+        The bottom-left corner of the grid. Use a negative value for `y_size` if you wish to supply a top-left origin.
+    x_width : Column
+        The number of points on the grid's x-axis
+    y_width : Column
+        The number of points on the grid's y-axis
+    x_size : Column
+        The spacing between each point on the grid's x-axis
+        (in meters or degrees depending on the projection of `points_array`)
+    y_size : Column
+        The spacing between each point on the grid's y-axis
+        (in meters or degrees depending on the projection of `points_array`)
+    split_point_finder : String
+        (Optional) The split point finding algorithm used to incorporate `lines_array` into the triangulation.
+        Default is "NONENCROACHING", alternative is "MIDPOINT".
+
+    Returns
+    -------
+    Column (DoubleType)
+    """
+    return config.mosaic_context.invoke_function(
+        "st_interpolateelevation",
+        pyspark_to_java_column(points_array),
+        pyspark_to_java_column(lines_array),
+        pyspark_to_java_column(merge_tolerance),
+        pyspark_to_java_column(snap_tolerance),
+        pyspark_to_java_column(lit(split_point_finder)),
+        pyspark_to_java_column(origin),
+        pyspark_to_java_column(x_width),
+        pyspark_to_java_column(y_width),
+        pyspark_to_java_column(x_size),
+        pyspark_to_java_column(y_size),
     )
 
 

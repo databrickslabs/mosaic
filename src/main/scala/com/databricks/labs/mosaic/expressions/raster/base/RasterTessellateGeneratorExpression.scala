@@ -2,7 +2,6 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
@@ -78,7 +77,6 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
     def rasterGenerator(raster: MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
-        GDAL.enable(expressionConfig)
         val rasterType = RasterTileType(tileExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile
             .deserialize(tileExpr.eval(input).asInstanceOf[InternalRow], indexSystem.getCellIdDataType, rasterType)

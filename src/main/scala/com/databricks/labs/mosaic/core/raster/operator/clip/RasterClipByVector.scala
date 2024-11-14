@@ -8,6 +8,8 @@ import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALWarp
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.gdal.osr.SpatialReference
 
+import java.util.Locale
+
 /**
   * RasterClipByVector is an object that defines the interface for clipping a
   * raster by a vector geometry.
@@ -31,28 +33,39 @@ object RasterClipByVector {
       *   The geometry CRS.
       * @param geometryAPI
       *   The geometry API.
+      * @param cutlineAllTouched
+      *   Whether pixels touching cutline are automatically included (true) or
+      *   included only the cutline crosses the centre point of the pixel
+      *   (false) default: true.
       * @return
       *   A clipped raster.
       */
-    def clip(raster: MosaicRasterGDAL, geometry: MosaicGeometry, geomCRS: SpatialReference, geometryAPI: GeometryAPI): MosaicRasterGDAL = {
+    def clip(
+        raster: MosaicRasterGDAL,
+        geometry: MosaicGeometry,
+        geomCRS: SpatialReference,
+        geometryAPI: GeometryAPI,
+        cutlineAllTouched: Boolean = true
+    ): MosaicRasterGDAL = {
         val rasterCRS = raster.getSpatialReference
         val outShortName = raster.getDriversShortName
         val geomSrcCRS = if (geomCRS == null) rasterCRS else geomCRS
+
+        val cutlineToken = cutlineAllTouched.toString.toUpperCase(Locale.US)
 
         val resultFileName = PathUtils.createTmpFilePath(GDAL.getExtension(outShortName))
 
         val shapeFileName = VectorClipper.generateClipper(geometry, geomSrcCRS, rasterCRS, geometryAPI)
 
         // For -wo consult https://gdal.org/doxygen/structGDALWarpOptions.html
-        // SOURCE_EXTRA=3 is used to ensure that when the raster is clipped, the
-        // pixels that touch the geometry are included. The default is 1, 3 seems to be a good empirical value.
         val result = GDALWarp.executeWarp(
           resultFileName,
           Seq(raster),
-          command = s"gdalwarp -wo CUTLINE_ALL_TOUCHED=TRUE -cutline $shapeFileName -crop_to_cutline"
+          command = s"gdalwarp -wo CUTLINE_ALL_TOUCHED=$cutlineToken -cutline $shapeFileName -crop_to_cutline"
         )
 
         VectorClipper.cleanUpClipper(shapeFileName)
+        PathUtils.cleanUpPath(shapeFileName)
 
         result
     }

@@ -5,35 +5,73 @@ import com.databricks.labs.mosaic.core.index.H3IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.test.MosaicSpatialQueryTest
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
+import org.scalatest.Tag
 import org.scalatest.matchers.must.Matchers.{be, noException}
-import org.scalatest.matchers.should.Matchers.an
+import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
 
 import java.nio.file.{Files, Paths}
+
+object ExcludeLocalTag extends Tag("ExcludeIfLocal")
 
 class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSessionGDAL {
 
     test("Read netcdf with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
-        MosaicContext.build(H3IndexSystem, JTS)
+        assume(checkpointingEnabled)
+        val mc = MosaicContext.build(H3IndexSystem, JTS)
+        mc.register(spark)
+
 
         val netcdf = "/binary/netcdf-coral/"
-        val filePath = getClass.getResource(netcdf).getPath
+        val filePath = this.getClass.getResource(netcdf).getPath
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
-            .option("retile", "true")
-            .option("tileSize", "10")
+            .option("sizeInMB", "16")
+            .option("resolution", "0")
             .option("readSubdataset", "true")
-            .option("subdataset", "1")
+            .option("subdatasetName", "bleaching_alert_area")
+            .option("retile", "true")
+            .option("tileSize", "600")
             .option("kRingInterpolate", "3")
+            .option("combiner", "avg")
             .load(filePath)
             .select("measure")
-            .queryExecution
-            .executedPlan
+            .take(1)
 
     }
 
-    test("Read grib with Raster As Grid Reader") {
+    test("Read ECMWF netcdf with Raster As Grid Reader") {
+        assume(System.getProperty("os.name") == "Linux")
+        assume(checkpointingEnabled)
+        val mc = MosaicContext.build(H3IndexSystem, JTS)
+        mc.register(spark)
+
+
+        val netcdf = "/binary/netcdf-ECMWF/"
+        val filePath = this.getClass.getResource(netcdf).getPath
+
+        val result = MosaicContext.read
+            .format("raster_to_grid")
+            .option("sizeInMB", "16")
+            .option("convertToFormat", "GTiff")
+            .option("resolution", "0")
+            .option("readSubdataset", "true")
+            .option("subdatasetName", "t2m")
+            .option("retile", "true")
+            .option("tileSize", "600")
+            .option("combiner", "avg")
+            .load(filePath)
+            .select("measure")
+            .cache()
+
+        result.count shouldBe 1098
+
+        noException should be thrownBy result.take(1)
+
+    }
+
+    test("Read grib with Raster As Grid Reader", ExcludeLocalTag) {
         assume(System.getProperty("os.name") == "Linux")
         MosaicContext.build(H3IndexSystem, JTS)
 
@@ -42,10 +80,12 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("sizeInMB", "16")
+            .option("resolution", "0")
             .option("extensions", "grib")
             .option("combiner", "min")
             .option("retile", "true")
-            .option("tileSize", "10")
+            .option("tileSize", "100")
             .option("kRingInterpolate", "3")
             .load(filePath)
             .select("measure")
@@ -62,8 +102,11 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
 
         noException should be thrownBy MosaicContext.read
             .format("raster_to_grid")
+            .option("sizeInMB", "16")
+            .option("resolution", "0")
+            .option("retile", "true")
+            .option("tileSize", "100")
             .option("combiner", "max")
-            .option("tileSize", "10")
             .option("kRingInterpolate", "3")
             .load(filePath)
             .select("measure")

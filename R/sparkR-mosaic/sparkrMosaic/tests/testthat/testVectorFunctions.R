@@ -94,3 +94,46 @@ test_that("aggregate vector functions behave as intended", {
   expect_true(first(sdf.intersection)$comparison_intersection)
 
 })
+
+test_that("triangulation / interpolation functions behave as intended", {
+sdf <- createDataFrame(
+  data.frame(
+    wkt = c(
+      "POINT Z (3 2 1)",
+      "POINT Z (2 1 0)",
+      "POINT Z (1 3 3)",
+      "POINT Z (0 2 2)"
+    )
+  )
+)
+
+sdf <- agg(groupBy(sdf), masspoints = collect_list(column("wkt")))
+sdf <- withColumn(sdf, "breaklines", expr("array('LINESTRING EMPTY')"))
+triangulation_sdf <- withColumn(sdf, "triangles", st_triangulate(column("masspoints"), column("breaklines"), lit(0.0), lit(0.01), lit("NONENCROACHING")))
+cache(triangulation_sdf)
+expect_equal(SparkR::count(triangulation_sdf), 2)
+expected <- c("POLYGON Z((0 2 2, 2 1 0, 1 3 3, 0 2 2))", "POLYGON Z((1 3 3, 2 1 0, 3 2 1, 1 3 3))")
+expect_contains(expected, first(triangulation_sdf)$triangles)
+
+interpolation_sdf <- sdf
+interpolation_sdf <- withColumn(interpolation_sdf, "origin", st_geomfromwkt(lit("POINT (0.55 1.75)")))
+interpolation_sdf <- withColumn(interpolation_sdf, "xWidth", lit(12L))
+interpolation_sdf <- withColumn(interpolation_sdf, "yWidth", lit(6L))
+interpolation_sdf <- withColumn(interpolation_sdf, "xSize", lit(0.1))
+interpolation_sdf <- withColumn(interpolation_sdf, "ySize", lit(0.1))
+interpolation_sdf <- withColumn(interpolation_sdf, "interpolated", st_interpolateelevation(
+  column("masspoints"),
+  column("breaklines"),
+  lit(0.01),
+  lit(0.01),
+  lit("NONENCROACHING"),
+  column("origin"),
+  column("xWidth"),
+  column("yWidth"),
+  column("xSize"),
+  column("ySize")
+))
+cache(interpolation_sdf)
+expect_equal(SparkR::count(interpolation_sdf), 6 * 12)
+expect_contains(collect(interpolation_sdf)$interpolated, "POINT Z(1.6 1.8 1.2)")
+})
