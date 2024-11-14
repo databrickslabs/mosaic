@@ -98,17 +98,27 @@ The output of the reader is a DataFrame with the following columns:
 mos.read().format("raster_to_grid")
 ***********************************
 Reads a GDAL raster file and converts it to a grid.
+
 It uses a pattern similar to standard spark.read.format(*).option(*).load(*) pattern.
 The only difference is that it uses :code:`mos.read()` instead of :code:`spark.read()`.
+
 The raster pixels are converted to grid cells using specified combiner operation (default is mean).
 If the raster pixels are larger than the grid cells, the cell values can be calculated using interpolation.
 The interpolation method used is Inverse Distance Weighting (IDW) where the distance function is a k_ring
 distance of the grid.
+
+Rasters can be transformed into different formats as part of this process in order to overcome problems with bands
+being translated into subdatasets by some GDAL operations. Our recommendation is to specify :code:`GTiff` if you run into problems here.
+
+Raster checkpointing should be enabled to avoid memory issues when working with large rasters. See :doc:`Checkpointing </usage/raster-checkpointing>` for more information.
+
 The reader supports the following options:
 
     * fileExtension - file extension of the raster file (StringType) - default is *.*
     * vsizip - if the rasters are zipped files, set this to true (BooleanType)
     * resolution - resolution of the output grid (IntegerType)
+    * sizeInMB - size of subdivided rasters in MB. Must be supplied, must be a positive integer (IntegerType)
+    * convertToFormat - convert the raster to a different format (StringType)
     * combiner - combiner operation to use when converting raster to grid (StringType) - default is mean
     * retile - if the rasters are too large they can be re-tiled to smaller tiles (BooleanType)
     * tileSize - size of the re-tiled tiles, tiles are always squares of tileSize x tileSize (IntegerType)
@@ -131,14 +141,19 @@ The reader supports the following options:
 .. tabs::
     .. code-tab:: py
 
-        df = mos.read().format("raster_to_grid")\
-            .option("fileExtension", "*.tif")\
-            .option("resolution", "8")\
-            .option("combiner", "mean")\
-            .option("retile", "true")\
-            .option("tileSize", "1000")\
-            .option("kRingInterpolate", "2")\
+        df = (
+            mos.read()
+            .format("raster_to_grid")
+            .option("sizeInMB", "16")
+            .option("convertToFormat", "GTiff")
+            .option("resolution", "0")
+            .option("readSubdataset", "true")
+            .option("subdatasetName", "t2m")
+            .option("retile", "true")
+            .option("tileSize", "600")
+            .option("combiner", "avg")
             .load("dbfs:/path/to/raster.tif")
+            )
         df.show()
         +--------+--------+------------------+
         |band_id |cell_id |cell_value        |
@@ -151,14 +166,17 @@ The reader supports the following options:
 
     .. code-tab:: scala
 
-        val df = MosaicContext.read.format("raster_to_grid")
-            .option("fileExtension", "*.tif")
-            .option("resolution", "8")
-            .option("combiner", "mean")
-            .option("retile", "true")
-            .option("tileSize", "1000")
-            .option("kRingInterpolate", "2")
-            .load("dbfs:/path/to/raster.tif")
+        val df = MosaicContext.read
+             .format("raster_to_grid")
+             .option("sizeInMB", "16")
+             .option("convertToFormat", "GTiff")
+             .option("resolution", "0")
+             .option("readSubdataset", "true")
+             .option("subdatasetName", "t2m")
+             .option("retile", "true")
+             .option("tileSize", "600")
+             .option("combiner", "avg")
+             .load("dbfs:/path/to/raster.tif")
         df.show()
         +--------+--------+------------------+
         |band_id |cell_id |cell_value        |

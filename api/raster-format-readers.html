@@ -201,19 +201,24 @@ For example, if you want to read a GeoTiff file, you have to use the following o
 </section>
 <section id="mos-read-format-raster-to-grid">
 <h3>mos.read().format(“raster_to_grid”)<a class="headerlink" href="#mos-read-format-raster-to-grid" title="Permalink to this heading"></a></h3>
-<p>Reads a GDAL raster file and converts it to a grid.
-It uses a pattern similar to standard spark.read.format(*).option(*).load(*) pattern.
-The only difference is that it uses <code class="code docutils literal notranslate"><span class="pre">mos.read()</span></code> instead of <code class="code docutils literal notranslate"><span class="pre">spark.read()</span></code>.
-The raster pixels are converted to grid cells using specified combiner operation (default is mean).
+<p>Reads a GDAL raster file and converts it to a grid.</p>
+<p>It uses a pattern similar to standard spark.read.format(*).option(*).load(*) pattern.
+The only difference is that it uses <code class="code docutils literal notranslate"><span class="pre">mos.read()</span></code> instead of <code class="code docutils literal notranslate"><span class="pre">spark.read()</span></code>.</p>
+<p>The raster pixels are converted to grid cells using specified combiner operation (default is mean).
 If the raster pixels are larger than the grid cells, the cell values can be calculated using interpolation.
 The interpolation method used is Inverse Distance Weighting (IDW) where the distance function is a k_ring
-distance of the grid.
-The reader supports the following options:</p>
+distance of the grid.</p>
+<p>Rasters can be transformed into different formats as part of this process in order to overcome problems with bands
+being translated into subdatasets by some GDAL operations. Our recommendation is to specify <code class="code docutils literal notranslate"><span class="pre">GTiff</span></code> if you run into problems here.</p>
+<p>Raster checkpointing should be enabled to avoid memory issues when working with large rasters. See <a class="reference internal" href="../usage/raster-checkpointing.html"><span class="doc">Checkpointing</span></a> for more information.</p>
+<p>The reader supports the following options:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>fileExtension - file extension of the raster file (StringType) - default is <em>.</em></p></li>
 <li><p>vsizip - if the rasters are zipped files, set this to true (BooleanType)</p></li>
 <li><p>resolution - resolution of the output grid (IntegerType)</p></li>
+<li><p>sizeInMB - size of subdivided rasters in MB. Must be supplied, must be a positive integer (IntegerType)</p></li>
+<li><p>convertToFormat - convert the raster to a different format (StringType)</p></li>
 <li><p>combiner - combiner operation to use when converting raster to grid (StringType) - default is mean</p></li>
 <li><p>retile - if the rasters are too large they can be re-tiled to smaller tiles (BooleanType)</p></li>
 <li><p>tileSize - size of the re-tiled tiles, tiles are always squares of tileSize x tileSize (IntegerType)</p></li>
@@ -241,14 +246,19 @@ It uses standard <code class="code docutils literal notranslate"><span class="pr
 </dd></dl>
 
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-1-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-1-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-1-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">mos</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;raster_to_grid&quot;</span><span class="p">)</span>\
-    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;fileExtension&quot;</span><span class="p">,</span> <span class="s2">&quot;*.tif&quot;</span><span class="p">)</span>\
-    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;resolution&quot;</span><span class="p">,</span> <span class="s2">&quot;8&quot;</span><span class="p">)</span>\
-    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;mean&quot;</span><span class="p">)</span>\
-    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;retile&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>\
-    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;tileSize&quot;</span><span class="p">,</span> <span class="s2">&quot;1000&quot;</span><span class="p">)</span>\
-    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;kRingInterpolate&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">)</span>\
+<div aria-label="Tabbed content" role="tablist"><button aria-controls="panel-1-UHl0aG9u" aria-selected="true" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-UHl0aG9u" name="UHl0aG9u" role="tab" tabindex="0">Python</button><button aria-controls="panel-1-U2NhbGE=" aria-selected="false" class="sphinx-tabs-tab code-tab group-tab" id="tab-1-U2NhbGE=" name="U2NhbGE=" role="tab" tabindex="-1">Scala</button></div><div aria-labelledby="tab-1-UHl0aG9u" class="sphinx-tabs-panel code-tab group-tab" id="panel-1-UHl0aG9u" name="UHl0aG9u" role="tabpanel" tabindex="0"><div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">mos</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;raster_to_grid&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;sizeInMB&quot;</span><span class="p">,</span> <span class="s2">&quot;16&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;convertToFormat&quot;</span><span class="p">,</span> <span class="s2">&quot;GTiff&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;resolution&quot;</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;readSubdataset&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;subdatasetName&quot;</span><span class="p">,</span> <span class="s2">&quot;t2m&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;retile&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;tileSize&quot;</span><span class="p">,</span> <span class="s2">&quot;600&quot;</span><span class="p">)</span>
+    <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;combiner&quot;</span><span class="p">,</span> <span class="s2">&quot;avg&quot;</span><span class="p">)</span>
     <span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;dbfs:/path/to/raster.tif&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 <span class="o">+--------+--------+------------------+</span>
 <span class="o">|</span><span class="n">band_id</span> <span class="o">|</span><span class="n">cell_id</span> <span class="o">|</span><span class="n">cell_value</span>        <span class="o">|</span>
@@ -260,14 +270,17 @@ It uses standard <code class="code docutils literal notranslate"><span class="pr
 <span class="o">+--------+--------+------------------+</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-1-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MosaicContext</span><span class="p">.</span><span class="n">read</span><span class="p">.</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;raster_to_grid&quot;</span><span class="p">)</span>
-<span class="w">    </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;fileExtension&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;*.tif&quot;</span><span class="p">)</span>
-<span class="w">    </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;resolution&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;8&quot;</span><span class="p">)</span>
-<span class="w">    </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;combiner&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;mean&quot;</span><span class="p">)</span>
-<span class="w">    </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;retile&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="p">)</span>
-<span class="w">    </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;tileSize&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1000&quot;</span><span class="p">)</span>
-<span class="w">    </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;kRingInterpolate&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2&quot;</span><span class="p">)</span>
-<span class="w">    </span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;dbfs:/path/to/raster.tif&quot;</span><span class="p">)</span>
+</div><div aria-labelledby="tab-1-U2NhbGE=" class="sphinx-tabs-panel code-tab group-tab" hidden="true" id="panel-1-U2NhbGE=" name="U2NhbGE=" role="tabpanel" tabindex="0"><div class="highlight-scala notranslate"><div class="highlight"><pre><span></span><span class="kd">val</span><span class="w"> </span><span class="n">df</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">MosaicContext</span><span class="p">.</span><span class="n">read</span>
+<span class="w">     </span><span class="p">.</span><span class="n">format</span><span class="p">(</span><span class="s">&quot;raster_to_grid&quot;</span><span class="p">)</span>
+<span class="w">     </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;sizeInMB&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;16&quot;</span><span class="p">)</span>
+<span class="w">     </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;convertToFormat&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;GTiff&quot;</span><span class="p">)</span>
+<span class="w">     </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;resolution&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;0&quot;</span><span class="p">)</span>
+<span class="w">     </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;readSubdataset&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="p">)</span>
+<span class="w">     </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;subdatasetName&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;t2m&quot;</span><span class="p">)</span>
+<span class="w">     </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;retile&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="p">)</span>
+<span class="w">     </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;tileSize&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;600&quot;</span><span class="p">)</span>
+<span class="w">     </span><span class="p">.</span><span class="n">option</span><span class="p">(</span><span class="s">&quot;combiner&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;avg&quot;</span><span class="p">)</span>
+<span class="w">     </span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;dbfs:/path/to/raster.tif&quot;</span><span class="p">)</span>
 <span class="n">df</span><span class="p">.</span><span class="n">show</span><span class="p">()</span>
 <span class="o">+--------+--------+------------------+</span>
 <span class="o">|</span><span class="n">band_id</span><span class="w"> </span><span class="o">|</span><span class="n">cell_id</span><span class="w"> </span><span class="o">|</span><span class="n">cell_value</span><span class="w">        </span><span class="o">|</span>
