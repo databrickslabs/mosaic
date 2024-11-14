@@ -2,6 +2,7 @@
 Raster functions
 =================
 
+#####
 Intro
 #####
 Raster functions are available in mosaic if you have installed the optional dependency `GDAL`.
@@ -25,22 +26,14 @@ e.g. :code:`spark.read.format("gdal")`
     * The Mosaic raster tile schema changed in v0.4.1 to the following:
       :code:`<tile:struct<index_id:bigint, tile:binary, metadata:map<string, string>>`. All APIs that use tiles now follow
       this schema.
-    * The function :ref:`rst_maketiles` allows for the raster tile schema to hold either a path pointer (string)
-      or a byte array representation of the source raster. It also supports optional checkpointing for increased
-      performance during chains of raster operations.
-
-Updates to the raster features for 0.4.1
-----------------------------------------
-
-  * In 0.4.1, there are a new set of raster apis that have not yet had python bindings generated; however you can still
-    call the functions with pyspark function :code:`selectExpr`, e.g. :code:`selectExpr("rst_avg(...)")` which invokes the sql
-    registered expression. The calls are: :ref:`rst_avg`, :ref:`rst_max`, :ref:`rst_min`, :ref:`rst_median`, and :ref:`rst_pixelcount`.
-  * Also, scala does not have a :code:`df.display()` method while python does. In practice you would most often call
-    :code:`display(df)` in scala for a prettier output, but for brevity, we write :code:`df.show` in scala.
+    * Mosaic can write rasters from a DataFrame to a target directory in DBFS using the function :ref:`rst_write`
 
 .. note:: For mosaic versions > 0.4.0 you can use the revamped setup_gdal function or new setup_fuse_install.
     These functions will configure an init script in your preferred Workspace, Volume, or DBFS location to install GDAL
     on your cluster. See :doc:`Install and Enable GDAL with Mosaic </usage/install-gdal>` for more details.
+
+.. note:: For complex operations and / or working with large rasters, Mosaic offers the option option of employing checkpointing
+    to write intermediate results to disk. Follow the instructions in :doc:`Checkpointing </usage/raster-checkpointing>` to enable this feature.
 
 Functions
 #########
@@ -51,10 +44,8 @@ rst_avg
 .. function:: rst_avg(tile)
 
     Returns an array containing mean values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_avg(tile)")`
 
-    :param tile: A column containing the raster tile. 
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :rtype: Column: ArrayType(DoubleType)
 
@@ -63,7 +54,7 @@ rst_avg
 .. tabs::
    .. code-tab:: python
 
-    df.selectExpr("rst_avg(tile)"").limit(1).display()
+    df.selectExpr(mos.rst_avg("tile")).limit(1).display()
     +---------------+
     | rst_avg(tile) |
     +---------------+
@@ -96,7 +87,7 @@ rst_bandmetadata
     Extract the metadata describing the raster band.
     Metadata is return as a map of key value pairs.
 
-    :param tile: A column containing the raster tile. 
+    :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
     :param band: The band number to extract metadata for.
     :type band: Column (IntegerType)
@@ -197,7 +188,7 @@ rst_boundingbox
 rst_clip
 ********
 
-.. function:: rst_clip(tile, geometry)
+.. function:: rst_clip(tile, geometry, cutline_all_touched)
 
     Clips :code:`tile` with :code:`geometry`, provided in a supported encoding (WKB, WKT or GeoJSON).
 
@@ -205,21 +196,35 @@ rst_clip
     :type tile: Column (RasterTileType)
     :param geometry: A column containing the geometry to clip the raster to.
     :type geometry: Column (GeometryType)
+    :param cutline_all_touched: A column to specify pixels boundary behavior.
+    :type cutline_all_touched: Column (BooleanType)
     :rtype: Column: RasterTileType
 
 .. note::
-  Notes
+  **Notes**
+    Geometry input
+      The :code:`geometry` parameter is expected to be a polygon or a multipolygon.
 
-    :code:`geometry` is expected to be:
-      - in the same coordinate reference system as the raster.
-      - a polygon or a multipolygon.
+    Cutline handling
+      The :code:`cutline_all_touched` parameter:
 
-    The output raster tiles will have:
-      - the same extent as the input geometry.
-      - the same number of bands as the input raster.
-      - the same pixel data type as the input raster.
-      - the same pixel size as the input raster.
-      - the same coordinate reference system as the input raster.
+      - Optional: default is true. This is a GDAL warp config for the operation.
+      - If set to true, the pixels touching the geometry are included in the clip,
+        regardless of half-in or half-out; this is important for tessellation behaviors.
+      - If set to false, only at least half-in pixels are included in the clip.
+      - More information can be found `here <https://gdal.org/en/latest/api/gdalwarp_cpp.html>`__
+
+      The actual GDAL command employed to perform the clipping operation is as follows:
+      :code:`"gdalwarp -wo CUTLINE_ALL_TOUCHED=<TRUE|FALSE> -cutline <GEOMETRY> -crop_to_cutline"`
+
+    Output
+      Output raster tiles will have:
+
+        - the same extent as the input geometry.
+        - the same number of bands as the input raster.
+        - the same pixel data type as the input raster.
+        - the same pixel size as the input raster.
+        - the same coordinate reference system as the input raster.
 ..
 
     :example:
@@ -482,6 +487,185 @@ rst_derivedband
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "NetCDF" } |
      +----------------------------------------------------------------------------------------------------------------+
 
+
+rst_dtmfromgeoms
+****************
+
+.. function:: rst_dtmfromgeoms(pointsArray, linesArray, mergeTolerance, snapTolerance, splitPointFinder, origin, xWidth, yWidth, xSize, ySize, noData)
+
+    Generate a raster with interpolated elevations across a grid of points described by:
+
+    - :code:`origin`: a point geometry describing the bottom-left corner of the grid,
+    - :code:`xWidth` and :code:`yWidth`: the number of points in the grid in x and y directions,
+    - :code:`xSize` and :code:`ySize`: the space between grid points in the x and y directions.
+
+    :note: To generate a grid from a "top-left" :code:`origin`, use a negative value for :code:`ySize`.
+
+    The underlying algorithm first creates a surface mesh by triangulating :code:`pointsArray`
+    (including :code:`linesArray` as a set of constraint lines) then determines where each point
+    in the grid would lie on the surface mesh. Finally, it interpolates the
+    elevation of that point based on the surrounding triangle's vertices.
+
+    As with :code:`st_triangulate`, there are two 'tolerance' parameters for the algorithm:
+
+    - :code:`mergeTolerance` sets the point merging tolerance of the triangulation algorithm, i.e. before the initial
+      triangulation is performed, nearby points in :code:`pointsArray` can be merged in order to speed up the triangulation
+      process. A value of zero means all points are considered for triangulation.
+    - :code:`snapTolerance` sets the tolerance for post-processing the results of the triangulation, i.e. matching
+      the vertices of the output triangles to input points / lines. This is necessary as the algorithm often returns null
+      height / Z values. Setting this to a large value may result in the incorrect Z values being assigned to the
+      output triangle vertices (especially when :code:`linesArray` contains very densely spaced segments).
+      Setting this value to zero may result in the output triangle vertices being assigned a null Z value.
+    Both tolerance parameters are expressed in the same units as the projection of the input point geometries.
+
+    Additionally, you have control over the algorithm used to find split points on the constraint lines. The recommended
+    default option here is the "NONENCROACHING" algorithm. You can also use the "MIDPOINT" algorithm if you find the
+    constraint fitting process fails to converge. For full details of these options see the JTS reference
+    `here <https://locationtech.github.io/jts/javadoc/org/locationtech/jts/triangulate/ConstraintSplitPointFinder.html>`__.
+
+    The :code:`noData` value of the output raster can be set using the :code:`noData` parameter.
+
+    This is a generator expression and the resulting DataFrame will contain one row per point of the grid.
+
+    :param pointsArray: Array of geometries respresenting the points to be triangulated
+    :type pointsArray: Column (ArrayType(Geometry))
+    :param linesArray: Array of geometries respresenting the lines to be used as constraints
+    :type linesArray: Column (ArrayType(Geometry))
+    :param mergeTolerance: A tolerance used to coalesce points in close proximity to each other before performing triangulation.
+    :type mergeTolerance: Column (DoubleType)
+    :param snapTolerance: A snapping tolerance used to relate created points to their corresponding lines for elevation interpolation.
+    :type snapTolerance: Column (DoubleType)
+    :param splitPointFinder: Algorithm used for finding split points on constraint lines. Options are "NONENCROACHING" and "MIDPOINT".
+    :type splitPointFinder: Column (StringType)
+    :param origin: A point geometry describing the bottom-left corner of the grid.
+    :type origin: Column (Geometry)
+    :param xWidth: The number of points in the grid in x direction.
+    :type xWidth: Column (IntegerType)
+    :param yWidth: The number of points in the grid in y direction.
+    :type yWidth: Column (IntegerType)
+    :param xSize: The spacing between each point on the grid's x-axis.
+    :type xSize: Column (DoubleType)
+    :param ySize: The spacing between each point on the grid's y-axis.
+    :type ySize: Column (DoubleType)
+    :param noData: The no-data value of the output raster.
+    :type noData: Column (DoubleType)
+    :rtype: Column (RasterTileType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df = (
+        spark.createDataFrame(
+            [
+                ["POINT Z (2 1 0)"],
+                ["POINT Z (3 2 1)"],
+                ["POINT Z (1 3 3)"],
+                ["POINT Z (0 2 2)"],
+            ],
+            ["wkt"],
+        )
+        .groupBy()
+        .agg(collect_list("wkt").alias("masspoints"))
+        .withColumn("breaklines", array(lit("LINESTRING EMPTY")))
+        .withColumn("origin", st_geomfromwkt(lit("POINT (0.6 1.8)")))
+        .withColumn("xWidth", lit(12))
+        .withColumn("yWidth", lit(6))
+        .withColumn("xSize", lit(0.1))
+        .withColumn("ySize", lit(0.1))
+    )
+    df.select(
+        rst_dtmfromgeoms(
+            "masspoints", "breaklines", lit(0.0), lit(0.01),
+            "origin", "xWidth", "yWidth", "xSize", "ySize",
+            split_point_finder="NONENCROACHING", no_data_value=-9999.0
+        )
+    ).show(truncate=False)
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |rst_dtmfromgeoms(masspoints, breaklines, 0.0, 0.01, origin, xWidth, yWidth, xSize, ySize)                                                                                                                                                                                                                                                                                                                                                              |
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |{NULL, /dbfs/tmp/mosaic/raster/checkpoint/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, {path -> /dbfs/tmp/mosaic/raster/checkpoint/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, last_error -> , all_parents -> , driver -> GTiff, parentPath -> /tmp/mosaic_tmp/mosaic5678582907307109410/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, last_command -> gdal_rasterize ATTRIBUTE=VALUES -of GTiff -co TILED=YES -co COMPRESS=DEFLATE}}|
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    val df = Seq(
+      Seq(
+        "POINT Z (2 1 0)", "POINT Z (3 2 1)",
+        "POINT Z (1 3 3)", "POINT Z (0 2 2)"
+      )
+    )
+    .toDF("masspoints")
+    .withColumn("breaklines", array().cast(ArrayType(StringType)))
+    .withColumn("origin", st_geomfromwkt(lit("POINT (0.6 1.8)")))
+    .withColumn("xWidth", lit(12))
+    .withColumn("yWidth", lit(6))
+    .withColumn("xSize", lit(0.1))
+    .withColumn("ySize", lit(0.1))
+
+    df.select(
+      rst_dtmfromgeoms(
+        $"masspoints", $"breaklines",
+        lit(0.0), lit(0.01), lit("NONENCROACHING")
+        $"origin", $"xWidth", $"yWidth",
+        $"xSize", $"ySize", lit(-9999.0)
+      )
+    ).show(1, false)
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |rst_dtmfromgeoms(masspoints, breaklines, 0.0, 0.01, origin, xWidth, yWidth, xSize, ySize)                                                                                                                                                                                                                                                                                                                                                              |
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |{NULL, /dbfs/tmp/mosaic/raster/checkpoint/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, {path -> /dbfs/tmp/mosaic/raster/checkpoint/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, last_error -> , all_parents -> , driver -> GTiff, parentPath -> /tmp/mosaic_tmp/mosaic5678582907307109410/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, last_command -> gdal_rasterize ATTRIBUTE=VALUES -of GTiff -co TILED=YES -co COMPRESS=DEFLATE}}|
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT
+      RST_DTMFROMGEOMS(
+        ARRAY(
+          "POINT Z (2 1 0)",
+          "POINT Z (3 2 1)",
+          "POINT Z (1 3 3)",
+          "POINT Z (0 2 2)"
+        ),
+        ARRAY("LINESTRING EMPTY"),
+        DOUBLE(0.0), DOUBLE(0.01), "NONENCROACHING",
+        "POINT (0.6 1.8)", 12, 6,
+        DOUBLE(0.1), DOUBLE(0.1), DOUBLE(-9999.0)
+      ) AS tile
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |rst_dtmfromgeoms(masspoints, breaklines, 0.0, 0.01, origin, xWidth, yWidth, xSize, ySize)                                                                                                                                                                                                                                                                                                                                                              |
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |{NULL, /dbfs/tmp/mosaic/raster/checkpoint/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, {path -> /dbfs/tmp/mosaic/raster/checkpoint/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, last_error -> , all_parents -> , driver -> GTiff, parentPath -> /tmp/mosaic_tmp/mosaic5678582907307109410/raster_d4ab419f_9829_4004_99a3_aaa597a69938.GTiff, last_command -> gdal_rasterize ATTRIBUTE=VALUES -of GTiff -co TILED=YES -co COMPRESS=DEFLATE}}|
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: r R
+
+    sdf <- createDataFrame(
+      data.frame(
+        points = c(
+          "POINT Z (3 2 1)", "POINT Z (2 1 0)",
+          "POINT Z (1 3 3)", "POINT Z (0 2 2)"
+        )
+      )
+    )
+    sdf <- agg(groupBy(sdf), masspoints = collect_list(column("points")))
+    sdf <- withColumn(sdf, "breaklines", expr("array('LINESTRING EMPTY')"))
+    sdf <- select(sdf, rst_dtmfromgeoms(
+      column("masspoints"), column("breaklines"),
+      lit(0.0), lit(0.01), lit("NONENCROACHING"),
+      lit("POINT (0.6 1.8)"), lit(12L), lit(6L),
+      lit(0.1), lit(0.1), lit(-9999.0)
+      )
+    )
+    showDF(sdf, n=1, truncate=F)
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |rst_dtmfromgeoms(masspoints, breaklines, 0.0, 0.01, POINT (0.6 1.8), 12, 6, 0.1, 0.1)                                                                                                                                                                                                                                                                                                                                                                  |
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+    |{NULL, /dbfs/tmp/mosaic/raster/checkpoint/raster_ab03a97f_9bc3_410c_80e1_adf6f75f46e2.GTiff, {path -> /dbfs/tmp/mosaic/raster/checkpoint/raster_ab03a97f_9bc3_410c_80e1_adf6f75f46e2.GTiff, last_error -> , all_parents -> , driver -> GTiff, parentPath -> /tmp/mosaic_tmp/mosaic8840676907961488874/raster_ab03a97f_9bc3_410c_80e1_adf6f75f46e2.GTiff, last_command -> gdal_rasterize ATTRIBUTE=VALUES -of GTiff -co TILED=YES -co COMPRESS=DEFLATE}}|
+    +-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
 rst_filter
 **********
 
@@ -597,13 +781,15 @@ rst_fromcontent
 
     :param raster_bin: A column containing the raster data.
     :type raster_bin: Column (BinaryType)
+    :param driver: GDAL driver to use to open the raster.
+    :type driver: Column(StringType)
     :param size_in_MB: Optional parameter to specify the size of the raster tile in MB. Default is not to split the input.
     :type size_in_MB: Column (IntegerType)
     :rtype: Column: RasterTileType
 
 .. note::
 
-  Notes
+  **Notes**
     - The input raster must be a byte array in a BinaryType column.
     - The driver required to read the raster must be one supplied with GDAL.
     - If the size_in_MB parameter is specified, the raster will be split into tiles of the specified size.
@@ -1182,8 +1368,6 @@ rst_max
 .. function:: rst_max(tile)
 
     Returns an array containing maximum values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_max(tile)")`
 
     :param tile: A column containing the raster tile. 
     :type tile: Column (RasterTileType)
@@ -1194,7 +1378,7 @@ rst_max
 .. tabs::
    .. code-tab:: python
 
-    df.selectExpr("rst_max(tile)"").limit(1).display()
+    df.selectExpr(mos.rst_max("tile")).limit(1).display()
     +---------------+
     | rst_max(tile) |
     +---------------+
@@ -1225,8 +1409,6 @@ rst_median
 .. function:: rst_median(tile)
 
     Returns an array containing median values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_median(tile)")`
 
     :param tile: A column containing the raster tile. 
     :type tile: Column (RasterTileType)
@@ -1237,7 +1419,7 @@ rst_median
 .. tabs::
    .. code-tab:: python
 
-    df.selectExpr("rst_median(tile)"").limit(1).display()
+    df.selectExpr(mos.rst_median("tile")).limit(1).display()
     +---------------+
     | rst_median(tile) |
     +---------------+
@@ -1445,8 +1627,6 @@ rst_min
 .. function:: rst_min(tile)
 
     Returns an array containing minimum values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_min(tile)")`
 
     :param tile: A column containing the raster tile. 
     :type tile: Column (RasterTileType)
@@ -1457,7 +1637,7 @@ rst_min
 .. tabs::
    .. code-tab:: python
 
-    df.selectExpr("rst_min(tile)"").limit(1).display()
+    df.selectExpr(mos.rst_min("tile")).limit(1).display()
     +---------------+
     | rst_min(tile) |
     +---------------+
@@ -1582,17 +1762,35 @@ rst_numbands
     +---------------------+
 
 rst_pixelcount
-***************
+**************
 
-.. function:: rst_pixelcount(tile)
+.. function:: rst_pixelcount(tile, count_nodata, count_all)
 
-    Returns an array containing valid pixel count values for each band.
-    The python bindings are available through sql, 
-    e.g. :code:`selectExpr("rst_pixelcount(tile)")`
+    Returns an array containing pixel count values for each band; default excludes mask and nodata pixels.
     
     :param tile: A column containing the raster tile.
     :type tile: Column (RasterTileType)
+    :param count_nodata: A column to specify whether to count nodata pixels.
+    :type count_nodata: Column (BooleanType)
+    :param count_all: A column to specify whether to count all pixels.
+    :type count_all: Column (BooleanType)
     :rtype: Column: ArrayType(LongType)
+
+.. note::
+
+  Notes:
+
+  If pixel value is noData or mask value is 0.0, the pixel is not counted by default.
+
+  :code:`count_nodata`
+    - This is an optional param.
+    - if specified as true, include the noData (not mask) pixels in the count (default is false).
+
+  :code:`count_all`
+    - This is an optional param; as a positional arg, must also pass :code:`count_nodata`
+      (value of :code:`count_nodata` is ignored).
+    - if specified as true, simply return bandX * bandY in the count (default is false).
+..
 
     :example:
 
@@ -2463,7 +2661,7 @@ rst_separatebands
     +--------------------------------------------------------------------------------------------------------------------------------+
 
 rst_setnodata
-**********************
+*************
 
 .. function:: rst_setnodata(tile, nodata)
 
@@ -2514,6 +2712,49 @@ rst_setnodata
      | {index_id: 593308294097928191, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      | {index_id: 593308294097928192, raster: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
      +------------------------------------------------------------------------------------------------------------------+
+
+rst_setsrid
+***********
+
+.. function:: rst_setsrid(tile, srid)
+
+    Set the SRID of the raster tile as an EPSG code.
+
+    :param tile: A column containing the raster tile.
+    :type tile: Column (RasterTileType)
+    :param srid: The SRID to set
+    :type srid: Column (IntegerType)
+    :rtype: Column: (RasterTileType)
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df.select(mos.rst_setsrid('tile', F.lit(9122))).display()
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    df.select(rst_setsrid(col("tile"), lit(9122))).show
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT rst_setsrid(tile, 9122) FROM table
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_setsrid(tile, 9122)                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+    | {index_id: 593308294097928191, tile: [00 01 10 ... 00], parentPath: "dbfs:/path_to_file", driver: "GTiff" }    |
+    +------------------------------------------------------------------------------------------------------------------+
 
 rst_skewx
 *********
@@ -3008,6 +3249,99 @@ rst_tryopen
      | true                                                                                                             |
      +------------------------------------------------------------------------------------------------------------------+
 
+
+rst_type
+********
+
+.. function:: rst_type(tile)
+
+    Returns the data type of the raster's bands.
+
+    :param tile: A column containing the raster tile.
+    :type tile: Column (RasterTileType)
+    :rtype: Column: StringType
+
+    :example:
+
+.. tabs::
+   .. code-tab:: py
+
+    df.select(mos.rst_type('tile')).display()
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_type(tile)                                                                                                   |
+    +------------------------------------------------------------------------------------------------------------------+
+    | [Int16]                                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: scala
+
+    df.select(rst_type(col("tile"))).show
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_type(tile)                                                                                                   |
+    +------------------------------------------------------------------------------------------------------------------+
+    | [Int16]                                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+
+   .. code-tab:: sql
+
+    SELECT rst_type(tile) FROM table
+    +------------------------------------------------------------------------------------------------------------------+
+    | rst_type(tile)                                                                                                   |
+    +------------------------------------------------------------------------------------------------------------------+
+    | [Int16]                                                                                                          |
+    +------------------------------------------------------------------------------------------------------------------+
+
+
+rst_updatetype
+**************
+
+.. function:: rst_updatetype(tile, newType)
+
+    Translates the raster to a new data type.
+
+    :param tile: A column containing the raster tile.
+    :type tile: Column (RasterTileType)
+    :param newType: Data type to translate the raster to.
+    :type newType: Column (StringType)
+    :rtype: Column: (RasterTileType)
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.select(mos.rst_updatetype('tile', lit('Float32'))).display()
+     +----------------------------------------------------------------------------------------------------+
+     | rst_updatetype(tile,Float32)                                                                       |
+     +----------------------------------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
+     |  "last_command":"gdaltranslate -ot Float32 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
+     +----------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.select(rst_updatetype(col("tile"), lit("Float32"))).show
+     +----------------------------------------------------------------------------------------------------+
+     | rst_updatetype(tile,Float32)                                                                       |
+     +----------------------------------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
+     |  "last_command":"gdaltranslate -ot Float32 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
+     +----------------------------------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT rst_updatetype(tile, 'Float32') FROM table
+     +----------------------------------------------------------------------------------------------------+
+     | rst_updatetype(tile,Float32)                                                                       |
+     +----------------------------------------------------------------------------------------------------+
+     | {"index_id":null,"raster":"SUkqAAg...= (truncated)","metadata":{"path":"... .tif","last_error":"", |
+     |  "all_parents":"no_path","driver":"GTiff","parentPath":"no_path",                                  |
+     |  "last_command":"gdaltranslate -ot Float32 -of GTiff -co TILED=YES -co COMPRESS=DEFLATE"}}         |
+     +----------------------------------------------------------------------------------------------------+
+
+
 rst_upperleftx
 **********************
 
@@ -3271,3 +3605,60 @@ rst_worldtorastercoordy
     +------------------------------------------------------------------------------------------------------------------+
     | 997                                                                                                              |
     +------------------------------------------------------------------------------------------------------------------+
+
+rst_write
+*********
+
+.. function:: rst_write(input, dir)
+
+    Writes raster tiles from the input column to a specified directory.
+
+    :param input: A column containing the raster tile.
+    :type input: Column
+    :param dir: The directory, e.g. fuse, to write the tile's raster as file.
+    :type dir: Column(StringType)
+    :rtype: Column: RasterTileType
+
+.. note::
+  **Notes**
+    - Use :code:`RST_Write` to save a 'tile' column to a specified directory (e.g. fuse) location using its
+      already populated GDAL driver and tile information.
+    - Useful for formalizing the tile 'path' when writing a Lakehouse table. An example might be to turn on checkpointing
+      for internal data pipeline phase operations in which multiple interim tiles are populated, but at the end of the phase
+      use this function to set the final path to be used in the phase's persisted table. Then, you are free to delete
+      the internal tiles that accumulated in the configured checkpointing directory.
+..
+
+    :example:
+
+.. tabs::
+    .. code-tab:: py
+
+     df.select(rst_write("tile", <write_dir>).alias("tile")).limit(1).display()
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"tile":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
+    .. code-tab:: scala
+
+     df.select(rst_write(col("tile", <write_dir>)).as("tile)).limit(1).show
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"tile":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+
+    .. code-tab:: sql
+
+     SELECT rst_write(tile, <write_dir>) as tile FROM table LIMIT 1
+     +------------------------------------------------------------------------+
+     | tile                                                                   |
+     +------------------------------------------------------------------------+
+     | {"index_id":null,"tile":"<write_path>","metadata":{                  |
+     | "parentPath":"no_path","driver":"GTiff","path":"...","last_error":""}} |
+     +------------------------------------------------------------------------+
+

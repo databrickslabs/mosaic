@@ -59,6 +59,7 @@
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart notebook</a></li>
 <li class="toctree-l2"><a class="reference internal" href="kepler.html">Kepler visualizations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="automatic-sql-registration.html">Automatic SQL registration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="raster-checkpointing.html">Checkpointing for raster operations</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../models/models.html">Models</a></li>
@@ -165,10 +166,10 @@ mos.setup_gdal()
 <p>After the <code class="code docutils literal notranslate"><span class="pre">setup_gdal</span></code> function has been run, you will need to configure the cluster to use the
 init script. The init script can be set by clicking on the “Edit” button on the cluster page and adding
 the following to the “Advanced Options” section:</p>
-<figure class="doc-figure align-default" id="id3">
+<figure class="doc-figure align-default" id="id1">
 <img alt="../_images/init_script.png" src="../_images/init_script.png" />
 <figcaption>
-<p><span class="caption-text">Fig 1. Init script configuration</span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Fig 1. Init script configuration</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </section>
@@ -206,7 +207,7 @@ GDAL 3.4.1, released 2021/12/27
 <tbody>
 <tr class="row-even"><td><p>spark.databricks.labs.mosaic.raster.checkpoint</p></td>
 <td><p>“/dbfs/tmp/mosaic/raster/checkpoint”</p></td>
-<td><p>Checkpoint location, e.g. <span class="xref std std-ref">rst_maketiles</span></p></td>
+<td><p>Checkpoint location, e.g. <a class="reference internal" href="../api/raster-functions.html#rst-maketiles"><span class="std std-ref">rst_maketiles</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p>spark.databricks.labs.mosaic.raster.use.checkpoint</p></td>
 <td><p>“false”</p></td>
@@ -218,7 +219,7 @@ GDAL 3.4.1, released 2021/12/27
 </tr>
 <tr class="row-odd"><td><p>spark.databricks.labs.mosaic.raster.blocksize</p></td>
 <td><p>“128”</p></td>
-<td><p>Blocksize in pixels, see <span class="xref std std-ref">rst_convolve</span> and <span class="xref std std-ref">rst_filter</span> for more</p></td>
+<td><p>Blocksize in pixels, see <a class="reference internal" href="../api/raster-functions.html#rst-convolve"><span class="std std-ref">rst_convolve</span></a> and <a class="reference internal" href="../api/raster-functions.html#rst-filter"><span class="std std-ref">rst_filter</span></a> for more</p></td>
 </tr>
 </tbody>
 </table>
@@ -238,7 +239,7 @@ GDAL 3.4.1, released 2021/12/27
 <td><p>“YES”</p></td>
 </tr>
 <tr class="row-odd"><td><p>GDAL_DISABLE_READDIR_ON_OPEN</p></td>
-<td><p>“TRUE”</p></td>
+<td><p>“EMPTY_DIR”</p></td>
 </tr>
 <tr class="row-even"><td><p>CPL_TMPDIR</p></td>
 <td><p>“&lt;CPL_TMPDIR&gt;”</p></td>

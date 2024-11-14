@@ -24,7 +24,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Models" href="../models/models.html" />
+    <link rel="next" title="Checkpointing for raster operations" href="raster-checkpointing.html" />
     <link rel="prev" title="Kepler visualizations" href="kepler.html" /> 
 </head>
 
@@ -59,6 +59,7 @@
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart notebook</a></li>
 <li class="toctree-l2"><a class="reference internal" href="kepler.html">Kepler visualizations</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Automatic SQL registration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="raster-checkpointing.html">Checkpointing for raster operations</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../models/models.html">Models</a></li>
@@ -166,10 +167,10 @@ spark.sql.extensions<span class="w"> </span>com.databricks.labs.mosaic.sql.exten
 </pre></div>
 </div>
 <p>You should see all the supported <code class="code docutils literal notranslate"><span class="pre">ST_</span></code> functions registered by Mosaic appear in the output.</p>
-<figure class="doc-figure align-default" id="id5">
+<figure class="doc-figure align-default" id="id1">
 <img alt="../_images/functions_show.png" src="../_images/functions_show.png" />
 <figcaption>
-<p><span class="caption-text">Fig 1. Show Functions Example</span><a class="headerlink" href="#id5" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Fig 1. Show Functions Example</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 <div class="admonition note">
@@ -180,10 +181,10 @@ also, function auto-complete in the UI may not list custom registered SQL expres
 <div class="highlight-py notranslate"><div class="highlight"><pre><span></span><span class="n">sql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;DESCRIBE FUNCTION st_buffer&quot;&quot;&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<figure class="doc-figure align-default" id="id6">
+<figure class="doc-figure align-default" id="id2">
 <img alt="../_images/function_describe.png" src="../_images/function_describe.png" />
 <figcaption>
-<p><span class="caption-text">Fig 2. Describe Function Example</span><a class="headerlink" href="#id6" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Fig 2. Describe Function Example</span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 <div class="admonition warning">
@@ -211,7 +212,7 @@ or alternatively in python/scala code: spark.conf.set(“spark.databricks.labs.m
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="kepler.html" class="btn btn-neutral float-left" title="Kepler visualizations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../models/models.html" class="btn btn-neutral float-right" title="Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="raster-checkpointing.html" class="btn btn-neutral float-right" title="Checkpointing for raster operations" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

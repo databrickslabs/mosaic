@@ -85,6 +85,7 @@
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
@@ -141,7 +142,7 @@
 </li>
         <li><a href="api/spatial-indexing.html#grid_tessellateexplode">grid_tessellateexplode()</a>
 </li>
-        <li><a href="api/raster-format-readers.html#mos.read">mos.read()</a>, <a href="api/vector-format-readers.html#mos.read">[1]</a>
+        <li><a href="api/raster-format-readers.html#mos.read">mos.read()</a>
 </li>
         <li><a href="api/raster-functions.html#rst_avg">rst_avg()</a>
 </li>
@@ -160,6 +161,8 @@
         <li><a href="api/raster-functions.html#rst_derivedband">rst_derivedband()</a>
 </li>
         <li><a href="api/spatial-aggregations.html#rst_derivedband_agg">rst_derivedband_agg()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_dtmfromgeoms">rst_dtmfromgeoms()</a>
 </li>
         <li><a href="api/raster-functions.html#rst_filter">rst_filter()</a>
 </li>
@@ -237,6 +240,8 @@
 </li>
         <li><a href="api/raster-functions.html#rst_setnodata">rst_setnodata()</a>
 </li>
+        <li><a href="api/raster-functions.html#rst_setsrid">rst_setsrid()</a>
+</li>
         <li><a href="api/raster-functions.html#rst_skewx">rst_skewx()</a>
 </li>
         <li><a href="api/raster-functions.html#rst_skewy">rst_skewy()</a>
@@ -257,6 +262,10 @@
 </li>
         <li><a href="api/raster-functions.html#rst_tryopen">rst_tryopen()</a>
 </li>
+        <li><a href="api/raster-functions.html#rst_type">rst_type()</a>
+</li>
+        <li><a href="api/raster-functions.html#rst_updatetype">rst_updatetype()</a>
+</li>
         <li><a href="api/raster-functions.html#rst_upperleftx">rst_upperleftx()</a>
 </li>
         <li><a href="api/raster-functions.html#rst_upperlefty">rst_upperlefty()</a>
@@ -269,9 +278,11 @@
 </li>
         <li><a href="api/raster-functions.html#rst_worldtorastercoordy">rst_worldtorastercoordy()</a>
 </li>
+        <li><a href="api/raster-functions.html#rst_write">rst_write()</a>
+</li>
         <li><a href="usage/install-gdal.html#setup_gdal">setup_gdal()</a>
 </li>
-        <li><a href="api/raster-format-readers.html#spark.read.format">spark.read.format()</a>, <a href="api/vector-format-readers.html#id0">[1]</a>, <a href="api/vector-format-readers.html#id1">[2]</a>, <a href="api/vector-format-readers.html#spark.read.format">[3]</a>
+        <li><a href="api/raster-format-readers.html#spark.read.format">spark.read.format()</a>
 </li>
         <li><a href="api/spatial-functions.html#st_area">st_area()</a>
 </li>
@@ -323,6 +334,8 @@
 </li>
         <li><a href="api/spatial-functions.html#st_haversine">st_haversine()</a>
 </li>
+        <li><a href="api/spatial-functions.html#st_interpolateelevation">st_interpolateelevation()</a>
+</li>
         <li><a href="api/spatial-functions.html#st_intersection">st_intersection()</a>
 </li>
         <li><a href="api/spatial-aggregations.html#st_intersection_agg">st_intersection_agg()</a>
@@ -358,6 +371,8 @@
         <li><a href="api/spatial-functions.html#st_transform">st_transform()</a>
 </li>
         <li><a href="api/spatial-functions.html#st_translate">st_translate()</a>
+</li>
+        <li><a href="api/spatial-functions.html#st_triangulate">st_triangulate()</a>
 </li>
         <li><a href="api/spatial-functions.html#st_unaryunion">st_unaryunion()</a>
 </li>
@@ -565,6 +580,22 @@
   </ul></td>
 </tr></table>
 
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/vector-format-readers.html#mos.read-.format-multi_read_ogr-.load">load() (in module mos.read().format(&#34;multi_read_ogr&#34;))</a>
+</li>
+      <li><a href="api/vector-format-readers.html#spark.read.format-geo_db-.load">load() (in module spark.read.format(&#34;geo_db&#34;))</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/vector-format-readers.html#spark.read.format-ogr-.load">load() (in module spark.read.format(&#34;ogr&#34;))</a>
+</li>
+      <li><a href="api/vector-format-readers.html#spark.read.format-shapefile-.load">load() (in module spark.read.format(&#34;shapefile&#34;))</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -572,7 +603,7 @@
     mos.read()
 
       <ul>
-        <li><a href="api/raster-format-readers.html#mos.read">built-in function</a>, <a href="api/vector-format-readers.html#mos.read">[1]</a>
+        <li><a href="api/raster-format-readers.html#mos.read">built-in function</a>
 </li>
       </ul></li>
   </ul></td>
@@ -642,6 +673,13 @@
 
       <ul>
         <li><a href="api/spatial-aggregations.html#rst_derivedband_agg">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_dtmfromgeoms()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_dtmfromgeoms">built-in function</a>
 </li>
       </ul></li>
       <li>
@@ -805,8 +843,6 @@
         <li><a href="api/raster-functions.html#rst_pixelheight">built-in function</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     rst_pixelwidth()
 
@@ -814,6 +850,8 @@
         <li><a href="api/raster-functions.html#rst_pixelwidth">built-in function</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     rst_rastertogridavg()
 
@@ -913,6 +951,13 @@
 </li>
       </ul></li>
       <li>
+    rst_setsrid()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_setsrid">built-in function</a>
+</li>
+      </ul></li>
+      <li>
     rst_skewx()
 
       <ul>
@@ -983,6 +1028,20 @@
 </li>
       </ul></li>
       <li>
+    rst_type()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_type">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    rst_updatetype()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_updatetype">built-in function</a>
+</li>
+      </ul></li>
+      <li>
     rst_upperleftx()
 
       <ul>
@@ -1024,6 +1083,13 @@
         <li><a href="api/raster-functions.html#rst_worldtorastercoordy">built-in function</a>
 </li>
       </ul></li>
+      <li>
+    rst_write()
+
+      <ul>
+        <li><a href="api/raster-functions.html#rst_write">built-in function</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -1041,7 +1107,7 @@
     spark.read.format()
 
       <ul>
-        <li><a href="api/raster-format-readers.html#spark.read.format">built-in function</a>, <a href="api/vector-format-readers.html#id0">[1]</a>, <a href="api/vector-format-readers.html#id1">[2]</a>, <a href="api/vector-format-readers.html#spark.read.format">[3]</a>
+        <li><a href="api/raster-format-readers.html#spark.read.format">built-in function</a>
 </li>
       </ul></li>
       <li>
@@ -1220,6 +1286,13 @@
 </li>
       </ul></li>
       <li>
+    st_interpolateelevation()
+
+      <ul>
+        <li><a href="api/spatial-functions.html#st_interpolateelevation">built-in function</a>
+</li>
+      </ul></li>
+      <li>
     st_intersection()
 
       <ul>
@@ -1345,6 +1418,13 @@
 
       <ul>
         <li><a href="api/spatial-functions.html#st_translate">built-in function</a>
+</li>
+      </ul></li>
+      <li>
+    st_triangulate()
+
+      <ul>
+        <li><a href="api/spatial-functions.html#st_triangulate">built-in function</a>
 </li>
       </ul></li>
       <li>
