@@ -6,8 +6,8 @@ We will continue to maintain Mosaic for the foreseeable future, including bug fi
 
 This release includes a number of enhancements and fixes, detailed below.
 
-### Raster checkpointing is enabled by default
-Fuse-based checkpointing for raster operations is now enabled by default and managed through:
+### Raster checkpointing functions
+Fuse-based checkpointing for raster operations is disabled by default but can be enabled and managed through:
 - spark configs `spark.databricks.labs.mosaic.raster.use.checkpoint` and `spark.databricks.labs.mosaic.raster.checkpoint`.
 - python: `mos.enable_gdal(spark, with_checkpoint_path=path)`.
 - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, path)`.
@@ -23,6 +23,7 @@ We plan further enhancements to this feature (including automatic cleanup of che
   - `RST_Clip` now exposes the GDAL Warp option `CUTLINE_ALL_TOUCHED` which determines whether or not any given pixel is included whether the clipping geometry crosses the centre point of the pixel (false) or any part of the pixel (true). The default is true but this is now configurable.
   - Within clipping operations such as `RST_Clip` we now correctly set the CRS in the generated Shapefile Feature Layer used for clipping. This means that the CRS of the input geometry will be respected when clipping rasters.
   - Added two new functions for getting and upcasting the datatype of a raster band: `RST_Type` and `RST_UpdateType`. Use these for ensuring that the datatype of a raster is appropriate for the operations being performed, e.g. upcasting the types of integer-typed input rasters before performing raster algebra like NDVI calculations where the result needs to be a float.
+  - Added `RST_AsFormat`, a function that translates rasters between formats e.g. from NetCDF to GeoTIFF.
   - The logic underpinning `RST_MemSize` (and related operations) has been updated to fall back to estimating based on the raster dimensions and data types of each band if the raster is held in-memory.
   - `RST_To_Overlapping_Tiles` is renamed `RST_ToOverlappingTiles`. The original expression remains but is marked as deprecated.
   - `RST_WorldToRasterCoordY` now returns the correct `y` value (was returning `x`)

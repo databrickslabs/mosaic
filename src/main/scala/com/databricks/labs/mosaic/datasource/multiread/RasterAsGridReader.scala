@@ -64,7 +64,6 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
         } else {
             lit(config("convertToFormat"))
         }
-
         val rasterToGridCombiner = getRasterToGridFunc(config("combiner"))
 
         val loadedDf = retiledDf
