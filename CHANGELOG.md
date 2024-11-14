@@ -1,9 +1,5 @@
 ## v0.4.3 [DBR 13.3 LTS]
 
-This is the final mainline release of Mosaic. Future development will be focused on the planned spatial-utils library, which will be a successor to Mosaic and will include new features and improvements. The first release of spatial-utils is expected in the coming months.
-
-We will continue to maintain Mosaic for the foreseeable future, including bug fixes and security updates. However, we recommend that users start transitioning to spatial-utils as soon as possible to take advantage of the new features and improvements that will be available in that library.
-
 This release includes a number of enhancements and fixes, detailed below.
 
 ### Raster checkpointing functions
@@ -13,8 +9,6 @@ Fuse-based checkpointing for raster operations is disabled by default but can be
 - scala: `MosaicGDAL.enableGDALWithCheckpoint(spark, path)`.
   
 This feature is designed to improve performance and reduce memory usage for raster operations by writing intermediate data to a fuse directory. This is particularly useful for large rasters or when working with many rasters in a single operation. 
-
-We plan further enhancements to this feature (including automatic cleanup of checkpoint locations) as part of the first release of spatial-utils.
 
 ### Enhancements and fixes to the raster processing APIs
   - Added `RST_Write`, a function that permits writing each raster 'tile' in a DataFrame to a specified location (e.g. fuse directory) using the appropriate GDAL driver and tile data / path. This is useful for formalizing the path when writing a Lakehouse table and allows removal of interim checkpointed data.
