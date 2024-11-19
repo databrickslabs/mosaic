@@ -87,6 +87,23 @@
             <version>2.4.0</version>
             <scope>provided</scope>
         </dependency>
+        <!-- log4j -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jul-to-slf4j</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>${slf4j.version}</version>
+            <!-- runtime scope is appropriate, but causes SBT build problems -->
+        </dependency>
         <!--geo dependencies-->
         <dependency>
             <groupId>com.uber</groupId>
@@ -254,9 +271,10 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <scala.version>2.12.10</scala.version>
+                <scala.version>2.12.18</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
                 <spark.version>3.5.0</spark.version>
+                <slf4j.version>2.0.7</slf4j.version>
                 <mosaic.version>0.4.4</mosaic.version>
             </properties>
             <build>
@@ -289,9 +307,10 @@
             <!-- local testing `mvn test -PskipScoverage -DskipTests=false -Dsuite=...` -->
             <id>skipScoverage</id>
             <properties>
-                <scala.version>2.12.10</scala.version>
+                <scala.version>2.12.18</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
                 <spark.version>3.5.0</spark.version>
+                <slf4j.version>2.0.7</slf4j.version>
                 <mosaic.version>0.4.4</mosaic.version>
                 <maven.compiler.source>1.8</maven.compiler.source>
                 <maven.compiler.target>1.8</maven.compiler.target>
