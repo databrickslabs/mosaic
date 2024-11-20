@@ -6,7 +6,7 @@ import org.gdal.gdalconst.gdalconstConstants
 
 import java.nio.file.{Files, Paths}
 import scala.sys.process._
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 
 /** GDALWarp is a wrapper for the GDAL Warp command. */
@@ -29,7 +29,15 @@ object GDALWarp {
 
         val effectiveCommand = OperatorOptions.appendOptions(command, rasters.head.getWriteOptions)
         val warpOptionsVec = OperatorOptions.parseOptions(effectiveCommand)
-        val warpOptions = new WarpOptions(warpOptionsVec)
+        val warpOptions = Try(new WarpOptions(warpOptionsVec)) match {
+            case Success(value) => value
+            case Failure(exception) =>
+                throw new Exception(
+              "Constructing GDAL warp options object failed " +
+                  s"for command $effectiveCommand " +
+                  s"with error ${gdal.GetLastErrorMsg()}"
+            )
+        }
         val result = gdal.Warp(outputPath, rasters.map(_.getRaster).toArray, warpOptions)
         // Format will always be the same as the first raster
         val errorMsg = gdal.GetLastErrorMsg

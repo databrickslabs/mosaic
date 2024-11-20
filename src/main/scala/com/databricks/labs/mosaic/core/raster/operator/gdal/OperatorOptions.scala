@@ -14,11 +14,54 @@ object OperatorOptions {
       *   A vector of options.
       */
     def parseOptions(command: String): java.util.Vector[String] = {
-        val args = command.split(" ")
+        val args = parseAndDeduplicate(command)
         val optionsVec = new java.util.Vector[String]()
-        args.drop(1).foreach(optionsVec.add)
+        args.foreach(optionsVec.add)
         optionsVec
     }
+
+    def parseAndDeduplicate(args: String): List[String] = {
+        // Split the input string into an array by whitespace
+        val parts = args.split("\\s+")
+
+        // Mutable structures to track unique flags and allow duplicate prefixes
+        val seenFlags = scala.collection.mutable.Map[String, List[String]]()
+        val preservedMultipleFlags = scala.collection.mutable.ListBuffer[String]()
+
+        val flagRegex = """^-[a-zA-Z]""".r
+
+        // Process the arguments
+        var i = 0
+        while (i < parts.length) {
+            val flag = parts(i)
+            if (flag.startsWith("-")) {
+                // Slice the array for all associated values
+                val values = parts.slice(i + 1, parts.length).takeWhile(v => flagRegex.findFirstIn(v).isEmpty)
+                if (flag.startsWith("-co") || flag.startsWith("-wo")) {
+                    // Allow multiple instances of these (preserve all values)
+                    preservedMultipleFlags += flag
+                    preservedMultipleFlags ++= values
+                } else {
+                    // Deduplicate by keeping only the latest values
+                    seenFlags(flag) = values.toList
+                }
+                i += values.length // Skip over the values
+            }
+            i += 1 // Move to the next flag
+        }
+
+        // Combine the deduplicated flags and preserved multiple flags
+        val deduplicatedArgs = seenFlags.flatMap {
+            case (flag, values) =>
+                if (values.isEmpty) List(flag) // Flags without values
+                else flag +: values // Include flag and its associated values
+        }
+
+        // Return the final deduplicated and ordered list
+        (deduplicatedArgs ++ preservedMultipleFlags).toList
+    }
+
+
 
     /**
       * Add default options to the command. Extract the compression from the

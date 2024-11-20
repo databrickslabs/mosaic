@@ -19,13 +19,13 @@ import scala.util.Try
 /** GDAL environment preparation and configuration. Some functions only for driver. */
 object MosaicGDAL extends Logging {
 
-    private val usrlibsoPath = "/usr/lib/libgdal.so"
-    private val usrlibso30Path = "/usr/lib/libgdal.so.30"
-    private val usrlibso3003Path = "/usr/lib/libgdal.so.30.0.3"
-    private val libjnisoPath = "/usr/lib/libgdalalljni.so"
-    private val libjniso30Path = "/usr/lib/libgdalalljni.so.30"
-    private val libjniso3003Path = "/usr/lib/libgdalalljni.so.30.0.3"
-    private val libogdisoPath = "/usr/lib/ogdi/4.1/libgdal.so"
+    private val usrlibsoPath = "/usr/lib/x86_64-linux-gnu/libgdal.so"
+//    private val usrlibso30Path = "/usr/lib/libgdal.so.30"
+//    private val usrlibso3003Path = "/usr/lib/libgdal.so.30.0.3"
+    private val libjnisoPath = "/usr/lib/x86_64-linux-gnu/jni/libgdalalljni.so"
+//    private val libjniso30Path = "/usr/lib/libgdalalljni.so.30"
+//    private val libjniso3003Path = "/usr/lib/libgdalalljni.so.30.0.3"
+//    private val libogdisoPath = "/usr/lib/ogdi/4.1/libgdal.so"
 
     val defaultBlockSize = 1024
     val vrtBlockSize = 128 // This is a must value for VRTs before GDAL 3.7
@@ -236,12 +236,12 @@ object MosaicGDAL extends Logging {
     /** Loads the shared objects required for GDAL. */
     private def loadSharedObjects(): Unit = {
         loadOrNOOP(usrlibsoPath)
-        loadOrNOOP(usrlibso30Path)
-        loadOrNOOP(usrlibso3003Path)
+//        loadOrNOOP(usrlibso30Path)
+//        loadOrNOOP(usrlibso3003Path)
         loadOrNOOP(libjnisoPath)
-        loadOrNOOP(libjniso30Path)
-        loadOrNOOP(libjniso3003Path)
-        loadOrNOOP(libogdisoPath)
+//        loadOrNOOP(libjniso30Path)
+//        loadOrNOOP(libjniso3003Path)
+//        loadOrNOOP(libogdisoPath)
     }
 
     /** Loads the shared object if it exists. */
