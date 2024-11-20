@@ -23,6 +23,7 @@ runs:
             sudo apt-get update && sudo apt-get install -f -y
             sudo dpkg -i python/mosaic/gdal/gdal_3.10.0-1_amd64.deb
             sudo dpkg -L gdal
+            sudo apt-get install -y python3-numpy zip unzip
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
