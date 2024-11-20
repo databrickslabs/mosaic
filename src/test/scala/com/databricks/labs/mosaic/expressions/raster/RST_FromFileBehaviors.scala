@@ -25,7 +25,7 @@ trait RST_FromFileBehaviors extends QueryTest {
             .withColumn("tile", rst_fromfile($"path"))
             .withColumn("bbox", rst_boundingbox($"tile"))
             .withColumn("cent", st_centroid($"bbox"))
-            .withColumn("clip_region", st_buffer($"cent", 0.1))
+            .withColumn("clip_region", st_buffer($"cent", 1000.0))
             .withColumn("clip", rst_clip($"tile", $"clip_region"))
             .withColumn("bbox2", rst_boundingbox($"clip"))
             .withColumn("result", st_area($"bbox") =!= st_area($"bbox2"))
@@ -42,7 +42,7 @@ trait RST_FromFileBehaviors extends QueryTest {
                    |with subquery as (
                    |   select rst_fromfile(path) as tile from source
                    |)
-                   |select st_area(rst_boundingbox(tile)) != st_area(rst_boundingbox(rst_clip(tile, st_buffer(st_centroid(rst_boundingbox(tile)), 0.1)))) as result
+                   |select st_area(rst_boundingbox(tile)) != st_area(rst_boundingbox(rst_clip(tile, st_buffer(st_centroid(rst_boundingbox(tile)), 1000.0)))) as result
                    |from subquery
                    |""".stripMargin)
             .as[Boolean]
@@ -57,7 +57,7 @@ trait RST_FromFileBehaviors extends QueryTest {
                   |with subquery as (
                   |   select rst_fromfile(path, 4) as tile from source
                   |)
-                  |select st_area(rst_boundingbox(tile)) != st_area(rst_boundingbox(rst_clip(tile, st_buffer(st_centroid(rst_boundingbox(tile)), 0.1)))) as result
+                  |select st_area(rst_boundingbox(tile)) != st_area(rst_boundingbox(rst_clip(tile, st_buffer(st_centroid(rst_boundingbox(tile)), 1000.0)))) as result
                   |from subquery
                   |""".stripMargin)
             .as[Boolean]

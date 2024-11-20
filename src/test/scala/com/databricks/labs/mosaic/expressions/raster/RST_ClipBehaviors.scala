@@ -28,7 +28,7 @@ trait RST_ClipBehaviors extends QueryTest {
         val gridTiles = rastersInMemory
             .withColumn("bbox", rst_boundingbox($"tile"))
             .withColumn("cent", st_centroid($"bbox"))
-            .withColumn("clip_region", st_buffer($"cent", 0.1))
+            .withColumn("clip_region", st_buffer($"cent", 1000.0))
             .withColumn("clip", rst_clip($"tile", $"clip_region"))
             .withColumn("bbox2", rst_boundingbox($"clip"))
             .withColumn("result", st_area($"bbox") =!= st_area($"bbox2"))
@@ -43,7 +43,7 @@ trait RST_ClipBehaviors extends QueryTest {
         noException should be thrownBy spark
             .sql("""
                    |select
-                   |  rst_clip(tile, st_buffer(st_centroid(rst_boundingbox(tile)), 0.1)) as tile
+                   |  rst_clip(tile, st_buffer(st_centroid(rst_boundingbox(tile)), 1000.0)) as tile
                    |from source
                    |""".stripMargin)
             .collect()
