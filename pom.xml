@@ -273,7 +273,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <scala.version>2.12.18</scala.version>
+                <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
                 <spark.version>3.5.0</spark.version>
                 <slf4j.version>2.0.7</slf4j.version>
@@ -284,7 +284,7 @@
                     <plugin>
                         <groupId>org.scoverage</groupId>
                         <artifactId>scoverage-maven-plugin</artifactId>
-                        <version>1.4.1</version>
+                        <version>1.4.11</version>
                         <executions>
                             <execution>
                                 <id>scoverage-report</id>
