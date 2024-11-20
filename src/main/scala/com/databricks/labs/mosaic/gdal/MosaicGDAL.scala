@@ -20,12 +20,7 @@ import scala.util.Try
 object MosaicGDAL extends Logging {
 
     private val usrlibsoPath = "/usr/lib/x86_64-linux-gnu/libgdal.so"
-//    private val usrlibso30Path = "/usr/lib/libgdal.so.30"
-//    private val usrlibso3003Path = "/usr/lib/libgdal.so.30.0.3"
     private val libjnisoPath = "/usr/lib/x86_64-linux-gnu/jni/libgdalalljni.so"
-//    private val libjniso30Path = "/usr/lib/libgdalalljni.so.30"
-//    private val libjniso3003Path = "/usr/lib/libgdalalljni.so.30.0.3"
-//    private val libogdisoPath = "/usr/lib/ogdi/4.1/libgdal.so"
 
     val defaultBlockSize = 1024
     val vrtBlockSize = 128 // This is a must value for VRTs before GDAL 3.7

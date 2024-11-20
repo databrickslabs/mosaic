@@ -19,22 +19,9 @@ runs:
         - name: Add packaged GDAL dependencies
           shell: bash
           run : |
-            # - update apt
-            sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-backports main universe multiverse restricted"
-            sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-updates main universe multiverse restricted"
-            sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-security main multiverse restricted universe"
-            sudo apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main multiverse restricted universe"
-            sudo apt-get update -y
-            # - install natives
-            sudo apt-get install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
-            sudo apt-get install -y gdal-bin libgdal-dev python3-numpy python3-gdal zip unzip
-            # - install pip libs
-            pip install --upgrade pip
-            pip install gdal==${{ matrix.gdal }}
-            # - add the so files 
-            sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so
-            sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so.30
-            sudo wget -nv -P /usr/lib -nc https://raw.githubusercontent.com/databrickslabs/mosaic/main/resources/gdal/jammy/libgdalalljni.so.30.0.3
+            sudo dpkg -i python/mosaic/gdal/gdal_3.10.0-1_amd64.deb || :
+            sudo apt-get update && sudo apt-get install -f -y
+            sudo dpkg -i python/mosaic/gdal/gdal_3.10.0-1_amd64.deb
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
