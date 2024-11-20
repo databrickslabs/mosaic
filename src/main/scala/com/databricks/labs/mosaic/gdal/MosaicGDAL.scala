@@ -34,7 +34,7 @@ object MosaicGDAL extends Logging {
 
 
     // Only use this with GDAL rasters
-    val WSG84: SpatialReference = {
+    lazy val WSG84: SpatialReference = {
         val wsg84 = new SpatialReference()
         wsg84.ImportFromEPSG(4326)
         wsg84.SetAxisMappingStrategy(org.gdal.osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
