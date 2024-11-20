@@ -7,8 +7,6 @@ import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{Args, CompositeStatus, Status}
 
-import scala.util.Try
-
 trait SharedSparkSessionGDAL extends SharedSparkSession {
 
 
@@ -40,9 +38,9 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         SparkSession.cleanupAnyExistingSession()
         val session = new MosaicTestSparkSession(conf)
         session.sparkContext.setLogLevel("ERROR")
-        Try {
+//        Try {
             MosaicGDAL.enableGDAL(session)
-        }
+//        }
         session
     }
 
