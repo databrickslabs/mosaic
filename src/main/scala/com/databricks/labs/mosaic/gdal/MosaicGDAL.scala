@@ -238,7 +238,6 @@ object MosaicGDAL extends Logging {
     // noinspection ScalaStyle
     private def loadOrNOOP(path: String): Unit = {
         try {
-//            if (Files.exists(Paths.get(path))) System.load(path)
             System.load(path)
         } catch {
             case t: Throwable =>
