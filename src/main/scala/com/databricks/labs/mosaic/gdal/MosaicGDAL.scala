@@ -231,12 +231,7 @@ object MosaicGDAL extends Logging {
     /** Loads the shared objects required for GDAL. */
     private def loadSharedObjects(): Unit = {
         loadOrNOOP(usrlibsoPath)
-//        loadOrNOOP(usrlibso30Path)
-//        loadOrNOOP(usrlibso3003Path)
         loadOrNOOP(libjnisoPath)
-//        loadOrNOOP(libjniso30Path)
-//        loadOrNOOP(libjniso3003Path)
-//        loadOrNOOP(libogdisoPath)
     }
 
     /** Loads the shared object if it exists. */
