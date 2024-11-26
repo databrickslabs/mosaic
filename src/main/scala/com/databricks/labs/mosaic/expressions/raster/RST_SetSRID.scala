@@ -21,6 +21,7 @@ case class RST_SetSRID(
       rastersExpr,
       sridExpr,
       returnsRaster = true,
+      unsafe = true,
       expressionConfig = expressionConfig
     )
       with NullIntolerant

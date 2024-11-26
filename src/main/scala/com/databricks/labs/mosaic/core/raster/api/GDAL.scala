@@ -117,7 +117,8 @@ object GDAL {
     def readRaster(
                       inputRaster: Any,
                       createInfo: Map[String, String],
-                      inputDT: DataType
+                      inputDT: DataType,
+                      unsafe: Option[Boolean] = None
                   ): MosaicRasterGDAL = {
         if (inputRaster == null) {
             MosaicRasterGDAL(null, createInfo)
@@ -128,7 +129,7 @@ object GDAL {
                 case _: BinaryType =>
                     val bytes = inputRaster.asInstanceOf[Array[Byte]]
                     try {
-                        val rasterObj = MosaicRasterGDAL.readRaster(bytes, createInfo)
+                        val rasterObj = MosaicRasterGDAL.readRaster(bytes, createInfo, unsafe)
                         if (rasterObj.raster == null) {
                             val rasterZipObj = readParentZipBinary(bytes, createInfo)
                             if (rasterZipObj.raster == null) {

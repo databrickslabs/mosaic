@@ -21,6 +21,7 @@ case class RST_UpdateType (
     tileExpr,
     newType,
     returnsRaster = true,
+    unsafe = false,
     expressionConfig
 )
     with NullIntolerant

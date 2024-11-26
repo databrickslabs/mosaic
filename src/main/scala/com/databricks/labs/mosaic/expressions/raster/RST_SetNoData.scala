@@ -23,6 +23,7 @@ case class RST_SetNoData(
       tileExpr,
       noDataExpr,
       returnsRaster = true,
+      unsafe = false,
       expressionConfig = expressionConfig
     )
       with NullIntolerant

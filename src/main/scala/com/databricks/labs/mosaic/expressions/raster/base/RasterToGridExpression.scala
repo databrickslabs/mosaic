@@ -39,7 +39,7 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
     resolutionExpr: Expression,
     measureType: DataType,
     expressionConfig: MosaicExpressionConfig
-) extends Raster1ArgExpression[T](rasterExpr, resolutionExpr, returnsRaster = false, expressionConfig)
+) extends Raster1ArgExpression[T](rasterExpr, resolutionExpr, returnsRaster = false, unsafe = false, expressionConfig)
       with RasterGridExpression
       with NullIntolerant
       with Serializable {

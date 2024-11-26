@@ -21,6 +21,10 @@ import scala.reflect.ClassTag
   *   containing the raster file content.
   * @param arg1Expr
   *   The expression for the first argument.
+  * @param returnsRaster
+  *   Does the expression return a raster tile object?
+  * @param unsafe
+  *   Does the operation require a raster opened in non-thread safe mode?
   * @param expressionConfig
   *   Additional arguments for the expression (expressionConfigs).
   * @tparam T
@@ -30,6 +34,7 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
     rasterExpr: Expression,
     arg1Expr: Expression,
     returnsRaster: Boolean,
+    unsafe: Boolean,
     expressionConfig: MosaicExpressionConfig
 ) extends BinaryExpression
       with NullIntolerant
@@ -71,9 +76,10 @@ abstract class Raster1ArgExpression[T <: Expression: ClassTag](
         GDAL.enable(expressionConfig)
         val rasterType = RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile.deserialize(
-          input.asInstanceOf[InternalRow],
-          expressionConfig.getCellIdType,
-          rasterType
+            input.asInstanceOf[InternalRow],
+            expressionConfig.getCellIdType,
+            rasterType,
+            Some(unsafe)
         )
         val raster = tile.getRaster
         val result = rasterTransform(tile, arg1)

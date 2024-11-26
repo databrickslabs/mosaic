@@ -733,13 +733,17 @@ object MosaicRasterGDAL extends RasterReader {
       * @return
       *   A GDAL [[Dataset]] object.
       */
-    def pathAsDataset(path: String, driverShortName: Option[String]): Dataset = {
+    def pathAsDataset(path: String, driverShortName: Option[String], unsafe: Option[Boolean] = None): Dataset = {
+        val openFlags = unsafe match {
+            case Some(value) if (value) => OF_READONLY
+            case _ => OF_THREAD_SAFE
+        }
         driverShortName match {
             case Some(driverShortName) =>
                 val drivers = new JVector[String]()
                 drivers.add(driverShortName)
-                gdal.OpenEx(path, OF_RASTER | OF_THREAD_SAFE, drivers)
-            case None                  => gdal.Open(path, OF_RASTER | OF_THREAD_SAFE)
+                gdal.OpenEx(path, openFlags, drivers)
+            case None                  => gdal.Open(path, openFlags)
         }
     }
 
@@ -772,7 +776,7 @@ object MosaicRasterGDAL extends RasterReader {
       * @return
       *   A [[MosaicRasterGDAL]] object.
      */
-    override def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String]): MosaicRasterGDAL = {
+    override def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String], unsafe: Option[Boolean] = None): MosaicRasterGDAL = {
         if (Option(contentBytes).isEmpty || contentBytes.isEmpty) {
             MosaicRasterGDAL(null, createInfo)
         } else {
@@ -783,12 +787,12 @@ object MosaicRasterGDAL extends RasterReader {
             val tmpPath = PathUtils.createTmpFilePath(extension)
             Files.write(Paths.get(tmpPath), contentBytes)
             // Try reading as a tmp file, if that fails, rename as a zipped file
-            val dataset = pathAsDataset(tmpPath, Some(driverShortName))
+            val dataset = pathAsDataset(tmpPath, Some(driverShortName), unsafe)
             if (dataset == null) {
                 val zippedPath = s"$tmpPath.zip"
                 Files.move(Paths.get(tmpPath), Paths.get(zippedPath), StandardCopyOption.REPLACE_EXISTING)
                 val readPath = PathUtils.getZipPath(zippedPath)
-                val ds1 = pathAsDataset(readPath, Some(driverShortName))
+                val ds1 = pathAsDataset(readPath, Some(driverShortName), unsafe)
                 if (ds1 == null) {
                     // the way we zip using uuid is not compatible with GDAL
                     // we need to unzip and read the file if it was zipped by us
@@ -800,7 +804,7 @@ object MosaicRasterGDAL extends RasterReader {
                     val extension = GDAL.getExtension(driverShortName)
                     val lastExtracted = SysUtils.getLastOutputLine(prompt)
                     val unzippedPath = PathUtils.parseUnzippedPathFromExtracted(lastExtracted, extension)
-                    val ds2 = pathAsDataset(unzippedPath, Some(driverShortName))
+                    val ds2 = pathAsDataset(unzippedPath, Some(driverShortName), unsafe)
                     if (ds2 == null) {
                         throw new Exception(s"Error reading raster from bytes: ${prompt._3}")
                     }

@@ -22,6 +22,7 @@ case class RST_Transform(
       tileExpr,
       srid,
       returnsRaster = true,
+      unsafe = false,
       expressionConfig
     )
       with NullIntolerant
