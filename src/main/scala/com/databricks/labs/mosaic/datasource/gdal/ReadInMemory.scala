@@ -83,7 +83,7 @@ object ReadInMemory extends ReadStrategy {
             "path" -> readPath,
             "parentPath" -> inPath
         )
-        val raster = MosaicRasterGDAL.readRaster(createInfo)
+        val raster = MosaicRasterGDAL.readRaster(createInfo, None)
         val uuid = getUUID(status)
 
         val fields = requiredSchema.fieldNames.filter(_ != TILE).map {

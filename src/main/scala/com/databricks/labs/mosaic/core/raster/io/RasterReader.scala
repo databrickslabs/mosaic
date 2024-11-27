@@ -56,6 +56,6 @@ trait RasterReader extends Logging {
       * @return
       *   A [[MosaicRasterGDAL]] object.
       */
-    def readRaster(createInfo: Map[String, String]): MosaicRasterGDAL
+    def readRaster(createInfo: Map[String, String], unsafe: Option[Boolean]): MosaicRasterGDAL
 
 }

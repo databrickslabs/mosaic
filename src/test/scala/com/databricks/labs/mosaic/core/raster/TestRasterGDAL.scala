@@ -45,7 +45,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         val np_content = spark.read.format("binaryFile")
             .load("src/test/resources/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
             .select("content").first.getAs[Array[Byte]](0)
-        val np_raster = MosaicRasterGDAL.readRaster(np_content, createInfo)
+        val np_raster = MosaicRasterGDAL.readRaster(np_content, createInfo, None)
 //        val np_raster = RasterIO.readRasterHydratedFromContent(np_content, createInfo, getExprConfigOpt)
         np_raster.getMemSize > 0 should be(true)
         info(s"np_content length? ${np_content.length}")
@@ -62,7 +62,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           "path" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
           "parentPath" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
         )
-        val testRaster = MosaicRasterGDAL.readRaster(createInfo)
+        val testRaster = MosaicRasterGDAL.readRaster(createInfo, None)
         testRaster.xSize shouldBe 2400
         testRaster.ySize shouldBe 2400
         testRaster.numBands shouldBe 1
@@ -84,7 +84,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           "path" -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb"),
           "parentPath" -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb")
         )
-        val testRaster = MosaicRasterGDAL.readRaster(createInfo)
+        val testRaster = MosaicRasterGDAL.readRaster(createInfo, None)
         testRaster.xSize shouldBe 14
         testRaster.ySize shouldBe 14
         testRaster.numBands shouldBe 14
@@ -102,14 +102,14 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           "path" -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc"),
           "parentPath" -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc")
         )
-        val superRaster = MosaicRasterGDAL.readRaster(createInfo)
+        val superRaster = MosaicRasterGDAL.readRaster(createInfo, None)
         val subdatasetPath = superRaster.subdatasets("bleaching_alert_area")
 
         val sdCreateInfo = Map(
           "path" -> subdatasetPath,
           "parentPath" -> subdatasetPath
         )
-        val testRaster = MosaicRasterGDAL.readRaster(sdCreateInfo)
+        val testRaster = MosaicRasterGDAL.readRaster(sdCreateInfo, None)
 
         testRaster.xSize shouldBe 7200
         testRaster.ySize shouldBe 3600
@@ -129,7 +129,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           "path" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
           "parentPath" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
         )
-        val testRaster = MosaicRasterGDAL.readRaster(createInfo)
+        val testRaster = MosaicRasterGDAL.readRaster(createInfo, None)
 
         testRaster.pixelXSize - 463.312716527 < 0.0000001 shouldBe true
         testRaster.pixelYSize - -463.312716527 < 0.0000001 shouldBe true

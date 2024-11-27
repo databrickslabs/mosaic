@@ -28,16 +28,16 @@ trait RST_SetSRIDBehaviors extends QueryTest {
             .withColumn("result", rst_setsrid($"tile", lit(4326)))
             .select("result")
 
-//        rastersInMemory
-//            .createOrReplaceTempView("source")
-//
-//        noException should be thrownBy spark.sql("""
-//                                                   |select rst_setsrid(tile, 4326) from source
-//                                                   |""".stripMargin)
-//
-//        noException should be thrownBy rastersInMemory
-//            .withColumn("result", rst_setsrid($"tile", lit(4326)))
-//            .select("result")
+        rastersInMemory
+            .createOrReplaceTempView("source")
+
+        noException should be thrownBy spark.sql("""
+                                                   |select rst_setsrid(tile, 4326) from source
+                                                   |""".stripMargin)
+
+        noException should be thrownBy rastersInMemory
+            .withColumn("result", rst_setsrid($"tile", lit(4326)))
+            .select("result")
 
         val result = df
             .where(rst_srid($"result") === lit(4326))

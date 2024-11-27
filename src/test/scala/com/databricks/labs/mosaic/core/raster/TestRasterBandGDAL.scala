@@ -14,7 +14,7 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
           "path" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
           "parentPath" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
         )
-        val testRaster = MosaicRasterGDAL.readRaster(createInfo)
+        val testRaster = MosaicRasterGDAL.readRaster(createInfo, None)
         val testBand = testRaster.getBand(1)
         testBand.getBand
         testBand.index shouldBe 1
@@ -41,7 +41,7 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
             "path" -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb"),
             "parentPath" -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb")
         )
-        val testRaster = MosaicRasterGDAL.readRaster(createInfo)
+        val testRaster = MosaicRasterGDAL.readRaster(createInfo, None)
         val testBand = testRaster.getBand(1)
         testBand.description shouldBe "1[-] HYBL=\"Hybrid level\""
         testBand.dataType shouldBe 7
@@ -61,13 +61,13 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
             "path" -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc"),
             "parentPath" -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc")
         )
-        val superRaster = MosaicRasterGDAL.readRaster(createInfo)
+        val superRaster = MosaicRasterGDAL.readRaster(createInfo, None)
         val subdatasetPath = superRaster.subdatasets("bleaching_alert_area")
         val sdCreate  = Map(
             "path" -> subdatasetPath,
             "parentPath" -> subdatasetPath
         )
-        val testRaster = MosaicRasterGDAL.readRaster(sdCreate)
+        val testRaster = MosaicRasterGDAL.readRaster(sdCreate, None)
 
         val testBand = testRaster.getBand(1)
         testBand.dataType shouldBe 1

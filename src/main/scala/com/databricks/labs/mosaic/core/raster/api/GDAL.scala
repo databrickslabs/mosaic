@@ -125,13 +125,13 @@ object GDAL {
         } else {
             inputDT match {
                 case _: StringType =>
-                    MosaicRasterGDAL.readRaster(createInfo)
+                    MosaicRasterGDAL.readRaster(createInfo, unsafe)
                 case _: BinaryType =>
                     val bytes = inputRaster.asInstanceOf[Array[Byte]]
                     try {
                         val rasterObj = MosaicRasterGDAL.readRaster(bytes, createInfo, unsafe)
                         if (rasterObj.raster == null) {
-                            val rasterZipObj = readParentZipBinary(bytes, createInfo)
+                            val rasterZipObj = readParentZipBinary(bytes, createInfo, unsafe)
                             if (rasterZipObj.raster == null) {
                                 rasterObj // <- return initial
                             } else {
@@ -141,18 +141,18 @@ object GDAL {
                             rasterObj
                         }
                     } catch {
-                        case _: Throwable => readParentZipBinary(bytes, createInfo)
+                        case _: Throwable => readParentZipBinary(bytes, createInfo, unsafe)
                     }
                 case _ => throw new IllegalArgumentException(s"Unsupported data type: $inputDT")
             }
         }
     }
 
-    private def readParentZipBinary(bytes: Array[Byte], createInfo: Map[String, String]): MosaicRasterGDAL = {
+    private def readParentZipBinary(bytes: Array[Byte], createInfo: Map[String, String], unsafe: Option[Boolean]): MosaicRasterGDAL = {
         try {
             val parentPath = createInfo("parentPath")
             val zippedPath = s"/vsizip/$parentPath"
-            MosaicRasterGDAL.readRaster(bytes, createInfo + ("path" -> zippedPath))
+            MosaicRasterGDAL.readRaster(bytes, createInfo + ("path" -> zippedPath), unsafe)
         } catch {
             case _: Throwable => MosaicRasterGDAL(null, createInfo)
         }
@@ -211,9 +211,9 @@ object GDAL {
       * @return
       *   Returns a [[MosaicRasterGDAL]] object.
       */
-    def raster(path: String, parentPath: String): MosaicRasterGDAL = {
+    def raster(path: String, parentPath: String, unsafe: Option[Boolean]): MosaicRasterGDAL = {
         val createInfo = Map("path" -> path, "parentPath" -> parentPath)
-        MosaicRasterGDAL.readRaster(createInfo)
+        MosaicRasterGDAL.readRaster(createInfo, unsafe)
     }
 
     /**
@@ -229,9 +229,9 @@ object GDAL {
       * @return
       *   Returns a [[MosaicRasterGDAL]] object.
       */
-    def raster(content: Array[Byte], parentPath: String, driverShortName: String): MosaicRasterGDAL = {
+    def raster(content: Array[Byte], parentPath: String, driverShortName: String, unsafe: Option[Boolean]): MosaicRasterGDAL = {
         val createInfo = Map("parentPath" -> parentPath, "driver" -> driverShortName)
-        MosaicRasterGDAL.readRaster(content, createInfo)
+        MosaicRasterGDAL.readRaster(content, createInfo, unsafe)
     }
 
     /**

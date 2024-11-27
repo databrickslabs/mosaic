@@ -51,7 +51,12 @@ object GDALRasterize {
         val createOptionsVec = new JVector[String]()
         createOptionsVec.addAll(Seq("COMPRESS=LZW", "TILED=YES").asJavaCollection)
 
-        val newRaster = driver.Create(outputPath, xWidth, yWidth, 1, gdalconstConstants.GDT_Float64, createOptionsVec)
+        val newRasterBase = driver.Create(outputPath, xWidth, yWidth, 1, gdalconstConstants.GDT_Float64, createOptionsVec)
+        newRasterBase.FlushCache()
+        newRasterBase.delete()
+
+        val newRaster = gdal.OpenEx(outputPath, gdalconstConstants.OF_RASTER | gdalconstConstants.OF_UPDATE)
+
         val rasterCRS = if (geoms.isEmpty) origin.getSpatialReferenceOSR else geoms.head.getSpatialReferenceOSR
         newRaster.SetSpatialRef(rasterCRS)
         newRaster.SetGeoTransform(Array(origin.getX, xSize, 0.0, origin.getY, 0.0, ySize))
@@ -74,7 +79,7 @@ object GDALRasterize {
                 "last_error" -> errorMsg,
                 "all_parents" -> ""
             )
-            return MosaicRasterGDAL.readRaster(createInfo)
+            return MosaicRasterGDAL.readRaster(createInfo, unsafe = Option(true))
         }
 
         val valuesToBurn = values.getOrElse(geoms.map(_.getAnyPoint.getZ)) // can come back and make this the mean
@@ -99,7 +104,7 @@ object GDALRasterize {
           "last_error" -> errorMsg,
           "all_parents" -> ""
         )
-        MosaicRasterGDAL.readRaster(createInfo)
+        MosaicRasterGDAL.readRaster(createInfo, unsafe = Option(true))
     }
 
 

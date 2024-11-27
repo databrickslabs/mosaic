@@ -61,7 +61,7 @@ trait RST_ClipBehaviors extends QueryTest {
         val testPath = filePath("/binary/geotiff-small/chicago_sp27.tif")
 
         val createInfo = Map("path" -> testPath, "parentPath" -> testPath)
-        val testRaster = MosaicRasterGDAL.readRaster(createInfo)
+        val testRaster = MosaicRasterGDAL.readRaster(createInfo, None)
 
         val ftMeters = 0.3 // ~0.3 ft in meter
         val ftUnits = 0.3 // epsg:26771 0.3 ft per unit

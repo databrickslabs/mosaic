@@ -180,7 +180,7 @@ case class MosaicRasterGDAL(
             } else {
                 subdatasets.values
                     .filter(_.toLowerCase(Locale.ROOT).startsWith(getDriversShortName.toLowerCase(Locale.ROOT)))
-                    .flatMap(bp => readRaster(createInfo + ("path" -> bp)).getBands)
+                    .flatMap(bp => readRaster(createInfo + ("path" -> bp), None).getBands)
                     .takeWhile(_.isEmpty)
                     .nonEmpty
             }
@@ -761,7 +761,7 @@ object MosaicRasterGDAL extends RasterReader {
       *   A [[MosaicRasterGDAL]] object.
       */
     override def readBand(bandIndex: Int, createInfo: Map[String, String]): MosaicRasterBandGDAL = {
-        val raster = readRaster(createInfo)
+        val raster = readRaster(createInfo, None)
         // Note: Raster and Band are coupled, this can cause a pointer leak
         raster.getBand(bandIndex)
     }
@@ -776,7 +776,7 @@ object MosaicRasterGDAL extends RasterReader {
       * @return
       *   A [[MosaicRasterGDAL]] object.
      */
-    override def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String], unsafe: Option[Boolean] = None): MosaicRasterGDAL = {
+    override def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String], unsafe: Option[Boolean]): MosaicRasterGDAL = {
         if (Option(contentBytes).isEmpty || contentBytes.isEmpty) {
             MosaicRasterGDAL(null, createInfo)
         } else {
@@ -829,14 +829,14 @@ object MosaicRasterGDAL extends RasterReader {
       * @return
       *   A [[MosaicRasterGDAL]] object.
       */
-    override def readRaster(createInfo: Map[String, String]): MosaicRasterGDAL = {
+    override def readRaster(createInfo: Map[String, String], unsafe: Option[Boolean]): MosaicRasterGDAL = {
         val inPath = createInfo("path")
         val isSubdataset = PathUtils.isSubdataset(inPath)
         val cleanPath = PathUtils.getCleanPath(inPath)
         val readPath =
             if (isSubdataset) PathUtils.getSubdatasetPath(cleanPath)
             else PathUtils.getZipPath(cleanPath)
-        val dataset = pathAsDataset(readPath, None)
+        val dataset = pathAsDataset(readPath, None, unsafe)
         val error =
             if (dataset == null) {
                 val error = gdal.GetLastErrorMsg()

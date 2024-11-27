@@ -35,7 +35,7 @@ object GDALCalc {
         val toRun = effectiveCommand.replace("gdal_calc", gdal_calc)
         val commandRes = SysUtils.runCommand(s"python3 $toRun")
         val errorMsg = gdal.GetLastErrorMsg
-        val result = GDAL.raster(resultPath, resultPath)
+        val result = GDAL.raster(resultPath, resultPath, None)
         val createInfo = Map(
           "path" -> resultPath,
           "parentPath" -> resultPath,
