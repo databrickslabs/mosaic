@@ -51,11 +51,7 @@ object GDALRasterize {
         val createOptionsVec = new JVector[String]()
         createOptionsVec.addAll(Seq("COMPRESS=LZW", "TILED=YES").asJavaCollection)
 
-        val newRasterBase = driver.Create(outputPath, xWidth, yWidth, 1, gdalconstConstants.GDT_Float64, createOptionsVec)
-        newRasterBase.FlushCache()
-        newRasterBase.delete()
-
-        val newRaster = gdal.OpenEx(outputPath, gdalconstConstants.OF_RASTER | gdalconstConstants.OF_UPDATE)
+        val newRaster = driver.Create(outputPath, xWidth, yWidth, 1, gdalconstConstants.GDT_Float64, createOptionsVec)
 
         val rasterCRS = if (geoms.isEmpty) origin.getSpatialReferenceOSR else geoms.head.getSpatialReferenceOSR
         newRaster.SetSpatialRef(rasterCRS)
