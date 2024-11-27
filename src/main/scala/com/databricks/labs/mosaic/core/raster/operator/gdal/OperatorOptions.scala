@@ -29,6 +29,7 @@ object OperatorOptions {
         val preservedMultipleFlags = scala.collection.mutable.ListBuffer[String]()
 
         val flagRegex = """^-[a-zA-Z]""".r
+        val keyValueRegex = """^[^=\s]+=[^=\s]+$""".r
 
         // Process the arguments
         var i = 0
@@ -46,6 +47,8 @@ object OperatorOptions {
                     seenFlags(flag) = values.toList
                 }
                 i += values.length // Skip over the values
+            } else if (keyValueRegex.findFirstIn(flag).isDefined) {
+                preservedMultipleFlags += flag // Allow duplicates for these
             }
             i += 1 // Move to the next flag
         }
