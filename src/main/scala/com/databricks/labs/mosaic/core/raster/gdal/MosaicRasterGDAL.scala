@@ -180,7 +180,7 @@ case class MosaicRasterGDAL(
             } else {
                 subdatasets.values
                     .filter(_.toLowerCase(Locale.ROOT).startsWith(getDriversShortName.toLowerCase(Locale.ROOT)))
-                    .flatMap(bp => readRaster(createInfo + ("path" -> bp), None).getBands)
+                    .flatMap(bp => readRaster(createInfo + ("path" -> bp)).getBands)
                     .takeWhile(_.isEmpty)
                     .nonEmpty
             }
@@ -761,7 +761,7 @@ object MosaicRasterGDAL extends RasterReader {
       *   A [[MosaicRasterGDAL]] object.
       */
     override def readBand(bandIndex: Int, createInfo: Map[String, String]): MosaicRasterBandGDAL = {
-        val raster = readRaster(createInfo, None)
+        val raster = readRaster(createInfo)
         // Note: Raster and Band are coupled, this can cause a pointer leak
         raster.getBand(bandIndex)
     }

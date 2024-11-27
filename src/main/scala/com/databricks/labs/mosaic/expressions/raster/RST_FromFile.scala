@@ -70,7 +70,7 @@ case class RST_FromFile(
         val currentSize = Files.size(Paths.get(PathUtils.replaceDBFSTokens(readPath)))
         if (targetSize <= 0 && currentSize <= Integer.MAX_VALUE) {
             val createInfo = Map("path" -> readPath, "parentPath" -> path)
-            var raster = MosaicRasterGDAL.readRaster(createInfo, None)
+            var raster = MosaicRasterGDAL.readRaster(createInfo)
             var tile = MosaicRasterTile(null, raster)
             val row = tile.formatCellId(indexSystem).serialize(rasterType)
             RasterCleaner.dispose(raster)

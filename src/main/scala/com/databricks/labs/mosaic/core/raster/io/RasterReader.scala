@@ -42,6 +42,9 @@ trait RasterReader extends Logging {
      */
     def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String], unsafe: Option[Boolean]): MosaicRasterGDAL
 
+    def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String]): MosaicRasterGDAL =
+        readRaster(contentBytes, createInfo, None)
+
     /**
       * Reads a raster from a file system path. Reads a subdataset if the path
       * is to a subdataset. Assumes "path" is a key in createInfo.
@@ -57,5 +60,8 @@ trait RasterReader extends Logging {
       *   A [[MosaicRasterGDAL]] object.
       */
     def readRaster(createInfo: Map[String, String], unsafe: Option[Boolean]): MosaicRasterGDAL
+
+    def readRaster(createInfo: Map[String, String]): MosaicRasterGDAL =
+        readRaster(createInfo, None)
 
 }

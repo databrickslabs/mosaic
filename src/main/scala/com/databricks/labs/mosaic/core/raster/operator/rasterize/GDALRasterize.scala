@@ -75,7 +75,7 @@ object GDALRasterize {
                 "last_error" -> errorMsg,
                 "all_parents" -> ""
             )
-            return MosaicRasterGDAL.readRaster(createInfo, unsafe = Option(true))
+            return MosaicRasterGDAL.readRaster(createInfo)
         }
 
         val valuesToBurn = values.getOrElse(geoms.map(_.getAnyPoint.getZ)) // can come back and make this the mean
@@ -100,7 +100,7 @@ object GDALRasterize {
           "last_error" -> errorMsg,
           "all_parents" -> ""
         )
-        MosaicRasterGDAL.readRaster(createInfo, unsafe = Option(true))
+        MosaicRasterGDAL.readRaster(createInfo)
     }
 
 

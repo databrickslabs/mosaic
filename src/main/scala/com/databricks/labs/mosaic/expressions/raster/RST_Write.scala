@@ -75,8 +75,7 @@ case class RST_Write(
             .toString
 
         MosaicRasterGDAL.readRaster(
-          Map("path" -> outPath, "driver" -> inDriver, "parentPath" -> inPath),
-            None
+          Map("path" -> outPath, "driver" -> inDriver, "parentPath" -> inPath)
         )
     }
 
