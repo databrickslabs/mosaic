@@ -321,3 +321,16 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         )
 
         result.write.mode("overwrite").format("noop").save()
+
+
+    def test_geoparquet_reader(self):
+        geoparquet_df = (
+            readers.read()
+            .format("multi_read_ogr")
+            .option("driverName", "parquet")
+            .option("chunkSize", "2")
+            .load("test/data/example.parquet")
+        )
+
+        self.assertEqual(geoparquet_df.count(), 5)
+
