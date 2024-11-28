@@ -225,9 +225,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .repartition(self.spark.sparkContext.defaultParallelism)
             .withColumn(
                 "timestep",
-                element_at(
-                    api.rst_metadata("tile"), "NC_GLOBAL#GDAL_MOSAIC_BAND_INDEX"
-                ),
+                element_at(col("tile.metadata"), "bandIndex"),
             )
             .withColumn("tile", api.rst_setsrid("tile", lit(4326)))
             .where(col("timestep") == 21)

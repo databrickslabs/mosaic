@@ -8,7 +8,6 @@ from .enable import refresh_context
 from .fuse import SetupMgr
 
 __all__ = [
-    "setup_gdal",
     "enable_gdal",
     "update_checkpoint_path",
     "set_checkpoint_on",
@@ -19,48 +18,6 @@ __all__ = [
     "reset_checkpoint",
     "get_checkpoint_path_default",
 ]
-
-
-def setup_gdal(
-    to_fuse_dir: str = "/Workspace/Shared/geospatial/mosaic/gdal/jammy/0.4.2",
-    script_out_name: str = "mosaic-gdal-init.sh",
-    jni_so_copy: bool = False,
-    test_mode: bool = False,
-) -> bool:
-    """
-    Prepare GDAL init script and shared objects required for GDAL to run on spark.
-    This function will generate the init script that will install GDAL on each worker node.
-    After the setup_gdal is run, the init script must be added to the cluster; also,
-    a cluster restart is required.
-
-    Notes:
-      (a) This is close in behavior to Mosaic < 0.4 series (prior to DBR 13),
-          now using jammy default (3.4.1)
-      (b) `to_fuse_dir` can be one of `/Volumes/..`, `/Workspace/..`, `/dbfs/..`;
-           however, you should use `setup_fuse_install()` for Volume based installs
-
-    Parameters
-    ----------
-    to_fuse_dir : str
-            Path to write out the init script for GDAL installation;
-            default is '/Workspace/Shared/geospatial/mosaic/gdal/jammy/0.4.2'.
-    script_out_name : str
-            name of the script to be written;
-            default is 'mosaic-gdal-init.sh'.
-    jni_so_copy : bool
-            if True, copy shared object to fuse dir and config script to use;
-            default is False
-    test_mode : bool
-            Only for unit tests.
-
-    Returns
-    -------
-    True unless resources fail to download.
-    """
-    setup_mgr = SetupMgr(
-        to_fuse_dir, script_out_name=script_out_name, jni_so_copy=jni_so_copy
-    )
-    return setup_mgr.configure(test_mode=test_mode)
 
 
 def enable_gdal(spark: SparkSession, with_checkpoint_path: str = None) -> None:
@@ -102,12 +59,6 @@ def enable_gdal(spark: SparkSession, with_checkpoint_path: str = None) -> None:
     except Exception as e:
         print(
             "GDAL not enabled. Mosaic with GDAL requires that GDAL be installed on the cluster.\n"
-        )
-        print(
-            "You can run `setup_gdal()` or `setup_fuse_install()` to generate the init script for GDAL install.\n"
-        )
-        print(
-            "After the init script is generated, you need to add it to your cluster and restart.\n"
         )
         print("Error: " + str(e))
 
