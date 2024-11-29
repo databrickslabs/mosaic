@@ -5,6 +5,9 @@ import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterGDAL, MosaicRast
 import com.databricks.labs.mosaic.utils.SysUtils
 import org.gdal.gdal.gdal
 
+import java.nio.file.{Files, Paths}
+import scala.util.Try
+
 /** GDALCalc is a helper object for executing GDAL Calc commands. */
 object GDALCalc {
 
@@ -35,6 +38,14 @@ object GDALCalc {
         val toRun = effectiveCommand.replace("gdal_calc", gdal_calc)
         val commandRes = SysUtils.runCommand(s"python3 $toRun")
         val errorMsg = gdal.GetLastErrorMsg
+        val size = Try(Files.size(Paths.get(resultPath))).getOrElse(
+            {
+                val msg = "Error during GDAL calc operation: " +
+                    s"file $resultPath " +
+                    s"with command '$effectiveCommand'. GDAL returned error: $errorMsg"
+                throw new Exception(msg)
+            }
+        )
         val result = GDAL.raster(resultPath, resultPath, None)
         val createInfo = Map(
           "path" -> resultPath,
