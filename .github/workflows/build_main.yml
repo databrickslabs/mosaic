@@ -18,7 +18,7 @@ jobs:
       matrix:
         python: [ 3.11.0 ]
         python_minor: [ 3.11 ]
-        numpy: [ 1.22.4 ]
+        numpy: [ 1.23.5 ]
         gdal: [ 3.10.0 ]
         spark: [ 3.5.0 ]
         R: [ 4.3.2 ]

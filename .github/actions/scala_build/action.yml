@@ -15,6 +15,7 @@ runs:
         - name: Configure python interpreter
           shell: bash
           run: |
+            pip install numpy==${{ matrix.numpy }}
             sudo bash <<EOF
               add-apt-repository ppa:deadsnakes/ppa
               apt update
