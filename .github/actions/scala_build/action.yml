@@ -38,7 +38,7 @@ runs:
           if: inputs.skip_tests == 'false'
           shell: bash
           run: |
-            python -c 'import numpy as np; print(np.__version__)'
+            python3 -c 'import numpy as np; print(np.__version__)'
             sudo mvn -q clean install
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
