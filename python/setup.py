@@ -70,9 +70,12 @@ class CustomInstallCommand(install):
         if not self.am_root():
             prepend.append("sudo")
 
+        env = os.environ.copy()
+        env.pop("PYTHONPATH")
+
         # Install base dependencies
-        subprocess.check_call(prepend + ["apt-get", "update"])
-        subprocess.check_call(prepend + ["apt-get", "install", "-y", *self.required_os_packages])
+        subprocess.check_call(prepend + ["apt-get", "update"], env=env)
+        subprocess.check_call(prepend + ["apt-get", "install", "-y", *self.required_os_packages], env=env)
 
         # Install the .deb file
         deb_file = os.path.join(
@@ -82,13 +85,13 @@ class CustomInstallCommand(install):
         if os.path.exists(deb_file):
             try:
                 # Run dpkg to install the .deb file
-                try:
-                    subprocess.check_call(prepend + ["dpkg", "-i", deb_file])
-                except subprocess.CalledProcessError as e:
-                    subprocess.check_call(
-                        prepend + ["apt-get", "install", "-f", "-y"]
-                    )  # Fix dependencies if needed
-                    subprocess.check_call(prepend + ["dpkg", "-i", deb_file])
+                # try:
+                subprocess.check_call(prepend + ["dpkg", "-i", deb_file])
+                # except subprocess.CalledProcessError as e:
+                #     subprocess.check_call(
+                #         prepend + ["apt-get", "install", "-f", "-y"]
+                #     )  # Fix dependencies if needed
+                #     subprocess.check_call(prepend + ["dpkg", "-i", deb_file])
             except subprocess.CalledProcessError as e:
                 print(f"Error installing .deb package: {e}")
                 sys.exit(1)
