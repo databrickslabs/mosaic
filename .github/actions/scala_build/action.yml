@@ -37,7 +37,9 @@ runs:
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
-          run: sudo mvn -q clean install
+          run: |
+            python -c 'import numpy as np; print(np.__version__)'
+            sudo mvn -q clean install
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
           shell: bash
