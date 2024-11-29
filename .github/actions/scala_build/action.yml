@@ -19,6 +19,8 @@ runs:
         - name: Add packaged GDAL dependencies
           shell: bash
           run : |
+            which python3
+            which python
             cd python && pip install .
 #            sudo dpkg -i python/mosaic/gdal/gdal_3.10.0-1_amd64.deb || :
 #            sudo apt-get update && sudo apt-get install -f -y
