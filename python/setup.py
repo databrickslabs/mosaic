@@ -72,6 +72,8 @@ class CustomInstallCommand(install):
 
         env = os.environ.copy()
         env.pop("PYTHONPATH")
+        env["PATH"] = env["PATH"].replace("/databricks/python3/bin;", "")
+        print(env)
 
         # Install base dependencies
         subprocess.check_call(prepend + ["apt-get", "update"], env=env)
