@@ -37,11 +37,8 @@ runs:
           if: inputs.skip_tests == 'false'
           shell: bash
           run: |
-            readlink -f $(which python3)
             source /databricks/python3/bin/activate
             readlink -f $(which python3)
-            echo $PATH
-            /databricks/python3/bin/python3 -c 'import numpy as np; print(np.__version__)'
             python3 -c 'import numpy as np; print(np.__version__)'
             sudo mvn -q clean install
         - name: Build the scala JAR - skip tests is true
