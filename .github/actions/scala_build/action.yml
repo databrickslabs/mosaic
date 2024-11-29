@@ -25,18 +25,18 @@ runs:
               python${{ matrix.python_minor }}-dev \
               python${{ matrix.python_minor }}-venv \
               python${{ matrix.python_minor }}-distutils
-              update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${{ matrix.python_minor }} 1
+#              update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${{ matrix.python_minor }} 1
               mkdir -p /databricks
               chown $USER:$USER /databricks
               chmod -R 766 /databricks/
             EOF
             python3 -m venv /databricks/python3
-            echo "/databricks/python3/bin" >> "$GITHUB_PATH"
+#            echo "/databricks/python3/bin" >> "$GITHUB_PATH"
         - name: Add packaged GDAL dependencies
           shell: bash
           run : |
             which python
-            cd python && pip install .
+            cd python && /databricks/python3/bin/pip install .
 #            sudo dpkg -i python/mosaic/gdal/gdal_3.10.0-1_amd64.deb || :
 #            sudo apt-get update && sudo apt-get install -f -y
 #            sudo dpkg -i python/mosaic/gdal/gdal_3.10.0-1_amd64.deb

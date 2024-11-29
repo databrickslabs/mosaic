@@ -70,14 +70,9 @@ class CustomInstallCommand(install):
         if not self.am_root():
             prepend.append("sudo")
 
-        env = os.environ.copy()
-        env.pop("PYTHONPATH")
-        env["PATH"] = env["PATH"].replace("/databricks/python3/bin;", "")
-        print(env)
-
         # Install base dependencies
-        subprocess.check_call(prepend + ["apt-get", "update"], env=env)
-        subprocess.check_call(prepend + ["apt-get", "install", "-y", *self.required_os_packages], env=env)
+        subprocess.check_call(prepend + ["apt-get", "update"])
+        subprocess.check_call(prepend + ["apt-get", "install", "-y", *self.required_os_packages])
 
         # Install the .deb file
         deb_file = os.path.join(
