@@ -13,15 +13,22 @@ runs:
             java-version: '8'
             distribution: 'zulu'
         - name: Configure python interpreter
-          uses: actions/setup-python@v2
-          with:
-            python-version: ${{ matrix.python }}
+#          uses: actions/setup-python@v2
+#          with:
+#            python-version: ${{ matrix.python }}
+          shell: bash
+          run: |
+            add-apt-repository ppa:deadsnakes/ppa
+            apt update
+            apt install -y python3.11 python3.11-dev python3.11-venv python3.11-distutils
+            update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1
+            python3 -m venv /databricks/python3
+            echo "/databricks/python3" >> "$GITHUB_PATH"
         - name: Add packaged GDAL dependencies
           shell: bash
           run : |
+            which python
             cd python && pip install .
-            which gdal_calc.py
-            head $(which gdal_calc.py)
 #            sudo dpkg -i python/mosaic/gdal/gdal_3.10.0-1_amd64.deb || :
 #            sudo apt-get update && sudo apt-get install -f -y
 #            sudo dpkg -i python/mosaic/gdal/gdal_3.10.0-1_amd64.deb
