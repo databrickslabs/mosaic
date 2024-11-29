@@ -25,6 +25,8 @@ runs:
               python${{ matrix.python_minor }}-venv \
               python${{ matrix.python_minor }}-distutils
             sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${{ matrix.python_minor }} 1
+            sudo mkdir -p /databricks
+            sudo chmod a+x /databricks
             python3 -m venv /databricks/python3
             echo "/databricks/python3" >> "$GITHUB_PATH"
         - name: Add packaged GDAL dependencies
