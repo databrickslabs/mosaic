@@ -29,7 +29,7 @@ runs:
               chown $USER:$USER /databricks
               chmod -R 766 /databricks/
             EOF
-            python3 -m venv /databricks/python3
+            python${{ matrix.python_minor }} -m venv /databricks/python3
         - name: Add packaged GDAL dependencies
           shell: bash
           run : |
