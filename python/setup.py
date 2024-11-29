@@ -83,14 +83,7 @@ class CustomInstallCommand(install):
 
         if os.path.exists(deb_file):
             try:
-                # Run dpkg to install the .deb file
-                # try:
                 subprocess.check_call(prepend + ["dpkg", "-i", deb_file])
-                # except subprocess.CalledProcessError as e:
-                #     subprocess.check_call(
-                #         prepend + ["apt-get", "install", "-f", "-y"]
-                #     )  # Fix dependencies if needed
-                #     subprocess.check_call(prepend + ["dpkg", "-i", deb_file])
             except subprocess.CalledProcessError as e:
                 print(f"Error installing .deb package: {e}")
                 sys.exit(1)

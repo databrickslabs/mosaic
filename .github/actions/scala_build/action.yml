@@ -12,9 +12,6 @@ runs:
           with:
             java-version: '8'
             distribution: 'zulu'
-#          uses: actions/setup-python@v2
-#          with:
-#            python-version:
         - name: Configure python interpreter
           shell: bash
           run: |
@@ -33,13 +30,8 @@ runs:
         - name: Add packaged GDAL dependencies
           shell: bash
           run : |
-            which python
             cd python && /databricks/python3/bin/pip install .
-#            sudo dpkg -i python/mosaic/gdal/gdal_3.10.0-1_amd64.deb || :
-#            sudo apt-get update && sudo apt-get install -f -y
-#            sudo dpkg -i python/mosaic/gdal/gdal_3.10.0-1_amd64.deb
-#            sudo dpkg -L gdal
-#            sudo apt-get install -y python3-numpy zip unzip
+            echo "/databricks/python3/bin" >> "$GITHUB_PATH"
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
