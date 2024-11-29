@@ -67,7 +67,7 @@ class CustomInstallCommand(install):
 
         prepend = []
 
-        if not am_root():
+        if not self.am_root():
             prepend.append("sudo")
 
         # Install base dependencies
