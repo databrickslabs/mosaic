@@ -31,7 +31,7 @@ runs:
               chmod -R 766 /databricks/
             EOF
             python3 -m venv /databricks/python3
-            echo "/databricks/python3" >> "$GITHUB_PATH"
+            echo "/databricks/python3/bin" >> "$GITHUB_PATH"
         - name: Add packaged GDAL dependencies
           shell: bash
           run : |
