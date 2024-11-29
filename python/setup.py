@@ -59,10 +59,20 @@ class CustomInstallCommand(install):
         "netcdf-bin",
     ]
 
+    @staticmethod
+    def am_root():
+        return os.geteuid() == 0
+
     def run(self):
+
+        prepend = []
+
+        if not am_root():
+            prepend.append("sudo")
+
         # Install base dependencies
-        subprocess.check_call(["apt-get", "update"])
-        subprocess.check_call(["apt-get", "install", "-y", *self.required_os_packages])
+        subprocess.check_call(prepend + ["apt-get", "update"])
+        subprocess.check_call(prepend + ["apt-get", "install", "-y", *self.required_os_packages])
 
         # Install the .deb file
         deb_file = os.path.join(
@@ -71,20 +81,14 @@ class CustomInstallCommand(install):
 
         if os.path.exists(deb_file):
             try:
-                # Ensure root privileges for .deb installation
-                if os.geteuid() != 0:
-                    print("You need root privileges to install the .deb package.")
-                    print("Please run this with sudo or as root.")
-                    sys.exit(1)
-
                 # Run dpkg to install the .deb file
                 try:
-                    subprocess.check_call(["dpkg", "-i", deb_file])
+                    subprocess.check_call(prepend + ["dpkg", "-i", deb_file])
                 except subprocess.CalledProcessError as e:
                     subprocess.check_call(
-                        ["apt-get", "install", "-f", "-y"]
+                        prepend + ["apt-get", "install", "-f", "-y"]
                     )  # Fix dependencies if needed
-                    subprocess.check_call(["dpkg", "-i", deb_file])
+                    subprocess.check_call(prepend + ["dpkg", "-i", deb_file])
             except subprocess.CalledProcessError as e:
                 print(f"Error installing .deb package: {e}")
                 sys.exit(1)
