@@ -16,21 +16,33 @@ dependencies = [
     "numpy <2.0,>=1.23",
     "ipython <8.16,>=7.4.2",
     "h3 <4.0,>=3.7",
-    "geopandas <0.14.4,>=0.14"
+    "pyogrio~=0.10.0",
+    "geopandas <0.14.4,>=0.14",
+    "geopy ~=2.4.1"
 ]
 
 [project.optional-dependencies]
 viz = ["keplergl == 0.3.2"]
-raster = ["rasterio <1.4,>=1.3.11"]
-all = ["databricks-spatial[viz,raster]"]
+raster = [
+    "rioxarray==0.17.0",
+    "rasterio <1.4,>=1.3.11",
+    "xarray[io]==2024.03.0",
+]
+route = [
+    "osmnx <2.0,>=1.9.4"
+]
+all = ["databricks-spatial[viz,raster,route]"]
 
 [build-system]
 requires = [
     "keplergl == 0.3.2",
-    "rasterio <1.4,>=1.3.11",
+    "osmnx <2.0,>=1.9.4",
     "pyspark <4.0,>=3.5",
+    "rasterio <1.4,>=1.3.11",
+    "rioxarray==0.17.0",
     "setuptools >= 61.0",
     "wheel",
+    "xarray[io]==2024.03.0",
 ]
 build-backend = "setuptools.build_meta"
 
