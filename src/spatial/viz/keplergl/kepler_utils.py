@@ -8,7 +8,7 @@ from typing import Any
 
 from pyspark.sql.connect.session import SparkSession
 from spatial.vector import vector_utils
-from ..viz_helpers import *
+from ..helpers.viz_helpers import *
 
 import re
 

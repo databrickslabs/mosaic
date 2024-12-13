@@ -1,9 +1,9 @@
-from pyspark.sql import SparkSession
-
 __all__ = [
     "get_fun_prefix",
     "unregister"
 ]
+
+from pyspark.sql import SparkSession
 
 DEFAULT_PREFIX = "dbx"
 

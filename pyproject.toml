@@ -29,12 +29,14 @@ raster = [
     "xarray[io]==2024.03.0",
 ]
 route = [
+    "cloudpickle ~=2.2.1",
     "osmnx <2.0,>=1.9.4"
 ]
 all = ["databricks-spatial[viz,raster,route]"]
 
 [build-system]
 requires = [
+    "cloudpickle ~=2.2.1",
     "keplergl == 0.3.2",
     "osmnx <2.0,>=1.9.4",
     "pyspark <4.0,>=3.5",

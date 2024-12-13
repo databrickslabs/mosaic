@@ -1,15 +1,3 @@
-import math
-
-import pandas as pd
-import pyproj
-import shapely
-
-from shapely import Geometry, MultiPolygon, Polygon, MultiLineString, LineString, MultiPoint, Point, GeometryCollection
-from shapely import ops
-from shapely.validation import explain_validity as shapely_explain_validity
-from shapely.validation import make_valid as shapely_make_valid
-from typing import Any, List
-
 __all__ = [
     "get_point_z",
     "has_node_startswith",
@@ -29,6 +17,18 @@ __all__ = [
     "try_to_wkt",
     "try_to_geojson"
 ]
+
+import math
+
+import pandas as pd
+import pyproj
+import shapely
+
+from shapely import Geometry, MultiPolygon, Polygon, MultiLineString, LineString, MultiPoint, Point, GeometryCollection
+from shapely import ops
+from shapely.validation import explain_validity as shapely_explain_validity
+from shapely.validation import make_valid as shapely_make_valid
+from typing import Any, List
 
 def get_point_z(geom: Any) -> float:
     """
