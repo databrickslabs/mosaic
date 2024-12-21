@@ -14,6 +14,7 @@ __all__ = [
     # - helpers -
     "try_to_ewkb",
     "try_to_shapely",
+    "try_to_shapely_list",
     "try_to_wkt",
     "try_to_geojson"
 ]

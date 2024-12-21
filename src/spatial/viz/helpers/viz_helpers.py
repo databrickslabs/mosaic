@@ -4,7 +4,8 @@ __all__ = [
     "DEFAULT_ZOOM_INFO",
     "RENDER_TYPE",
     "GEO_FORMAT",
-    "calc_zoom_info"
+    "calc_zoom_info",
+    "render_gdf"
 ]
 
 from dataclasses import dataclass
@@ -15,6 +16,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.connect.session import SparkSession
 from spatial.vector import vector_utils
 
+import geopandas as gpd
 
 class RENDER_TYPE(Enum):
     """Specify expected type of 'render_col' in DFMapItem."""
@@ -170,3 +172,32 @@ def calc_zoom_info(spark: SparkSession, df_map_item: DFMapItem, debug_level: int
 
     (debug_level > 0) and print(d, "\n")
     return ZoomInfo(d['centroid_x'], d['centroid_y'], d['zoom'])
+
+
+def render_gdf(
+        gdf: gpd.GeoDataFrame, val_col:str=None, figsize: tuple[int, int]=(10, 10), kwargs: dict = {}
+):
+    """Render a Geopandas dataframe using its 'geometry' column.
+
+    - this can be used to just render geometries
+    - can also be used to render h3 tessellated rasters
+
+    Parameters
+    ----------
+    gdf : gpd.GeoDataFrame
+        The geodataframe to plot
+    val_col : str (optional)
+        If provided, this will be used to color the plot, e.g. measure;
+        default is None; ignored if other color params are provided
+    figsize : tuple[int, int] (optional)
+        The size of the figure, prior to any auto sizing;
+        default is (10,10)
+    kwargs : dict
+        Any additional args; they will be passed directly to the underlying
+        function as '**kwargs'
+    Returns
+    -------
+    ax
+        matplotlib axes instance
+    """
+    gdf.plot(column=val_col, figsize=figsize, **kwargs)
