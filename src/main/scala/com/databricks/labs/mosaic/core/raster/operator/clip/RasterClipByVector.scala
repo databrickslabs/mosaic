@@ -9,6 +9,7 @@ import com.databricks.labs.mosaic.utils.PathUtils
 import org.gdal.osr.SpatialReference
 
 import java.util.Locale
+import scala.util.Try
 
 /**
   * RasterClipByVector is an object that defines the interface for clipping a
@@ -47,15 +48,13 @@ object RasterClipByVector {
         geometryAPI: GeometryAPI,
         cutlineAllTouched: Boolean = true
     ): MosaicRasterGDAL = {
-        val rasterCRS = raster.getSpatialReference
         val outShortName = raster.getDriversShortName
-        val geomSrcCRS = if (geomCRS == null) rasterCRS else geomCRS
 
         val cutlineToken = cutlineAllTouched.toString.toUpperCase(Locale.US)
 
         val resultFileName = PathUtils.createTmpFilePath(GDAL.getExtension(outShortName))
 
-        val shapeFileName = VectorClipper.generateClipper(geometry, geomSrcCRS, rasterCRS, geometryAPI)
+        val shapeFileName = VectorClipper.generateClipper(geometry, geomCRS, raster, geometryAPI)
 
         // For -wo consult https://gdal.org/doxygen/structGDALWarpOptions.html
         val result = GDALWarp.executeWarp(

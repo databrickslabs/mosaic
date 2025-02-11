@@ -20,6 +20,8 @@ import java.util.UUID
   */
 object GDAL {
 
+    var isRegistered = false
+
     /**
       * Returns the no data value for the given GDAL data type. For non-numeric
       * data types, it returns 0.0. For numeric data types, it returns the
@@ -65,8 +67,15 @@ object GDAL {
       */
     def enable(mosaicConfig: MosaicExpressionConfig): Unit = {
         configureGDAL(mosaicConfig)
+        enable()
+    }
+
+    def enable(): Unit = {
         gdal.UseExceptions()
-        gdal.AllRegister()
+        if (!isRegistered) {
+            gdal.AllRegister()
+            isRegistered = true
+        }
     }
 
     /**

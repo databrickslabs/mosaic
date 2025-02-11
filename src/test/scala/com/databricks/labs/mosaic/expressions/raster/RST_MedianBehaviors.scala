@@ -23,13 +23,13 @@ trait RST_MedianBehaviors extends QueryTest {
             .load("src/test/resources/modis")
 
         val df = rastersInMemory
-            .withColumn("tile", rst_tessellate($"tile", lit(3)))
+            .withColumn("tile", rst_tessellate($"tile", lit(2)))
             .withColumn("result", rst_median($"tile"))
             .select("result")
             .select(explode($"result").as("result"))
 
         rastersInMemory
-            .withColumn("tile", rst_tessellate($"tile", lit(3)))
+            .withColumn("tile", rst_tessellate($"tile", lit(2)))
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
@@ -37,7 +37,7 @@ trait RST_MedianBehaviors extends QueryTest {
                                                    |""".stripMargin)
 
         noException should be thrownBy rastersInMemory
-            .withColumn("result", rst_rastertogridmax($"tile", lit(3)))
+            .withColumn("result", rst_rastertogridmax($"tile", lit(2)))
             .select("result")
 
         val result = df.as[Double].collect().max

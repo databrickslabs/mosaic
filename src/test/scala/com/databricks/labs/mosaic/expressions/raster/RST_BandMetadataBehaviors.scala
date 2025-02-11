@@ -23,11 +23,11 @@ trait RST_BandMetadataBehaviors extends QueryTest {
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
-            .load("src/test/resources/binary/netcdf-coral")
+            .load("src/test/resources/binary/netcdf-CMIP5")
 
         val rasterDfWithBandMetadata = rastersInMemory
             .withColumn("subdatasets", rst_subdatasets($"tile"))
-            .withColumn("tile", rst_getsubdataset($"tile", lit("bleaching_alert_area")))
+            .withColumn("tile", rst_getsubdataset($"tile", lit("prAdjust")))
             .withColumn("tile", rst_subdivide($"tile", 100))
             .select(
               rst_bandmetadata($"tile", lit(1))
@@ -36,7 +36,7 @@ trait RST_BandMetadataBehaviors extends QueryTest {
 
         rastersInMemory
             .withColumn("subdatasets", rst_subdatasets($"tile"))
-            .withColumn("tile", rst_getsubdataset($"tile", lit("bleaching_alert_area")))
+            .withColumn("tile", rst_getsubdataset($"tile", lit("prAdjust")))
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
@@ -45,7 +45,7 @@ trait RST_BandMetadataBehaviors extends QueryTest {
 
         noException should be thrownBy rastersInMemory
             .withColumn("subdatasets", rst_subdatasets($"tile"))
-            .withColumn("tile", rst_getsubdataset($"tile", lit("bleaching_alert_area")))
+            .withColumn("tile", rst_getsubdataset($"tile", lit("prAdjust")))
             .select(
               rst_bandmetadata($"tile", lit(1))
                   .alias("metadata")

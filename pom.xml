@@ -118,7 +118,7 @@
         <dependency>
             <groupId>org.gdal</groupId>
             <artifactId>gdal</artifactId>
-            <version>3.4.0</version>
+            <version>3.9.0</version>
         </dependency>
 
     </dependencies>
@@ -174,6 +174,8 @@
                 <configuration>
                     <!-- Tests will be run with scalatest-maven-plugin instead -->
                     <skipTests>true</skipTests>
+                    <forkCount>1C</forkCount>
+                    <reuseForks>false</reuseForks>
                     <argLine>@{argLine} -Djava.library.path=/usr/local/lib;/usr/java/packages/lib;/usr/lib64;/lib64;/lib;/usr/lib</argLine>
                 </configuration>
             </plugin>
@@ -182,6 +184,8 @@
                 <artifactId>scalatest-maven-plugin</artifactId>
                 <version>2.0.0</version>
                 <configuration>
+                    <logForkedProcessCommand>true</logForkedProcessCommand>
+                    <forkMode>always</forkMode>
                     <reportsDirectory>${project.build.directory}/test-reports</reportsDirectory>
                 </configuration>
                 <executions>
@@ -256,7 +260,7 @@
             <properties>
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.4.1</spark.version>
+                <spark.version>3.5.0</spark.version>
                 <mosaic.version>0.4.3</mosaic.version>
             </properties>
             <build>
@@ -291,7 +295,7 @@
             <properties>
                 <scala.version>2.12.10</scala.version>
                 <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.4.1</spark.version>
+                <spark.version>3.5.0</spark.version>
                 <mosaic.version>0.4.3</mosaic.version>
                 <maven.compiler.source>1.8</maven.compiler.source>
                 <maven.compiler.target>1.8</maven.compiler.target>

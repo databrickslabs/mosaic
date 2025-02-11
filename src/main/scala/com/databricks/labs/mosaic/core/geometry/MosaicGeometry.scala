@@ -5,11 +5,12 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
 import org.gdal.ogr.ogr
-import org.gdal.osr.SpatialReference
+import org.gdal.osr.{CoordinateTransformation, SpatialReference, osr}
 import org.gdal.osr.osrConstants._
 import org.locationtech.proj4j._
 
 import java.util.Locale
+import scala.util.Try
 
 trait MosaicGeometry extends GeometryWriter with Serializable {
 
@@ -126,11 +127,26 @@ trait MosaicGeometry extends GeometryWriter with Serializable {
 
     def osrTransformCRS(srcSR: SpatialReference, destSR: SpatialReference, geometryAPI: GeometryAPI): MosaicGeometry = {
         if (srcSR.IsSame(destSR) == 1) return this
-        val ogcGeometry = ogr.CreateGeometryFromWkb(this.toWKB)
-        ogcGeometry.AssignSpatialReference(srcSR)
-        ogcGeometry.TransformTo(destSR)
-        val mosaicGeometry = geometryAPI.geometry(ogcGeometry.ExportToWkb, "WKB")
+
+        val transform = new CoordinateTransformation(srcSR, destSR)
+
+        def mapper(x: Double, y: Double): (Double, Double) = {
+            val p = transform.TransformPoint(x, y).toSeq.take(2)
+            (p(0), p(1))
+        }
+
+        val srID = Try(destSR.AutoIdentifyEPSG()).getOrElse(4326)
+
+        val mosaicGeometry = mapXY(mapper)
+        mosaicGeometry.setSpatialReference(srID)
         mosaicGeometry
+
+
+//        val ogcGeometry = ogr.CreateGeometryFromWkb(this.toWKB)
+//        ogcGeometry.AssignSpatialReference(srcSR)
+//        ogcGeometry.TransformTo(destSR)
+//        val mosaicGeometry = geometryAPI.geometry(ogcGeometry.ExportToWkb, "WKB")
+//        mosaicGeometry
     }
 
     def transformCRSXY(sridTo: Int, sridFrom: Int): MosaicGeometry = {

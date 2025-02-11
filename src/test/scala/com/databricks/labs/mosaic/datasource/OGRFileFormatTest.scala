@@ -160,7 +160,7 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
             .withColumn("geom", st_setsrid(st_geomfromwkt(col("geom_0")), lit(27700)))
 
         noException should be thrownBy
-            lad_df.select(st_astext(st_transform(col("geom"), lit(4326)))).show(1, truncate = false)
+            lad_df.select(st_astext(st_transform(col("geom"), lit(4326)))).take(1)
     }
 
 }

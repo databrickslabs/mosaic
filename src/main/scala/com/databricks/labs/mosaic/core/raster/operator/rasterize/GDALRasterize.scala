@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.core.raster.operator.rasterize
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterGDAL, MosaicRasterWriteOptions}
 import com.databricks.labs.mosaic.core.raster.operator.gdal.OperatorOptions
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum
@@ -43,8 +44,7 @@ object GDALRasterize {
         ySize: Double,
         noDataValue: Double = Double.NaN
     ): MosaicRasterGDAL = {
-
-        gdal.AllRegister()
+        GDAL.enable()
         val writeOptions = MosaicRasterWriteOptions.GTiff
         val outputPath = PathUtils.createTmpFilePath(writeOptions.format)
         val driver = gdal.GetDriverByName(writeOptions.format)

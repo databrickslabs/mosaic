@@ -26,13 +26,12 @@ object SeparateBands {
         val tiles = for (i <- 0 until raster.numBands) yield {
             val fileExtension = raster.getRasterFileExtension
             val rasterPath = PathUtils.createTmpFilePath(fileExtension)
-            val shortDriver = raster.getDriversShortName
             val outOptions = raster.getWriteOptions
 
             val result = GDALTranslate.executeTranslate(
               rasterPath,
               raster,
-              command = s"gdal_translate -of $shortDriver -b ${i + 1}",
+              command = s"gdal_translate -b ${i + 1}",
               writeOptions = outOptions
             )
 

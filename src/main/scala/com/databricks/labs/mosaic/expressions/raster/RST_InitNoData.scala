@@ -45,7 +45,7 @@ case class RST_InitNoData(
             .map(GDAL.getNoDataConstant)
             .mkString(" ")
         val resultPath = PathUtils.createTmpFilePath(GDAL.getExtension(tile.getDriver))
-        val cmd = s"""gdalwarp -of ${tile.getDriver} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
+        val cmd = s"""gdalwarp -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
         tile.copy(
           raster = GDALWarp.executeWarp(
             resultPath,

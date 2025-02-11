@@ -4,11 +4,13 @@ import com.databricks.labs.mosaic.{MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_C
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
+import com.databricks.labs.mosaic.utils.IsolatedProcess
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.matchers.should.Matchers._
 import org.gdal.gdal.{gdal => gdalJNI}
 import org.gdal.gdalconst
 
+import scala.concurrent.duration.DurationInt
 import scala.sys.process._
 import scala.util.Try
 
@@ -17,34 +19,44 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
     test("Verify that GDAL is enabled.") {
         assume(System.getProperty("os.name") == "Linux")
 
+        val sp = spark
+        import sp.implicits._
+
         val checkCmd = "gdalinfo --version"
-        val resultDriver = Try(checkCmd.!!).getOrElse("")
+        IsolatedProcess.runInNewProcess(checkCmd, 10.seconds)
+        val resultDriver = IsolatedProcess.runInNewProcess(checkCmd, 10.seconds).getOrElse("")
         resultDriver should not be ""
         resultDriver should include("GDAL")
 
         val sc = spark.sparkContext
-        val numExecutors = sc.getExecutorMemoryStatus.size - 1
-        val resultExecutors = Try(
-          sc.parallelize(1 to numExecutors)
-              .pipe(checkCmd)
-              .collect
-        ).getOrElse(Array[String]())
-        resultExecutors.length should not be 0
+
+        val numExecutors = sc.getExecutorMemoryStatus.size
+        val resultExecutors = spark.createDataset(1 to numExecutors * 8)
+            .toDF("number")
+            .repartition(8)
+            .rdd
+            .mapPartitions { partition =>
+                partition.map(_ => IsolatedProcess.runInNewProcess(checkCmd, 10.seconds).getOrElse(""))
+            }
+            .collect
         resultExecutors.foreach(s => s should include("GDAL"))
     }
 
     test("Verify memsize handling") {
         val createInfo = Map(
-            "path" -> "no_path",
-            "parentPath" -> "no_path",
-            "driver" -> "GTiff"
+          "path" -> "no_path",
+          "parentPath" -> "no_path",
+          "driver" -> "GTiff"
         )
         val null_raster = MosaicRasterGDAL(null, createInfo)
         null_raster.getMemSize should be(-1)
 
-        val np_content = spark.read.format("binaryFile")
+        val np_content = spark.read
+            .format("binaryFile")
             .load("src/test/resources/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
-            .select("content").first.getAs[Array[Byte]](0)
+            .select("content")
+            .first
+            .getAs[Array[Byte]](0)
         val np_raster = MosaicRasterGDAL.readRaster(np_content, createInfo)
 //        val np_raster = RasterIO.readRasterHydratedFromContent(np_content, createInfo, getExprConfigOpt)
         np_raster.getMemSize > 0 should be(true)
@@ -57,7 +69,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
     test("Read tile metadata from GeoTIFF file.") {
         assume(System.getProperty("os.name") == "Linux")
-        
+
         val createInfo = Map(
           "path" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"),
           "parentPath" -> filePath("/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF")
@@ -82,7 +94,9 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
         val createInfo = Map(
           "path" -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb"),
-          "parentPath" -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb")
+          "parentPath" -> filePath(
+            "/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb"
+          )
         )
         val testRaster = MosaicRasterGDAL.readRaster(createInfo)
         testRaster.xSize shouldBe 14
@@ -97,13 +111,17 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
 
     test("Read raster metadata from a NetCDF file.") {
         assume(System.getProperty("os.name") == "Linux")
-        
+
         val createInfo = Map(
-          "path" -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc"),
-          "parentPath" -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc")
+          "path" -> filePath(
+            "/binary/netcdf-CMIP5/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc"
+          ),
+          "parentPath" -> filePath(
+            "/binary/netcdf-CMIP5/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc"
+          )
         )
         val superRaster = MosaicRasterGDAL.readRaster(createInfo)
-        val subdatasetPath = superRaster.subdatasets("bleaching_alert_area")
+        val subdatasetPath = superRaster.subdatasets("prAdjust")
 
         val sdCreateInfo = Map(
           "path" -> subdatasetPath,
@@ -111,12 +129,12 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         )
         val testRaster = MosaicRasterGDAL.readRaster(sdCreateInfo)
 
-        testRaster.xSize shouldBe 7200
-        testRaster.ySize shouldBe 3600
-        testRaster.numBands shouldBe 1
-        testRaster.proj4String shouldBe "+proj=longlat +a=6378137 +rf=298.2572 +no_defs"
-        testRaster.SRID shouldBe 0
-        testRaster.extent shouldBe Seq(-180.00000610436345, -89.99999847369712, 180.00000610436345, 89.99999847369712)
+        testRaster.xSize shouldBe 720
+        testRaster.ySize shouldBe 360
+        testRaster.numBands shouldBe 31
+        testRaster.proj4String shouldBe "+proj=longlat +datum=WGS84 +no_defs"
+        testRaster.SRID shouldBe 4326
+        testRaster.extent shouldBe Seq(-180.0, -90.0, 180.0, 90.0)
 
         testRaster.getRaster.delete()
         superRaster.getRaster.delete()
@@ -358,7 +376,6 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
           inputMatrix(12)(12),
           inputMatrix(12)(13)
         ).max.toDouble
-
     }
 
     test("Verify that checkpoint is configured.") {

@@ -24,11 +24,11 @@ import scala.util.{Failure, Success, Try}
 
 /**
   * Mosaic's GDAL internal object for rasters.
-  * - Constructor invoked from various functions, including the
-  *   [[MosaicRasterGDAL]] scala companion object.
-  * - When invoked, raster is already a GDAL [[Dataset]].
-  * - "path" expected to be either "no_path" or fuse accessible.
-  * - same for "parent_path"
+  *   - Constructor invoked from various functions, including the
+  *     [[MosaicRasterGDAL]] scala companion object.
+  *   - When invoked, raster is already a GDAL [[Dataset]].
+  *   - "path" expected to be either "no_path" or fuse accessible.
+  *   - same for "parent_path"
   */
 //noinspection DuplicatedCode
 case class MosaicRasterGDAL(
@@ -50,22 +50,25 @@ case class MosaicRasterGDAL(
         compression
     }
 
-    /////////////////////////////////////////
+    // ///////////////////////////////////////
     // FROM createInfo
-    /////////////////////////////////////////
+    // ///////////////////////////////////////
 
     /** @return The raster's path on disk. */
     def path: String = createInfo("path")
 
-    /** @return The raster's path on disk. Usually this is a parent file for the tile. */
+    /**
+      * @return
+      *   The raster's path on disk. Usually this is a parent file for the tile.
+      */
     def parentPath: String = createInfo("parentPath")
 
     /** @return The driver as option. */
     def driverShortName: Option[String] = createInfo.get("driver")
 
-    /////////////////////////////////////////
+    // ///////////////////////////////////////
     // GDAL Dataset
-    /////////////////////////////////////////
+    // ///////////////////////////////////////
 
     /**
       * For the provided geometry and CRS, get bounding box polygon.
@@ -82,29 +85,30 @@ case class MosaicRasterGDAL(
         val sourceCRS = getSpatialReference
 
         val destCRSEPSGCode = (destCRS.GetAuthorityName(null), destCRS.GetAuthorityCode(null)) match {
-            case (null, _) => 0
+            case (null, _)                                      => 0
             case (name: String, code: String) if name == "EPSG" => code.toInt
-            case _ => 0
+            case _                                              => 0
         }
 
         val transform = new osr.CoordinateTransformation(sourceCRS, destCRS)
 
+        val p1 = transform.TransformPoint(gt(0), gt(3)).toSeq.take(2)
+        val p2 = transform.TransformPoint(gt(0) + gt(1) * xSize, gt(3)).toSeq.take(2)
+        val p3 = transform.TransformPoint(gt(0) + gt(1) * xSize, gt(3) + gt(5) * ySize).toSeq.take(2)
+        val p4 = transform.TransformPoint(gt(0), gt(3) + gt(5) * ySize).toSeq.take(2)
+
         val bbox = geometryAPI.geometry(
-            Seq(
-                Seq(gt(0), gt(3)),
-                Seq(gt(0) + gt(1) * xSize, gt(3)),
-                Seq(gt(0) + gt(1) * xSize, gt(3) + gt(5) * ySize),
-                Seq(gt(0), gt(3) + gt(5) * ySize)
-            ).map(geometryAPI.fromCoords),
-            POLYGON
+          Seq(
+            p1,
+            p2,
+            p3,
+            p4
+          ).map(geometryAPI.fromCoords),
+          POLYGON
         )
 
-        val geom1 = org.gdal.ogr.ogr.CreateGeometryFromWkb(bbox.toWKB)
-        geom1.Transform(transform)
-
-        val mosaicGeom = geometryAPI.geometry(geom1.ExportToWkb(), "WKB")
-        mosaicGeom.setSpatialReference(destCRSEPSGCode)
-        mosaicGeom
+        bbox.setSpatialReference(destCRSEPSGCode)
+        bbox
     }
 
     /** @return The diagonal size of a raster. */
@@ -135,7 +139,7 @@ case class MosaicRasterGDAL(
         if (Files.exists(Paths.get(toRead))) {
             Files.size(Paths.get(toRead))
         } else if (getBands.nonEmpty) {
-            //estimate based on pixels and datatype
+            // estimate based on pixels and datatype
             getBands.map(_.estimatedSizeInMem).sum
         } else {
             -1
@@ -144,9 +148,9 @@ case class MosaicRasterGDAL(
 
     /**
       * Get spatial reference.
-      * - may be already set on the raster
-      * - if not, load and detect it.
-      * - defaults to [[MosaicGDAL.WSG84]]
+      *   - may be already set on the raster
+      *   - if not, load and detect it.
+      *   - defaults to [[MosaicGDAL.WSG84]]
       * @return
       *   Raster's [[SpatialReference]] object.
       */
@@ -168,10 +172,10 @@ case class MosaicRasterGDAL(
     }
 
     /**
-     * @return
-     *   True if the raster is empty, false otherwise. May be expensive to
-     *   compute since it requires reading the raster and computing statistics.
-     */
+      * @return
+      *   True if the raster is empty, false otherwise. May be expensive to
+      *   compute since it requires reading the raster and computing statistics.
+      */
     def isEmpty: Boolean = {
         val bands = getBands
         if (bands.isEmpty) {
@@ -243,15 +247,13 @@ case class MosaicRasterGDAL(
 
     /** @return Returns the raster's proj4 string. */
     def proj4String: String = {
-
-        try {
-            raster.GetSpatialRef.ExportToProj4
-        } catch {
-            case _: Any => ""
-        }
+        getSpatialReference.ExportToProj4()
     }
 
-    /** @return Sets the raster's SRID. This is the EPSG code of the raster's CRS. */
+    /**
+      * @return
+      *   Sets the raster's SRID. This is the EPSG code of the raster's CRS.
+      */
     def setSRID(srid: Int): MosaicRasterGDAL = {
         val srs = new osr.SpatialReference()
         srs.ImportFromEPSG(srid)
@@ -262,14 +264,17 @@ case class MosaicRasterGDAL(
         val newRaster = MosaicRasterGDAL.pathAsDataset(tmpPath, driverShortName)
         dispose(this)
         val newCreateInfo = Map(
-            "path" -> tmpPath,
-            "parentPath" -> parentPath,
-            "driver" -> getDriversShortName
+          "path" -> tmpPath,
+          "parentPath" -> parentPath,
+          "driver" -> getDriversShortName
         )
         MosaicRasterGDAL(newRaster, newCreateInfo)
     }
 
-    /** @return Returns the raster's SRID. This is the EPSG code of the raster's CRS. */
+    /**
+      * @return
+      *   Returns the raster's SRID. This is the EPSG code of the raster's CRS.
+      */
     def SRID: Int = {
         Try(crsFactory.readEpsgFromParameters(proj4String))
             .filter(_ != null)
@@ -297,13 +302,13 @@ case class MosaicRasterGDAL(
     /** @return Returns y size of the raster. */
     def ySize: Int = raster.GetRasterYSize
 
-    /////////////////////////////////////////
+    // ///////////////////////////////////////
     // Apply Functions
-    /////////////////////////////////////////
+    // ///////////////////////////////////////
 
     /**
       * Applies a convolution filter to the raster.
-      * - operator applied per band.
+      *   - operator applied per band.
       * @param kernel
       *   [[Array[Double]]] kernel to apply to the raster.
       * @return
@@ -326,9 +331,9 @@ case class MosaicRasterGDAL(
         }
 
         val newCreateInfo = Map(
-            "path" -> tmpPath,
-            "parentPath" -> parentPath,
-            "driver" -> getDriversShortName
+          "path" -> tmpPath,
+          "parentPath" -> parentPath,
+          "driver" -> getDriversShortName
         )
 
         val result = MosaicRasterGDAL(outputRaster, newCreateInfo)
@@ -361,9 +366,9 @@ case class MosaicRasterGDAL(
         }
 
         val newCreateInfo = Map(
-            "path" -> tmpPath,
-            "parentPath" -> parentPath,
-            "driver" -> getDriversShortName
+          "path" -> tmpPath,
+          "parentPath" -> parentPath,
+          "driver" -> getDriversShortName
         )
 
         val result = MosaicRasterGDAL(outputRaster, newCreateInfo)
@@ -388,7 +393,8 @@ case class MosaicRasterGDAL(
       * @param geometryAPI
       *   Default is JTS.
       * @return
-      *   Returns [[MosaicRasterGDAL]] for a given cell ID. Used for tessellation.
+      *   Returns [[MosaicRasterGDAL]] for a given cell ID. Used for
+      *   tessellation.
       */
     def getRasterForCell(cellID: Long, indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicRasterGDAL = {
         val cellGeom = indexSystem.indexToGeometry(cellID, geometryAPI)
@@ -396,9 +402,9 @@ case class MosaicRasterGDAL(
         RasterClipByVector.clip(this, cellGeom, geomCRS, geometryAPI)
     }
 
-    /////////////////////////////////////////
+    // ///////////////////////////////////////
     // Subdataset Functions
-    /////////////////////////////////////////
+    // ///////////////////////////////////////
 
     /**
       * Get a particular subdataset by name.
@@ -413,10 +419,10 @@ case class MosaicRasterGDAL(
         val error = sPath match {
             case Some(_) => ""
             case None    => s"""
-                               |Subdataset $subsetName not found!
-                               |Available subdatasets:
-                               |     ${subdatasets.keys.filterNot(_.startsWith("SUBDATASET_")).mkString(", ")}
-                               |     """.stripMargin
+                            |Subdataset $subsetName not found!
+                            |Available subdatasets:
+                            |     ${subdatasets.keys.filterNot(_.startsWith("SUBDATASET_")).mkString(", ")}
+                            |     """.stripMargin
         }
         val sanitized = PathUtils.getCleanPath(sPath.getOrElse(PathUtils.NO_PATH_STRING))
         val subdatasetPath = PathUtils.getSubdatasetPath(sanitized)
@@ -426,23 +432,24 @@ case class MosaicRasterGDAL(
         // It will be available when the raster is serialized for next operation
         // If value is needed then it will be computed when getMemSize is called
         val newCreateInfo = Map(
-            "path" -> sPath.getOrElse(PathUtils.NO_PATH_STRING),
-            "parentPath" -> parentPath,
-            "driver" -> getDriversShortName,
-            "last_error" -> {
-                if (gdalError.nonEmpty || error.nonEmpty) s"""
-                                                             |GDAL Error: $gdalError
-                                                             |$error
-                                                             |""".stripMargin
-                else ""
-            }
+          "path" -> sPath.getOrElse(PathUtils.NO_PATH_STRING),
+          "parentPath" -> parentPath,
+          "driver" -> getDriversShortName,
+          "last_error" -> {
+              if (gdalError.nonEmpty || error.nonEmpty) s"""
+                                                           |GDAL Error: $gdalError
+                                                           |$error
+                                                           |""".stripMargin
+              else ""
+          }
         )
         MosaicRasterGDAL(ds, newCreateInfo)
     }
 
     /**
       * Test if path is a subdataset.
-      * @return boolean
+      * @return
+      *   boolean
       */
     def isSubDataset: Boolean = {
         val isSubdataset = PathUtils.isSubdataset(path)
@@ -463,17 +470,17 @@ case class MosaicRasterGDAL(
                 val path = subdatasetsMap(key)
                 val pieces = path.split(":")
                 Seq(
-                    key -> pieces.last,
-                    s"${pieces.last}_tmp" -> path,
-                    pieces.last -> s"${pieces.head}:$sanitizedParentPath:${pieces.last}"
+                  key -> pieces.last,
+                  s"${pieces.last}_tmp" -> path,
+                  pieces.last -> s"${pieces.head}:$sanitizedParentPath:${pieces.last}"
                 )
             } else Seq(key -> subdatasetsMap(key))
         ).toMap
     }
 
-    /////////////////////////////////////////
+    // ///////////////////////////////////////
     // Band Functions
-    /////////////////////////////////////////
+    // ///////////////////////////////////////
 
     /**
       * @param bandId
@@ -500,10 +507,10 @@ case class MosaicRasterGDAL(
                 val stddev = Array.ofDim[Double](1)
                 band.GetStatistics(true, true, min, max, mean, stddev)
                 i -> Map(
-                    "min" -> min(0),
-                    "max" -> max(0),
-                    "mean" -> mean(0),
-                    "stddev" -> stddev(0)
+                  "min" -> min(0),
+                  "max" -> max(0),
+                  "mean" -> mean(0),
+                  "stddev" -> stddev(0)
                 )
             })
             .toMap
@@ -520,17 +527,17 @@ case class MosaicRasterGDAL(
             .toMap
     }
 
-    /////////////////////////////////////////
+    // ///////////////////////////////////////
     // Raster Lifecycle Functions
-    /////////////////////////////////////////
+    // ///////////////////////////////////////
 
     /**
       * Cleans up the raster driver and references.
-      * - This will not clean up a file stored in a Databricks location,
-      *   meaning DBFS, Volumes, or Workspace paths are skipped.
-      * Unlinks the raster file. After this operation the raster object is no
-      * longer usable. To be used as last step in expression after writing to
-      * bytes.
+      *   - This will not clean up a file stored in a Databricks location,
+      *     meaning DBFS, Volumes, or Workspace paths are skipped. Unlinks the
+      *     raster file. After this operation the raster object is no longer
+      *     usable. To be used as last step in expression after writing to
+      *     bytes.
       */
     def cleanUp(): Unit = {
         // 0.4.4 - don't delete any checkpointing or fuse locations.
@@ -574,8 +581,7 @@ case class MosaicRasterGDAL(
       * Refreshes the raster object. This is needed after writing to a file
       * system path. GDAL only properly writes to a file system path if the
       * raster object is destroyed. After refresh operation the raster object is
-      * usable again.
-      * Returns [[MosaicRasterGDAL]].
+      * usable again. Returns [[MosaicRasterGDAL]].
       */
     def refresh(): MosaicRasterGDAL = {
         MosaicRasterGDAL(pathAsDataset(path), createInfo)
@@ -591,7 +597,7 @@ case class MosaicRasterGDAL(
     def writeToBytes(dispose: Boolean = true): Array[Byte] = {
         val readPath = {
             val tmpPath =
-                  if (isSubDataset) {
+                if (isSubDataset) {
                     val tmpPath = PathUtils.createTmpFilePath(getRasterFileExtension)
                     writeToPath(tmpPath, dispose = false)
                     tmpPath
@@ -602,7 +608,8 @@ case class MosaicRasterGDAL(
                 val parentDir = Paths.get(tmpPath).getParent.toString
                 val fileName = Paths.get(tmpPath).getFileName.toString
                 val prompt = SysUtils.runScript(Array("/bin/sh", "-c", s"cd $parentDir && zip -r0 $fileName.zip $fileName"))
-                if (prompt._3.nonEmpty) throw new Exception(s"Error zipping file: ${prompt._3}. Please verify that zip is installed. Run 'apt install zip'.")
+                if (prompt._3.nonEmpty)
+                    throw new Exception(s"Error zipping file: ${prompt._3}. Please verify that zip is installed. Run 'apt install zip'.")
                 s"$tmpPath.zip"
             } else {
                 tmpPath
@@ -631,18 +638,19 @@ case class MosaicRasterGDAL(
       * @param dispose
       *   Whether to dispose of the raster object, default is true.
       * @return
-      *  The path where written.
+      *   The path where written.
       */
     def writeToPath(newPath: String, dispose: Boolean = true): String = {
         if (isSubDataset) {
             val driver = raster.GetDriver()
 
-            //test to see if path is in a fuse location
-            val outPath = if (PathUtils.isFuseLocation(newPath)) {
-                PathUtils.createTmpFilePath(getRasterFileExtension)
-            } else {
-                newPath
-            }
+            // test to see if path is in a fuse location
+            val outPath =
+                if (PathUtils.isFuseLocation(newPath)) {
+                    PathUtils.createTmpFilePath(getRasterFileExtension)
+                } else {
+                    newPath
+                }
 
             val ds = driver.CreateCopy(outPath, this.flushCache().getRaster, 1)
             if (ds == null) {
@@ -661,7 +669,7 @@ case class MosaicRasterGDAL(
             val fromDir = thisPath.getParent
             val toDir = Paths.get(newPath) match {
                 case p: Path if Files.isDirectory(p) => p
-                case p: Path => p.getParent()
+                case p: Path                         => p.getParent()
             }
             val stemRegex = PathUtils.getStemRegex(this.path)
             PathUtils.wildcardCopy(fromDir.toString, toDir.toString, stemRegex)
@@ -670,9 +678,9 @@ case class MosaicRasterGDAL(
         }
     }
 
-    ///////////////////////////////////////////////////
+    // /////////////////////////////////////////////////
     // Additional Getters
-    ///////////////////////////////////////////////////
+    // /////////////////////////////////////////////////
 
     /** @return Returns the raster's bands as a Seq. */
     def getBands: Seq[MosaicRasterBandGDAL] = (1 to numBands).map(getBand)
@@ -683,10 +691,13 @@ case class MosaicRasterGDAL(
     /** @return The raster's driver short name. */
     def getDriversShortName: String =
         driverShortName.getOrElse(
-            Try(raster.GetDriver().getShortName).getOrElse("NONE")
+          Try(raster.GetDriver().getShortName).getOrElse("NONE")
         )
 
-    /** @return The raster's path on disk. Usually this is a parent file for the tile. */
+    /**
+      * @return
+      *   The raster's path on disk. Usually this is a parent file for the tile.
+      */
     def getParentPath: String = parentPath
 
     /** @return Returns the raster's path. */
@@ -699,7 +710,6 @@ case class MosaicRasterGDAL(
     def getRasterFileExtension: String = GDAL.getExtension(getDriversShortName)
 
 }
-
 
 //noinspection ZeroIndexToHead
 /** Companion object for MosaicRasterGDAL Implements RasterReader APIs */
@@ -771,7 +781,7 @@ object MosaicRasterGDAL extends RasterReader {
       *   metadata of the raster. This is not the same as GDAL creation options.
       * @return
       *   A [[MosaicRasterGDAL]] object.
-     */
+      */
     override def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String]): MosaicRasterGDAL = {
         if (Option(contentBytes).isEmpty || contentBytes.isEmpty) {
             MosaicRasterGDAL(null, createInfo)

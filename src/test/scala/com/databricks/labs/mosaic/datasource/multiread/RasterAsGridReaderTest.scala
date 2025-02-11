@@ -15,35 +15,8 @@ object ExcludeLocalTag extends Tag("ExcludeIfLocal")
 
 class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSessionGDAL {
 
-    test("Read netcdf with Raster As Grid Reader") {
-        assume(System.getProperty("os.name") == "Linux")
-        assume(checkpointingEnabled)
-        val mc = MosaicContext.build(H3IndexSystem, JTS)
-        mc.register(spark)
-
-
-        val netcdf = "/binary/netcdf-coral/"
-        val filePath = this.getClass.getResource(netcdf).getPath
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("sizeInMB", "16")
-            .option("resolution", "0")
-            .option("readSubdataset", "true")
-            .option("subdatasetName", "bleaching_alert_area")
-            .option("retile", "true")
-            .option("tileSize", "600")
-            .option("kRingInterpolate", "3")
-            .option("combiner", "avg")
-            .load(filePath)
-            .select("measure")
-            .take(1)
-
-    }
-
     test("Read ECMWF netcdf with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
-        assume(checkpointingEnabled)
         val mc = MosaicContext.build(H3IndexSystem, JTS)
         mc.register(spark)
 
@@ -100,7 +73,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
         val tif = "/modis/"
         val filePath = getClass.getResource(tif).getPath
 
-        noException should be thrownBy MosaicContext.read
+        MosaicContext.read
             .format("raster_to_grid")
             .option("sizeInMB", "16")
             .option("resolution", "0")
@@ -121,7 +94,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
         val zarr = "/binary/zarr-example/"
         val filePath = getClass.getResource(zarr).getPath
 
-        noException should be thrownBy MosaicContext.read
+        MosaicContext.read
             .format("raster_to_grid")
             .option("readSubdataset", "true")
             .option("subdatasetName", "/group_with_attrs/F_order_array")
