@@ -36,7 +36,10 @@ route = [
     "osmnx <2.0,>=1.9.4",
     "osmium ~= 4.0.2"
 ]
-all = ["databricks-spatial[viz,raster,route]"]
+points = [
+    "laspy[lazrs,laszip]"
+]
+all = ["databricks-spatial[viz,raster,route,points]"]
 
 [build-system]
 requires = [
