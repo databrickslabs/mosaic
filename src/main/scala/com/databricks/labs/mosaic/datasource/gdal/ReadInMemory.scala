@@ -4,10 +4,9 @@ import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
 import com.databricks.labs.mosaic.expressions.raster.buildMapString
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.utils.{HadoopUtils, PathUtils, ReaderUtils}
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
@@ -78,13 +77,13 @@ object ReadInMemory extends ReadStrategy {
     ): Iterator[InternalRow] = {
         val inPath = status.getPath.toString
         val readPath = PathUtils.getCleanPath(inPath)
-        val contentBytes: Array[Byte] = readContent(fs, status)
+        val contentBytes: Array[Byte] = HadoopUtils.readContent(fs, status)
         val createInfo = Map(
             "path" -> readPath,
             "parentPath" -> inPath
         )
         val raster = MosaicRasterGDAL.readRaster(createInfo)
-        val uuid = getUUID(status)
+        val uuid = HadoopUtils.getUUID(status)
 
         val fields = requiredSchema.fieldNames.filter(_ != TILE).map {
             case PATH              => status.getPath.toString
@@ -103,7 +102,7 @@ object ReadInMemory extends ReadStrategy {
         val rasterTileSer = InternalRow.fromSeq(
           Seq(null, contentBytes, mapData)
         )
-        val row = Utils.createRow(
+        val row = ReaderUtils.createRow(
           fields ++ Seq(rasterTileSer)
         )
         RasterCleaner.dispose(raster)

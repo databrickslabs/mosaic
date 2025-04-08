@@ -5,20 +5,18 @@ import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.datasource.Utils
 import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.utils.{HadoopUtils, ReaderUtils}
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
-
-import java.nio.file.{Files, Paths}
+import org.apache.spark.util.SerializableConfiguration
 
 /** An object defining the retiling read strategy for the GDAL file format. */
 object ReadAsPath extends ReadStrategy {
 
-    val tileDataType: DataType = StringType
+    private val tileDataType: DataType = StringType
 
     // noinspection DuplicatedCode
     /**
@@ -88,14 +86,23 @@ object ReadAsPath extends ReadStrategy {
         options: Map[String, String],
         indexSystem: IndexSystem
     ): Iterator[InternalRow] = {
+        val uuid = HadoopUtils.getUUID(status)
         val inPath = status.getPath.toString
-        val uuid = getUUID(status)
+        val hconf = new SerializableConfiguration(fs.getConf)
+        val tmpPath = HadoopUtils.copyToLocalTmp(inPath, hconf)
 
-        val tmpPath = PathUtils.copyToTmp(inPath)
         val createInfo = Map("path" -> tmpPath, "parentPath" -> inPath)
         val raster = MosaicRasterGDAL.readRaster(createInfo)
         val tile = MosaicRasterTile(null, raster)
         
+        val row = createRow(status, tile, uuid, requiredSchema, indexSystem)
+
+        HadoopUtils.deleteIfExists(tmpPath, hconf)
+
+        Seq(row).iterator
+    }
+
+    def createRow(status: FileStatus, tile: MosaicRasterTile, uuid: Long, requiredSchema: StructType, indexSystem: IndexSystem): InternalRow = {
         val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
         val fields = trimmedSchema.fieldNames.map {
             case PATH              => status.getPath.toString
@@ -111,14 +118,9 @@ object ReadAsPath extends ReadStrategy {
             case other             => throw new RuntimeException(s"Unsupported field name: $other")
         }
         // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
-        val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(tileDataType)))
+        val row = ReaderUtils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(tileDataType)))
         RasterCleaner.dispose(tile)
-        
-        val rows = Seq(row)
-
-        Files.deleteIfExists(Paths.get(tmpPath))
-
-        rows.iterator
+        row
     }
 
 }

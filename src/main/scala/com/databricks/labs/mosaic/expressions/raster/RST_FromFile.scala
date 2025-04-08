@@ -10,7 +10,7 @@ import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.utils.{HadoopUtils, PathUtils}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -64,11 +64,12 @@ case class RST_FromFile(
         GDAL.enable(expressionConfig)
         val rasterType = dataType.asInstanceOf[RasterTileType].rasterType
         val path = rasterPathExpr.eval(input).asInstanceOf[UTF8String].toString
-        val readPath = PathUtils.getCleanPath(path)
-        val driver = MosaicRasterGDAL.identifyDriver(path)
+        val tmpPath = HadoopUtils.copyToLocalTmp(path, expressionConfig.hConf)
+        val readPath = PathUtils.getCleanPath(tmpPath)
+        val driver = MosaicRasterGDAL.identifyDriver(readPath)
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
         val currentSize = Files.size(Paths.get(PathUtils.replaceDBFSTokens(readPath)))
-        if (targetSize <= 0 && currentSize <= Integer.MAX_VALUE) {
+        val res = if (targetSize <= 0 && currentSize <= Integer.MAX_VALUE) {
             val createInfo = Map("path" -> readPath, "parentPath" -> path)
             var raster = MosaicRasterGDAL.readRaster(createInfo)
             var tile = MosaicRasterTile(null, raster)
@@ -91,6 +92,8 @@ case class RST_FromFile(
             tiles = null
             rows.map(row => InternalRow.fromSeq(Seq(row)))
         }
+        //HadoopUtils.deleteIfExists(tmpPath, expressionConfig.hConf)
+        res
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression =

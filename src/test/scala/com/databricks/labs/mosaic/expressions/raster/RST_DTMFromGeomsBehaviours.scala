@@ -20,6 +20,7 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
 
     def simpleRasterizeTest(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
 
+        //spark.conf.set("spark.hadoop.fs.hdfs.impl", classOf[org.apache.hadoop.fs.RawLocalFileSystem].getName)
         val mc = MosaicContext.build(indexSystem, geometryAPI)
         import mc.functions._
         val sc = spark
@@ -30,6 +31,7 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
             .option("asWKB", "true")
             .format("multi_read_ogr")
             .load(pointsPath)
+            .repartition()
         val result = pointsDf
             .withColumn("geom_0", st_geomfromwkb($"geom_0"))
             .withColumn("geom_0", st_setsrid($"geom_0", lit(27700)))
@@ -45,15 +47,36 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
             .withColumn("pixel_size_x", lit(1.0))
             .withColumn("pixel_size_y", lit(-1.0))
             .withColumn("noData", lit(noData))
-            .withColumn("tile", rst_dtmfromgeoms(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
-                $"origin", $"grid_size_x", $"grid_size_y",
-                $"pixel_size_x", $"pixel_size_y", $"noData"))
+            .withColumn(
+              "tile",
+              rst_dtmfromgeoms(
+                $"masspoints",
+                $"breaklines",
+                $"mergeTolerance",
+                $"snapTolerance",
+                $"splitPointFinder",
+                $"origin",
+                $"grid_size_x",
+                $"grid_size_y",
+                $"pixel_size_x",
+                $"pixel_size_y",
+                $"noData"
+              )
+            )
             .drop(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
-                $"origin", $"grid_size_x", $"grid_size_y",
-                $"pixel_size_x", $"pixel_size_y", $"noData"
-            ).cache()
+              $"masspoints",
+              $"breaklines",
+              $"mergeTolerance",
+              $"snapTolerance",
+              $"splitPointFinder",
+              $"origin",
+              $"grid_size_x",
+              $"grid_size_y",
+              $"pixel_size_x",
+              $"pixel_size_y",
+              $"noData"
+            )
+            .cache()
         noException should be thrownBy result.collect()
 
     }
@@ -101,15 +124,36 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
             .withColumn("pixel_size_x", lit(1.0))
             .withColumn("pixel_size_y", lit(-1.0))
             .withColumn("noData", lit(noData))
-            .withColumn("tile", rst_dtmfromgeoms(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
-                $"origin", $"grid_size_x", $"grid_size_y",
-                $"pixel_size_x", $"pixel_size_y", $"noData"))
+            .withColumn(
+              "tile",
+              rst_dtmfromgeoms(
+                $"masspoints",
+                $"breaklines",
+                $"mergeTolerance",
+                $"snapTolerance",
+                $"splitPointFinder",
+                $"origin",
+                $"grid_size_x",
+                $"grid_size_y",
+                $"pixel_size_x",
+                $"pixel_size_y",
+                $"noData"
+              )
+            )
             .drop(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
-                $"origin", $"grid_size_x", $"grid_size_y",
-                $"pixel_size_x", $"pixel_size_y", $"noData"
-            ).cache()
+              $"masspoints",
+              $"breaklines",
+              $"mergeTolerance",
+              $"snapTolerance",
+              $"splitPointFinder",
+              $"origin",
+              $"grid_size_x",
+              $"grid_size_y",
+              $"pixel_size_x",
+              $"pixel_size_y",
+              $"noData"
+            )
+            .cache()
         noException should be thrownBy result.collect()
     }
 
@@ -124,8 +168,8 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
         val outputRegion = "POLYGON ((340000 460000, 350000 460000, 350000 470000, 340000 470000, 340000 460000))"
         val rasterBuffer = 500.0
 
-        val rasterExtentsDf =
-            List(outputRegion).toDF("wkt")
+        val rasterExtentsDf = List(outputRegion)
+            .toDF("wkt")
             .withColumn("extent_geom", st_geomfromwkt($"wkt"))
             .withColumn("extent_geom", st_setsrid($"extent_geom", lit(27700)))
             .withColumn("cells", grid_tessellateexplode($"extent_geom", lit(3)))
@@ -173,15 +217,36 @@ trait RST_DTMFromGeomsBehaviours extends SharedSparkSessionGDAL {
             .withColumn("pixel_size_x", lit(1.0))
             .withColumn("pixel_size_y", lit(-1.0))
             .withColumn("noData", lit(noData))
-            .withColumn("tile", rst_dtmfromgeoms(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
-                $"raster_origin", $"grid_size_x", $"grid_size_y",
-                $"pixel_size_x", $"pixel_size_y", $"noData"))
+            .withColumn(
+              "tile",
+              rst_dtmfromgeoms(
+                $"masspoints",
+                $"breaklines",
+                $"mergeTolerance",
+                $"snapTolerance",
+                $"splitPointFinder",
+                $"raster_origin",
+                $"grid_size_x",
+                $"grid_size_y",
+                $"pixel_size_x",
+                $"pixel_size_y",
+                $"noData"
+              )
+            )
             .drop(
-                $"masspoints", $"breaklines", $"mergeTolerance", $"snapTolerance", $"splitPointFinder",
-                $"raster_origin", $"grid_size_x", $"grid_size_y",
-                $"pixel_size_x", $"pixel_size_y", $"noData"
-            ).cache()
+              $"masspoints",
+              $"breaklines",
+              $"mergeTolerance",
+              $"snapTolerance",
+              $"splitPointFinder",
+              $"raster_origin",
+              $"grid_size_x",
+              $"grid_size_y",
+              $"pixel_size_x",
+              $"pixel_size_y",
+              $"noData"
+            )
+            .cache()
         noException should be thrownBy result.collect()
         result.count() shouldBe inputsDf.count()
     }

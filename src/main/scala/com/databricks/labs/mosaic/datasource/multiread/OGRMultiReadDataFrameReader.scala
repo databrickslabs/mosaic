@@ -2,8 +2,10 @@ package com.databricks.labs.mosaic.datasource.multiread
 
 import com.databricks.labs.mosaic.datasource.OGRFileFormat
 import com.databricks.labs.mosaic.expressions.util.OGRReadeWithOffset
+import com.databricks.labs.mosaic.utils.HadoopUtils
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
+import org.apache.spark.util.SerializableConfiguration
 
 /**
   * A Mosaic DataFrame Reader that provides a unified interface to read OGR
@@ -37,17 +39,18 @@ class OGRMultiReadDataFrameReader(sparkSession: SparkSession) extends MosaicData
         val layerName = config("layerName")
         val chunkSize = config("chunkSize").toInt
 
+        val hConf = new SerializableConfiguration(sparkSession.sessionState.newHadoopConf())
         val ds = OGRFileFormat.getDataSource(driverName, headPath)
         val layer = OGRFileFormat.getLayer(ds, layerNumber, layerName)
         val partitionCount = 1 + (layer.GetFeatureCount / chunkSize)
-
-        val schema = OGRFileFormat.inferSchemaImpl(driverName, headPath, config)
+        val schema = OGRFileFormat.inferSchemaImpl(driverName, headPath, config, hConf)
 
         val ogrReadWithOffset = OGRReadeWithOffset(
           col("path").expr,
           col("chunkIndex").expr,
           config,
-          schema.get
+          schema.get,
+          hConf
         )
 
         df

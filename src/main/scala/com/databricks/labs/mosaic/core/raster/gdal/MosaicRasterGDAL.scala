@@ -80,6 +80,10 @@ case class MosaicRasterGDAL(
       *   Returns [[MosaicGeometry]] representing bounding box polygon.
       */
     def bbox(geometryAPI: GeometryAPI, destCRS: SpatialReference = MosaicGDAL.WSG84): MosaicGeometry = {
+        windowBBox((0, 0, xSize, ySize), geometryAPI, destCRS)
+    }
+
+    def windowBBox(window: (Int, Int, Int, Int), geometryAPI: GeometryAPI, destCRS: SpatialReference = MosaicGDAL.WSG84): MosaicGeometry = {
         val gt = getGeoTransform
 
         val sourceCRS = getSpatialReference
@@ -92,10 +96,10 @@ case class MosaicRasterGDAL(
 
         val transform = new osr.CoordinateTransformation(sourceCRS, destCRS)
 
-        val p1 = transform.TransformPoint(gt(0), gt(3)).toSeq.take(2)
-        val p2 = transform.TransformPoint(gt(0) + gt(1) * xSize, gt(3)).toSeq.take(2)
-        val p3 = transform.TransformPoint(gt(0) + gt(1) * xSize, gt(3) + gt(5) * ySize).toSeq.take(2)
-        val p4 = transform.TransformPoint(gt(0), gt(3) + gt(5) * ySize).toSeq.take(2)
+        val p1 = transform.TransformPoint(gt(0) + gt(1) * window._1, gt(3) + gt(5) * window._2).toSeq.take(2)
+        val p2 = transform.TransformPoint(gt(0) + gt(1) * window._3, gt(3) + gt(5) * window._2).toSeq.take(2)
+        val p3 = transform.TransformPoint(gt(0) + gt(1) * window._3, gt(3) + gt(5) * window._4).toSeq.take(2)
+        val p4 = transform.TransformPoint(gt(0) + gt(1) * window._1, gt(3) + gt(5) * window._4).toSeq.take(2)
 
         val bbox = geometryAPI.geometry(
           Seq(

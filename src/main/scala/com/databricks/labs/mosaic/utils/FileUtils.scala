@@ -26,6 +26,15 @@ object FileUtils {
         bytes
     }
 
+    def writeBytes(inPath: String, bytes: Array[Byte]): Unit = {
+        val cleanPath = PathUtils.replaceDBFSTokens(inPath)
+        val path = Paths.get(cleanPath)
+        Files.createDirectories(path.getParent)
+        val outputStream = Files.newOutputStream(Paths.get(cleanPath))
+        outputStream.write(bytes)
+        outputStream.close()
+    }
+
     def createMosaicTempDir(prefix: String = "/tmp"): String = {
         val tempRoot = Paths.get(s"$prefix/mosaic_tmp/")
         if (!Files.exists(tempRoot)) {

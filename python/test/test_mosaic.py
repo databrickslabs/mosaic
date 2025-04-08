@@ -1,4 +1,4 @@
-from pyspark.sql.functions import _to_java_column, col
+from pyspark.sql.column import _to_java_column, col
 
 from .context import MosaicContext, MosaicLibraryHandler
 from .utils import SparkTestCase

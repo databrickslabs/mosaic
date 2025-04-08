@@ -19,6 +19,7 @@ class OGRMultiReadDataFrameReaderTest extends QueryTest with SharedSparkSessionG
             .format("multi_read_ogr")
             .option("vsizip", "true")
             .load(filePath)
+            .repartition()
             .take(1)
 
         noException should be thrownBy MosaicContext.read
@@ -27,6 +28,7 @@ class OGRMultiReadDataFrameReaderTest extends QueryTest with SharedSparkSessionG
             .option("vsizip", "true")
             .option("asWKB", "true")
             .load(filePath)
+            .repartition()
             .take(1)
 
         noException should be thrownBy MosaicContext.read
@@ -35,6 +37,7 @@ class OGRMultiReadDataFrameReaderTest extends QueryTest with SharedSparkSessionG
             .option("vsizip", "true")
             .option("asWKB", "true")
             .load(filePath)
+            .repartition()
             .select("SHAPE")
             .take(1)
 

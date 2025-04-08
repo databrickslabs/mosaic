@@ -78,7 +78,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.xSize shouldBe 2400
         testRaster.ySize shouldBe 2400
         testRaster.numBands shouldBe 1
-        testRaster.proj4String shouldBe "+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +R=6371007.181 +units=m +no_defs"
+        testRaster.proj4String shouldBe "+proj=[longlat +datum=WGS84] +no_defs"
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-8895604.157333, 1111950.519667, -7783653.637667, 2223901.039333)
         testRaster.getRaster.GetProjection()

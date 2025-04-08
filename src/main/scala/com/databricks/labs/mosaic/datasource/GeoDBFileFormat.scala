@@ -7,6 +7,7 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.execution.datasources.PartitionedFile
 import org.apache.spark.sql.sources.Filter
+import org.apache.spark.util.SerializableConfiguration
 
 class GeoDBFileFormat extends OGRFileFormat with Serializable {
 
@@ -19,7 +20,8 @@ class GeoDBFileFormat extends OGRFileFormat with Serializable {
         options: Map[String, String],
         files: Seq[FileStatus]
     ): Option[StructType] = {
-        OGRFileFormat.inferSchemaImpl(driverName, files.head.getPath.toString, options)
+        val hConf = new SerializableConfiguration(sparkSession.sessionState.newHadoopConf)
+        OGRFileFormat.inferSchemaImpl(driverName, files.head.getPath.toString, options, hConf)
     }
 
     override def buildReader(
@@ -31,7 +33,8 @@ class GeoDBFileFormat extends OGRFileFormat with Serializable {
         options: Map[String, String],
         hadoopConf: Configuration
     ): PartitionedFile => Iterator[InternalRow] = {
-        OGRFileFormat.buildReaderImpl(driverName, dataSchema, requiredSchema, options)
+        val hConf = new SerializableConfiguration(hadoopConf)
+        OGRFileFormat.buildReaderImpl(driverName, dataSchema, requiredSchema, options, hConf)
     }
 
 }

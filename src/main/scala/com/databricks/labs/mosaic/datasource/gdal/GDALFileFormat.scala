@@ -3,11 +3,9 @@ package com.databricks.labs.mosaic.datasource.gdal
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import com.google.common.io.{ByteStreams, Closeables}
-import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
+import com.databricks.labs.mosaic.utils.ReaderUtils
+import org.apache.hadoop.fs.{FileStatus, Path}
 import org.apache.hadoop.mapreduce.Job
-import org.apache.orc.util.Murmur3
-import org.apache.spark.SparkException
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.datasources.binaryfile.BinaryFileFormat
 import org.apache.spark.sql.execution.datasources.{OutputWriterFactory, PartitionedFile}
@@ -138,7 +136,7 @@ class GDALFileFormat extends BinaryFileFormat {
             val status = fs.getFileStatus(path)
 
             if (supportedExtensions.contains("*") || supportedExtensions.exists(status.getPath.getName.toLowerCase(Locale.ROOT).endsWith)) {
-                if (filterFuncs.forall(_.apply(status)) && isAllowedExtension(status, options)) {
+                if (filterFuncs.forall(_.apply(status)) && ReaderUtils.isAllowedExtension(status, options)) {
                     reader.read(status, fs, requiredSchema, options, indexSystem)
                 } else {
                     Iterator.empty
@@ -162,78 +160,11 @@ object GDALFileFormat {
     val CONTENT = "content"
     val X_SIZE = "x_size"
     val Y_SIZE = "y_size"
-    val X_OFFSET = "x_offset"
-    val Y_OFFSET = "y_offset"
     val BAND_COUNT = "bandCount"
     val METADATA = "metadata"
     val SUBDATASETS: String = "subdatasets"
     val SRID = "srid"
     val UUID = "uuid"
-
-    /**
-      * Creates an exception for when the file is too big to read.
-      * @param maxLength
-      *   Maximum length.
-      * @param status
-      *   File status.
-      * @return
-      *   An instance of [[SparkException]].
-      */
-    def CantReadBytesException(maxLength: Long, status: FileStatus): SparkException =
-        new SparkException(
-          s"Can't read binary files bigger than $maxLength bytes. " +
-              s"File ${status.getPath} is ${status.getLen} bytes"
-        )
-
-    /**
-      * Generates a UUID for the file.
-      * @param status
-      *   File status.
-      * @return
-      *   A UUID.
-      */
-    def getUUID(status: FileStatus): Long = {
-        val uuid = Murmur3.hash64(
-          status.getPath.toString.getBytes("UTF-8") ++
-              status.getLen.toString.getBytes("UTF-8") ++
-              status.getModificationTime.toString.getBytes("UTF-8")
-        )
-        uuid
-    }
-
-    // noinspection UnstableApiUsage
-    /**
-      * Reads the content of the file.
-      * @param fs
-      *   File system.
-      * @param status
-      *   File status.
-      * @return
-      *   An array of bytes.
-      */
-    def readContent(fs: FileSystem, status: FileStatus): Array[Byte] = {
-        val stream = fs.open(status.getPath)
-        try { // noinspection UnstableApiUsage
-            ByteStreams.toByteArray(stream)
-        } finally { // noinspection UnstableApiUsage
-            Closeables.close(stream, true)
-        }
-    }
-
-    /**
-      * Indicates whether the file extension is allowed.
-      * @param status
-      *   File status.
-      * @param options
-      *   Reading options.
-      * @return
-      *   True if the file extension is allowed, false otherwise.
-      */
-    def isAllowedExtension(status: FileStatus, options: Map[String, String]): Boolean = {
-        val allowedExtensions = options.getOrElse("extensions", "*").split(";").map(_.trim.toLowerCase(Locale.ROOT))
-        val fileExtension = status.getPath.getName.toLowerCase(Locale.ROOT)
-        allowedExtensions.contains("*") || allowedExtensions.exists(fileExtension.endsWith)
-    }
 
     /**
       * Creates a filter function for the file.
@@ -242,7 +173,7 @@ object GDALFileFormat {
       * @return
       *   An instance of [[FileStatus]] => [[Boolean]].
       */
-    private def createFilterFunction(filter: Filter): Option[FileStatus => Boolean] = {
+    def createFilterFunction(filter: Filter): Option[FileStatus => Boolean] = {
         filter match {
             case And(left, right)                                     => (createFilterFunction(left), createFilterFunction(right)) match {
                     case (Some(leftPred), Some(rightPred)) => Some(s => leftPred(s) && rightPred(s))

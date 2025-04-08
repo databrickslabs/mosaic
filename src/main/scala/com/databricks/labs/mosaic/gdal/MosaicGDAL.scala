@@ -38,6 +38,13 @@ object MosaicGDAL extends Logging {
         wsg84
     }
 
+    lazy val EPSG3857: SpatialReference = {
+        val epsg3857 = new SpatialReference()
+        epsg3857.ImportFromEPSG(3857)
+        epsg3857.SetAxisMappingStrategy(org.gdal.osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
+        epsg3857
+    }
+
     /** Returns true if GDAL is enabled. */
     def wasEnabled(spark: SparkSession): Boolean =
         spark.conf.get(GDAL_ENABLED, "false").toBoolean || sys.env.getOrElse("GDAL_ENABLED", "false").toBoolean
@@ -46,6 +53,7 @@ object MosaicGDAL extends Logging {
     def configureGDAL(mosaicConfig: MosaicExpressionConfig): Unit = {
         val CPL_TMPDIR = MosaicContext.tmpDir(mosaicConfig)
         val GDAL_PAM_PROXY_DIR = MosaicContext.tmpDir(mosaicConfig)
+
         gdal.SetConfigOption("GDAL_VRT_ENABLE_PYTHON", "YES")
         gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "YES")
         gdal.SetConfigOption("CPL_TMPDIR", CPL_TMPDIR)
@@ -53,8 +61,20 @@ object MosaicGDAL extends Logging {
         gdal.SetConfigOption("GDAL_PAM_ENABLED", "YES")
         gdal.SetConfigOption("CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE", "NO")
         gdal.SetConfigOption("CPL_LOG", s"$CPL_TMPDIR/gdal.log")
+
         gdal.SetConfigOption("GDAL_CACHEMAX", "512")
-        gdal.SetConfigOption("GDAL_NUM_THREADS", "ALL_CPUS")
+        gdal.SetCacheMax(512*1024*1024)
+        gdal.SetConfigOption("GDAL_NUM_THREADS", "4")
+        gdal.SetConfigOption("GDAL_SWATH_SIZE", "1073741824")
+        gdal.SetConfigOption("VSI_CACHE", "TRUE")
+        gdal.SetConfigOption("VSI_CACHE_SIZE", "33554432")
+        gdal.SetConfigOption("GTIFF_DIRECT_IO", "YES")
+        gdal.SetConfigOption("GTIFF_VIRTUAL_MEM_IO", "IF_ENOUGH_RAM")
+        gdal.SetConfigOption("GDAL_BAND_BLOCK_CACHE", "HASHSET")
+
+        gdal.SetConfigOption("GDAL_INGESTED_BYTES_AT_OPEN", "67108864") // 64MB chunks
+
+
         mosaicConfig.getGDALConf.foreach { case (k, v) => gdal.SetConfigOption(k.split("\\.").last, v) }
         setBlockSize(mosaicConfig)
         configureCheckpoint(mosaicConfig)

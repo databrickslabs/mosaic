@@ -1,24 +1,19 @@
 package com.databricks.labs.mosaic.datasource.gdal
 
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.raster.operator.retile.BalancedSubdivision
-import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.datasource.Utils
-import com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat._
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.utils.{HadoopUtils, PathUtils, ReaderUtils}
 import org.apache.hadoop.fs.{FileStatus, FileSystem}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
+import org.apache.spark.util.SerializableConfiguration
 
 /** An object defining the retiling read strategy for the GDAL file format. */
 object ReTileOnRead extends ReadStrategy {
-
-    val tileDataType: DataType = StringType
 
     // noinspection DuplicatedCode
     /**
@@ -48,21 +43,7 @@ object ReTileOnRead extends ReadStrategy {
         parentSchema: StructType,
         sparkSession: SparkSession
     ): StructType = {
-        val trimmedSchema = parentSchema.filter(field => field.name != CONTENT && field.name != LENGTH)
-        val indexSystem = IndexSystemFactory.getIndexSystem(sparkSession)
-        StructType(trimmedSchema)
-            .add(StructField(UUID, LongType, nullable = false))
-            .add(StructField(X_SIZE, IntegerType, nullable = false))
-            .add(StructField(Y_SIZE, IntegerType, nullable = false))
-            .add(StructField(BAND_COUNT, IntegerType, nullable = false))
-            .add(StructField(METADATA, MapType(StringType, StringType), nullable = false))
-            .add(StructField(SUBDATASETS, MapType(StringType, StringType), nullable = false))
-            .add(StructField(SRID, IntegerType, nullable = false))
-            .add(StructField(LENGTH, LongType, nullable = false))
-            // Note that for retiling we always use checkpoint location.
-            // In this case rasters are stored off spark rows.
-            // If you need the tiles in memory please load them from path stored in the tile returned by the reader.
-            .add(StructField(TILE, RasterTileType(indexSystem.getCellIdDataType, tileDataType, useCheckpoint = true), nullable = false))
+        ReadAsPath.getSchema(options, files, parentSchema, sparkSession)
     }
 
     /**
@@ -88,59 +69,26 @@ object ReTileOnRead extends ReadStrategy {
         options: Map[String, String],
         indexSystem: IndexSystem
     ): Iterator[InternalRow] = {
-        val uuid = getUUID(status)
+        val uuid = HadoopUtils.getUUID(status)
         val sizeInMB = options.getOrElse("sizeInMB", "16").toInt
-
         val inPath = status.getPath.toString
-        val tmpPath = options.getOrElse("readSubdataset", "false").toBoolean match {
-            case true =>
-                val readRaster = GDAL.raster(status.getPath.toString, status.getPath.toString)
-                val subDatasets = readRaster.subdatasets
-                if (subDatasets.isEmpty) {
-                    throw new RuntimeException(s"Option 'readSubdataset' was set to 'true' but no subdatasets were found in ${status.getPath.toString}")
-                }
-                if (options.contains("subdatasetName")) {
-                    val subdatasetName = options("subdatasetName")
-                    if (!subDatasets.contains(subdatasetName)) {
-                        throw new RuntimeException(s"Subdataset $subdatasetName not found in ${status.getPath.toString}")
-                    }
+        val hconf = new SerializableConfiguration(fs.getConf)
 
-                    val subdatasetPath = PathUtils.createTmpFilePath(readRaster.getRasterFileExtension)
-                    readRaster.getSubdataset(subdatasetName).writeToPath(subdatasetPath)
-                    readRaster.destroy()
-                    subdatasetPath
-                }
-                else {
-                    throw new RuntimeException(s"Option 'readSubdataset' was set to 'true' but 'subdatasetName' was not provided for ${status.getPath.toString}")
-                }
-            case false => PathUtils.copyToTmpWithRetry(inPath, 5)
-        }
+        // Hadoop copy to local to account for the Volumes
+        val tmpPath1 = HadoopUtils.copyToLocalTmp(inPath, hconf)
+        // After copying to local we can proceed as if the file was never on the volume
+        // This was done to avoid redoing the logic for subdatasets via Hadoop file wrangling
+        // for some reason both returned the same path ????
+        val tmpPath2 = ReaderUtils.asTmpRaster(tmpPath1, options)
 
-        val tiles = localSubdivide(tmpPath, inPath, sizeInMB)
+        val tiles = localSubdivide(tmpPath2, inPath, sizeInMB)
 
-        val rows = tiles.map(tile => {
-            val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
-            val fields = trimmedSchema.fieldNames.map {
-                case PATH              => status.getPath.toString
-                case MODIFICATION_TIME => status.getModificationTime
-                case UUID              => uuid
-                case X_SIZE            => tile.getRaster.xSize
-                case Y_SIZE            => tile.getRaster.ySize
-                case BAND_COUNT        => tile.getRaster.numBands
-                case METADATA          => tile.getRaster.metadata
-                case SUBDATASETS       => tile.getRaster.subdatasets
-                case SRID              => tile.getRaster.SRID
-                case LENGTH            => tile.getRaster.getMemSize
-                case other             => throw new RuntimeException(s"Unsupported field name: $other")
-            }
-            // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
-            val row = Utils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(tileDataType)))
-            RasterCleaner.dispose(tile)
-            row
-        })
+        val rows = tiles.map(tile => ReadAsPath.createRow(status, tile, uuid, requiredSchema, indexSystem))
 
-        PathUtils.cleanUpPath(tmpPath)
-//        Try(Files.deleteIfExists(Paths.get(tmpPath)))
+        // Both tmp files are local and can be deleted
+        // here using PathUtils is safe, and it accounts for subdatasets complications
+        PathUtils.cleanUpPath(tmpPath1)
+        PathUtils.cleanUpPath(tmpPath2)
 
         rows.iterator
     }

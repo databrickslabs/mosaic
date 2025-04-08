@@ -1,15 +1,23 @@
 package com.databricks.labs.mosaic.expressions.util
 
-import com.databricks.labs.mosaic.datasource.{OGRFileFormat, Utils}
+import com.databricks.labs.mosaic.datasource.OGRFileFormat
+import com.databricks.labs.mosaic.utils.{HadoopUtils, ReaderUtils}
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, CollectionGenerator, Expression}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, CollectionGenerator, Expression}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+import org.apache.spark.util.SerializableConfiguration
 
 import scala.collection.TraversableOnce
 
-case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, config: Map[String, String], schema: StructType)
+case class OGRReadeWithOffset(
+    pathExpr: Expression,
+    chunkIndexExpr: Expression,
+    config: Map[String, String],
+    schema: StructType,
+    hconf: SerializableConfiguration
+)
     extends BinaryExpression
       with CollectionGenerator
       with Serializable
@@ -34,7 +42,8 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
         val chunkIndex = chunkIndexExpr.eval(input).asInstanceOf[Int]
         OGRFileFormat.enableOGRDrivers()
 
-        val ds = OGRFileFormat.getDataSource(driverName, path)
+        val tmpPath = HadoopUtils.copyToLocalTmp(path, hconf)
+        val ds = OGRFileFormat.getDataSource(driverName, tmpPath)
         val layer = OGRFileFormat.getLayer(ds, layerNumber, layerName)
 
         val start = chunkIndex * chunkSize
@@ -43,7 +52,7 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
         for (_ <- start until end) yield {
             val feature = layer.GetNextFeature()
             val row = OGRFileFormat.getFeatureFields(feature, schema, asWKB)
-            Utils.createRow(row)
+            ReaderUtils.createRow(row)
         }
     }
 
@@ -54,7 +63,7 @@ case class OGRReadeWithOffset(pathExpr: Expression, chunkIndexExpr: Expression, 
     override def makeCopy(newArgs: Array[AnyRef]): Expression = {
         val pathExpr = newArgs(0).asInstanceOf[Expression]
         val chunkIndexExpr = newArgs(1).asInstanceOf[Expression]
-        OGRReadeWithOffset(pathExpr, chunkIndexExpr, config, schema)
+        OGRReadeWithOffset(pathExpr, chunkIndexExpr, config, schema, hconf)
     }
 
     override protected def withNewChildrenInternal(newLeft: Expression, newRight: Expression): Expression =

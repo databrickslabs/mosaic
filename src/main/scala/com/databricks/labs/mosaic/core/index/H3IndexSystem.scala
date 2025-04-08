@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnum}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POLYGON}
-import com.uber.h3core.H3Core
+import com.uber.h3core.{H3Core, LengthUnit}
 import com.uber.h3core.util.GeoCoord
 import org.apache.spark.sql.types.LongType
 import org.apache.spark.unsafe.types.UTF8String
@@ -22,6 +22,8 @@ import scala.util.{Success, Try}
   *   [[https://github.com/uber/h3-java]]
   */
 object H3IndexSystem extends IndexSystem(LongType) with Serializable {
+
+    def edgeLength(res: Int): Double = h3.edgeLength(res, LengthUnit.km)
 
     override def crsID: Int = 4326
 

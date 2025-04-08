@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.core.index.IndexSystemFactory
 import org.apache.spark.sql.types.DataType
 import org.apache.spark.sql.{RuntimeConfig, SparkSession}
+import org.apache.spark.util.SerializableConfiguration
 
 import scala.util.Try
 
@@ -16,7 +17,10 @@ import scala.util.Try
   * @param configs
   *   The configuration map for the Mosaic Expression.
   */
-case class MosaicExpressionConfig(configs: Map[String, String]) {
+case class MosaicExpressionConfig(
+    configs: Map[String, String],
+    hConf: SerializableConfiguration
+) extends Serializable {
 
     def updateSparkConf(): Unit = {
         // populate initial set configs
@@ -27,6 +31,8 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
     def updateSparkConf(spark: SparkSession): Unit = {
         val sparkConf = spark.sparkContext.getConf
         configs.foreach { case (k, v) => sparkConf.set(k, v) }
+
+        val hConf = new SerializableConfiguration(spark.sessionState.newHadoopConf())
 
         // update defaults as well
         this
@@ -57,40 +63,44 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
     def getCellIdType: DataType = IndexSystemFactory.getIndexSystem(getIndexSystem).cellIdType
 
     def getIndexSystem: String = configs.getOrElse(MOSAIC_INDEX_SYSTEM, H3.name)
-    
+
     def getRasterBlockSize: Int = configs.getOrElse(MOSAIC_RASTER_BLOCKSIZE, MOSAIC_RASTER_BLOCKSIZE_DEFAULT).toInt
 
     def setGDALConf(conf: RuntimeConfig): MosaicExpressionConfig = {
         val toAdd = conf.getAll.filter(_._1.startsWith(MOSAIC_GDAL_PREFIX))
-        MosaicExpressionConfig(configs ++ toAdd)
+        MosaicExpressionConfig(configs ++ toAdd, hConf)
     }
 
     def setGeometryAPI(api: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_GEOMETRY_API -> api))
+        MosaicExpressionConfig(configs + (MOSAIC_GEOMETRY_API -> api), hConf)
     }
 
     def setIndexSystem(system: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_INDEX_SYSTEM -> system))
+        MosaicExpressionConfig(configs + (MOSAIC_INDEX_SYSTEM -> system), hConf)
     }
 
     def setRasterAPI(api: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_RASTER_API -> api))
+        MosaicExpressionConfig(configs + (MOSAIC_RASTER_API -> api), hConf)
     }
 
     def setRasterCheckpoint(checkpoint: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_RASTER_CHECKPOINT -> checkpoint))
+        MosaicExpressionConfig(configs + (MOSAIC_RASTER_CHECKPOINT -> checkpoint), hConf)
     }
 
     def setRasterUseCheckpoint(checkpoint: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_RASTER_USE_CHECKPOINT -> checkpoint))
+        MosaicExpressionConfig(configs + (MOSAIC_RASTER_USE_CHECKPOINT -> checkpoint), hConf)
     }
-    
+
     def setTmpPrefix(prefix: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (MOSAIC_RASTER_TMP_PREFIX -> prefix))
+        MosaicExpressionConfig(configs + (MOSAIC_RASTER_TMP_PREFIX -> prefix), hConf)
     }
 
     def setConfig(key: String, value: String): MosaicExpressionConfig = {
-        MosaicExpressionConfig(configs + (key -> value))
+        MosaicExpressionConfig(configs + (key -> value), hConf)
+    }
+
+    def setHadoopConf(hConf: SerializableConfiguration): MosaicExpressionConfig = {
+        MosaicExpressionConfig(configs, hConf)
     }
 
 }
@@ -102,7 +112,8 @@ case class MosaicExpressionConfig(configs: Map[String, String]) {
 object MosaicExpressionConfig {
 
     def apply(spark: SparkSession): MosaicExpressionConfig = {
-        val expressionConfig = new MosaicExpressionConfig(Map.empty[String, String])
+        val hConf = new SerializableConfiguration(spark.sessionState.newHadoopConf())
+        val expressionConfig = new MosaicExpressionConfig(Map.empty[String, String], hConf)
         expressionConfig
             .setGeometryAPI(spark.conf.get(MOSAIC_GEOMETRY_API, JTS.name))
             .setIndexSystem(spark.conf.get(MOSAIC_INDEX_SYSTEM, H3.name))

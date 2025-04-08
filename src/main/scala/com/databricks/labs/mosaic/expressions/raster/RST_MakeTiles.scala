@@ -11,7 +11,7 @@ import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.datasource.gdal.ReTileOnRead
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.utils.{HadoopUtils, PathUtils}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -105,8 +105,7 @@ case class RST_MakeTiles(
     private def getInputSize(rawInput: Any): Long = {
         if (inputExpr.dataType == StringType) {
             val path = rawInput.asInstanceOf[UTF8String].toString
-            val cleanPath = PathUtils.replaceDBFSTokens(path)
-            Files.size(Paths.get(cleanPath))
+            HadoopUtils.getSize(path, expressionConfig.hConf)
         } else {
             val bytes = rawInput.asInstanceOf[Array[Byte]]
             bytes.length
