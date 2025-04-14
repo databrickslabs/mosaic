@@ -70,7 +70,9 @@ case class RST_FromFile(
         val targetSize = sizeInMB.eval(input).asInstanceOf[Int]
         val currentSize = Files.size(Paths.get(PathUtils.replaceDBFSTokens(readPath)))
         val res = if (targetSize <= 0 && currentSize <= Integer.MAX_VALUE) {
-            val createInfo = Map("path" -> readPath, "parentPath" -> path)
+            val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(driver))
+            Files.copy(Paths.get(readPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
+            val createInfo = Map("path" -> tmpPath, "parentPath" -> path)
             var raster = MosaicRasterGDAL.readRaster(createInfo)
             var tile = MosaicRasterTile(null, raster)
             val row = tile.formatCellId(indexSystem).serialize(rasterType)
@@ -92,7 +94,7 @@ case class RST_FromFile(
             tiles = null
             rows.map(row => InternalRow.fromSeq(Seq(row)))
         }
-        //HadoopUtils.deleteIfExists(tmpPath, expressionConfig.hConf)
+        // HadoopUtils.deleteIfExists(tmpPath, expressionConfig.hConf)
         res
     }
 

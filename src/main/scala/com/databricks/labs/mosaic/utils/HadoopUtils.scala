@@ -2,13 +2,12 @@ package com.databricks.labs.mosaic.utils
 
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.google.common.io.{ByteStreams, Closeables}
-import org.apache.hadoop.fs.{FileStatus, FileSystem, FileUtil, Path}
+import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
 import org.apache.orc.util.Murmur3
+import org.apache.spark.sql.execution.streaming.FileSystemBasedCheckpointFileManager
 import org.apache.spark.util.SerializableConfiguration
 
 import java.net.URI
-import java.nio.file.{Files, Paths}
-import java.util.UUID
 
 //noinspection ScalaWeakerAccess
 object HadoopUtils {
@@ -39,13 +38,15 @@ object HadoopUtils {
         }
     }
 
-    def getStemRegex(str: String): String = {
-        val cleanPath = HadoopUtils.cleanPath(str)
-        val fileName = new Path(cleanPath).getName
-        val stemName = fileName.substring(0, fileName.lastIndexOf('.'))
-        val stemEscaped = stemName.replace(".", "\\.")
-        val stemRegex = s"$stemEscaped\\..*".r
-        stemRegex.toString
+    def getRelativePath(inPath: String, basePath: String): String = {
+        inPath
+            .stripPrefix(basePath)
+            .stripPrefix("file:/")
+            .stripPrefix("dbfs:/")
+            .stripPrefix("/dbfs/")
+            .stripPrefix("dbfs/")
+            .stripPrefix("Volumes/")
+            .stripPrefix("/Volumes/")
     }
 
     def listHadoopFiles(inPath: String): Seq[String] = {
@@ -60,99 +61,42 @@ object HadoopUtils {
             .map(_.getPath.toString)
     }
 
-    def copyToLocalTmp(inPath: String): String = {
-        copyToLocalTmp(inPath, hadoopConf)
-    }
-
     def copyToLocalTmp(inPath: String, hconf: SerializableConfiguration): String = {
         val copyFromPath = new Path(cleanPath(inPath))
-        val fs = copyFromPath.getFileSystem(hconf.value)
-        val uuid = UUID.randomUUID().toString.replace("-", "_")
-        val outDir = MosaicContext.tmpDir(null) + s"/$uuid"
-        Files.createDirectories(Paths.get(outDir))
+        val outputDir = cleanPath(MosaicContext.tmpDir(null))
+        copyToLocalDir(copyFromPath.toString, outputDir, hconf)
+    }
+
+    def copyToLocalDir(inPath: String, outDir: String, hConf: SerializableConfiguration, basePath: String = ""): String = {
+        val copyFromPath = new Path(cleanPath(inPath))
+        val fs = copyFromPath.getFileSystem(hConf.value)
+        val checkpointManager = new FileSystemBasedCheckpointFileManager(new Path(outDir), hConf.value)
+        checkpointManager.createCheckpointDirectory()
+
         if (fs.getFileStatus(copyFromPath).isDirectory) {
-            // If the path is a directory, we need to copy all files in the directory
-            val name = copyFromPath.getName
-            val stemRegex = ".*"
-            wildcardCopy(copyFromPath.toString, outDir + "/" + name, stemRegex, hconf)
+            val files = listHadoopFiles(copyFromPath.toString, hConf)
+            files.foreach(filePath => copyToLocalDir(filePath, outDir, hConf, basePath = copyFromPath.toString))
+            outDir
         } else {
-            val inPathDir = copyFromPath.getParent.toString
-            val stemRegex = getStemRegex(inPath)
-            wildcardCopy(inPathDir, outDir, stemRegex, hconf)
+            val relativePath = new Path(getRelativePath(copyFromPath.toString, basePath))
+            val fileName = relativePath.getName
+            val baseName = if (fileName.contains(".")) fileName.substring(0, fileName.lastIndexOf('.')) else fileName
+            val localDestPath = new Path(s"$outDir/$relativePath")
+            // this is horribly inefficient but ok for now
+            // we need a set of files to check for that is fixed per format
+            val parent = relativePath.getParent
+            val pattern = if (parent.toString.endsWith("/")) s"$parent$baseName" else s"$parent/$baseName"
+            val sideFiles = listHadoopFiles(copyFromPath.getParent.toString, hConf)
+                .filter(_.contains(pattern))
+            sideFiles.foreach( // copy together with sidecar files
+              filePath => {
+                  val input = new Path(filePath)
+                  val output = new Path(localDestPath.getParent.toString + "/" + input.getName)
+                  AtomicDistributedCopy.copyIfNeeded(checkpointManager, fs, input, output)
+              }
+            )
+            localDestPath.toString
         }
-        val fullFileName = copyFromPath.getName.split("/").last
-        // Wrapper to force metadata to be copied
-        try {
-            fs.getFileStatus(new Path(s"${MosaicContext.tmpDir(null)}/$uuid/$fullFileName")).getPath.toString
-        } catch {
-            case _: Exception =>
-                // If the file is not found, we need to copy it again
-                val newPath = new Path(s"${MosaicContext.tmpDir(null)}/$uuid/$fullFileName")
-                fs.copyToLocalFile(copyFromPath, newPath)
-                // Return the path of the copied file
-        }
-        fs.getFileStatus(new Path(s"${MosaicContext.tmpDir(null)}/$uuid/$fullFileName")).getPath.toString
-    }
-
-    def wildcardCopy(inDirPath: String, outDirPath: String, pattern: String): Unit = {
-        wildcardCopy(inDirPath, outDirPath, pattern, hadoopConf)
-    }
-
-    def wildcardCopy(inDirPath: String, outDirPath: String, pattern: String, hconf: SerializableConfiguration): Unit = {
-        val copyFromPath = cleanPath(inDirPath)
-        val copyToPath = cleanPath(outDirPath)
-
-        val tc = listHadoopFiles(copyFromPath, hconf)
-            .filter(f => s"$copyFromPath/$pattern".r.findFirstIn(f).isDefined)
-
-        for (path <- tc) {
-            val src = new Path(path)
-            val dest = new Path(copyToPath, src.getName)
-            if (src != dest) {
-                val fs = src.getFileSystem(hconf.value)
-                if (fs.getFileStatus(src).isDirectory) {
-                    //writeNioDir(src, dest, hconf)
-                    Files.createDirectories(Paths.get(dest.toString))
-                    FileUtil.copy(fs, src, fs, dest, false, hconf.value)
-                } else {
-                    //writeNioFile(src, dest, hconf)
-                    Files.createDirectories(Paths.get(dest.getParent.toString))
-                    Files.createFile(Paths.get(dest.toString))
-                    fs.copyToLocalFile(src, dest)
-                }
-            }
-        }
-    }
-
-    def writeNioFile(src: Path, dest: Path, hconf: SerializableConfiguration): Unit = {
-        val fs = src.getFileSystem(hconf.value)
-        val srcStatus = fs.getFileStatus(src)
-        val bytes = readContent(fs, srcStatus)
-        FileUtils.writeBytes(dest.toString, bytes)
-    }
-
-    def writeNioDir(src: Path, dest: Path, hconf: SerializableConfiguration): Unit = {
-        val fs = src.getFileSystem(hconf.value)
-        val destNio = Paths.get(dest.toString)
-
-        def recurse(currentSrc: Path, currentDest: java.nio.file.Path): Unit = {
-            fs.listStatus(currentSrc).foreach { entry =>
-                val name = entry.getPath.getName
-                val nextSrc = entry.getPath
-                val nextDest = currentDest.resolve(name)
-
-                if (entry.isDirectory) {
-                    Files.createDirectories(nextDest)
-                    recurse(nextSrc, nextDest)
-                } else {
-                    val destH = new Path(nextDest.toString)
-                    writeNioFile(nextSrc, destH, hconf)
-                }
-            }
-        }
-
-        Files.createDirectories(destNio)
-        recurse(src, destNio)
     }
 
     /**

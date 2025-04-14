@@ -6,6 +6,13 @@ RUN apt-get update -y
 # Install OpenJDK 8
 RUN apt-get install -y openjdk-8-jdk --no-install-recommends
 
+# Install tini
+RUN apt-get install -y tini
+
+# Use tini as init
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["bash"]
+
 # Install native dependencies
 RUN apt-get install -y python3-numpy unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
 
@@ -54,8 +61,8 @@ ENV ROOTDIR /usr/local
 ENV LD_LIBRARY_PATH /usr/local/lib
 ENV SPARK_VERSION 3.5.0
 ENV GDAL_VERSION 3.9.3
-ENV LIBPROJ_VERSION 9.1.0
-ENV CORES 8
+ENV LIBPROJ_VERSION 9.3.0
+ENV CORES 4
 
 WORKDIR $ROOTDIR/
 RUN mkdir -p $ROOTDIR/src
@@ -107,7 +114,7 @@ ENV MAVEN_CONFIG "$USER_HOME_DIR/.m2"
 
 # Python packages
 # - Adds additional needed packages
-# RUN pip3 install pip --upgrade --break-system-packages
+RUN pip3 install --ignore-installed pip --upgrade --break-system-packages
 RUN pip3 install build wheel keplergl ipython pyspark==$SPARK_VERSION --break-system-packages
 RUN pip3 install black build isort py4j requests --break-system-packages
 RUN pip3 install gdal==$GDAL_VERSION --break-system-packages
