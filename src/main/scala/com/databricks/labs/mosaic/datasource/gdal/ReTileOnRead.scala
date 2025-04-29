@@ -79,11 +79,11 @@ object ReTileOnRead extends ReadStrategy {
         // After copying to local we can proceed as if the file was never on the volume
         // This was done to avoid redoing the logic for subdatasets via Hadoop file wrangling
         // for some reason both returned the same path ????
-        val tmpPath2 = ReaderUtils.asTmpRaster(tmpPath1, options)
+        val tmpPath2 = ReaderUtils.asTmpRaster(tmpPath1, options, hconf)
 
         val tiles = localSubdivide(tmpPath2, inPath, sizeInMB)
 
-        val rows = tiles.map(tile => ReadAsPath.createRow(status, tile, uuid, requiredSchema, indexSystem))
+        val rows = tiles.map(tile => ReadAsPath.createRow(status, tile, uuid, requiredSchema, indexSystem, hconf))
 
         // Both tmp files are local and can be deleted
         // here using PathUtils is safe, and it accounts for subdatasets complications

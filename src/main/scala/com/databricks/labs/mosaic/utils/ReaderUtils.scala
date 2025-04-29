@@ -6,6 +6,7 @@ import org.apache.hadoop.fs.FileStatus
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.util.GenericArrayData
 import org.apache.spark.unsafe.types.UTF8String
+import org.apache.spark.util.SerializableConfiguration
 
 import java.util.Locale
 
@@ -32,7 +33,7 @@ object ReaderUtils {
         )
     }
 
-    def asTmpRaster(inPath: String, options: Map[String, String]): String = {
+    def asTmpRaster(inPath: String, options: Map[String, String], hConf: SerializableConfiguration): String = {
         if (options.getOrElse("readSubdataset", "false").toBoolean) {
             val readRaster = GDAL.raster(inPath, inPath)
             val subDatasets = readRaster.subdatasets
@@ -48,7 +49,7 @@ object ReaderUtils {
                 }
 
                 val subdatasetPath = PathUtils.createTmpFilePath(readRaster.getRasterFileExtension)
-                readRaster.getSubdataset(subdatasetName).writeToPath(subdatasetPath)
+                readRaster.getSubdataset(subdatasetName).writeToPath(subdatasetPath, dispose = true, hConf)
                 readRaster.destroy()
                 subdatasetPath
             } else {

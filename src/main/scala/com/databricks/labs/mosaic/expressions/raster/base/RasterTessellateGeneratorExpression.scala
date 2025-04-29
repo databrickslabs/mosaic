@@ -58,10 +58,7 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       */
     override def elementSchema: StructType = {
         StructType(
-            Array(StructField(
-                "element",
-                RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint))
-            )
+          Array(StructField("element", RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)))
         )
     }
 
@@ -79,13 +76,13 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         val rasterType = RasterTileType(tileExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile
-            .deserialize(tileExpr.eval(input).asInstanceOf[InternalRow], indexSystem.getCellIdDataType, rasterType)
+            .deserialize(tileExpr.eval(input).asInstanceOf[InternalRow], indexSystem.getCellIdDataType, rasterType, expressionConfig.hConf)
         val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))
         val generatedChips = rasterGenerator(tile, inResolution)
             .map(chip => chip.formatCellId(indexSystem))
 
         val rows = generatedChips
-            .map(chip => InternalRow.fromSeq(Seq(chip.formatCellId(indexSystem).serialize(rasterType))))
+            .map(chip => InternalRow.fromSeq(Seq(chip.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf))))
 
         RasterCleaner.dispose(tile)
         generatedChips.foreach(chip => RasterCleaner.dispose(chip))

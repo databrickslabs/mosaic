@@ -2,9 +2,8 @@ package com.databricks.labs.mosaic.utils
 
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.google.common.io.{ByteStreams, Closeables}
-import org.apache.hadoop.fs.{FileStatus, FileSystem, Path}
+import org.apache.hadoop.fs._
 import org.apache.orc.util.Murmur3
-import org.apache.spark.sql.execution.streaming.FileSystemBasedCheckpointFileManager
 import org.apache.spark.util.SerializableConfiguration
 
 import java.net.URI
@@ -21,6 +20,7 @@ object HadoopUtils {
     def cleanPath(inPath: String): String = {
         inPath match {
             // Handle Unity Catalog Volumes path
+            case _ if inPath.startsWith("/Volumes/")     => inPath
             case _ if inPath.startsWith("/dbfs/Volume/") => inPath.replace("/dbfs/Volume/", "/Volume/")
             // If it isn't a volumes path but starts with /dbfs/ then it is a DBFS path
             // Hadoop will not work with this path so we need to replace it with dbfs:/
@@ -38,17 +38,6 @@ object HadoopUtils {
         }
     }
 
-    def getRelativePath(inPath: String, basePath: String): String = {
-        inPath
-            .stripPrefix(basePath)
-            .stripPrefix("file:/")
-            .stripPrefix("dbfs:/")
-            .stripPrefix("/dbfs/")
-            .stripPrefix("dbfs/")
-            .stripPrefix("Volumes/")
-            .stripPrefix("/Volumes/")
-    }
-
     def listHadoopFiles(inPath: String): Seq[String] = {
         listHadoopFiles(inPath, hadoopConf)
     }
@@ -62,40 +51,68 @@ object HadoopUtils {
     }
 
     def copyToLocalTmp(inPath: String, hconf: SerializableConfiguration): String = {
+        val uuid = java.util.UUID.randomUUID().toString
         val copyFromPath = new Path(cleanPath(inPath))
-        val outputDir = cleanPath(MosaicContext.tmpDir(null))
+        val outputDir = cleanPath(MosaicContext.tmpDir(null)) + s"/$uuid"
         copyToLocalDir(copyFromPath.toString, outputDir, hconf)
     }
 
-    def copyToLocalDir(inPath: String, outDir: String, hConf: SerializableConfiguration, basePath: String = ""): String = {
+    def copyToPath(
+        inPath: String,
+        outPath: String,
+        hconf: SerializableConfiguration
+    ): String = {
         val copyFromPath = new Path(cleanPath(inPath))
-        val fs = copyFromPath.getFileSystem(hConf.value)
-        val checkpointManager = new FileSystemBasedCheckpointFileManager(new Path(outDir), hConf.value)
-        checkpointManager.createCheckpointDirectory()
+        val srcFS = copyFromPath.getFileSystem(hconf.value)
+        val srcStatus = srcFS.getFileStatus(copyFromPath)
+        val outputDir =
+            if (srcStatus.isDirectory) {
+                new Path(cleanPath(outPath)).toString
+            } else {
+                new Path(cleanPath(outPath)).getParent.toString
+            }
+        copyToLocalDir(copyFromPath.toString, outputDir, hconf)
+    }
 
-        if (fs.getFileStatus(copyFromPath).isDirectory) {
-            val files = listHadoopFiles(copyFromPath.toString, hConf)
-            files.foreach(filePath => copyToLocalDir(filePath, outDir, hConf, basePath = copyFromPath.toString))
-            outDir
+    def copyRelativeFiles(
+        srcFs: FileSystem,
+        dstFs: FileSystem,
+        baseSrcPath: Path,
+        dstDirPath: Path
+    ): Unit = {
+        val baseName = baseSrcPath.getName.takeWhile(_ != '.')
+        val prefix = baseName + "."
+
+        val filter = new PathFilter {
+            override def accept(path: Path): Boolean = path.getName.startsWith(prefix)
+        }
+
+        val parentDir = baseSrcPath.getParent
+        val matchingFiles = srcFs.listStatus(parentDir, filter)
+
+        matchingFiles.foreach { fileStatus =>
+            val srcFile = fileStatus.getPath
+            val dstFile = new Path(dstDirPath, srcFile.getName)
+            AtomicDistributedCopy.copyIfNeeded(srcFs, dstFs, srcFile, dstFile)
+        }
+    }
+
+    def copyToLocalDir(inPath: String, outDir: String, hConf: SerializableConfiguration): String = {
+        val copyFromPath = new Path(cleanPath(inPath))
+        val outDirPath = new Path(cleanPath(outDir))
+        val srcFS = copyFromPath.getFileSystem(hConf.value)
+        val dstFS = outDirPath.getFileSystem(hConf.value)
+
+        if (!dstFS.exists(outDirPath)) dstFS.mkdirs(outDirPath)
+
+        if (srcFS.getFileStatus(copyFromPath).isDirectory) {
+            AtomicDistributedCopy.copyIfNeeded(srcFS, dstFS, copyFromPath, outDirPath)
+            outDirPath.toString
         } else {
-            val relativePath = new Path(getRelativePath(copyFromPath.toString, basePath))
-            val fileName = relativePath.getName
-            val baseName = if (fileName.contains(".")) fileName.substring(0, fileName.lastIndexOf('.')) else fileName
-            val localDestPath = new Path(s"$outDir/$relativePath")
-            // this is horribly inefficient but ok for now
-            // we need a set of files to check for that is fixed per format
-            val parent = relativePath.getParent
-            val pattern = if (parent.toString.endsWith("/")) s"$parent$baseName" else s"$parent/$baseName"
-            val sideFiles = listHadoopFiles(copyFromPath.getParent.toString, hConf)
-                .filter(_.contains(pattern))
-            sideFiles.foreach( // copy together with sidecar files
-              filePath => {
-                  val input = new Path(filePath)
-                  val output = new Path(localDestPath.getParent.toString + "/" + input.getName)
-                  AtomicDistributedCopy.copyIfNeeded(checkpointManager, fs, input, output)
-              }
-            )
-            localDestPath.toString
+            if (!dstFS.exists(outDirPath)) dstFS.mkdirs(outDirPath)
+            copyRelativeFiles(srcFS, dstFS, copyFromPath, outDirPath)
+            val fileName = copyFromPath.getName
+            s"$outDirPath/$fileName"
         }
     }
 

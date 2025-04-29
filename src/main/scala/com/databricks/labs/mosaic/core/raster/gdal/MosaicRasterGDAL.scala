@@ -10,7 +10,8 @@ import com.databricks.labs.mosaic.core.raster.io.{RasterCleaner, RasterReader, R
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
-import com.databricks.labs.mosaic.utils.{FileUtils, PathUtils, SysUtils}
+import com.databricks.labs.mosaic.utils.{FileUtils, HadoopUtils, PathUtils, SysUtils}
+import org.apache.spark.util.SerializableConfiguration
 import org.gdal.gdal.{Dataset, gdal}
 import org.gdal.gdalconst.gdalconstConstants._
 import org.gdal.osr
@@ -598,13 +599,12 @@ case class MosaicRasterGDAL(
       * @return
       *   A byte array containing the raster data.
       */
-    def writeToBytes(dispose: Boolean = true): Array[Byte] = {
+    def writeToBytes(dispose: Boolean = true, hConf: SerializableConfiguration): Array[Byte] = {
         val readPath = {
             val tmpPath =
                 if (isSubDataset) {
                     val tmpPath = PathUtils.createTmpFilePath(getRasterFileExtension)
-                    writeToPath(tmpPath, dispose = false)
-                    tmpPath
+                    writeToPath(tmpPath, dispose = false, hConf)
                 } else {
                     this.path
                 }
@@ -612,8 +612,9 @@ case class MosaicRasterGDAL(
                 val parentDir = Paths.get(tmpPath).getParent.toString
                 val fileName = Paths.get(tmpPath).getFileName.toString
                 val prompt = SysUtils.runScript(Array("/bin/sh", "-c", s"cd $parentDir && zip -r0 $fileName.zip $fileName"))
-                if (prompt._3.nonEmpty)
+                if (prompt._3.nonEmpty) {
                     throw new Exception(s"Error zipping file: ${prompt._3}. Please verify that zip is installed. Run 'apt install zip'.")
+                }
                 s"$tmpPath.zip"
             } else {
                 tmpPath
@@ -644,41 +645,41 @@ case class MosaicRasterGDAL(
       * @return
       *   The path where written.
       */
-    def writeToPath(newPath: String, dispose: Boolean = true): String = {
-        if (isSubDataset) {
-            val driver = raster.GetDriver()
+    def writeToPath(newPath: String, dispose: Boolean = true, hconf: SerializableConfiguration): String = {
+        val driver = raster.GetDriver()
 
-            // test to see if path is in a fuse location
-            val outPath =
-                if (PathUtils.isFuseLocation(newPath)) {
-                    PathUtils.createTmpFilePath(getRasterFileExtension)
-                } else {
-                    newPath
-                }
+        // we need to figure out how to handle write to dir and write to path
+        // for now it is this combined logic, but a separate logic would likely be simpler and leaner
+        val tmpFileName = Paths.get(PathUtils.createTmpFilePath(getRasterFileExtension))
+        val (tmpPath, outPath) = Paths.get(newPath) match {
+            case p: Path if Files.isDirectory(p) =>
+                (
+                  tmpFileName.toString,
+                  s"$p/${tmpFileName.getFileName}"
+                )
+            case p: Path                         => (
+                  s"${tmpFileName.getParent}/${p.getFileName}",
+                  p.toAbsolutePath.toString
+                )
+        }
 
-            val ds = driver.CreateCopy(outPath, this.flushCache().getRaster, 1)
-            if (ds == null) {
-                val error = gdal.GetLastErrorMsg()
-                throw new Exception(s"Error writing raster to path: $error")
-            }
-            ds.FlushCache()
-            ds.delete()
-            if (dispose) RasterCleaner.dispose(this)
-            if (outPath != newPath) {
-                Files.move(Paths.get(outPath), Paths.get(newPath), StandardCopyOption.REPLACE_EXISTING)
-            }
-            newPath
+        val inRaster = this.getRaster
+        inRaster.FlushCache()
+        val ds = driver.CreateCopy(tmpPath, inRaster, 1)
+        if (ds == null) {
+            val error = gdal.GetLastErrorMsg()
+            throw new Exception(s"Error writing raster to path: $error")
+        }
+        ds.FlushCache()
+        ds.delete()
+        if (dispose) RasterCleaner.dispose(this)
+
+        if (tmpPath != outPath) {
+            HadoopUtils.copyToPath(tmpPath, outPath, hconf)
+            Files.deleteIfExists(Paths.get(tmpPath))
+            outPath
         } else {
-            val thisPath = Paths.get(this.path)
-            val fromDir = thisPath.getParent
-            val toDir = Paths.get(newPath) match {
-                case p: Path if Files.isDirectory(p) => p
-                case p: Path                         => p.getParent()
-            }
-            val stemRegex = PathUtils.getStemRegex(this.path)
-            PathUtils.wildcardCopy(fromDir.toString, toDir.toString, stemRegex)
-            if (dispose) RasterCleaner.dispose(this)
-            s"$toDir/${thisPath.getFileName}"
+            tmpPath
         }
     }
 

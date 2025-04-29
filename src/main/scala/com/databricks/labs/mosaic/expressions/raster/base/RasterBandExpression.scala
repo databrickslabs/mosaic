@@ -75,9 +75,10 @@ abstract class RasterBandExpression[T <: Expression: ClassTag](
         GDAL.enable(expressionConfig)
         val rasterType = RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile.deserialize(
-            inputRaster.asInstanceOf[InternalRow],
-            expressionConfig.getCellIdType,
-            rasterType
+          inputRaster.asInstanceOf[InternalRow],
+          expressionConfig.getCellIdType,
+          rasterType,
+          expressionConfig.hConf
         )
         val bandIndex = inputBand.asInstanceOf[Int]
 

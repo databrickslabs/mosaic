@@ -36,11 +36,11 @@ object FileUtils {
     }
 
     def createMosaicTempDir(prefix: String = "/tmp"): String = {
-        val tempRoot = Paths.get(s"$prefix/mosaic_tmp/")
+        val tempRoot = Paths.get(s"$prefix/raster_tmp/")
         if (!Files.exists(tempRoot)) {
             Files.createDirectories(tempRoot)
         }
-        val tempDir = Files.createTempDirectory(tempRoot, "mosaic")
+        val tempDir = Files.createTempDirectory(tempRoot, "")
         tempDir.toFile.getAbsolutePath
     }
 

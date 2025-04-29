@@ -25,7 +25,7 @@ trait RST_WriteBehaviors extends QueryTest {
         mc.register(sc)
         import mc.functions._
 
-        val writeDir = "/mnt/mosaic_tmp/write-tile"
+        val writeDir = "/mnt/test_tmp/write-tile"
         val writeDirJava = Paths.get(writeDir)
         Try(FileUtils.deleteRecursively(writeDir, keepRoot = false))
         Files.createDirectories(writeDirJava)
@@ -44,9 +44,11 @@ trait RST_WriteBehaviors extends QueryTest {
             .first()
 
         val createInfo1 = gridTiles1.getStruct(0).getAs[Map[String, String]](2)
-        val path1Java = Paths.get(createInfo1("path"))
+        val path1Java = Paths.get(createInfo1("path").replace("file:", ""))
 
-        Files.list(path1Java.getParent).count() shouldBe 1
+        // Some FS operations can result in a .crc file
+        // At the moment we dont delete these as we dont want to assume side effects of such deletion
+        Files.list(path1Java.getParent).count() >= 1 shouldBe true
         FileUtils.deleteRecursively(writeDir, keepRoot = false)
         Files.createDirectories(writeDirJava)
         Files.list(Paths.get(writeDir)).count() should be (0)
@@ -66,7 +68,7 @@ trait RST_WriteBehaviors extends QueryTest {
             .first()
 
         val createInfo2 = gridTilesSQL.getStruct(0).getAs[Map[String, String]](2)
-        val path2Java = Paths.get(createInfo2("path"))
+        val path2Java = Paths.get(createInfo2("path").replace("file:", ""))
 
         // should equal 2: original file plus file written during checkpointing
 
@@ -74,7 +76,7 @@ trait RST_WriteBehaviors extends QueryTest {
             case "true" => 2
             case _ => 1
         }
-        Files.list(path2Java.getParent).count() should be (expectedFileCount)
+        Files.list(path2Java.getParent).count() >= expectedFileCount shouldBe true
         Try(FileUtils.deleteRecursively(writeDir, keepRoot = false))
         Files.createDirectories(writeDirJava)
         Files.list(Paths.get(writeDir)).count() should be (0)

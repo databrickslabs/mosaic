@@ -75,7 +75,7 @@ case class RST_FromFile(
             val createInfo = Map("path" -> tmpPath, "parentPath" -> path)
             var raster = MosaicRasterGDAL.readRaster(createInfo)
             var tile = MosaicRasterTile(null, raster)
-            val row = tile.formatCellId(indexSystem).serialize(rasterType)
+            val row = tile.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf)
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
             raster = null
@@ -88,7 +88,7 @@ case class RST_FromFile(
             Files.copy(Paths.get(readPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
             val size = if (targetSize <= 0) 64 else targetSize
             var tiles = ReTileOnRead.localSubdivide(tmpPath, path, size)
-            val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterType))
+            val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf))
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(tmpPath))
             tiles = null

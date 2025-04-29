@@ -5,7 +5,6 @@ import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.utils.FileUtils
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
-import org.gdal.gdal.gdal
 import org.scalatest.{Args, CompositeStatus, Status}
 
 import scala.util.Try
@@ -35,7 +34,9 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
 
     override def createSparkSession: TestSparkSession = {
         val conf = sparkConf
-        conf.set(MOSAIC_RASTER_CHECKPOINT, FileUtils.createMosaicTempDir(prefix = "/mnt/"))
+        conf.set(MOSAIC_RASTER_CHECKPOINT, FileUtils.createMosaicTempDir(prefix = "/home/raster_checkpoint/"))
+        conf.set("spark.driver.extraJavaOptions", "-Djava.library.path=~/hadoop-native/lib/native")
+        conf.set("spark.executor.extraJavaOptions", "-Djava.library.path=~/hadoop-native/lib/native")
         SparkSession.cleanupAnyExistingSession()
         val session = new MosaicTestSparkSession(conf)
         session.sparkContext.setLogLevel("ERROR")
@@ -55,6 +56,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         super.afterAll()
         System.gc()
         super.beforeAll()
+        FileUtils.deleteRecursively("/home/raster_checkpoint/", keepRoot = true)
     }
 
 }

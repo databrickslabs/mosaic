@@ -6,9 +6,11 @@ import com.databricks.labs.mosaic.core.raster.operator.transform.RasterTransform
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.gdal.MosaicGDAL.configureGDAL
+import com.databricks.labs.mosaic.utils.{HadoopUtils, PathUtils}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
+import org.apache.spark.util.SerializableConfiguration
 import org.gdal.gdal.gdal
 import org.gdal.gdalconst.gdalconstConstants._
 
@@ -106,34 +108,38 @@ object GDAL {
     }
 
     /**
-     * Reads a raster from the given input data.
-     * - If it is a byte array, it will read the raster from the byte array.
-     * - If it is a string, it will read the raster from the path.
-     * - Path may be a zip file.
-     * - Path may be a subdataset.
-     *
-     * @param inputRaster
-     *   The raster, based on inputDT. Path based rasters with subdatasets
-     *   are supported.
-     * @param createInfo
-     *   Mosaic creation info of the raster. Note: This is not the same as the
-     *   metadata of the raster. This is not the same as GDAL creation options.
-     * @param inputDT
-     *  [[DataType]] for the raster, either [[StringType]] or [[BinaryType]].
-     * @return
-     *   Returns a [[MosaicRasterGDAL]] object.
-     */
+      * Reads a raster from the given input data.
+      *   - If it is a byte array, it will read the raster from the byte array.
+      *   - If it is a string, it will read the raster from the path.
+      *   - Path may be a zip file.
+      *   - Path may be a subdataset.
+      *
+      * @param inputRaster
+      *   The raster, based on inputDT. Path based rasters with subdatasets are
+      *   supported.
+      * @param createInfo
+      *   Mosaic creation info of the raster. Note: This is not the same as the
+      *   metadata of the raster. This is not the same as GDAL creation options.
+      * @param inputDT
+      *   [[DataType]] for the raster, either [[StringType]] or [[BinaryType]].
+      * @return
+      *   Returns a [[MosaicRasterGDAL]] object.
+      */
     def readRaster(
-                      inputRaster: Any,
-                      createInfo: Map[String, String],
-                      inputDT: DataType
-                  ): MosaicRasterGDAL = {
+        inputRaster: Any,
+        createInfo: Map[String, String],
+        inputDT: DataType,
+        hConf: SerializableConfiguration
+    ): MosaicRasterGDAL = {
         if (inputRaster == null) {
             MosaicRasterGDAL(null, createInfo)
         } else {
             inputDT match {
                 case _: StringType =>
-                    MosaicRasterGDAL.readRaster(createInfo)
+                    val inPath = createInfo("path")
+                    val tmpPath = HadoopUtils.copyToLocalTmp(inPath, hConf)
+                    val path = PathUtils.getCleanPath(tmpPath)
+                    MosaicRasterGDAL.readRaster(createInfo + ("path" -> path))
                 case _: BinaryType =>
                     val bytes = inputRaster.asInstanceOf[Array[Byte]]
                     try {
@@ -151,7 +157,7 @@ object GDAL {
                     } catch {
                         case _: Throwable => readParentZipBinary(bytes, createInfo)
                     }
-                case _ => throw new IllegalArgumentException(s"Unsupported data type: $inputDT")
+                case _             => throw new IllegalArgumentException(s"Unsupported data type: $inputDT")
             }
         }
     }
@@ -178,14 +184,13 @@ object GDAL {
       * @return
       *   Returns the paths of the written rasters.
       */
-    def writeRasters(generatedRasters: Seq[MosaicRasterGDAL], rasterDT: DataType): Seq[Any] = {
+    def writeRasters(generatedRasters: Seq[MosaicRasterGDAL], rasterDT: DataType, hConf: SerializableConfiguration): Seq[Any] = {
         generatedRasters.map(raster =>
             if (raster != null) {
                 rasterDT match {
-                    case StringType =>
-                        writeRasterString(raster)
+                    case StringType => writeRasterString(raster, hConf = hConf)
                     case BinaryType =>
-                        val bytes = raster.writeToBytes()
+                        val bytes = raster.writeToBytes(hConf = hConf)
                         RasterCleaner.dispose(raster)
                         bytes
                 }
@@ -195,14 +200,14 @@ object GDAL {
         )
     }
 
-    def writeRasterString(raster: MosaicRasterGDAL, path: Option[String] = None): UTF8String = {
+    def writeRasterString(raster: MosaicRasterGDAL, path: Option[String] = None, hConf: SerializableConfiguration): UTF8String = {
         val uuid = UUID.randomUUID().toString
         val extension = GDAL.getExtension(raster.getDriversShortName)
         val writePath = path match {
             case Some(p) => p
-            case None => s"${getCheckpointPath}/$uuid.$extension"
+            case None    => s"${getCheckpointPath}/$uuid.$extension"
         }
-        val outPath = raster.writeToPath(writePath)
+        val outPath = raster.writeToPath(writePath, dispose = true, hConf)
         RasterCleaner.dispose(raster)
         UTF8String.fromString(outPath)
     }

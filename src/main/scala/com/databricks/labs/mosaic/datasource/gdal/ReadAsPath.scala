@@ -95,14 +95,14 @@ object ReadAsPath extends ReadStrategy {
         val raster = MosaicRasterGDAL.readRaster(createInfo)
         val tile = MosaicRasterTile(null, raster)
         
-        val row = createRow(status, tile, uuid, requiredSchema, indexSystem)
+        val row = createRow(status, tile, uuid, requiredSchema, indexSystem, hconf)
 
         HadoopUtils.deleteIfExists(tmpPath, hconf)
 
         Seq(row).iterator
     }
 
-    def createRow(status: FileStatus, tile: MosaicRasterTile, uuid: Long, requiredSchema: StructType, indexSystem: IndexSystem): InternalRow = {
+    def createRow(status: FileStatus, tile: MosaicRasterTile, uuid: Long, requiredSchema: StructType, indexSystem: IndexSystem, hConf: SerializableConfiguration): InternalRow = {
         val trimmedSchema = StructType(requiredSchema.filter(field => field.name != TILE))
         val fields = trimmedSchema.fieldNames.map {
             case PATH              => status.getPath.toString
@@ -118,7 +118,7 @@ object ReadAsPath extends ReadStrategy {
             case other             => throw new RuntimeException(s"Unsupported field name: $other")
         }
         // Writing to bytes is destructive so we delay reading content and content length until the last possible moment
-        val row = ReaderUtils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(tileDataType)))
+        val row = ReaderUtils.createRow(fields ++ Seq(tile.formatCellId(indexSystem).serialize(tileDataType, hConf)))
         RasterCleaner.dispose(tile)
         row
     }

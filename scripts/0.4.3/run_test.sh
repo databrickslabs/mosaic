@@ -1,0 +1,1 @@
+mvn test -DargLine=-agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=n -DskipTests=False -DwildcardSuites=com.databricks.labs.mosaic.expressions.geometry.ST_UnaryUnionTest

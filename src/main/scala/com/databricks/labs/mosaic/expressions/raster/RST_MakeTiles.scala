@@ -24,12 +24,12 @@ import scala.util.Try
 
 /**
   * Creates raster tiles from the input column.
-  * - spark config to turn checkpointing on for all functions in 0.4.2
-  * - this is the only function able to write raster to
-  *    checkpoint (even if the spark config is set to false).
-  * - can be useful when you want to start from the configured checkpoint
-  *   but work with binary payloads from there.
- *  - more at [[com.databricks.labs.mosaic.gdal.MosaicGDAL]].
+  *   - spark config to turn checkpointing on for all functions in 0.4.2
+  *   - this is the only function able to write raster to checkpoint (even if
+  *     the spark config is set to false).
+  *   - can be useful when you want to start from the configured checkpoint but
+  *     work with binary payloads from there.
+  *     - more at [[com.databricks.labs.mosaic.gdal.MosaicGDAL]].
   * @param inputExpr
   *   The expression for the raster. If the raster is stored on disc, the path
   *   to the raster is provided. If the raster is stored in memory, the bytes of
@@ -61,7 +61,7 @@ case class RST_MakeTiles(
       with NullIntolerant
       with CodegenFallback {
 
-    /** @return Returns StringType if either  */
+    /** @return Returns StringType if either */
     override def dataType: DataType = {
         GDAL.enable(expressionConfig)
         require(withCheckpointExpr.isInstanceOf[Literal])
@@ -125,19 +125,25 @@ case class RST_MakeTiles(
 
         val rasterType = dataType.asInstanceOf[RasterTileType].rasterType
 
-        val rawDriver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
         val rawInput = inputExpr.eval(input)
+        val path =
+            if (inputExpr.dataType == StringType) {
+                val p = rawInput.asInstanceOf[UTF8String].toString
+                val tmpPath = HadoopUtils.copyToLocalTmp(p, expressionConfig.hConf)
+                PathUtils.getCleanPath(tmpPath)
+            } else PathUtils.NO_PATH_STRING
+
+        val rawDriver = driverExpr.eval(input).asInstanceOf[UTF8String].toString
         val driver = getDriver(rawInput, rawDriver)
         val targetSize = sizeInMBExpr.eval(input).asInstanceOf[Int]
         val inputSize = getInputSize(rawInput)
-        val path = if (inputExpr.dataType == StringType) rawInput.asInstanceOf[UTF8String].toString else PathUtils.NO_PATH_STRING
 
         if (targetSize <= 0 && inputSize <= Integer.MAX_VALUE) {
             // - no split required
             val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driver, "path" -> path)
-            val raster = GDAL.readRaster(rawInput, createInfo, inputExpr.dataType)
+            val raster = GDAL.readRaster(rawInput, createInfo, inputExpr.dataType, expressionConfig.hConf)
             val tile = MosaicRasterTile(null, raster)
-            val row = tile.formatCellId(indexSystem).serialize(rasterType)
+            val row = tile.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf)
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
             Seq(InternalRow.fromSeq(Seq(row)))
@@ -156,7 +162,7 @@ case class RST_MakeTiles(
                 }
             val size = if (targetSize <= 0) 64 else targetSize
             var tiles = ReTileOnRead.localSubdivide(readPath, PathUtils.NO_PATH_STRING, size)
-            val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterType))
+            val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf))
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(readPath))
             tiles = null

@@ -7,6 +7,7 @@ import com.databricks.labs.mosaic.expressions.raster.{buildMapString, extractMap
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types.{BinaryType, DataType, LongType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
+import org.apache.spark.util.SerializableConfiguration
 
 import scala.util.{Failure, Success, Try}
 
@@ -104,8 +105,8 @@ case class MosaicRasterTile(
       * @return
       *   An instance of [[InternalRow]].
       */
-    def serialize(rasterDataType: DataType): InternalRow = {
-        val encodedRaster = encodeRaster(rasterDataType)
+    def serialize(rasterDataType: DataType, hConf: SerializableConfiguration): InternalRow = {
+        val encodedRaster = encodeRaster(rasterDataType, hConf)
         val path = encodedRaster match {
                 case uStr: UTF8String => uStr.toString
                 case _ => raster.createInfo("path")
@@ -140,9 +141,10 @@ case class MosaicRasterTile(
       *   According to the [[DataType]].
       */
     private def encodeRaster(
-        rasterDataType: DataType
+        rasterDataType: DataType,
+        hConf: SerializableConfiguration
     ): Any = {
-        GDAL.writeRasters(Seq(raster), rasterDataType).head
+        GDAL.writeRasters(Seq(raster), rasterDataType, hConf).head
     }
 
     def getSequenceNumber: Int =
@@ -169,12 +171,12 @@ object MosaicRasterTile {
       * @return
       *   An instance of [[MosaicRasterTile]].
       */
-    def deserialize(row: InternalRow, idDataType: DataType, rasterDataType: DataType): MosaicRasterTile = {
+    def deserialize(row: InternalRow, idDataType: DataType, rasterDataType: DataType, hConf: SerializableConfiguration): MosaicRasterTile = {
         val index = row.get(0, idDataType)
         // handle checkpoint related de-serialization
         val rawRaster = row.get(1, rasterDataType)
         val createInfo = extractMap(row.getMap(2))
-        val raster = GDAL.readRaster(rawRaster, createInfo, rasterDataType)
+        val raster = GDAL.readRaster(rawRaster, createInfo, rasterDataType, hConf)
 
         // noinspection TypeCheckCanBeMatch
         if (Option(index).isDefined) {

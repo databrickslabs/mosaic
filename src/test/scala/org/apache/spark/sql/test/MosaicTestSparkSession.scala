@@ -8,14 +8,14 @@ class MosaicTestSparkSession(sc: SparkContext) extends TestSparkSession(sc) {
 
         this(
           new SparkContext(
-            "local[8]",
+            "local[16]",
             "test-sql-context",
             sparkConf
                 .set("spark.sql.adaptive.enabled", "false")
                 .set("spark.driver.memory", "32g")
                 .set("spark.executor.memory", "32g")
-                .set("spark.task.cpus", "4")
                 .set("spark.sql.testkey", "true")
+                .set("spark.sql.shuffle.partitions", "32")
           )
         )
     }

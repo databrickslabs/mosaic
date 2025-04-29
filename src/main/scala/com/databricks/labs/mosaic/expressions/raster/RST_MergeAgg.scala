@@ -13,7 +13,7 @@ import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate,
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, UnsafeProjection, UnsafeRow}
 import org.apache.spark.sql.catalyst.trees.UnaryLike
 import org.apache.spark.sql.catalyst.util.GenericArrayData
-import org.apache.spark.sql.types.{ArrayType, BinaryType, DataType}
+import org.apache.spark.sql.types.{ArrayType, DataType}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -75,7 +75,8 @@ case class RST_MergeAgg(
                     MosaicRasterTile.deserialize(
                       row.asInstanceOf[InternalRow],
                       expressionConfig.getCellIdType,
-                      rasterType
+                      rasterType,
+                      expressionConfig.hConf
                     )
                 )
                 .sortBy(_.getParentPath)
@@ -86,7 +87,7 @@ case class RST_MergeAgg(
 
             val result = MosaicRasterTile(idx, merged)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(rasterType)
+                .serialize(rasterType, expressionConfig.hConf)
 
             tiles.foreach(RasterCleaner.dispose(_))
             RasterCleaner.dispose(merged)
