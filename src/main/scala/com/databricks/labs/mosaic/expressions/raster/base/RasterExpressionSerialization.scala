@@ -37,7 +37,7 @@ trait RasterExpressionSerialization {
             val tile = data.asInstanceOf[MosaicRasterTile]
             val result = tile
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(outputDataType)
+                .serialize(outputDataType, expressionConfig.hConf)
             RasterCleaner.dispose(tile)
             result
         } else {

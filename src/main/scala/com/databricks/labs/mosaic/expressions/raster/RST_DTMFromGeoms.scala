@@ -107,7 +107,7 @@ case class RST_DTMFromGeoms(
           interpolatedPoints, None, origin, gridWidthXValue, gridWidthYValue, gridSizeXValue, gridSizeYValue, noDataValue
         )
 
-        val outputRow = MosaicRasterTile(null, outputRaster).serialize(StringType)
+        val outputRow = MosaicRasterTile(null, outputRaster).serialize(StringType, expressionConfig.hConf)
         outputRow
     }
 

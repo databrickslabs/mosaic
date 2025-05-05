@@ -79,9 +79,10 @@ abstract class Raster2ArgExpression[T <: Expression: ClassTag](
         GDAL.enable(expressionConfig)
         val rasterType = RasterTileType(rasterExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile.deserialize(
-            input.asInstanceOf[InternalRow],
-            expressionConfig.getCellIdType,
-            rasterType
+          input.asInstanceOf[InternalRow],
+          expressionConfig.getCellIdType,
+          rasterType,
+          expressionConfig.hConf
         )
         val result = rasterTransform(tile, arg1, arg2)
         val serialized = serialize(result, returnsRaster, rasterType, expressionConfig)

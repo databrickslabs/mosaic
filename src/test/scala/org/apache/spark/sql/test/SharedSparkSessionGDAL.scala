@@ -3,7 +3,6 @@ package org.apache.spark.sql.test
 import com.databricks.labs.mosaic._
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.utils.FileUtils
-
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.scalatest.{Args, CompositeStatus, Status}
@@ -12,7 +11,6 @@ import scala.util.Try
 
 trait SharedSparkSessionGDAL extends SharedSparkSession {
 
-
     var checkpointingEnabled: Boolean = _
     def checkpointingStatus: String = if (checkpointingEnabled) "enabled" else "disabled"
 
@@ -20,8 +18,7 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         val statuses = for (checkpointing <- Seq(true, false)) yield {
             checkpointingEnabled = checkpointing
             spark.conf.set(MOSAIC_RASTER_USE_CHECKPOINT, checkpointing)
-            spark.sparkContext.setLogLevel("INFO")
-            logInfo(s"Raster checkpointing is $checkpointingStatus")
+            info(s"$testName checkpoint: $checkpointingStatus")
             spark.sparkContext.setLogLevel("ERROR")
             super.runTest(testName, args)
         }
@@ -37,7 +34,9 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
 
     override def createSparkSession: TestSparkSession = {
         val conf = sparkConf
-        conf.set(MOSAIC_RASTER_CHECKPOINT, FileUtils.createMosaicTempDir(prefix = "/mnt/"))
+        conf.set(MOSAIC_RASTER_CHECKPOINT, FileUtils.createMosaicTempDir(prefix = "/home/raster_checkpoint/"))
+        conf.set("spark.driver.extraJavaOptions", "-Djava.library.path=~/hadoop-native/lib/native")
+        conf.set("spark.executor.extraJavaOptions", "-Djava.library.path=~/hadoop-native/lib/native")
         SparkSession.cleanupAnyExistingSession()
         val session = new MosaicTestSparkSession(conf)
         session.sparkContext.setLogLevel("ERROR")
@@ -49,6 +48,15 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
 
     override def beforeEach(): Unit = {
         super.beforeEach()
+        System.gc()
+    }
+
+    override def afterEach(): Unit = {
+        super.afterEach()
+        super.afterAll()
+        System.gc()
+        super.beforeAll()
+        FileUtils.deleteRecursively("/home/raster_checkpoint/", keepRoot = true)
     }
 
 }

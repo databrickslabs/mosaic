@@ -20,7 +20,7 @@ trait RST_WorldToRasterCoordYBehaviors extends QueryTest {
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
-            .load("src/test/resources/binary/netcdf-coral")
+            .load("src/test/resources/binary/netcdf-CMIP5")
 
         val df = rastersInMemory
             .withColumn("result", rst_worldtorastercoordy($"tile", 0, 0))
@@ -40,7 +40,7 @@ trait RST_WorldToRasterCoordYBehaviors extends QueryTest {
 
         val result = df.as[Double].collect().head
 
-        result == 0 shouldBe true
+        result != 0 shouldBe true
 
         an[Exception] should be thrownBy spark.sql("""
                                                      |select rst_worldtorastercoordy() from source

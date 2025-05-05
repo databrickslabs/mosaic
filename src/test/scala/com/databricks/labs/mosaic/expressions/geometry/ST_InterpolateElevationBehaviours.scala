@@ -2,9 +2,11 @@ package com.databricks.labs.mosaic.expressions.geometry
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.types.model.TriangulationSplitPointTypeEnum
 import com.databricks.labs.mosaic.functions.MosaicContext
 import com.databricks.labs.mosaic.functions.MosaicRegistryBehaviors.mosaicContext
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.types._
@@ -27,7 +29,7 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
     val origin = "POINT(348000 462000)"
 
     def simpleInterpolationBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-
+        MosaicGDAL.enableGDAL(spark)
         val mc = mosaicContext
         import mc.functions._
         val sc = spark
@@ -64,12 +66,13 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
                 $"origin", $"grid_size_x", $"grid_size_y",
                 $"pixel_size_x", $"pixel_size_y"
             )
-        noException should be thrownBy result.collect()
+        //noException should be thrownBy
+        result.collect()
         result.count() shouldBe 1000000L
     }
 
     def conformingInterpolationBehavior(indexSystem: IndexSystem, geometryAPI: GeometryAPI): Unit = {
-
+        MosaicGDAL.enableGDAL(spark)
         val mc = mosaicContext
         import mc.functions._
         val sc = spark
@@ -118,7 +121,8 @@ trait ST_InterpolateElevationBehaviours extends QueryTest {
                 $"pixel_size_x", $"pixel_size_y"
             )
             .cache()
-        noException should be thrownBy result.collect()
+        //noException should be thrownBy
+            result.collect()
         result.count() shouldBe 1000000L
         val  targetRow = result
             .orderBy(

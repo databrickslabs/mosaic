@@ -1146,16 +1146,6 @@ object MosaicContext extends Logging {
               && !spark.conf.getAll.exists(_._1.startsWith("spark.databricks.clusterUsageTags."))
             )
 
-        if (dbrMajor != 13 && !isTest) {
-            val msg = """|DEPRECATION ERROR:
-                         |    Mosaic v0.4.x series only supports Databricks Runtime 13.
-                         |    You can specify `%pip install 'databricks-mosaic<0.4,>=0.3'` for DBR < 13.""".stripMargin
-
-            logError(msg)
-            println(msg)
-            throw new Exception(msg)
-        }
-
         if (!isML && !isPhoton && !isTest) {
             val msg = """|DEPRECATION ERROR:
                          |  Please use a Databricks:

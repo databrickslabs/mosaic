@@ -20,7 +20,7 @@ trait RST_RasterToWorldCoordBehaviors extends QueryTest {
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
-            .load("src/test/resources/binary/netcdf-coral")
+            .load("src/test/resources/binary/netcdf-CMIP5")
 
         val df = rastersInMemory
             .withColumn("result", rst_rastertoworldcoord($"tile", lit(2), lit(2)))

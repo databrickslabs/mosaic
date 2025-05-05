@@ -56,6 +56,8 @@ class RasterAsGridReader(sparkSession: SparkSession) extends MosaicDataFrameRead
             .options(extraOptions)
             .load(paths: _*)
             .repartition(nPartitions)
+            .cache()
+            .repartition(nPartitions)
 
         val retiledDf = retileRaster(pathsDf, config)
 

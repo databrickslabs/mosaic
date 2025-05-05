@@ -7,6 +7,7 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.execution.datasources.PartitionedFile
 import org.apache.spark.sql.sources.{DataSourceRegister, Filter}
+import org.apache.spark.util.SerializableConfiguration
 
 class ShapefileFileFormat extends OGRFileFormat with DataSourceRegister with Serializable {
 
@@ -14,7 +15,7 @@ class ShapefileFileFormat extends OGRFileFormat with DataSourceRegister with Ser
 
     override def shortName(): String = "shapefile"
 
-    def checkExtension(path: String): Boolean = {
+    private def checkExtension(path: String): Boolean = {
         path.endsWith(".shp") || path.endsWith(".zip")
     }
 
@@ -24,7 +25,8 @@ class ShapefileFileFormat extends OGRFileFormat with DataSourceRegister with Ser
         files: Seq[FileStatus]
     ): Option[StructType] = {
         val headFilePath = files.map(_.getPath.toString).filter(checkExtension).head
-        OGRFileFormat.inferSchemaImpl(driverName, headFilePath, options)
+        val hConf = new SerializableConfiguration(sparkSession.sessionState.newHadoopConf)
+        OGRFileFormat.inferSchemaImpl(driverName, headFilePath, options, hConf)
     }
 
     override def buildReader(
@@ -35,13 +37,15 @@ class ShapefileFileFormat extends OGRFileFormat with DataSourceRegister with Ser
         filters: Seq[Filter],
         options: Map[String, String],
         hadoopConf: Configuration
-    ): PartitionedFile => Iterator[InternalRow] =
+    ): PartitionedFile => Iterator[InternalRow] = {
+        val hConf = new SerializableConfiguration(hadoopConf)
         (file: PartitionedFile) => {
             if (checkExtension(file.filePath.toString())) {
-                OGRFileFormat.buildReaderImpl(driverName, dataSchema, requiredSchema, options)(file)
+                OGRFileFormat.buildReaderImpl(driverName, dataSchema, requiredSchema, options, hConf)(file)
             } else {
                 Seq.empty[InternalRow].iterator
             }
         }
+    }
 
 }

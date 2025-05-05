@@ -66,7 +66,8 @@ abstract class RasterExpression[T <: Expression: ClassTag](
         val tile = MosaicRasterTile.deserialize(
           input.asInstanceOf[InternalRow],
           cellIdDataType,
-          rasterType
+          rasterType,
+          expressionConfig.hConf
         )
         val result = rasterTransform(tile)
         val serialized = serialize(result, returnsRaster, rasterType, expressionConfig)

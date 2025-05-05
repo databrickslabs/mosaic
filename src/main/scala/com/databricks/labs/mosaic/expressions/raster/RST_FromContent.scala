@@ -73,7 +73,7 @@ case class RST_FromContent(
             val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driver)
             var raster = MosaicRasterGDAL.readRaster(rasterArr, createInfo)
             var tile = MosaicRasterTile(null, raster)
-            val row = tile.formatCellId(indexSystem).serialize(rasterType)
+            val row = tile.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf)
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
             rasterArr = null
@@ -90,7 +90,7 @@ case class RST_FromContent(
 
             // split to tiles up to specifed threshold
             var tiles = ReTileOnRead.localSubdivide(tmpPath, PathUtils.NO_PATH_STRING, targetSize)
-            val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterType))
+            val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf))
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(tmpPath))
             rasterArr = null

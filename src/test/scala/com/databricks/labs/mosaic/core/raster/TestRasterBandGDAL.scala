@@ -38,8 +38,10 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
         assume(System.getProperty("os.name") == "Linux")
 
         val createInfo = Map(
-            "path" -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb"),
-            "parentPath" -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb")
+          "path" -> filePath("/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb"),
+          "parentPath" -> filePath(
+            "/binary/grib-cams/adaptor.mars.internal-1650626995.380916-11651-14-ca8e7236-16ca-4e11-919d-bdbd5a51da35.grb"
+          )
         )
         val testRaster = MosaicRasterGDAL.readRaster(createInfo)
         val testBand = testRaster.getBand(1)
@@ -58,21 +60,25 @@ class TestRasterBandGDAL extends SharedSparkSessionGDAL {
         assume(System.getProperty("os.name") == "Linux")
 
         val createInfo = Map(
-            "path" -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc"),
-            "parentPath" -> filePath("/binary/netcdf-coral/ct5km_baa-max-7d_v3.1_20220101.nc")
+          "path" -> filePath(
+            "/binary/netcdf-CMIP5/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc"
+          ),
+          "parentPath" -> filePath(
+            "/binary/netcdf-CMIP5/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc"
+          )
         )
         val superRaster = MosaicRasterGDAL.readRaster(createInfo)
-        val subdatasetPath = superRaster.subdatasets("bleaching_alert_area")
-        val sdCreate  = Map(
-            "path" -> subdatasetPath,
-            "parentPath" -> subdatasetPath
+        val subdatasetPath = superRaster.subdatasets("prAdjust")
+        val sdCreate = Map(
+          "path" -> subdatasetPath,
+          "parentPath" -> subdatasetPath
         )
         val testRaster = MosaicRasterGDAL.readRaster(sdCreate)
 
         val testBand = testRaster.getBand(1)
-        testBand.dataType shouldBe 1
-        (testBand.minPixelValue, testBand.maxPixelValue) shouldBe (0d, 4d)
-        (testBand.pixelValueScale, testBand.pixelValueOffset) shouldBe (1d, 0d)
+        testBand.dataType shouldBe 6
+        (testBand.minPixelValue, testBand.maxPixelValue) shouldBe (0d, 0.0016480331541970372)
+        (testBand.pixelValueScale, testBand.pixelValueOffset) shouldBe (0d, 0d)
 
         val testValues = testBand.values(5000, 1000, 100, 10)
         noException should be thrownBy testBand.values

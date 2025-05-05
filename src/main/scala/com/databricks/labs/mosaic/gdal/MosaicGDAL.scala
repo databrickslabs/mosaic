@@ -19,14 +19,6 @@ import scala.util.Try
 /** GDAL environment preparation and configuration. Some functions only for driver. */
 object MosaicGDAL extends Logging {
 
-    private val usrlibsoPath = "/usr/lib/libgdal.so"
-    private val usrlibso30Path = "/usr/lib/libgdal.so.30"
-    private val usrlibso3003Path = "/usr/lib/libgdal.so.30.0.3"
-    private val libjnisoPath = "/usr/lib/libgdalalljni.so"
-    private val libjniso30Path = "/usr/lib/libgdalalljni.so.30"
-    private val libjniso3003Path = "/usr/lib/libgdalalljni.so.30.0.3"
-    private val libogdisoPath = "/usr/lib/ogdi/4.1/libgdal.so"
-
     val defaultBlockSize = 1024
     val vrtBlockSize = 128 // This is a must value for VRTs before GDAL 3.7
     var blockSize: Int = MOSAIC_RASTER_BLOCKSIZE_DEFAULT.toInt
@@ -39,11 +31,18 @@ object MosaicGDAL extends Logging {
 
 
     // Only use this with GDAL rasters
-    val WSG84: SpatialReference = {
+    lazy val WSG84: SpatialReference = {
         val wsg84 = new SpatialReference()
         wsg84.ImportFromEPSG(4326)
         wsg84.SetAxisMappingStrategy(org.gdal.osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
         wsg84
+    }
+
+    lazy val EPSG3857: SpatialReference = {
+        val epsg3857 = new SpatialReference()
+        epsg3857.ImportFromEPSG(3857)
+        epsg3857.SetAxisMappingStrategy(org.gdal.osr.osrConstants.OAMS_TRADITIONAL_GIS_ORDER)
+        epsg3857
     }
 
     /** Returns true if GDAL is enabled. */
@@ -54,15 +53,28 @@ object MosaicGDAL extends Logging {
     def configureGDAL(mosaicConfig: MosaicExpressionConfig): Unit = {
         val CPL_TMPDIR = MosaicContext.tmpDir(mosaicConfig)
         val GDAL_PAM_PROXY_DIR = MosaicContext.tmpDir(mosaicConfig)
+
         gdal.SetConfigOption("GDAL_VRT_ENABLE_PYTHON", "YES")
-        gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+        gdal.SetConfigOption("GDAL_DISABLE_READDIR_ON_OPEN", "YES")
         gdal.SetConfigOption("CPL_TMPDIR", CPL_TMPDIR)
         gdal.SetConfigOption("GDAL_PAM_PROXY_DIR", GDAL_PAM_PROXY_DIR)
         gdal.SetConfigOption("GDAL_PAM_ENABLED", "YES")
         gdal.SetConfigOption("CPL_VSIL_USE_TEMP_FILE_FOR_RANDOM_WRITE", "NO")
         gdal.SetConfigOption("CPL_LOG", s"$CPL_TMPDIR/gdal.log")
+
         gdal.SetConfigOption("GDAL_CACHEMAX", "512")
-        gdal.SetConfigOption("GDAL_NUM_THREADS", "ALL_CPUS")
+        gdal.SetCacheMax(512*1024*1024)
+        gdal.SetConfigOption("GDAL_NUM_THREADS", "4")
+        gdal.SetConfigOption("GDAL_SWATH_SIZE", "1073741824")
+        gdal.SetConfigOption("VSI_CACHE", "TRUE")
+        gdal.SetConfigOption("VSI_CACHE_SIZE", "33554432")
+        gdal.SetConfigOption("GTIFF_DIRECT_IO", "YES")
+        gdal.SetConfigOption("GTIFF_VIRTUAL_MEM_IO", "IF_ENOUGH_RAM")
+        gdal.SetConfigOption("GDAL_BAND_BLOCK_CACHE", "HASHSET")
+
+        gdal.SetConfigOption("GDAL_INGESTED_BYTES_AT_OPEN", "67108864") // 64MB chunks
+
+
         mosaicConfig.getGDALConf.foreach { case (k, v) => gdal.SetConfigOption(k.split("\\.").last, v) }
         setBlockSize(mosaicConfig)
         configureCheckpoint(mosaicConfig)
@@ -235,17 +247,11 @@ object MosaicGDAL extends Logging {
 
     /** Loads the shared objects required for GDAL. */
     private def loadSharedObjects(): Unit = {
-        loadOrNOOP(usrlibsoPath)
-        loadOrNOOP(usrlibso30Path)
-        loadOrNOOP(usrlibso3003Path)
-        loadOrNOOP(libjnisoPath)
-        loadOrNOOP(libjniso30Path)
-        loadOrNOOP(libjniso3003Path)
-        loadOrNOOP(libogdisoPath)
+        loadOrNOOP("/usr/lib/gdalalljni.so")
     }
 
     /** Loads the shared object if it exists. */
-    // noinspection ScalaStyle
+    // noinspection ScalaStyle,SameParameterValue
     private def loadOrNOOP(path: String): Unit = {
         try {
             if (Files.exists(Paths.get(path))) System.load(path)

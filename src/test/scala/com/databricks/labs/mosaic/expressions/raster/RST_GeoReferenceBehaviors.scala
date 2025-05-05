@@ -21,7 +21,7 @@ trait RST_GeoReferenceBehaviors extends QueryTest {
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
-            .load("src/test/resources/binary/netcdf-coral")
+            .load("src/test/resources/binary/netcdf-CMIP5")
 
         val geoReferenceDf = rastersInMemory
             .withColumn("georeference", rst_georeference($"tile"))
@@ -40,8 +40,8 @@ trait RST_GeoReferenceBehaviors extends QueryTest {
 
         val result = geoReferenceDf.as[Map[String, Double]].collect()
 
-        result.head.get("upperLeftX").get != 0.0 shouldBe false
-        result.head.get("upperLeftY").get != 0.0 shouldBe false
+        result.head.get("upperLeftX").get != 0.0 shouldBe true
+        result.head.get("upperLeftY").get != 0.0 shouldBe true
         result.head.get("scaleX").get != 0.0 shouldBe true
         result.head.get("scaleY").get != 0.0 shouldBe true
         result.head.get("skewX").get != 0.0 shouldBe false

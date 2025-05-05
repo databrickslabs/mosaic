@@ -57,6 +57,7 @@ case class ST_AsGeojsonTileAgg(
     }
 
     override def eval(buffer: mutable.ArrayBuffer[Any]): Any = {
+        System.load("/usr/local/src/gdal-3.9.3/build/swig/java/libgdalalljni.so")
         ogr.RegisterAll()
         val driver = ogr.GetDriverByName("GeoJSON")
         val tmpName = PathUtils.createTmpFilePath("geojson")

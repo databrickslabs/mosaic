@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.functions.{collect_list, collect_set}
+import org.apache.spark.sql.functions.{array, collect_list, explode, lit}
 import org.scalatest.matchers.should.Matchers._
 
 trait RST_CombineAvgBehaviors extends QueryTest {
@@ -22,9 +22,11 @@ trait RST_CombineAvgBehaviors extends QueryTest {
             .format("gdal")
             .option("raster_storage", "in-memory")
             .load("src/test/resources/modis")
+            .limit(2)
 
-        val gridTiles = rastersInMemory.union(rastersInMemory)
-            .withColumn("tiles", rst_tessellate($"tile", 2))
+        val gridTiles = rastersInMemory
+            .withColumn("tiles", rst_tessellate($"tile", 0))
+            .withColumn("explode", explode(array(lit(1), lit(2))))
             .select("path", "tiles")
             .groupBy("path")
             .agg(
@@ -32,7 +34,8 @@ trait RST_CombineAvgBehaviors extends QueryTest {
             )
             .select("tiles")
 
-        rastersInMemory.union(rastersInMemory)
+        rastersInMemory
+            .withColumn("explode", explode(array(lit(1), lit(2))))
             .createOrReplaceTempView("source")
 
         //noException should be thrownBy
@@ -40,7 +43,7 @@ trait RST_CombineAvgBehaviors extends QueryTest {
         spark.sql("""
                     |select rst_combineavg(collect_list(tiles)) as tiles
                     |from (
-                    |  select path, rst_tessellate(tile, 2) as tiles
+                    |  select path, rst_tessellate(tile, 0) as tiles
                     |  from source
                     |)
                     |group by path

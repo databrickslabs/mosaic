@@ -76,11 +76,12 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
         GDAL.enable(expressionConfig)
         val rasterType = RasterTileType(tileExpr, expressionConfig.isRasterUseCheckpoint).rasterType
-        val tile = MosaicRasterTile.deserialize(tileExpr.eval(input).asInstanceOf[InternalRow], cellIdDataType, rasterType)
+        val tile =
+            MosaicRasterTile.deserialize(tileExpr.eval(input).asInstanceOf[InternalRow], cellIdDataType, rasterType, expressionConfig.hConf)
         val generatedRasters = rasterGenerator(tile)
 
         // Writing rasters disposes of the written raster
-        val rows = generatedRasters.map(_.formatCellId(indexSystem).serialize(rasterType))
+        val rows = generatedRasters.map(_.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf))
         generatedRasters.foreach(gr => RasterCleaner.dispose(gr))
         RasterCleaner.dispose(tile)
 

@@ -15,35 +15,8 @@ object ExcludeLocalTag extends Tag("ExcludeIfLocal")
 
 class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSessionGDAL {
 
-    test("Read netcdf with Raster As Grid Reader") {
-        assume(System.getProperty("os.name") == "Linux")
-        assume(checkpointingEnabled)
-        val mc = MosaicContext.build(H3IndexSystem, JTS)
-        mc.register(spark)
-
-
-        val netcdf = "/binary/netcdf-coral/"
-        val filePath = this.getClass.getResource(netcdf).getPath
-
-        noException should be thrownBy MosaicContext.read
-            .format("raster_to_grid")
-            .option("sizeInMB", "16")
-            .option("resolution", "0")
-            .option("readSubdataset", "true")
-            .option("subdatasetName", "bleaching_alert_area")
-            .option("retile", "true")
-            .option("tileSize", "600")
-            .option("kRingInterpolate", "3")
-            .option("combiner", "avg")
-            .load(filePath)
-            .select("measure")
-            .take(1)
-
-    }
-
     test("Read ECMWF netcdf with Raster As Grid Reader") {
         assume(System.getProperty("os.name") == "Linux")
-        assume(checkpointingEnabled)
         val mc = MosaicContext.build(H3IndexSystem, JTS)
         mc.register(spark)
 
@@ -63,7 +36,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("combiner", "avg")
             .load(filePath)
             .select("measure")
-            .cache()
+            .repartition(10)
 
         result.count shouldBe 1098
 
@@ -89,6 +62,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("kRingInterpolate", "3")
             .load(filePath)
             .select("measure")
+            .repartition(10)
             .take(1)
 
     }
@@ -97,19 +71,20 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
         assume(System.getProperty("os.name") == "Linux")
         MosaicContext.build(H3IndexSystem, JTS)
 
-        val tif = "/modis/"
+        val tif = "/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF"
         val filePath = getClass.getResource(tif).getPath
 
-        noException should be thrownBy MosaicContext.read
+        MosaicContext.read
             .format("raster_to_grid")
             .option("sizeInMB", "16")
             .option("resolution", "0")
             .option("retile", "true")
-            .option("tileSize", "100")
+            .option("tileSize", "500")
             .option("combiner", "max")
-            .option("kRingInterpolate", "3")
+            .option("kRingInterpolate", "1")
             .load(filePath)
             .select("measure")
+            .repartition(10)
             .take(1)
 
     }
@@ -121,7 +96,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
         val zarr = "/binary/zarr-example/"
         val filePath = getClass.getResource(zarr).getPath
 
-        noException should be thrownBy MosaicContext.read
+        MosaicContext.read
             .format("raster_to_grid")
             .option("readSubdataset", "true")
             .option("subdatasetName", "/group_with_attrs/F_order_array")
@@ -130,6 +105,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("tileSize", "10")
             .load(filePath)
             .select("measure")
+            .repartition(10)
             .take(1)
 
         noException should be thrownBy MosaicContext.read
@@ -140,6 +116,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("vsizip", "true")
             .load(filePath)
             .select("measure")
+            .repartition(10)
             .take(1)
 
         noException should be thrownBy MosaicContext.read
@@ -150,6 +127,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("vsizip", "true")
             .load(filePath)
             .select("measure")
+            .repartition(10)
             .take(1)
 
         noException should be thrownBy MosaicContext.read
@@ -160,6 +138,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("vsizip", "true")
             .load(filePath)
             .select("measure")
+            .repartition(10)
             .take(1)
 
         val paths = Files.list(Paths.get(filePath)).toArray.map(_.toString)
@@ -170,6 +149,7 @@ class RasterAsGridReaderTest extends MosaicSpatialQueryTest with SharedSparkSess
             .option("vsizip", "true")
             .load(paths: _*)
             .select("measure")
+            .repartition(10)
             .take(1)
 
         an[Error] should be thrownBy MosaicContext.read

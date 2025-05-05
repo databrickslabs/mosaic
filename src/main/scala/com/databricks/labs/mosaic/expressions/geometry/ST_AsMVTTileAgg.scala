@@ -3,6 +3,8 @@ package com.databricks.labs.mosaic.expressions.geometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.expressions.geometry.base.AsTileExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
+import com.databricks.labs.mosaic.gdal.MosaicGDAL.loadOrNOOP
 import com.databricks.labs.mosaic.utils.{PathUtils, SysUtils}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
@@ -66,6 +68,7 @@ case class ST_AsMVTTileAgg(
     }
 
     override def eval(buffer: mutable.ArrayBuffer[Any]): Any = {
+        System.load("/usr/local/src/gdal-3.9.3/build/swig/java/libgdalalljni.so")
         ogr.RegisterAll()
         // We assume all zxyIDs are the same for all the rows in the buffer
         val zxyID = buffer.head.asInstanceOf[InternalRow].get(2, zxyIDExpr.dataType).toString

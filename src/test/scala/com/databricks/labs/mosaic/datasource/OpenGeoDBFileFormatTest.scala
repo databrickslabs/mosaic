@@ -1,10 +1,10 @@
 package com.databricks.labs.mosaic.datasource
 
 import org.apache.spark.sql.QueryTest
-import org.apache.spark.sql.test.SharedSparkSession
+import org.apache.spark.sql.test.{SharedSparkSession, SharedSparkSessionGDAL}
 import org.scalatest.matchers.must.Matchers.{be, noException}
 
-class OpenGeoDBFileFormatTest extends QueryTest with SharedSparkSession {
+class OpenGeoDBFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
 
     test("Read open geoDB with OpenGeoDBFileFormat") {
         assume(System.getProperty("os.name") == "Linux")

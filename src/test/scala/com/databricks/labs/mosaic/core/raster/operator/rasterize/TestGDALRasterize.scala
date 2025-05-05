@@ -3,10 +3,12 @@ package com.databricks.labs.mosaic.core.raster.operator.rasterize
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
-import org.scalatest.funsuite.AnyFunSuite
+import com.databricks.labs.mosaic.gdal.MosaicGDAL
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.scalatest.matchers.should.Matchers._
 
-class TestGDALRasterize extends AnyFunSuite {
+class TestGDALRasterize extends SharedSparkSessionGDAL {
 
     // https://oeis.org/A341198
     val points: Seq[String] = Seq(

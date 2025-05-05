@@ -1,6 +1,7 @@
 package com.databricks.labs.mosaic.datasource
 
-import com.databricks.labs.mosaic.utils.PathUtils
+import com.databricks.labs.mosaic.core.raster.api.GDAL
+import com.databricks.labs.mosaic.utils.{HadoopUtils, PathUtils, ReaderUtils}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileStatus
 import org.apache.hadoop.mapreduce.Job
@@ -12,6 +13,7 @@ import org.apache.spark.sql.catalyst.analysis.TypeCoercion
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+import org.apache.spark.util.SerializableConfiguration
 import org.gdal.ogr._
 
 import java.sql.Timestamp
@@ -37,7 +39,8 @@ class OGRFileFormat extends FileFormat with DataSourceRegister with Serializable
     ): Option[StructType] = {
         val driverName = options.getOrElse("driverName", "")
         val headFilePath = files.head.getPath.toString
-        inferSchemaImpl(driverName, headFilePath, options)
+        val hConf = new SerializableConfiguration(sparkSession.sessionState.newHadoopConf())
+        inferSchemaImpl(driverName, headFilePath, options, hConf)
     }
 
     override def isSplitable(
@@ -57,9 +60,10 @@ class OGRFileFormat extends FileFormat with DataSourceRegister with Serializable
     ): PartitionedFile => Iterator[InternalRow] = {
 
         val driverName = options.getOrElse("driverName", "")
+        val hconf = new SerializableConfiguration(hadoopConf)
         // No column filter at the moment.
         // To improve performance, we can filter columns in the OGR layer using requiredSchema.
-        buildReaderImpl(driverName, dataSchema, requiredSchema, options)
+        buildReaderImpl(driverName, dataSchema, requiredSchema, options, hconf)
     }
 
     override def prepareWrite(
@@ -74,7 +78,7 @@ class OGRFileFormat extends FileFormat with DataSourceRegister with Serializable
 //noinspection VarCouldBeVal
 object OGRFileFormat extends Serializable {
 
-    def OGREmptyGeometry: Geometry = {
+    private def OGREmptyGeometry: Geometry = {
         enableOGRDrivers()
         ogr.CreateGeometryFromWkt("POINT EMPTY")
     }
@@ -109,7 +113,7 @@ object OGRFileFormat extends Serializable {
     }
 
     /**
-      * Converts a OGR type name to Spark SQL data type.
+      * Converts an OGR type name to Spark SQL data type.
       *
       * @param typeName
       *   the OGR type name.
@@ -136,7 +140,7 @@ object OGRFileFormat extends Serializable {
         }
 
     /**
-      * Infers the type of a field from a feature. The type is inferred from the
+      * Infers the type of field from a feature. The type is inferred from the
       * value of the field. If the field type is String, the inferred type is
       * returned. Otherwise, the inferred type is coerced to the reported type.
       * If the reported type is not String, the inferred type is coerced to the
@@ -148,7 +152,7 @@ object OGRFileFormat extends Serializable {
       * @return
       *   the inferred type
       */
-    def inferType(feature: Feature, j: Int): DataType = {
+    private def inferType(feature: Feature, j: Int): DataType = {
         val field = feature.GetFieldDefnRef(j)
         val reportedType = getType(field.GetFieldTypeName(field.GetFieldType))
         val value = feature.GetFieldAsString(j)
@@ -249,8 +253,7 @@ object OGRFileFormat extends Serializable {
       * @return
       *   the java.sql.Date.
       */
-    // noinspection ScalaDeprecation
-    def getJavaSQLTimestamp(feature: Feature, id: Int): Timestamp = {
+    private def getJavaSQLTimestamp(feature: Feature, id: Int): Timestamp = {
         var year: Array[Int] = Array.fill[Int](1)(0)
         var month: Array[Int] = Array.fill[Int](1)(0)
         var day: Array[Int] = Array.fill[Int](1)(0)
@@ -259,6 +262,7 @@ object OGRFileFormat extends Serializable {
         var second: Array[Float] = Array.fill[Float](1)(0)
         var tz: Array[Int] = Array.fill[Int](1)(0)
         feature.GetFieldAsDateTime(id, year, month, day, hour, minute, second, tz)
+        // noinspection ScalaDeprecation
         val datetime = new java.sql.Timestamp(year(0), month(0), day(0), hour(0), minute(0), second(0).toInt, tz(0))
         datetime
     }
@@ -272,9 +276,9 @@ object OGRFileFormat extends Serializable {
       *   field index.
       * @return
       */
-    // noinspection ScalaDeprecation
     def getDate(feature: Feature, id: Int): Int = {
         val timestamp = getJavaSQLTimestamp(feature, id)
+        // noinspection ScalaDeprecation
         val date = new java.sql.Date(timestamp.getYear, timestamp.getMonth, timestamp.getDay)
         DateTimeUtils.fromJavaDate(date)
     }
@@ -288,20 +292,20 @@ object OGRFileFormat extends Serializable {
       *   field index.
       * @return
       */
-    def getDateTime(feature: Feature, id: Int): Long = {
+    private def getDateTime(feature: Feature, id: Int): Long = {
         val datetime = getJavaSQLTimestamp(feature, id)
         DateTimeUtils.fromJavaTimestamp(datetime)
     }
 
     /**
-      * Creates a Spark SQL schema from a OGR feature.
+      * Creates a Spark SQL schema from an OGR feature.
       *
       * @param feature
       *   OGR feature.
       * @return
       *   Spark SQL schema.
       */
-    def getFeatureSchema(feature: Feature, asWKB: Boolean): StructType = {
+    private def getFeatureSchema(feature: Feature, asWKB: Boolean): StructType = {
         val geomDataType = if (asWKB) BinaryType else StringType
         val fields = (0 until feature.GetFieldCount())
             .map(j => {
@@ -339,7 +343,7 @@ object OGRFileFormat extends Serializable {
             .map(feature.GetGeomFieldRef)
             .flatMap(f => {
                 if (Option(f).isDefined) {
-                    //f.FlattenTo2D()
+                    // f.FlattenTo2D()
                     Seq(
                       if (asWKB) f.ExportToWkb else f.ExportToWkt,
                       Try(f.GetSpatialReference.GetAuthorityCode(null)).getOrElse("0")
@@ -377,7 +381,7 @@ object OGRFileFormat extends Serializable {
     }
 
     /**
-      * Infer the schema of a OGR file.
+      * Infer the schema of an OGR file.
       *
       * @param driverName
       *   the name of the OGR driver
@@ -391,16 +395,18 @@ object OGRFileFormat extends Serializable {
     def inferSchemaImpl(
         driverName: String,
         path: String,
-        options: Map[String, String]
+        options: Map[String, String],
+        hConf: SerializableConfiguration
     ): Option[StructType] = {
         OGRFileFormat.enableOGRDrivers()
 
         val layerN = options.getOrElse("layerNumber", "0").toInt
         val layerName = options.getOrElse("layerName", "")
-        val inferenceLimit = options.getOrElse("inferenceLimit", "200").toInt
+        val inferenceLimit = options.getOrElse("inferenceLimit", "100").toInt
         val asWKB = options.getOrElse("asWKB", "false").toBoolean
 
-        val dataset = getDataSource(driverName, path)
+        val tmpPath = HadoopUtils.copyToLocalTmp(path, hConf)
+        val dataset = getDataSource(driverName, tmpPath)
         val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
         val layer = dataset.GetLayer(resolvedLayerName)
         layer.ResetReading()
@@ -424,12 +430,13 @@ object OGRFileFormat extends Serializable {
             }
         }
 
+        HadoopUtils.deleteIfExists(tmpPath, hConf)
         Some(StructType(layerSchema))
 
     }
 
     /**
-      * Build a reader for a OGR file.
+      * Build a reader for an OGR file.
       *
       * @param driverName
       *   the name of the OGR driver
@@ -446,16 +453,17 @@ object OGRFileFormat extends Serializable {
         driverName: String,
         dataSchema: StructType,
         requiredSchema: StructType,
-        options: Map[String, String]
+        options: Map[String, String],
+        hconf: SerializableConfiguration
     ): PartitionedFile => Iterator[InternalRow] = { file: PartitionedFile =>
         {
             OGRFileFormat.enableOGRDrivers()
-
             val layerN = options.getOrElse("layerNumber", "0").toInt
             val layerName = options.getOrElse("layerName", "")
             val asWKB = options.getOrElse("asWKB", "false").toBoolean
-            val path = file.filePath
-            val dataset = getDataSource(driverName, path.toString())
+
+            val path = HadoopUtils.copyToLocalTmp(file.filePath.toPath.toString, hconf)
+            val dataset = getDataSource(driverName, path)
             val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
             val layer = dataset.GetLayerByName(resolvedLayerName)
             layer.ResetReading()
@@ -463,7 +471,7 @@ object OGRFileFormat extends Serializable {
             val mask = dataSchema.map(_.name).map(requiredSchema.fieldNames.contains(_)).toArray
 
             var feature: Feature = null
-            (0 until layer.GetFeatureCount().toInt)
+            val rows = (0 until layer.GetFeatureCount().toInt)
                 .foldLeft(Seq.empty[InternalRow])((acc, _) => {
                     feature = layer.GetNextFeature()
                     val fields = getFeatureFields(feature, dataSchema, asWKB)
@@ -471,10 +479,13 @@ object OGRFileFormat extends Serializable {
                         .filter(_._2)
                         .map(_._1)
                     val values = fields ++ Seq(metadata)
-                    val row = Utils.createRow(values)
+                    val row = ReaderUtils.createRow(values)
                     acc ++ Seq(row)
                 })
                 .iterator
+
+            HadoopUtils.deleteIfExists(path, hconf)
+            rows
         }
     }
 

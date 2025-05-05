@@ -74,7 +74,7 @@ case class RST_CombineAvgAgg(
         } else {
 
             // Do do move the expression
-            var tiles = buffer.map(row => deserializeTile(row.asInstanceOf[InternalRow], cellIDType, rasterType))
+            var tiles = buffer.map(row => deserializeTile(row.asInstanceOf[InternalRow], cellIDType, rasterType, expressionConfig.hConf))
             buffer.clear()
 
             // If merging multiple index rasters, the index value is dropped
@@ -83,7 +83,7 @@ case class RST_CombineAvgAgg(
 
             val result = MosaicRasterTile(idx, combined)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(rasterType)
+                .serialize(rasterType, expressionConfig.hConf)
 
             tiles.foreach(RasterCleaner.dispose)
             RasterCleaner.dispose(result)

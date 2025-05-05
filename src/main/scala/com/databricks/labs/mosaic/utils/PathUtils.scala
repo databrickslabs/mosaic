@@ -172,7 +172,7 @@ object PathUtils {
         // Subdatasets paths are formatted as: "FORMAT:/path/to/file.tif:subdataset"
         val format :: filePath :: subdataset :: Nil = path.split(":").toList
         val isZip = filePath.endsWith(".zip")
-        val vsiPrefix = if (isZip) VSI_ZIP_TOKEN else ""
+        val vsiPrefix = if (isZip && !filePath.startsWith("/vsizip/")) VSI_ZIP_TOKEN else ""
         s"$format:$vsiPrefix$filePath:$subdataset"
     }
 
@@ -289,6 +289,9 @@ object PathUtils {
       */
     def replaceDBFSTokens(path: String): String = {
         path
+            .replace("[", "")
+            .replace("]", "")
+            .replace("\"", "")
             .replace(s"$FILE_TOKEN/", "/")
             .replace(s"$DBFS_TOKEN$VOLUMES_TOKEN/", s"$VOLUMES_TOKEN/")
             .replace(s"$DBFS_TOKEN/", s"$DBFS_FUSE_TOKEN/")

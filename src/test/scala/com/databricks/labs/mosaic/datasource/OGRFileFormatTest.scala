@@ -8,6 +8,7 @@ import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.functions.{col, lit}
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
 import org.apache.spark.sql.types._
+import org.apache.spark.util.SerializableConfiguration
 import org.gdal.ogr.ogr
 import org.scalatest.matchers.must.Matchers.{be, noException}
 import org.scalatest.matchers.should.Matchers.{an, convertToAnyShouldWrapper}
@@ -121,6 +122,7 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
           null,
           null,
           Map("driverName" -> "", "layerNumber" -> "1", "chunkSize" -> "200", "vsizip" -> "false", "layerName" -> "", "asWKB" -> "false"),
+          null,
           null
         ).position should be(false)
     }
@@ -129,6 +131,8 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
         assume(System.getProperty("os.name") == "Linux")
         OGRFileFormat.enableOGRDrivers(force = true)
 
+        val hConf = new SerializableConfiguration(spark.sessionState.newHadoopConf())
+
         val shapefile = "/binary/shapefile/"
         val filePath = getClass.getResource(shapefile).getPath
         val ds = ogr.Open(filePath + "map.shp")
@@ -136,7 +140,7 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
         val feature1 = ds.GetLayer(0).GetNextFeature()
         val testFeature = feature1
         testFeature.SetGeomField(0, null)
-        val schema = OGRFileFormat.inferSchemaImpl("", filePath, Map("driverName" -> "ESRI Shapefile", "asWKB" -> "true")).get
+        val schema = OGRFileFormat.inferSchemaImpl("", filePath, Map("driverName" -> "ESRI Shapefile", "asWKB" -> "true"), hConf).get
 
         noException should be thrownBy
             OGRFileFormat.getFeatureFields(testFeature, schema, asWKB = true)
@@ -160,7 +164,7 @@ class OGRFileFormatTest extends QueryTest with SharedSparkSessionGDAL {
             .withColumn("geom", st_setsrid(st_geomfromwkt(col("geom_0")), lit(27700)))
 
         noException should be thrownBy
-            lad_df.select(st_astext(st_transform(col("geom"), lit(4326)))).show(1, truncate = false)
+            lad_df.select(st_astext(st_transform(col("geom"), lit(4326)))).take(1)
     }
 
 }

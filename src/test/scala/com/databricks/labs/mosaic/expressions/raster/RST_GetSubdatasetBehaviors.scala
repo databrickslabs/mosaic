@@ -21,17 +21,17 @@ trait RST_GetSubdatasetBehaviors extends QueryTest {
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
-            .load("src/test/resources/binary/netcdf-coral")
+            .load("src/test/resources/binary/netcdf-CMIP5")
 
         val geoReferenceDf = rastersInMemory
-            .withColumn("subdataset", rst_getsubdataset($"tile", lit("bleaching_alert_area")))
+            .withColumn("subdataset", rst_getsubdataset($"tile", lit("prAdjust")))
             .select(rst_georeference($"subdataset"))
 
         rastersInMemory
             .createOrReplaceTempView("source")
 
         noException should be thrownBy spark.sql("""
-                                                   |select rst_georeference(rst_getsubdataset(tile, "bleaching_alert_area")) from source
+                                                   |select rst_georeference(rst_getsubdataset(tile, "prAdjust")) from source
                                                    |""".stripMargin)
 
         val result = geoReferenceDf.as[Map[String, Double]].take(1).head
@@ -60,23 +60,23 @@ trait RST_GetSubdatasetBehaviors extends QueryTest {
         val rasters = spark.read
             .format("gdal")
             .option("driverName", "NetCDF")
-            .load("src/test/resources/binary/netcdf-coral")
+            .load("src/test/resources/binary/netcdf-CMIP5")
 
         val rasterCount = rasters.count.toInt
-        rasterCount shouldBe 10
+        rasterCount shouldBe 1
 
         val subdatasetDF = rasters
-            .select(rst_getsubdataset($"tile", lit("bleaching_alert_area")).alias("tile"))
+            .select(rst_getsubdataset($"tile", lit("prAdjust")).alias("tile"))
 
         val subdatasetCount = subdatasetDF.count.toInt
-        subdatasetCount shouldBe 10
+        subdatasetCount shouldBe 1
 
         val subdivideDF = subdatasetDF
             .select(rst_subdivide($"tile", lit(8)).alias("tile"))
 
         noException should be thrownBy subdivideDF.write.format("noop").mode("overwrite").save()
         val paths = subdivideDF.select($"tile.raster").as[String].collect
-        paths.size shouldBe 40
+        paths.size shouldBe 15
 
     }
 

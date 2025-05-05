@@ -20,14 +20,14 @@ trait RST_IsEmptyBehaviors extends QueryTest {
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
-            .load("src/test/resources/binary/netcdf-coral")
+            .load("src/test/resources/binary/netcdf-CMIP5")
 
         val df = rastersInMemory
             .withColumn("result", rst_isempty($"tile"))
             .select("result")
 
         val df2 = rastersInMemory
-            .withColumn("tile", rst_getsubdataset($"tile", "bleaching_alert_area"))
+            .withColumn("tile", rst_getsubdataset($"tile", "prAdjust"))
             .withColumn("result", rst_isempty($"tile"))
             .select("result")
 

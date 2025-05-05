@@ -19,7 +19,7 @@ trait RST_UpperLeftXBehaviors extends QueryTest {
         val rastersInMemory = spark.read
             .format("gdal")
             .option("raster_storage", "in-memory")
-            .load("src/test/resources/binary/netcdf-coral")
+            .load("src/test/resources/binary/netcdf-CMIP5")
 
         val df = rastersInMemory
             .withColumn("result", rst_upperleftx($"tile"))

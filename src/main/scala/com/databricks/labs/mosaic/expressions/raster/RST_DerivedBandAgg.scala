@@ -13,7 +13,7 @@ import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate,
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, UnsafeProjection, UnsafeRow}
 import org.apache.spark.sql.catalyst.trees.TernaryLike
 import org.apache.spark.sql.catalyst.util.GenericArrayData
-import org.apache.spark.sql.types.{ArrayType, BinaryType, DataType}
+import org.apache.spark.sql.types.{ArrayType, DataType}
 import org.apache.spark.unsafe.types.UTF8String
 
 import scala.collection.mutable.ArrayBuffer
@@ -84,7 +84,8 @@ case class RST_DerivedBandAgg(
                 MosaicRasterTile.deserialize(
                   row.asInstanceOf[InternalRow],
                   expressionConfig.getCellIdType,
-                  rasterType
+                  rasterType,
+                  expressionConfig.hConf
                 )
             )
 
@@ -95,7 +96,7 @@ case class RST_DerivedBandAgg(
 
             val result = MosaicRasterTile(idx, combined)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))
-                .serialize(rasterType)
+                .serialize(rasterType, expressionConfig.hConf)
 
             tiles.foreach(RasterCleaner.dispose(_))
             RasterCleaner.dispose(result)

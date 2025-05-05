@@ -26,6 +26,7 @@ class RST_HeightTest extends QueryTest with SharedSparkSessionGDAL with RST_Heig
         noCodegen {
             assume(System.getProperty("os.name") == "Linux")
             heightBehavior(H3IndexSystem, JTS)
+            rstFromFileIntegrationBehavior(H3IndexSystem, JTS)
         }
     }
 

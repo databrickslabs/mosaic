@@ -1,12 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.WithExpressionInfo
 import com.databricks.labs.mosaic.expressions.raster.base.Raster1ArgExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, Literal, NullIntolerant}
@@ -57,25 +57,33 @@ case class RST_Write(
       * @return
       *   tile using the new path
       */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
-        tile.copy(
-          raster = copyToArg1Dir(tile, arg1)
-        )
-    }
+    // NOOP
+    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = tile
 
-    private def copyToArg1Dir(inTile: MosaicRasterTile, arg1: Any): MosaicRasterGDAL = {
-        val inRaster = inTile.getRaster
-        val inPath = inRaster.createInfo("path")
-        val inDriver = inRaster.createInfo("driver")
-        val outPath = GDAL.writeRasterString(
-                inRaster,
-                Some(arg1.asInstanceOf[UTF8String].toString)
+    override def nullSafeEval(input: Any, arg1: Any): Any = {
+        GDAL.enable(expressionConfig)
+        val rasterType = RasterTileType(inputExpr, expressionConfig.isRasterUseCheckpoint).rasterType
+        val inputRow = input.asInstanceOf[InternalRow]
+        val tile = MosaicRasterTile.deserialize(
+          inputRow,
+          expressionConfig.getCellIdType,
+          rasterType,
+          expressionConfig.hConf
+        )
+        val raster = tile.getRaster
+        val outPath = GDAL
+            .writeRasterString(
+              raster,
+              Some(arg1.asInstanceOf[UTF8String].toString),
+              expressionConfig.hConf
             )
             .toString
-
-        MosaicRasterGDAL.readRaster(
-          Map("path" -> outPath, "driver" -> inDriver, "parentPath" -> inPath)
-        )
+        val newCreateInfo = raster.createInfo + ("path" -> outPath, "parentPath" -> arg1.asInstanceOf[UTF8String].toString)
+        val mapData = buildMapString(newCreateInfo)
+        rasterType match {
+            case BinaryType => InternalRow.fromSeq(Seq(null, inputRow.get(1, BinaryType), mapData))
+            case StringType => InternalRow.fromSeq(Seq(null, UTF8String.fromString(outPath), mapData))
+        }
     }
 
 }

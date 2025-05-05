@@ -24,4 +24,4 @@ cd /root/mosaic && mvn package -DskipTests
 # [4] build python
 # - refer to dockerfile for what is already built
 echo "\n::: [4] ... build python :::\n"
-cd /root/mosaic/python && pip install .
+cd /root/mosaic/python && pip install . --break-system-packages

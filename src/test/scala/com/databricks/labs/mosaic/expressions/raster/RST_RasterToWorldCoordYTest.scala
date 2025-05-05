@@ -22,7 +22,7 @@ class RST_RasterToWorldCoordYTest extends QueryTest with SharedSparkSessionGDAL 
 
     // These tests are not index system nor geometry API specific.
     // Only testing one pairing is sufficient.
-    test("Testing RST_RasterToGridMin with manual GDAL registration (H3, JTS).") {
+    test("Testing RST_RasterToWorldCoordY with manual GDAL registration (H3, JTS).") {
         noCodegen {
             assume(System.getProperty("os.name") == "Linux")
             rasterToWorldCoordY(H3IndexSystem, JTS)

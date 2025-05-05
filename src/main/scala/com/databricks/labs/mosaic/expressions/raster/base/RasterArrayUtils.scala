@@ -19,9 +19,10 @@ object RasterArrayUtils {
             .map(i =>
                 MosaicRasterTile
                     .deserialize(
-                        arrayData.get(i, rasterDT).asInstanceOf[InternalRow],
-                        expressionConfig.getCellIdType,
-                        rasterType
+                      arrayData.get(i, rasterDT).asInstanceOf[InternalRow],
+                      expressionConfig.getCellIdType,
+                      rasterType,
+                      expressionConfig.hConf
                     )
             )
     }

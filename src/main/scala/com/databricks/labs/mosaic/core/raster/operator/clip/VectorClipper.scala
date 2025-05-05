@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.core.raster.operator.clip
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.utils.PathUtils
 import org.gdal.gdal.gdal
 import org.gdal.ogr.ogrConstants.OFTInteger
@@ -57,16 +58,22 @@ object VectorClipper {
       * @return
       *   The shapefile name.
       */
-    def generateClipper(geometry: MosaicGeometry, srcCrs: SpatialReference, dstCrs: SpatialReference, geometryAPI: GeometryAPI): String = {
+    def generateClipper(geometry: MosaicGeometry, geomCRS: SpatialReference, raster: MosaicRasterGDAL, geometryAPI: GeometryAPI): String = {
+        val rasterCRS = raster.getSpatialReference
         val shapeFileName = getShapefileName
         var shpDataSource = getShapefile(shapeFileName)
+        val geomSrcCRS = if (geomCRS == null) rasterCRS else geomCRS
 
-        val projectedGeom = geometry.osrTransformCRS(srcCrs, dstCrs, geometryAPI)
+        val projectedGeom = geometry.osrTransformCRS(geomSrcCRS, rasterCRS, geometryAPI)
 
-        val geom = ogr.CreateGeometryFromWkb(projectedGeom.toWKB(2))
-        geom.AssignSpatialReference(dstCrs)
+        val factor = 0.5 * raster.pixelDiagSize
+        val pixelArea = Math.abs(raster.pixelXSize * raster.pixelYSize)
+        val adjustedGeom = if (projectedGeom.getArea < pixelArea) projectedGeom.buffer(factor) else projectedGeom
 
-        val geomLayer = shpDataSource.CreateLayer("geom", dstCrs)
+        val geom = ogr.CreateGeometryFromWkb(adjustedGeom.toWKB(2))
+        geom.AssignSpatialReference(rasterCRS)
+
+        val geomLayer = shpDataSource.CreateLayer("geom", rasterCRS)
 
         val idField = new org.gdal.ogr.FieldDefn("id", OFTInteger)
         geomLayer.CreateField(idField)
