@@ -30,24 +30,9 @@ class MosaicContext:
             sc._jvm.com.databricks.labs.mosaic.core.index, "IndexSystemFactory"
         )
 
-        try:
-            self._geometry_api = spark.conf.get(
-                "spark.databricks.labs.mosaic.geometry.api"
-            )
-        except Py4JJavaError as e:
-            self._geometry_api = "JTS"
-
-        try:
-            self._index_system = spark.conf.get(
-                "spark.databricks.labs.mosaic.index.system"
-            )
-        except Py4JJavaError as e:
-            self._index_system = "H3"
-
-        try:
-            self._raster_api = spark.conf.get("spark.databricks.labs.mosaic.raster.api")
-        except Py4JJavaError as e:
-            self._raster_api = "GDAL"
+        self._geometry_api = spark.conf.get("spark.databricks.labs.mosaic.geometry.api", "JTS")
+        self._index_system = spark.conf.get("spark.databricks.labs.mosaic.index.system", "H3")
+        self._raster_api = spark.conf.get("spark.databricks.labs.mosaic.raster.api", "GDAL")
 
         # singleton on the java side
         # - access dynamically
