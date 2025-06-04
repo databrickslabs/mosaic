@@ -1,7 +1,6 @@
 package com.databricks.labs.mosaic.datasource.v2.ogrmultiread
 
-import org.apache.spark.sql.catalog.Table
-import org.apache.spark.sql.connector.catalog.{Column, SupportsRead, TableCapability}
+import org.apache.spark.sql.connector.catalog.{Column, SupportsRead, Table, TableCapability}
 import org.apache.spark.sql.connector.read.ScanBuilder
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
@@ -19,10 +18,6 @@ class OGRMultiReadTable(schema: StructType, properties: Map[String, String]) ext
 
     override def newScanBuilder(options: CaseInsensitiveStringMap): ScanBuilder = { () =>
         new OGRMultiReadBatch(schema, properties ++ options.asScala)
-    }
-
-    override def location(): String = {
-        properties.getOrElse("path", "")
     }
 
     override def capabilities(): java.util.Set[TableCapability] = Set(TableCapability.BATCH_READ).asJava
