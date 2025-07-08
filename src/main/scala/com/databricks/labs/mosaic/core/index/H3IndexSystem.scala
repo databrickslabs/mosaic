@@ -2,10 +2,10 @@ package com.databricks.labs.mosaic.core.index
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnum}
 import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{LINESTRING, POLYGON}
-import com.uber.h3core.{H3Core, LengthUnit}
+import com.databricks.labs.mosaic.core.types.model.{Coordinates, GeometryTypeEnum}
 import com.uber.h3core.util.GeoCoord
+import com.uber.h3core.{H3Core, LengthUnit}
 import org.apache.spark.sql.types.LongType
 import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
@@ -79,15 +79,16 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       *   when performing polyfill.
       */
     override def getBufferRadius(geometry: MosaicGeometry, resolution: Int, geometryAPI: GeometryAPI): Double = {
-        val centroid = geometry.getCentroid.mapXY((x, y) => if (x > 180) (-180 + x % 180, y) else if (x < -180) (180 - x % 180, y) else (x, y)).getCentroid
+        val centroid = geometry.getCentroid
+            .mapXY((x, y) => if (x > 180) (-180 + x % 180, y) else if (x < -180) (180 - x % 180, y) else (x, y))
+            .getCentroid
         val centroidIndex = h3.geoToH3(centroid.getY, centroid.getX, resolution)
         val indexGeom = indexToGeometry(centroidIndex, geometryAPI)
         GeometryTypeEnum.fromString(indexGeom.getGeometryType) match {
             case POLYGON =>
                 val boundary = indexGeom.getShellPoints.head // first shell is always in head
                 boundary.map(_.distance(centroid)).max
-            case _ =>
-                indexGeom.flatten.flatMap(_.boundary.flatten).maxBy(_.getLength).getLength
+            case _       => indexGeom.flatten.flatMap(_.boundary.flatten).maxBy(_.getLength).getLength
         }
     }
 
@@ -98,7 +99,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       * LinearRing.
       *
       * @param index
-      *   Id of the index whose geometry should be returned.
+      *   ID of the index whose geometry should be returned.
       * @return
       *   An instance of [[Geometry]] corresponding to index.
       */
@@ -106,7 +107,8 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         val boundary = h3.h3ToGeoBoundary(index).asScala
         val extended = boundary ++ List(boundary.head)
 
-        val geom = if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
+        val geom =
+            if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index), geometryAPI)
             else makeSafeGeometry(extended, geometryAPI)
 
         geom.setSpatialReference(crsID)
@@ -209,7 +211,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
     /**
       * H3 supports resolutions ranging from 0 until 15. Resolution 0 represents
       * the most coarse resolution where the surface of the earth is split into
-      * 122 hexagons. Resolution 15 represents the mre fine grained resolution.
+      * 122 hexagons. Resolution 15 represents the mre fine-grained resolution.
       * @see
       *   https://h3geo.org/docs/core-library/restable/
       * @return
@@ -240,15 +242,17 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
     override def distance(cellId: Long, cellId2: Long): Long = Try(h3.h3Distance(cellId, cellId2)).map(_.toLong).getOrElse(0)
 
-    // Find all cells that cross the north pole. There always is exactly one cell per resolution.
+    // Find all cells that cross the North Pole. There always is exactly one cell per resolution.
     private lazy val northPoleCells = Range.inclusive(0, 15).map(h3.geoToH3(90, 0, _))
 
-    // Find all cells that cross the south pole. There always is exactly one cell per resolution.
+    // Find all cells that cross the South Pole. There always is exactly one cell per resolution.
     private lazy val southPoleCells = Range.inclusive(0, 15).map(h3.geoToH3(-90, 0, _))
 
     private def crossesNorthPole(cell_id: Long): Boolean = northPoleCells contains cell_id
     private def crossesSouthPole(cell_id: Long): Boolean = southPoleCells contains cell_id
+    // noinspection ScalaUnusedSymbol
     private def crossesNorthPole(cell_id: String): Boolean = northPoleCells contains h3.stringToH3(cell_id)
+    // noinspection ScalaUnusedSymbol
     private def crossesSouthPole(cell_id: String): Boolean = southPoleCells contains h3.stringToH3(cell_id)
 
     /**
@@ -305,7 +309,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       *   [[MosaicGeometry]].
       * @return
       *   A [[MosaicGeometry]] instance. Generates a polygon using the
-      *   cooridaates for the outer ring in the order they are provided. This
+      *   coordinates for the outer ring in the order they are provided. This
       *   method will not check for validity of the geometry and may return an
       *   invalid geometry.
       */
@@ -353,7 +357,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       *   A collection of [[GeoCoord]]s to be used to create a
       *   [[MosaicGeometry]].
       * @param isNorthPole
-      *   Boolean indicating if the pole is the north or south pole.
+      *   Boolean indicating if the pole is the north or South Pole.
       * @param geometryAPI
       *   An instance of [[GeometryAPI]] to be used to create a
       *   [[MosaicGeometry]].
@@ -401,7 +405,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
         makeSafeGeometry(geometryAPI, unsafeGeometry)
     }
 
-    private def makeSafeGeometry(geometryAPI: GeometryAPI, unsafeGeometry: MosaicGeometry) = {
+    def makeSafeGeometry(geometryAPI: GeometryAPI, unsafeGeometry: MosaicGeometry): MosaicGeometry = {
         if (crossesAntiMeridian(unsafeGeometry)) {
             val shiftedGeometry = unsafeGeometry.mapXY(shiftEast)
             val westGeom = shiftedGeometry.intersection(makeEastBBox(geometryAPI))

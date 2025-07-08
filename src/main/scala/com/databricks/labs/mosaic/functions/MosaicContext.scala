@@ -14,7 +14,7 @@ import com.databricks.labs.mosaic.expressions.geometry._
 import com.databricks.labs.mosaic.expressions.index._
 import com.databricks.labs.mosaic.expressions.raster._
 import com.databricks.labs.mosaic.expressions.util.TrySql
-import com.databricks.labs.mosaic.utils.FileUtils
+import com.databricks.labs.mosaic.utils.{FileUtils, RST_ExprListener}
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.FunctionIdentifier
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry
@@ -91,7 +91,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
      * - called on driver.
      *
      * @param database
-     *   A database to which functions are added to. By default none is passed
+     *   A database to which functions are added to. By default, none is passed
      *   resulting in functions being registered in default database.
      */
     def register(database: String): Unit = {
@@ -106,7 +106,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
       * @param spark
       *   SparkSession to which the parsers are registered to.
       * @param database
-      *   A database to which functions are added to. By default none is passed
+      *   A database to which functions are added to. By default, none is passed
       *   resulting in functions being registered in default database.
       */
     // noinspection ZeroIndexToHead
@@ -530,7 +530,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
         // DataType keywords are needed at checkInput execution time.
         // They cant be passed as Expressions to ConvertTo Expression.
-        // Instead they are passed as String instances and for SQL
+        // Instead, they are passed as String instances and for SQL
         // parser purposes separate method names are defined.
 
         registry.registerFunction(
@@ -555,6 +555,9 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         aliasFunction(registry, "point_index_geom", database, "grid_pointascellid", database)
         aliasFunction(registry, "point_index_lonlat", database, "grid_longlatascellid", database)
         aliasFunction(registry, "polyfill", database, "grid_polyfill", database)
+
+        // Register folder cleaner for rst_ expressions
+        spark.sessionState.listenerManager.register(new RST_ExprListener(spark))
 
     }
 
@@ -710,6 +713,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
         def rst_clip(raster: Column, geometry: Column, cutline: Boolean): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, lit(cutline).expr, expressionConfig))
         def rst_clip(raster: Column, geometry: Column, cutline: Column): Column = ColumnAdapter(RST_Clip(raster.expr, geometry.expr, cutline.expr, expressionConfig))
         def rst_convolve(raster: Column, kernel: Column): Column = ColumnAdapter(RST_Convolve(raster.expr, kernel.expr, expressionConfig))
+        //noinspection ScalaStyle
         def rst_dtmfromgeoms(pointsArray: Column, linesArray: Column, mergeTol: Column, snapTol: Column, splitPointFinder: Column, origin: Column, xWidth: Column, yWidth: Column, xSize: Column, ySize: Column, noData: Column): Column =
             ColumnAdapter(RST_DTMFromGeoms(pointsArray.expr, linesArray.expr, mergeTol.expr, snapTol.expr, splitPointFinder.expr, origin.expr, xWidth.expr, yWidth.expr, xSize.expr, ySize.expr, noData.expr, expressionConfig))
         def rst_pixelcount(raster: Column): Column = ColumnAdapter(RST_PixelCount(raster.expr, lit(false).expr, lit(false).expr, expressionConfig))
@@ -1092,7 +1096,8 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 
 object MosaicContext extends Logging {
 
-    var _tmpDir: String = ""
+    private var _tmpDir: String = ""
+    //noinspection ScalaUnusedSymbol
     val mosaicVersion: String = "0.4.3"
 
     private var instance: Option[MosaicContext] = None
@@ -1100,8 +1105,13 @@ object MosaicContext extends Logging {
     def tmpDir(mosaicConfig: MosaicExpressionConfig): String = {
         if (_tmpDir == "" || mosaicConfig != null) {
             val prefix = Try { mosaicConfig.getTmpPrefix }.toOption.getOrElse("")
-            _tmpDir = FileUtils.createMosaicTempDir(prefix)
-            _tmpDir
+            if (prefix != "" && _tmpDir.startsWith(prefix)) {
+                // If the prefix is already set, we do not change the tmpDir
+                _tmpDir
+            } else {
+                _tmpDir = FileUtils.createMosaicTempDir(prefix)
+                _tmpDir
+            }
         } else {
             _tmpDir
         }

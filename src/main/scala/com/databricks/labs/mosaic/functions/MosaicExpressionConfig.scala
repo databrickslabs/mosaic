@@ -99,6 +99,8 @@ case class MosaicExpressionConfig(
         MosaicExpressionConfig(configs + (key -> value), hConf)
     }
 
+    def getTileMaxSize: Long = configs.getOrElse(MOSAIC_TILE_SIZE, MOSAIC_TILE_SIZE_DEFAULT).toLong
+
     def setHadoopConf(hConf: SerializableConfiguration): MosaicExpressionConfig = {
         MosaicExpressionConfig(configs, hConf)
     }

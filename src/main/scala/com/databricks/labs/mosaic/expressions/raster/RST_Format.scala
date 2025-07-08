@@ -10,16 +10,16 @@ import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.{DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 
-case class RST_Format (
-                              tileExpr: Expression,
-                              expressionConfig: MosaicExpressionConfig
-                          ) extends RasterExpression[RST_Format](
-    tileExpr,
-    returnsRaster = false,
-    expressionConfig
-)
-    with NullIntolerant
-    with CodegenFallback {
+case class RST_Format(
+    tileExpr: Expression,
+    expressionConfig: MosaicExpressionConfig
+) extends RasterExpression[RST_Format](
+      tileExpr,
+      returnsRaster = false,
+      expressionConfig
+    )
+      with NullIntolerant
+      with CodegenFallback {
 
     override def dataType: DataType = StringType
 

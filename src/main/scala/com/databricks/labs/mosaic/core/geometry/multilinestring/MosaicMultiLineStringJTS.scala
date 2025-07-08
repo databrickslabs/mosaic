@@ -10,6 +10,8 @@ import org.locationtech.jts.geom._
 
 class MosaicMultiLineStringJTS(multiLineString: MultiLineString) extends MosaicGeometryJTS(multiLineString) with MosaicMultiLineString {
 
+    override def getGeometry: Geometry = multiLineString
+
     override def toInternal: InternalGeometry = {
         val shells = for (i <- 0 until multiLineString.getNumGeometries) yield {
             val lineString = multiLineString.getGeometryN(i).asInstanceOf[LineString]

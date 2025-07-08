@@ -1,14 +1,15 @@
 package com.databricks.labs.mosaic.core.raster.gdal
 
 import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.geometry.api.{GeometryAPI, JTS}
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL.readRaster
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner.dispose
 import com.databricks.labs.mosaic.core.raster.io.{RasterCleaner, RasterReader, RasterWriter}
 import com.databricks.labs.mosaic.core.raster.operator.clip.RasterClipByVector
-import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.POLYGON
+import com.databricks.labs.mosaic.core.raster.operator.proj.RasterProject
+import com.databricks.labs.mosaic.core.types.model.GeometryTypeEnum.{MULTIPOLYGON, POLYGON}
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.utils.{FileUtils, HadoopUtils, PathUtils, SysUtils}
 import org.apache.spark.util.SerializableConfiguration
@@ -16,6 +17,9 @@ import org.gdal.gdal.{Dataset, gdal}
 import org.gdal.gdalconst.gdalconstConstants._
 import org.gdal.osr
 import org.gdal.osr.SpatialReference
+import org.locationtech.jts.algorithm.Orientation
+import org.locationtech.jts.geom.{Coordinate, Geometry, Polygon}
+import org.locationtech.jts.io.WKBWriter
 import org.locationtech.proj4j.CRSFactory
 
 import java.nio.file.{Files, Path, Paths, StandardCopyOption}
@@ -102,18 +106,18 @@ case class MosaicRasterGDAL(
         val p3 = transform.TransformPoint(gt(0) + gt(1) * window._3, gt(3) + gt(5) * window._4).toSeq.take(2)
         val p4 = transform.TransformPoint(gt(0) + gt(1) * window._1, gt(3) + gt(5) * window._4).toSeq.take(2)
 
-        val bbox = geometryAPI.geometry(
-          Seq(
-            p1,
-            p2,
-            p3,
-            p4
-          ).map(geometryAPI.fromCoords),
-          POLYGON
-        )
+        val points = Seq(p1, p2, p3, p4)
+        val isCCW = Orientation.isCCW(points.map(p => new Coordinate(p(0), p(1))).toArray)
+        val orderedPoints = if (isCCW) points else points.reverse
 
+        val bbox = geometryAPI.geometry(orderedPoints.map(geometryAPI.fromCoords), POLYGON)
         bbox.setSpatialReference(destCRSEPSGCode)
-        bbox
+
+        if (destCRS.IsSame(MosaicGDAL.WSG84) == 1) {
+            MosaicRasterGDAL.makeSafeGeometry(geometryAPI, bbox)
+        } else {
+            bbox
+        }
     }
 
     /** @return The diagonal size of a raster. */
@@ -134,12 +138,18 @@ case class MosaicRasterGDAL(
 
     /**
       * @note
-      *   If memory size is -1 this will destroy the raster and you will need to
-      *   refresh it to use it again.
+      *   If memory size is -1 this will destroy the raster and, you will need
+      *   to refresh it to use it again.
       * @return
       *   Returns the amount of memory occupied by the file in bytes.
       */
     def getMemSize: Long = {
+        if (createInfo.contains("size")) {
+            val size = createInfo("size").toLong
+            if (size != -1) {
+                return size
+            }
+        }
         val toRead = if (path.startsWith("/vsizip/")) path.replace("/vsizip/", "") else path
         if (Files.exists(Paths.get(toRead))) {
             Files.size(Paths.get(toRead))
@@ -402,9 +412,22 @@ case class MosaicRasterGDAL(
       *   tessellation.
       */
     def getRasterForCell(cellID: Long, indexSystem: IndexSystem, geometryAPI: GeometryAPI): MosaicRasterGDAL = {
+        val indexSR = indexSystem.osrSpatialRef
+        val rasterSR = getSpatialReference
+        // get the geometry of the cell in the index system
         val cellGeom = indexSystem.indexToGeometry(cellID, geometryAPI)
-        val geomCRS = indexSystem.osrSpatialRef
-        RasterClipByVector.clip(this, cellGeom, geomCRS, geometryAPI)
+        if (indexSR.IsSame(rasterSR) == 1) {
+            // If SRs are the same, we can skip the projection
+            RasterClipByVector.clip(this, cellGeom, rasterSR, geometryAPI)
+        } else {
+            // We do this in project->clip->project order to avoid AntiMeridian issues
+            // project the cell geometry to the raster's spatial reference
+            val cellProjected = cellGeom.osrTransformCRS(indexSR, rasterSR, geometryAPI)
+            // clip the raster by the cell geometry
+            val clipped = RasterClipByVector.clip(this, cellProjected, rasterSR, geometryAPI)
+            // project the clipped raster to the index system
+            RasterProject.project(clipped, indexSR)
+        }
     }
 
     // ///////////////////////////////////////
@@ -696,7 +719,9 @@ case class MosaicRasterGDAL(
     /** @return The raster's driver short name. */
     def getDriversShortName: String =
         driverShortName.getOrElse(
-          Try(raster.GetDriver().getShortName).getOrElse("NONE")
+          Try(raster.GetDriver().getShortName).getOrElse(
+            createInfo.getOrElse("driver", "NONE")
+          )
         )
 
     /**
@@ -789,7 +814,7 @@ object MosaicRasterGDAL extends RasterReader {
       */
     override def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String]): MosaicRasterGDAL = {
         if (Option(contentBytes).isEmpty || contentBytes.isEmpty) {
-            MosaicRasterGDAL(null, createInfo)
+            MosaicRasterGDAL(null, createInfo + ("size" -> "0"))
         } else {
             // This is a temp UUID for purposes of reading the raster through GDAL from memory
             // The stable UUID is kept in metadata of the raster
@@ -797,6 +822,7 @@ object MosaicRasterGDAL extends RasterReader {
             val extension = GDAL.getExtension(driverShortName)
             val tmpPath = PathUtils.createTmpFilePath(extension)
             Files.write(Paths.get(tmpPath), contentBytes)
+            val size = contentBytes.length
             // Try reading as a tmp file, if that fails, rename as a zipped file
             val dataset = pathAsDataset(tmpPath, Some(driverShortName))
             if (dataset == null) {
@@ -819,12 +845,12 @@ object MosaicRasterGDAL extends RasterReader {
                     if (ds2 == null) {
                         throw new Exception(s"Error reading raster from bytes: ${prompt._3}")
                     }
-                    MosaicRasterGDAL(ds2, createInfo + ("path" -> unzippedPath))
+                    MosaicRasterGDAL(ds2, createInfo + ("path" -> unzippedPath, "size" -> size.toString))
                 } else {
-                    MosaicRasterGDAL(ds1, createInfo + ("path" -> readPath))
+                    MosaicRasterGDAL(ds1, createInfo + ("path" -> readPath, "size" -> size.toString))
                 }
             } else {
-                MosaicRasterGDAL(dataset, createInfo + ("path" -> tmpPath))
+                MosaicRasterGDAL(dataset, createInfo + ("path" -> tmpPath, "size" -> size.toString))
             }
         }
     }
@@ -848,7 +874,7 @@ object MosaicRasterGDAL extends RasterReader {
             if (isSubdataset) PathUtils.getSubdatasetPath(cleanPath)
             else PathUtils.getZipPath(cleanPath)
         val dataset = pathAsDataset(readPath, None)
-        val error =
+        val error = {
             if (dataset == null) {
                 val error = gdal.GetLastErrorMsg()
                 s"""
@@ -856,6 +882,8 @@ object MosaicRasterGDAL extends RasterReader {
                 Error: $error
             """
             } else ""
+        }
+        val size = Try(Files.size(Paths.get(readPath))).getOrElse(0L)
         val driverShortName = Try(dataset.GetDriver().getShortName).getOrElse("NONE")
         // Avoid costly IO to compute MEM size here
         // It will be available when the raster is serialized for next operation
@@ -866,10 +894,81 @@ object MosaicRasterGDAL extends RasterReader {
           createInfo ++
               Map(
                 "driver" -> driverShortName,
-                "last_error" -> error
+                "last_error" -> error,
+                "size" -> size.toString
               )
         )
         raster
+    }
+
+    def makeSafeGeometry(geometryAPI: GeometryAPI, unsafeGeometry: MosaicGeometry): MosaicGeometry = {
+        if (crossesAntiMeridian(unsafeGeometry)) {
+            // Step 1: shift [-180,180] → [0,360]
+            val translated = unsafeGeometry.translate(180.0, 0.0)
+
+            // Step 2: define boxes in [0,360] range
+            val westBBoxWKT = "POLYGON((0 -90, 180 -90, 180 90, 0 90, 0 -90))"
+            val eastBBoxWKT = "POLYGON((180 -90, 360 -90, 360 90, 180 90, 180 -90))"
+
+            val westBBox = geometryAPI.geometry(westBBoxWKT, "WKT")
+            val eastBBox = geometryAPI.geometry(eastBBoxWKT, "WKT")
+
+            val westShifted = translated.intersection(westBBox)
+            val eastShifted = translated.intersection(eastBBox)
+
+            val westBack = westShifted.translate(-180.0, 0.0)
+            val eastBack = eastShifted.translate(-180.0, 0.0)
+
+            val westPart = rebuildPolygonWithFixedCoords(geometryAPI, westBack, westShifted, "west")
+            val eastPart = rebuildPolygonWithFixedCoords(geometryAPI, eastBack, eastShifted, "east")
+
+            geometryAPI.fromSeq(
+              Seq(westPart, eastPart).filterNot(_.isEmpty).filter(_.getArea > 0),
+              MULTIPOLYGON
+            )
+        } else {
+            unsafeGeometry
+        }
+    }
+
+    private def crossesAntiMeridian(geometry: MosaicGeometry): Boolean = {
+        val minX = geometry.minMaxCoord("X", "MIN")
+        val maxX = geometry.minMaxCoord("X", "MAX")
+        minX < 0 && maxX > 0 && (maxX - minX > 180.0) && !(minX <= -180.0 && maxX >= 180.0)
+    }
+
+    def rebuildPolygonWithFixedCoords(
+        geometryAPI: GeometryAPI,
+        backGeom: MosaicGeometry,
+        shiftedGeom: MosaicGeometry,
+        side: String
+    ): MosaicGeometry = {
+        val polyBack = backGeom.getGeometry.asInstanceOf[Polygon]
+        val polyShifted = shiftedGeom.getGeometry.asInstanceOf[Polygon]
+
+        val shell = zipFix(polyBack.getExteriorRing, polyShifted.getExteriorRing, side)
+        val poly = JTS.makePolygonFromCoords(shell, Seq.empty)
+
+        val wkb = new WKBWriter().write(poly)
+        geometryAPI.geometry(wkb, "WKB")
+    }
+
+    private def zipFix(
+        backRing: Geometry,
+        shiftedRing: Geometry,
+        side: String
+    ): Seq[(Double, Double)] = {
+        val coordsBack = backRing.getCoordinates
+        val coordsShifted = shiftedRing.getCoordinates
+        require(coordsBack.length == coordsShifted.length)
+
+        coordsBack.zip(coordsShifted).map { case (cBack, cShifted) =>
+            val xBack =
+                if (cBack.x == 0.0 && cShifted.x == 180.0 && side == "west") -180.0
+                else if (cBack.x == 0.0 && cShifted.x == 180.0 && side == "east") 180.0
+                else cBack.x
+            (xBack, cBack.y)
+        }
     }
 
 }

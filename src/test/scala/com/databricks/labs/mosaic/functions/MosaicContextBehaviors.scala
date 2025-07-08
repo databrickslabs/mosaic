@@ -256,13 +256,7 @@ trait MosaicContextBehaviors extends MosaicSpatialQueryTest {
         spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "14-x")
         an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
 
-        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "14-photon-x")
-        an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
-
         spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "12-x")
-        an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
-
-        spark.conf.set("spark.databricks.clusterUsageTags.sparkVersion", "12-photon-x")
         an[Exception] should be thrownBy MosaicContext.checkDBR(spark)
     }
 

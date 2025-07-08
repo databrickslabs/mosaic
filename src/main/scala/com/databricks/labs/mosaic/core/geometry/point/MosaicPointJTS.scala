@@ -9,6 +9,8 @@ import org.locationtech.jts.geom._
 
 class MosaicPointJTS(point: Point) extends MosaicGeometryJTS(point) with MosaicPoint {
 
+    override def getGeometry: Geometry = point
+
     override def geoCoord: Coordinates = Coordinates(point.getY, point.getX)
 
     override def coord: Coordinate = new Coordinate(point.getX, point.getY)

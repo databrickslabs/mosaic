@@ -11,7 +11,7 @@ import scala.util.Try
 /** GDALWarp is a wrapper for the GDAL Warp command. */
 object GDALWarp {
 
-    def addSrcSRS(options: java.util.Vector[String], raster: MosaicRasterGDAL): java.util.Vector[String] = {
+    private def addSrcSRS(options: java.util.Vector[String], raster: MosaicRasterGDAL): java.util.Vector[String] = {
         val srs = raster.raster.GetSpatialRef()
         if (srs == null) {
             val srsVec = new java.util.Vector[String]()
@@ -53,7 +53,8 @@ object GDALWarp {
           "driver" -> rasters.head.getWriteOptions.format,
           "last_command" -> effectiveCommand,
           "last_error" -> errorMsg,
-          "all_parents" -> rasters.map(_.getParentPath).mkString(";")
+          "all_parents" -> rasters.map(_.getParentPath).mkString(";"),
+          "size" -> size.toString
         )
         rasters.head.copy(raster = result, createInfo = createInfo).flushCache()
     }
@@ -74,7 +75,7 @@ object GDALWarp {
         this.synchronized {
             val executedCommand = s"$effectiveCommand $inPath $outputPath"
             val commandOutput = executedCommand.!!
-            gdal.Open(outputPath, gdalconstConstants.GA_ReadOnly)
+            gdal.OpenShared(outputPath, gdalconstConstants.GA_ReadOnly)
         }
 
 }

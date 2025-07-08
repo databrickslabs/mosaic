@@ -4,15 +4,17 @@ import com.databricks.labs.mosaic.core.crs.CRSBoundsProvider
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.geometry.linestring.MosaicLineString
 import com.databricks.labs.mosaic.core.geometry.point.MosaicPoint
-import org.gdal.ogr.ogr
-import org.gdal.osr.{CoordinateTransformation, SpatialReference, osr}
 import org.gdal.osr.osrConstants._
+import org.gdal.osr.{CoordinateTransformation, SpatialReference}
+import org.locationtech.jts.geom.Geometry
 import org.locationtech.proj4j._
 
 import java.util.Locale
 import scala.util.Try
 
 trait MosaicGeometry extends GeometryWriter with Serializable {
+
+    def getGeometry: Geometry
 
     def getNumGeometries: Int
 

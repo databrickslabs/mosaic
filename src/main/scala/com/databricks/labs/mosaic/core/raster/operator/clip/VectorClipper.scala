@@ -33,17 +33,8 @@ object VectorClipper {
       *   The shapefile name.
       */
     def generateClipper(geometry: MosaicGeometry, geomCRS: SpatialReference, raster: MosaicRasterGDAL, geometryAPI: GeometryAPI): String = {
-        val rasterCRS = raster.getSpatialReference
-        val geomSrcCRS = if (geomCRS == null) rasterCRS else geomCRS
-
-        val projectedGeom = geometry.osrTransformCRS(geomSrcCRS, rasterCRS, geometryAPI)
-
-        val factor = 0.5 * raster.pixelDiagSize
-        val pixelArea = Math.abs(raster.pixelXSize * raster.pixelYSize)
-        val adjustedGeom = if (projectedGeom.getArea < pixelArea) projectedGeom.buffer(factor) else projectedGeom
-
+        val adjustedGeom = getClipperGeom(geometry, geomCRS, raster, geometryAPI)
         val wkt = adjustedGeom.toWKT
-
         val tmpFileName = PathUtils.createTmpFilePath("csv")
         val tmpFile = Paths.get(tmpFileName)
         val writer = Files.newBufferedWriter(tmpFile)
@@ -53,8 +44,22 @@ object VectorClipper {
         } finally {
             writer.close()
         }
-
         tmpFile.toAbsolutePath.toString
+    }
+
+    def getClipperGeom(
+        geometry: MosaicGeometry,
+        geomCRS: SpatialReference,
+        raster: MosaicRasterGDAL,
+        geometryAPI: GeometryAPI
+    ): MosaicGeometry = {
+        val rasterCRS = raster.getSpatialReference
+        val geomSrcCRS = if (geomCRS == null) rasterCRS else geomCRS
+        val projectedGeom = geometry.osrTransformCRS(geomSrcCRS, rasterCRS, geometryAPI)
+        val factor = 0.5 * raster.pixelDiagSize
+        val pixelArea = Math.abs(raster.pixelXSize * raster.pixelYSize)
+        val adjustedGeom = if (projectedGeom.getArea < pixelArea) projectedGeom.buffer(factor) else projectedGeom
+        adjustedGeom
     }
 
     /**

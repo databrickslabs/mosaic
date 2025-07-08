@@ -5,10 +5,12 @@ import com.databricks.labs.mosaic.core.raster.gdal.{MosaicRasterGDAL, MosaicRast
 import com.databricks.labs.mosaic.utils.SysUtils
 import org.gdal.gdal.gdal
 
+import java.nio.file.{Files, Paths}
+
 /** GDALCalc is a helper object for executing GDAL Calc commands. */
 object GDALCalc {
 
-    val gdal_calc: String = {
+    private val gdal_calc: String = {
         val calcPath = SysUtils.runCommand("which gdal_calc.py")._1.split("\n").headOption.getOrElse("")
         if (calcPath.isEmpty) {
             throw new RuntimeException("Could not find gdal_calc.py.")
@@ -36,6 +38,8 @@ object GDALCalc {
         val commandRes = SysUtils.runCommand(s"python3 $toRun")
         val errorMsg = gdal.GetLastErrorMsg
         val result = GDAL.raster(resultPath, resultPath)
+        val size = Files.size(Paths.get(resultPath))
+        //noinspection DuplicatedCode
         val createInfo = Map(
           "path" -> resultPath,
           "parentPath" -> resultPath,
@@ -43,6 +47,7 @@ object GDALCalc {
           "last_command" -> effectiveCommand,
           "last_error" -> errorMsg,
           "all_parents" -> resultPath,
+          "size" -> size.toString,
           "full_error" -> s"""
                              |GDAL Calc command failed:
                              |GDAL err:

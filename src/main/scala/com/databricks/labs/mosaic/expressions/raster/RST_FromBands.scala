@@ -11,7 +11,6 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 
-
 /** The expression for stacking and resampling input bands. */
 case class RST_FromBands(
     bandsExpr: Expression,
@@ -29,7 +28,7 @@ case class RST_FromBands(
         RasterTileType(
           expressionConfig.getCellIdType,
           RasterTileType(bandsExpr, expressionConfig.isRasterUseCheckpoint).rasterType,
-            expressionConfig.isRasterUseCheckpoint
+          expressionConfig.isRasterUseCheckpoint
         )
     }
 

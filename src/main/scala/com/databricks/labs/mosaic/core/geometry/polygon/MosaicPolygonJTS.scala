@@ -10,6 +10,8 @@ import org.locationtech.jts.geom._
 
 class MosaicPolygonJTS(polygon: Polygon) extends MosaicGeometryJTS(polygon) with MosaicPolygon {
 
+    override def getGeometry: Geometry = polygon
+
     override def toInternal: InternalGeometry = {
         val boundary = polygon.getBoundary
         val shell = boundary.getGeometryN(0).getCoordinates.map(InternalCoord(_))

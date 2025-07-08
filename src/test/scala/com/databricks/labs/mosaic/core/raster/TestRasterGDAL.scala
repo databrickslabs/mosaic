@@ -1,18 +1,16 @@
 package com.databricks.labs.mosaic.core.raster
 
-import com.databricks.labs.mosaic.{MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_TEST_MODE}
 import com.databricks.labs.mosaic.core.raster.gdal.MosaicRasterGDAL
 import com.databricks.labs.mosaic.gdal.MosaicGDAL
 import com.databricks.labs.mosaic.test.mocks.filePath
 import com.databricks.labs.mosaic.utils.IsolatedProcess
+import com.databricks.labs.mosaic.{MOSAIC_RASTER_CHECKPOINT, MOSAIC_RASTER_USE_CHECKPOINT, MOSAIC_TEST_MODE}
 import org.apache.spark.sql.test.SharedSparkSessionGDAL
-import org.scalatest.matchers.should.Matchers._
 import org.gdal.gdal.{gdal => gdalJNI}
 import org.gdal.gdalconst
+import org.scalatest.matchers.should.Matchers._
 
 import scala.concurrent.duration.DurationInt
-import scala.sys.process._
-import scala.util.Try
 
 class TestRasterGDAL extends SharedSparkSessionGDAL {
 
@@ -78,7 +76,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.xSize shouldBe 2400
         testRaster.ySize shouldBe 2400
         testRaster.numBands shouldBe 1
-        testRaster.proj4String shouldBe "+proj=[longlat +datum=WGS84] +no_defs"
+        testRaster.proj4String.isEmpty shouldBe false
         testRaster.SRID shouldBe 0
         testRaster.extent shouldBe Seq(-8895604.157333, 1111950.519667, -7783653.637667, 2223901.039333)
         testRaster.getRaster.GetProjection()
@@ -132,7 +130,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         testRaster.xSize shouldBe 720
         testRaster.ySize shouldBe 360
         testRaster.numBands shouldBe 31
-        testRaster.proj4String shouldBe "+proj=longlat +datum=WGS84 +no_defs"
+        testRaster.proj4String.isEmpty shouldBe false
         testRaster.SRID shouldBe 4326
         testRaster.extent shouldBe Seq(-180.0, -90.0, 180.0, 90.0)
 

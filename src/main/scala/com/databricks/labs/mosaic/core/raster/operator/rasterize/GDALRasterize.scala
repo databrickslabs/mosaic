@@ -13,8 +13,10 @@ import org.gdal.ogr.ogr.{CreateGeometryFromWkb, GetDriverByName}
 import org.gdal.ogr.ogrConstants.{OFTReal, wkbPoint, wkbPolygon}
 import org.gdal.ogr.{DataSource, Feature, FieldDefn, ogr}
 
+import java.nio.file.{Files, Paths}
 import java.util.{Vector => JVector}
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 object GDALRasterize {
 
@@ -90,6 +92,7 @@ object GDALRasterize {
 
         newRaster.FlushCache()
         newRaster.delete()
+        val size = Try(Files.size(Paths.get(outputPath))).getOrElse(-1)
         val errorMsg = gdal.GetLastErrorMsg
         val createInfo = Map(
           "path" -> outputPath,
@@ -97,6 +100,7 @@ object GDALRasterize {
           "driver" -> writeOptions.format,
           "last_command" -> effectiveCommand,
           "last_error" -> errorMsg,
+          "size" -> size.toString,
           "all_parents" -> ""
         )
         MosaicRasterGDAL.readRaster(createInfo)
@@ -109,16 +113,16 @@ object GDALRasterize {
      * @param geoms The geometries to write to the DataSource.
      * @param valuesToBurn The values to burn into the raster.
      * @param geometryType The type of geometry to write to the DataSource.
-     * @param format The format of the DataSource (driver the should be used).
+     * @param format The format of the DataSource (driver that should be used).
      * @param path The path to write the DataSource to.
      * @return A DataSource object containing the geometries and values.
      */
-    def writeToDataSource(
+    private def writeToDataSource(
         geoms: Seq[MosaicGeometry],
         valuesToBurn: Seq[Double],
         geometryType: Option[GeometryTypeEnum.Value],
-        format: String="Memory",
-        path: String="mem"
+        format: String = "Memory",
+        path: String = "mem"
     ): DataSource = {
         ogr.RegisterAll()
 

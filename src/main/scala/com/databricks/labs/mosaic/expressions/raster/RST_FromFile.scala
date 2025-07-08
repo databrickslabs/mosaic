@@ -72,7 +72,7 @@ case class RST_FromFile(
         val res = if (targetSize <= 0 && currentSize <= Integer.MAX_VALUE) {
             val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(driver))
             Files.copy(Paths.get(readPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
-            val createInfo = Map("path" -> tmpPath, "parentPath" -> path)
+            val createInfo = Map("path" -> tmpPath, "parentPath" -> path, "driver" -> driver, "size" -> currentSize.toString)
             var raster = MosaicRasterGDAL.readRaster(createInfo)
             var tile = MosaicRasterTile(null, raster)
             val row = tile.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf)
@@ -87,12 +87,13 @@ case class RST_FromFile(
             val tmpPath = PathUtils.createTmpFilePath(GDAL.getExtension(driver))
             Files.copy(Paths.get(readPath), Paths.get(tmpPath), StandardCopyOption.REPLACE_EXISTING)
             val size = if (targetSize <= 0) 64 else targetSize
-            var tiles = ReTileOnRead.localSubdivide(tmpPath, path, size)
-            val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf))
-            tiles.foreach(RasterCleaner.dispose(_))
+            val tiles = ReTileOnRead.localSubdivide(tmpPath, path, size)
             Files.deleteIfExists(Paths.get(tmpPath))
-            tiles = null
-            rows.map(row => InternalRow.fromSeq(Seq(row)))
+            tiles.map { tile =>
+                val serialized = tile.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf)
+                RasterCleaner.dispose(tile)
+                InternalRow.fromSeq(Seq(serialized))
+            }
         }
         // HadoopUtils.deleteIfExists(tmpPath, expressionConfig.hConf)
         res

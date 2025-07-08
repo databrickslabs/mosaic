@@ -65,14 +65,14 @@ object MosaicGDAL extends Logging {
         gdal.SetConfigOption("GDAL_CACHEMAX", "512")
         gdal.SetCacheMax(512*1024*1024)
         gdal.SetConfigOption("GDAL_NUM_THREADS", "4")
-        gdal.SetConfigOption("GDAL_SWATH_SIZE", "1073741824")
-        gdal.SetConfigOption("VSI_CACHE", "TRUE")
-        gdal.SetConfigOption("VSI_CACHE_SIZE", "33554432")
-        gdal.SetConfigOption("GTIFF_DIRECT_IO", "YES")
-        gdal.SetConfigOption("GTIFF_VIRTUAL_MEM_IO", "IF_ENOUGH_RAM")
-        gdal.SetConfigOption("GDAL_BAND_BLOCK_CACHE", "HASHSET")
-
-        gdal.SetConfigOption("GDAL_INGESTED_BYTES_AT_OPEN", "67108864") // 64MB chunks
+//        gdal.SetConfigOption("GDAL_SWATH_SIZE", "1073741824")
+//        gdal.SetConfigOption("VSI_CACHE", "TRUE")
+//        gdal.SetConfigOption("VSI_CACHE_SIZE", "33554432")
+//        gdal.SetConfigOption("GTIFF_DIRECT_IO", "YES")
+//        gdal.SetConfigOption("GTIFF_VIRTUAL_MEM_IO", "IF_ENOUGH_RAM")
+//        gdal.SetConfigOption("GDAL_BAND_BLOCK_CACHE", "HASHSET")
+//
+//        gdal.SetConfigOption("GDAL_INGESTED_BYTES_AT_OPEN", "67108864") // 64MB chunks
 
 
         mosaicConfig.getGDALConf.foreach { case (k, v) => gdal.SetConfigOption(k.split("\\.").last, v) }

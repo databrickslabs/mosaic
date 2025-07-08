@@ -1,8 +1,7 @@
 package com.databricks.labs.mosaic.expressions.raster
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, MosaicRasterTile}
+import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
@@ -32,22 +31,10 @@ case class RST_BoundingBox(
       */
     override def rasterTransform(tile: MosaicRasterTile): Any = {
         var raster = tile.getRaster
-        val gt = raster.getRaster.GetGeoTransform()
-        val (originX, originY) = GDAL.toWorldCoord(gt, 0, 0)
-        val (endX, endY) = GDAL.toWorldCoord(gt, raster.xSize, raster.ySize)
         val geometryAPI = GeometryAPI(expressionConfig.getGeometryAPI)
-        val bboxPolygon = geometryAPI.geometry(
-          Seq(
-            Seq(originX, originY),
-            Seq(originX, endY),
-            Seq(endX, endY),
-            Seq(endX, originY),
-            Seq(originX, originY)
-          ).map(geometryAPI.fromCoords),
-          GeometryTypeEnum.POLYGON
-        )
+        val bbox = raster.bbox(geometryAPI, raster.getSpatialReference)
         raster = null
-        bboxPolygon.toWKB
+        bbox.toWKB
     }
 
 }

@@ -11,7 +11,7 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 import org.apache.spark.util.SerializableConfiguration
-import org.gdal.gdal.gdal
+import org.gdal.gdal.{Dataset, gdal}
 import org.gdal.gdalconst.gdalconstConstants._
 
 import java.util.UUID
@@ -22,7 +22,7 @@ import java.util.UUID
   */
 object GDAL {
 
-    var isRegistered = false
+    private var isRegistered = false
 
     /**
       * Returns the no data value for the given GDAL data type. For non-numeric
@@ -205,7 +205,7 @@ object GDAL {
         val extension = GDAL.getExtension(raster.getDriversShortName)
         val writePath = path match {
             case Some(p) => p
-            case None    => s"${getCheckpointPath}/$uuid.$extension"
+            case None    => s"$getCheckpointPath/$uuid.$extension"
         }
         val outPath = raster.writeToPath(writePath, dispose = true, hConf)
         RasterCleaner.dispose(raster)
@@ -280,7 +280,10 @@ object GDAL {
       */
     def toWorldCoord(gt: Seq[Double], x: Int, y: Int): (Double, Double) = {
         val (xGeo, yGeo) = RasterTransform.toWorldCoord(gt, x, y)
-        (xGeo, yGeo)
+        val (xGeoNext, yGeoNext) = RasterTransform.toWorldCoord(gt, x + 1, y + 1)
+        val centerX = (xGeo + xGeoNext) / 2.0
+        val centerY = (yGeo + yGeoNext) / 2.0
+        (centerX, centerY)
     }
 
     /**
@@ -297,7 +300,28 @@ object GDAL {
       */
     def fromWorldCoord(gt: Seq[Double], x: Double, y: Double): (Int, Int) = {
         val (xPixel, yPixel) = RasterTransform.fromWorldCoord(gt, x, y)
-        (xPixel, yPixel)
+        (math.floor(xPixel).toInt, math.floor(yPixel).toInt)
+    }
+
+    def createEmptyRaster(
+        path: String, // Full path to your temp file, e.g., "/tmp/foo.tif"
+        driverShortName: String,
+        width: Int,
+        height: Int,
+        nodata: Double,
+        bands: Int,
+        dtype: Int
+    ): Dataset = {
+        val driver = gdal.GetDriverByName(driverShortName)
+        val ds: Dataset = driver.Create(path, width, height, bands, dtype)
+
+        // Set nodata and fill with nodata value
+        for (b <- 1 to bands) {
+            val band = ds.GetRasterBand(b)
+            band.SetNoDataValue(nodata)
+            band.Fill(nodata)
+        }
+        ds
     }
 
 }
