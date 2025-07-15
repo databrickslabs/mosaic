@@ -1,0 +1,19 @@
+package com.dblabs.spatial
+
+import com.dblabs.spatial.vectorx.jts.JTS
+import org.apache.spark.sql.expressions.UserDefinedFunction
+import org.apache.spark.sql.functions.udf
+
+object udfs {
+
+    def st_aswkb: UserDefinedFunction =
+        udf((wkt: String) => {
+            JTS.toWKB(JTS.fromWKT(wkt))
+        })
+
+    def st_aswkt: UserDefinedFunction =
+        udf((wkb: Array[Byte]) => {
+            JTS.toWKT(JTS.fromWKB(wkb))
+        })
+
+}
