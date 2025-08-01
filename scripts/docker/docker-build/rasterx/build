@@ -1,0 +1,3 @@
+#!/bin/bash
+
+docker build -t "rasterx-dev:ubuntu24-gdal310-spark4" .

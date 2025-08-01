@@ -10,8 +10,8 @@
     <properties>
         <minimum.coverage>0</minimum.coverage>
         <skipTests>true</skipTests>
-        <maven.compiler.source>1.11</maven.compiler.source>
-        <maven.compiler.target>1.11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <spec2.version>4.2.0</spec2.version>
     </properties>
@@ -259,9 +259,9 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <scala.version>2.12.10</scala.version>
-                <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.5.0</spark.version>
+                <scala.version>2.13.12</scala.version>
+                <scala.compat.version>2.13</scala.compat.version>
+                <spark.version>4.0.0</spark.version>
                 <mosaic.version>0.4.3</mosaic.version>
             </properties>
             <build>
