@@ -14,7 +14,7 @@ import com.databricks.labs.mosaic.utils.PathUtils
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, Literal, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, Literal}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -31,7 +31,6 @@ case class RST_FromContent(
     expressionConfig: MosaicExpressionConfig
 ) extends CollectionGenerator
       with Serializable
-      with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = {

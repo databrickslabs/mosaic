@@ -67,11 +67,12 @@ object ST_ConcaveHull extends WithExpressionInfo {
           |        {"POLYGON (( 0 0, 1 0, 1 1, 0 1 ))"}
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
-        GenericExpressionFactory.construct[ST_ConcaveHull](
-          Array(children.head, Column(children(1)).cast("double").expr, children(2)),
-          expressionConfig
-        )
-    }
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = null
+//    { (children: Seq[Expression]) =>
+//        GenericExpressionFactory.construct[ST_ConcaveHull](
+//          Array(children.head, Column(children(1)).cast("double").expr, children(2)),
+//          expressionConfig
+//        )
+//    }
 
 }

@@ -37,7 +37,6 @@ trait SharedSparkSessionGDAL extends SharedSparkSession {
         conf.set(MOSAIC_RASTER_CHECKPOINT, FileUtils.createMosaicTempDir(prefix = "/home/raster_checkpoint/"))
         conf.set("spark.driver.extraJavaOptions", "-Djava.library.path=~/hadoop-native/lib/native")
         conf.set("spark.executor.extraJavaOptions", "-Djava.library.path=~/hadoop-native/lib/native")
-        SparkSession.cleanupAnyExistingSession()
         val session = new MosaicTestSparkSession(conf)
         session.sparkContext.setLogLevel("ERROR")
         Try {

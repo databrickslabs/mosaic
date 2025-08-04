@@ -8,8 +8,7 @@ import org.apache.spark.sql.catalyst.expressions.{
     ExpectsInputTypes,
     Expression,
     ExpressionDescription,
-    ExpressionInfo,
-    NullIntolerant
+    ExpressionInfo
 }
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
@@ -26,7 +25,6 @@ import org.apache.spark.sql.types._
 case class CellKRing(cellId: Expression, k: Expression, indexSystem: IndexSystem, geometryAPIName: String)
     extends BinaryExpression
       with ExpectsInputTypes
-      with NullIntolerant
       with CodegenFallback {
 
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)

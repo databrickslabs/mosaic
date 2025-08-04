@@ -5,7 +5,7 @@ import com.databricks.labs.mosaic.core.geometry.MosaicGeometry
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 
 import scala.reflect.ClassTag
@@ -30,7 +30,6 @@ abstract class UnaryVectorExpression[T <: Expression: ClassTag](
     expressionConfig: MosaicExpressionConfig
 ) extends UnaryExpression
       with VectorExpression
-      with NullIntolerant
       with Serializable {
 
     override def child: Expression = geometryExpr

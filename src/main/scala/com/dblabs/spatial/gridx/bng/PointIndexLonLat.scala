@@ -8,7 +8,6 @@ import org.apache.spark.sql.types._
 case class PointIndexLonLat(lon: Expression, lat: Expression, resolution: Expression, indexSystem: IndexSystem)
     extends TernaryExpression
       with ExpectsInputTypes
-      with NullIntolerant
       with CodegenFallback {
 
     override def inputTypes: Seq[DataType] =

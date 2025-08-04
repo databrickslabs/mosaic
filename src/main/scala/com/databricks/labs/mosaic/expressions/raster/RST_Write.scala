@@ -9,7 +9,7 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{Expression, Literal, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{Expression, Literal}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -38,7 +38,6 @@ case class RST_Write(
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
-      with NullIntolerant
       with CodegenFallback {
 
     // serialize data type

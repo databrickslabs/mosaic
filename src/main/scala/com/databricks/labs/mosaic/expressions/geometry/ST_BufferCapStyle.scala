@@ -58,8 +58,9 @@ object ST_BufferCapStyle extends WithExpressionInfo {
           |        POLYGON (...)
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
-        ST_BufferCapStyle(children.head, Column(children(1)).cast("double").expr, children(2), expressionConfig)
-    }
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = null
+//    { (children: Seq[Expression]) =>
+//        ST_BufferCapStyle(children.head, Column(children(1)).cast("double").expr, children(2), expressionConfig)
+//    }
 
 }

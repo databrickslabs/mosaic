@@ -8,7 +8,7 @@ import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{Expression}
 import org.apache.spark.sql.types.DataType
 
 /** Returns the world coordinate of the raster. */
@@ -18,7 +18,6 @@ case class RST_WorldToRasterCoord(
     y: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends Raster2ArgExpression[RST_WorldToRasterCoord](raster, x, y, returnsRaster = false, expressionConfig)
-      with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = PixelCoordsType

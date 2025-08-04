@@ -1,9 +1,11 @@
 package com.dblabs.spatial.gridx.bng
 
+import com.dblabs.spatial.expressions.{ExpressionConfig, GenericExpressionFactory, WithExpressionInfo}
 import com.dblabs.spatial.gridx.grid.BNG
 import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo}
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -19,7 +21,7 @@ case class BNG_KLoopExplode(
     override def inline: Boolean = false
     override def children: Seq[Expression] = Seq(cellId, k)
 
-    override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
+    override def eval(input: InternalRow): IterableOnce[InternalRow] = {
         val cellIdValue = cellId.eval(input)
         val kValue = k.eval(input)
         if (cellIdValue == null || kValue == null) {
@@ -46,31 +48,11 @@ case class BNG_KLoopExplode(
 
 }
 
-object BNG_KLoopExplode {
+object BNG_KLoopExplode extends WithExpressionInfo {
 
-    def registryExpressionInfo(db: Option[String]): ExpressionInfo =
-        new ExpressionInfo(
-          classOf[BNG_KLoopExplode].getCanonicalName,
-          db.orNull,
-          "bng_kloopexplode",
-          """
-            |    _FUNC_(cell_id, resolution)) - Generates the cell based k loop (hollow ring) cell IDs set for the input
-            |    cell ID and the input k value.
-            """.stripMargin,
-          "",
-          """
-            |    Examples:
-            |      > SELECT _FUNC_(a, b);
-            |        622236721274716159
-            |        622236721274716160
-            |        622236721274716161
-            |        ...
-            |
-            |  """.stripMargin,
-          "",
-          "generator_funcs",
-          "1.0",
-          "",
-          "built-in"
-        )
+    override def name: String = "bng_kloopexplode"
+
+    override def builder(expressionConfig: ExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[BNG_KLoopExplode](2, expressionConfig)
+    }
 }

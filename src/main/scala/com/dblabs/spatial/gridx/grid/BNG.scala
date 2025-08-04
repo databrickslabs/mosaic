@@ -145,7 +145,6 @@ object BNG extends Serializable {
       *   when performing polyfill.
       */
     def getBufferRadius(geometry: Geometry, resolution: Int): Double = {
-        // TODO: This logic does not account for geometry at all
         val size = getEdgeSize(resolution)
         size * math.sqrt(2) / 2
     }
@@ -349,8 +348,6 @@ object BNG extends Serializable {
       * 0 to 6 resolution, there are mid way resolutions that split index into
       * quadrants. Those are denoted as .5 resolutions by convention.
       *
-      * @see
-      *   [[IndexSystem.getResolution()]] docs.
       * @param res
       *   Any type input to be parsed into the Int representation of resolution.
       * @return
@@ -528,10 +525,9 @@ object BNG extends Serializable {
     }
 
     def indexToBoundary(index: Long): Seq[Coordinate] = {
-        // TODO: Revise this is too much conversions
         val geom = indexToGeometry(index)
         val coordinates = geom.getCoordinates
-        coordinates.map(coord => JTS.coordinatesFromXYs(coord.getX, coord.getY)).toSeq
+        coordinates.map(coord => JTS.coordinatesFromXYs(coord.getX, coord.getY))
     }
 
     def distance(cellId: Long, cellId2: Long): Long = {

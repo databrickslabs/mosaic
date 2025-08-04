@@ -9,7 +9,7 @@ import scala.jdk.CollectionConverters._
 
 class OGRMultiReadTable(schema: StructType, properties: Map[String, String]) extends Table with SupportsRead {
 
-    protected override def name(): String = "OGRMultiRead"
+    override def name(): String = "OGRMultiRead"
 
     // noinspection ScalaDeprecation
     override def schema(): StructType = schema

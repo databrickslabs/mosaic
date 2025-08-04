@@ -11,6 +11,7 @@ class CellIntersectionTest extends PlanTest with SharedSparkSession {
     test("BNG CellArea on sting ids") {
         import com.dblabs.spatial.gridx.bng.functions._
         import com.dblabs.spatial.udfs._
+        com.dblabs.spatial.gridx.bng.functions.register(spark)
 
         spark.sparkContext.setLogLevel("ERROR")
         val sc = spark
@@ -52,8 +53,8 @@ class CellIntersectionTest extends PlanTest with SharedSparkSession {
         )
         val expectedSchema = StructType(
             Array(
-                StructField("case_id", IntegerType, true),
-                StructField("expected_wkt", StringType, true)
+                StructField("case_id", IntegerType, nullable = true),
+                StructField("expected_wkt", StringType, nullable = true)
             )
         )
         val expDf = spark.createDataFrame(spark.sparkContext.parallelize(expected), expectedSchema)

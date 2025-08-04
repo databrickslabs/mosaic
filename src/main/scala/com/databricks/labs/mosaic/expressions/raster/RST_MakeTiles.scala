@@ -15,7 +15,7 @@ import com.databricks.labs.mosaic.utils.{HadoopUtils, PathUtils}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, Literal, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, Literal}
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -58,7 +58,6 @@ case class RST_MakeTiles(
     expressionConfig: MosaicExpressionConfig
 ) extends CollectionGenerator
       with Serializable
-      with NullIntolerant
       with CodegenFallback {
 
     /** @return Returns StringType if either */
@@ -84,8 +83,6 @@ case class RST_MakeTiles(
     override def position: Boolean = false
 
     override def inline: Boolean = false
-
-    override def children: Seq[Expression] = Seq(inputExpr, driverExpr, sizeInMBExpr, withCheckpointExpr)
 
     override def elementSchema: StructType = StructType(Array(StructField("tile", dataType)))
 
@@ -146,7 +143,7 @@ case class RST_MakeTiles(
             val row = tile.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf)
             RasterCleaner.dispose(raster)
             RasterCleaner.dispose(tile)
-            Seq(InternalRow.fromSeq(Seq(row)))
+            Seq(InternalRow.fromSeq(Seq(row).toSeq))
         } else {
             // target size is > 0 and raster size > target size
             // - write the initial raster to file (unsplit)
@@ -166,15 +163,16 @@ case class RST_MakeTiles(
             tiles.foreach(RasterCleaner.dispose(_))
             Files.deleteIfExists(Paths.get(readPath))
             tiles = null
-            rows.map(row => InternalRow.fromSeq(Seq(row)))
+            rows.map(row => InternalRow.fromSeq(Seq(row).toSeq))
         }
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression =
         GenericExpressionFactory.makeCopyImpl[RST_MakeTiles](this, newArgs, children.length, expressionConfig)
 
-    override def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression = makeCopy(newChildren.toArray)
+    override protected def withNewChildrenInternal(newChildren: scala.IndexedSeq[Expression]): Expression = ???
 
+    override def children: scala.Seq[Expression] = ???
 }
 
 /** Expression info required for the expression registration for spark SQL. */

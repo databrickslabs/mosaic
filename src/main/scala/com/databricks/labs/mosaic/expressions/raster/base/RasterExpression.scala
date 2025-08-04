@@ -8,7 +8,7 @@ import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, UnaryExpression}
 import org.apache.spark.sql.types.DataType
 
 import scala.reflect.ClassTag
@@ -31,7 +31,6 @@ abstract class RasterExpression[T <: Expression: ClassTag](
     returnsRaster: Boolean,
     expressionConfig: MosaicExpressionConfig
 ) extends UnaryExpression
-      with NullIntolerant
       with Serializable
       with RasterExpressionSerialization {
 

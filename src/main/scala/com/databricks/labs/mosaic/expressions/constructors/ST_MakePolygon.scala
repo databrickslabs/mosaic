@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.core.types.InternalGeometryType
 import com.databricks.labs.mosaic.core.types.model.{GeometryTypeEnum, InternalGeometry}
 
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionDescription, ExpressionInfo, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionDescription, ExpressionInfo}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.DataType
@@ -21,7 +21,6 @@ import org.apache.spark.sql.types.DataType
 )
 case class ST_MakePolygon(boundaryRing: Expression, holeRingArray: Expression)
     extends BinaryExpression
-      with NullIntolerant
       with CodegenFallback {
 
     override def left: Expression = boundaryRing

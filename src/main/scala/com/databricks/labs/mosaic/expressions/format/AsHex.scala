@@ -5,11 +5,11 @@ import com.databricks.labs.mosaic.core.types.HexType
 
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types.{DataType, StringType}
 
-case class AsHex(inGeometry: Expression) extends UnaryExpression with NullIntolerant {
+case class AsHex(inGeometry: Expression) extends UnaryExpression {
 
     /**
       * AsHex expression wraps string payload into a StructType. This wrapping

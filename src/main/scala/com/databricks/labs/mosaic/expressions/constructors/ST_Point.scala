@@ -3,7 +3,7 @@ package com.databricks.labs.mosaic.expressions.constructors
 import com.databricks.labs.mosaic.core.types.InternalGeometryType
 import com.databricks.labs.mosaic.core.types.model._
 
-import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionDescription, ExpressionInfo, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, Expression, ExpressionDescription, ExpressionInfo}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.DataType
@@ -16,7 +16,7 @@ import org.apache.spark.sql.types.DataType
   """,
   since = "1.0"
 )
-case class ST_Point(xVal: Expression, yVal: Expression) extends BinaryExpression with NullIntolerant with CodegenFallback {
+case class ST_Point(xVal: Expression, yVal: Expression) extends BinaryExpression with CodegenFallback {
 
     override def left: Expression = xVal
 

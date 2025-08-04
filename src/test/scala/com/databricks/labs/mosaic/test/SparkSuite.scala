@@ -1,5 +1,6 @@
 package com.databricks.labs.mosaic.test
 
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfterAll, TestSuite}
 import org.apache.spark.sql._
@@ -75,7 +76,12 @@ trait SparkSuite extends TestSuite with BeforeAndAfterAll {
     }
 
     protected object testImplicits extends SQLImplicits {
-        protected override def _sqlContext: SQLContext = _spark.sqlContext
+
+        override protected def session: SparkSession = ???
+
+        override implicit def localSeqToDatasetHolder[T: Encoder](s: Seq[T]): DatasetHolder[T] = ???
+
+        override implicit def rddToDatasetHolder[T: Encoder](rdd: RDD[T]): DatasetHolder[T] = ???
     }
 
 }

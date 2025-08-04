@@ -64,8 +64,9 @@ object ST_UpdateSRID extends WithExpressionInfo {
           |        POINT(...)
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (exprs: Seq[Expression]) =>
-        ST_UpdateSRID(exprs(0), Column(exprs(1)).cast("int").expr, Column(exprs(2)).cast("int").expr, expressionConfig)
-    }
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = null
+//    { (exprs: Seq[Expression]) =>
+//        ST_UpdateSRID(exprs(0), Column(exprs(1)).cast("int").expr, Column(exprs(2)).cast("int").expr, expressionConfig)
+//    }
 
 }

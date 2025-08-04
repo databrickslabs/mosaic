@@ -8,8 +8,8 @@ import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, Wi
 import com.databricks.labs.mosaic.expressions.raster.base.RasterArrayExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.types.DataType
 
 /** Expression for combining rasters using average of pixels. */
@@ -21,7 +21,6 @@ case class RST_CombineAvg(
       returnsRaster = true,
       expressionConfig = expressionConfig
     )
-      with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = {

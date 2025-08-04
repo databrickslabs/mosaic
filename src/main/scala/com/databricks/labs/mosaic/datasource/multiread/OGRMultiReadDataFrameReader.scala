@@ -46,8 +46,8 @@ class OGRMultiReadDataFrameReader(sparkSession: SparkSession) extends MosaicData
         val schema = OGRFileFormat.inferSchemaImpl(driverName, headPath, config, hConf)
 
         val ogrReadWithOffset = OGRReadeWithOffset(
-          col("path").expr,
-          col("chunkIndex").expr,
+          null, //col("path").expr,
+          null, // col("chunkIndex").expr,
           config,
           schema.get,
           hConf

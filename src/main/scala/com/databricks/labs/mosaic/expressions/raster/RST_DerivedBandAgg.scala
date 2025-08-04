@@ -92,7 +92,7 @@ case class RST_DerivedBandAgg(
             // If merging multiple index rasters, the index value is dropped
             val idx = if (tiles.map(_.getIndex).groupBy(identity).size == 1) tiles.head.getIndex else null
 
-            var combined = PixelCombineRasters.combine(tiles.map(_.getRaster), pythonFunc, funcName)
+            var combined = PixelCombineRasters.combine(tiles.map(_.getRaster).toSeq, pythonFunc, funcName)
 
             val result = MosaicRasterTile(idx, combined)
                 .formatCellId(IndexSystemFactory.getIndexSystem(expressionConfig.getIndexSystem))

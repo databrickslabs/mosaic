@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.types.{DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 
@@ -18,7 +18,6 @@ case class RST_Format(
       returnsRaster = false,
       expressionConfig
     )
-      with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = StringType

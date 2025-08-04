@@ -7,7 +7,7 @@ import com.databricks.labs.mosaic.expressions.raster.base.RasterGeneratorExpress
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{Expression}
 
 /**
   * Returns a set of new rasters which are the result of a rolling window over
@@ -20,7 +20,6 @@ case class RST_ToOverlappingTiles(
     overlapExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterGeneratorExpression[RST_ToOverlappingTiles](rasterExpr, expressionConfig)
-      with NullIntolerant
       with CodegenFallback {
 
     /**

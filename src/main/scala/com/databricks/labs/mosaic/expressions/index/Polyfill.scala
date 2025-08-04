@@ -20,7 +20,6 @@ import org.apache.spark.sql.types._
 case class Polyfill(geom: Expression, resolution: Expression, indexSystem: IndexSystem, geometryAPIName: String)
     extends BinaryExpression
       with ExpectsInputTypes
-      with NullIntolerant
       with CodegenFallback {
 
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)

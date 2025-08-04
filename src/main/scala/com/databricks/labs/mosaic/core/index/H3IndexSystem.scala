@@ -184,7 +184,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       *   A collection of index IDs forming a k ring.
       */
     override def kRing(index: Long, n: Int): Seq[Long] = {
-        h3.kRing(index, n).asScala.map(_.toLong)
+        h3.kRing(index, n).asScala.map(_.toLong).toSeq
     }
 
     /**
@@ -205,7 +205,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
           h3.hexRing(index, n).asScala.map(_.toLong)
         ).getOrElse(
           h3.kRing(index, n).asScala.toSet.diff(h3.kRing(index, n - 1).asScala.toSet).toSeq.map(_.toLong)
-        )
+        ).toSeq
     }
 
     /**
@@ -237,7 +237,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
     }
 
     override def indexToBoundary(index: Long): Seq[Coordinates] = {
-        h3.h3ToGeoBoundary(index).asScala.map(p => Coordinates(p.lat, p.lng))
+        h3.h3ToGeoBoundary(index).asScala.map(p => Coordinates(p.lat, p.lng)).toSeq
     }
 
     override def distance(cellId: Long, cellId2: Long): Long = Try(h3.h3Distance(cellId, cellId2)).map(_.toLong).getOrElse(0)
@@ -315,7 +315,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
       */
     private def makeUnsafeGeometry(coordinates: mutable.Buffer[GeoCoord], geometryAPI: GeometryAPI): MosaicGeometry = {
         geometryAPI.geometry(
-          coordinates.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))),
+          coordinates.map(p => geometryAPI.fromGeoCoord(Coordinates(p.lat, p.lng))).toSeq,
           POLYGON
         )
     }
@@ -370,7 +370,7 @@ object H3IndexSystem extends IndexSystem(LongType) with Serializable {
 
         val coords = coordinates.map(geoCoord => shiftEast(geoCoord.lng, geoCoord.lat)).sortBy(_._1)
         val lineString = geometryAPI.geometry(
-          coords.map(p => geometryAPI.fromGeoCoord(Coordinates(p._2, p._1))),
+          coords.map(p => geometryAPI.fromGeoCoord(Coordinates(p._2, p._1))).toSeq,
           LINESTRING
         )
 

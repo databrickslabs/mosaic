@@ -1,16 +1,9 @@
 package com.databricks.labs.mosaic.expressions.index
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import org.apache.spark.sql.catalyst.expressions.{
-    BinaryExpression,
-    ExpectsInputTypes,
-    Expression,
-    ExpressionDescription,
-    ExpressionInfo,
-    NullIntolerant
-}
+import com.databricks.labs.mosaic.core.index.IndexSystem
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{BinaryExpression, ExpectsInputTypes, Expression, ExpressionDescription, ExpressionInfo}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
@@ -26,7 +19,6 @@ import org.apache.spark.sql.types._
 case class CellKRing(cellId: Expression, k: Expression, indexSystem: IndexSystem, geometryAPIName: String)
     extends BinaryExpression
       with ExpectsInputTypes
-      with NullIntolerant
       with CodegenFallback {
 
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)

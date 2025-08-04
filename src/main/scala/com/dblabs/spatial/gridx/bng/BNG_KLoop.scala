@@ -12,10 +12,10 @@ case class BNG_KLoop(
     cellId: Expression,
     k: Expression
 ) extends InvokedExpression
-    with WithNewChildren {
+      with WithNewChildren {
 
     override def children: Seq[Expression] = Seq(cellId, k)
-    override def dataType: DataType = ArrayType(StringType)
+    override def dataType: DataType = ArrayType(cellId.dataType)
     override def nullable: Boolean = true
     override def prettyName: String = "bng_cellkloop"
     override def replacement: Expression = invoke(BNG_KLoop)
@@ -25,7 +25,12 @@ case class BNG_KLoop(
 object BNG_KLoop extends WithExpressionInfo {
 
     def eval(cellId: UTF8String, k: Int): Any = {
-        val indices = BNG.kLoop(BNG.parse(cellId.toString), k)
+        val indices = BNG.kLoop(BNG.parse(cellId.toString), k).map(BNG.format)
+        ArrayData.toArrayData(indices)
+    }
+
+    def eval(cellId: Long, k: Int): Any = {
+        val indices = BNG.kLoop(cellId, k)
         ArrayData.toArrayData(indices)
     }
 
@@ -34,5 +39,5 @@ object BNG_KLoop extends WithExpressionInfo {
     }
 
     override def name: String = "bng_cellkloop"
-}
 
+}

@@ -9,7 +9,7 @@ import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression}
 import org.apache.spark.sql.types._
 
 import scala.reflect.ClassTag
@@ -35,7 +35,6 @@ abstract class RasterGeneratorExpression[T <: Expression: ClassTag](
     tileExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends CollectionGenerator
-      with NullIntolerant
       with Serializable {
 
     override def dataType: DataType = {

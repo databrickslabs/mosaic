@@ -20,7 +20,6 @@ import org.apache.spark.unsafe.types.UTF8String
 )
 case class IndexGeometry(indexID: Expression, format: Expression, indexSystem: IndexSystem, geometryAPIName: String)
     extends BinaryExpression
-      with NullIntolerant
       with CodegenFallback {
 
     /** Expression output DataType. */

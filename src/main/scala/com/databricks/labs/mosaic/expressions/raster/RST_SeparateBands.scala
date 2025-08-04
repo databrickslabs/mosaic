@@ -7,7 +7,7 @@ import com.databricks.labs.mosaic.expressions.raster.base.RasterGeneratorExpress
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{Expression}
 
 /**
   * Returns a set of new single-band rasters, one for each band in the input raster.
@@ -16,7 +16,6 @@ case class RST_SeparateBands(
     rasterExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterGeneratorExpression[RST_SeparateBands](rasterExpr, expressionConfig)
-      with NullIntolerant
       with CodegenFallback {
 
     /**

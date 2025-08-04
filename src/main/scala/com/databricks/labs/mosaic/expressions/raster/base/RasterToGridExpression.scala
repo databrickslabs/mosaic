@@ -8,7 +8,7 @@ import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.raster.RasterToGridType
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.InternalRow
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.DataType
 
@@ -41,7 +41,6 @@ abstract class RasterToGridExpression[T <: Expression: ClassTag, P](
     expressionConfig: MosaicExpressionConfig
 ) extends Raster1ArgExpression[T](rasterExpr, resolutionExpr, returnsRaster = false, expressionConfig)
       with RasterGridExpression
-      with NullIntolerant
       with Serializable {
 
     override def dataType: DataType = RasterToGridType(expressionConfig.getCellIdType, measureType)

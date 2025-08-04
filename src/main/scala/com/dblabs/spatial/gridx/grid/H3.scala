@@ -7,8 +7,8 @@ import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.util.GeometryEditor
 import org.locationtech.jts.geom.{Coordinate, Geometry, MultiPolygon, Polygon}
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.jdk.CollectionConverters._
 import scala.util.{Success, Try}
 
 /**
@@ -197,7 +197,7 @@ object H3 extends Serializable {
       */
     def polyfill(geometry: Geometry, resolution: Int): Seq[Long] = {
 
-        def polygonToIndices(polygon: Polygon): Seq[Long] = {
+        def polygonToIndices(polygon: Polygon): mutable.Seq[Long] = {
             val boundary = polygon.getExteriorRing.getCoordinates.map(c => new GeoCoord(c.y, c.x)).toList.asJava
             val holes = (for (j <- 0 until polygon.getNumInteriorRing) yield {
                 polygon.getInteriorRingN(j).getCoordinates.map(c => new GeoCoord(c.y, c.x)).toList.asJava
@@ -259,7 +259,7 @@ object H3 extends Serializable {
       * @return
       *   A collection of index IDs forming a k ring.
       */
-    def kRing(index: Long, n: Int): Seq[Long] = {
+    def kRing(index: Long, n: Int): mutable.Seq[Long] = {
         h3.kRing(index, n).asScala.map(_.toLong)
     }
 
@@ -273,14 +273,18 @@ object H3 extends Serializable {
       * @return
       *   A collection of index IDs forming a k disk.
       */
-    def kLoop(index: Long, n: Int): Seq[Long] = {
+    def kLoop(index: Long, n: Int): mutable.Seq[Long] = {
         // HexRing crashes in case of pentagons.
         // Ensure a KRing fallback in said case.
         require(index >= 0L)
         Try(
           h3.hexRing(index, n).asScala.map(_.toLong)
         ).getOrElse(
-          h3.kRing(index, n).asScala.toSet.diff(h3.kRing(index, n - 1).asScala.toSet).toSeq.map(_.toLong)
+          // TODO: this should be improveable
+          // 2 runs of kring at n and n-1 seem redundant
+          // just kring n and filter via distance should be better
+          // h3.kRing(index, n).asScala.toSet.diff(h3.kRing(index, n - 1).asScala.toSet).map(_.toLong).toSeq
+            h3.kRing(index, n).asScala.filter(cell => h3.h3Distance(index, cell) == n).map(_.toLong)
         )
     }
 
@@ -312,7 +316,7 @@ object H3 extends Serializable {
         new Coordinate(geo.lat, geo.lng)
     }
 
-    def indexToBoundary(index: Long): Seq[Coordinate] = {
+    def indexToBoundary(index: Long): mutable.Seq[Coordinate] = {
         h3.h3ToGeoBoundary(index).asScala.map(p => new Coordinate(p.lat, p.lng))
     }
 

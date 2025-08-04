@@ -187,7 +187,7 @@
                     <forkMode>once</forkMode>
                     <logForkedProcessCommand>true</logForkedProcessCommand>
                     <reportsDirectory>${project.build.directory}/test-reports</reportsDirectory>
-                    <argLine>-Xms512m -Xmx2g -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=70 -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -agentlib:jdwp=transport=dt_socket,address=5006,server=y,suspend=n</argLine>
+                    <argLine>-Xms512m -Xmx2g -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=70 -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005</argLine>
                 </configuration>
                 <executions>
                     <execution>

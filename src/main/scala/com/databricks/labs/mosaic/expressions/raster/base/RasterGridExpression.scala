@@ -71,7 +71,7 @@ trait RasterGridExpression {
                 .groupBy(_._1) // Group by cell ID.
         }
         val transformed = raster.transformBands(bandTransform)
-        transformed.map(band => band.mapValues(values => values.map(_._2)))
+        transformed.map(band => band.mapValues(values => values.map(_._2)).toMap)
     }
 
 }

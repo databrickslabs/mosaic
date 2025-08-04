@@ -57,6 +57,8 @@ object JTS {
         wkbReader.read(bytes)
     }
 
+    def emptyPolygon: Geometry = JTS.fromWKT("POLYGON EMPTY")
+
     def toWKB(intersection: Geometry): Array[Byte] = {
         wkbWriter.write(intersection)
     }

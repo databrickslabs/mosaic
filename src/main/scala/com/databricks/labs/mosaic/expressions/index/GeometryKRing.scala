@@ -1,11 +1,11 @@
 package com.databricks.labs.mosaic.expressions.index
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
-import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
 import com.databricks.labs.mosaic.core.Mosaic
-import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionInfo, NullIntolerant, TernaryExpression}
+import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
+import com.databricks.labs.mosaic.core.index.IndexSystem
+import com.databricks.labs.mosaic.core.types.{HexType, InternalGeometryType}
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
+import org.apache.spark.sql.catalyst.expressions.{ExpectsInputTypes, Expression, ExpressionInfo, TernaryExpression}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
@@ -17,7 +17,6 @@ case class GeometryKRing(
     geometryAPIName: String
 ) extends TernaryExpression
       with ExpectsInputTypes
-      with NullIntolerant
       with CodegenFallback {
 
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)

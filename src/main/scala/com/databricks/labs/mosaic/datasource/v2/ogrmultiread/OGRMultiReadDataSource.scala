@@ -11,7 +11,8 @@ import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 import org.apache.spark.util.SerializableConfiguration
 
-import scala.jdk.CollectionConverters.mapAsScalaMapConverter
+import scala.jdk.CollectionConverters.MapHasAsScala
+
 
 //noinspection ScalaUnusedSymbol
 class OGRMultiReadDataSource extends TableProvider with DataSourceRegister {

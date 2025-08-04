@@ -10,8 +10,7 @@ import org.apache.spark.sql.catalyst.expressions.{
     ExpectsInputTypes,
     Expression,
     ExpressionDescription,
-    ExpressionInfo,
-    NullIntolerant
+    ExpressionInfo
 }
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.types._
@@ -28,7 +27,6 @@ import org.apache.spark.sql.types._
 case class CellIntersection(leftChip: Expression, rightChip: Expression, indexSystem: IndexSystem, geometryAPIName: String)
     extends BinaryExpression
       with ExpectsInputTypes
-      with NullIntolerant
       with CodegenFallback {
 
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)

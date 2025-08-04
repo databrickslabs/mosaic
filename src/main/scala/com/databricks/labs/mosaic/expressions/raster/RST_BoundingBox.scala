@@ -7,7 +7,7 @@ import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.types._
 
 /** The expression for extracting the bounding box of a raster. */
@@ -15,7 +15,6 @@ case class RST_BoundingBox(
     raster: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterExpression[RST_BoundingBox](raster, returnsRaster = false, expressionConfig = expressionConfig)
-      with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = BinaryType

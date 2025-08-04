@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.{ArrayType, DataType, DoubleType}
 
@@ -19,7 +19,6 @@ case class RST_GetNoData(
       returnsRaster = false,
       expressionConfig = expressionConfig
     )
-      with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = ArrayType(DoubleType)

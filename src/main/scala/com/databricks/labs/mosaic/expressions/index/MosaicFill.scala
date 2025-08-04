@@ -28,7 +28,6 @@ case class MosaicFill(
     geometryAPIName: String
 ) extends TernaryExpression
       with ExpectsInputTypes
-      with NullIntolerant
       with CodegenFallback {
 
     val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)

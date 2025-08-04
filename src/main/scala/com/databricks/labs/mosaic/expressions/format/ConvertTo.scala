@@ -4,7 +4,7 @@ import com.databricks.labs.mosaic.codegen.format.ConvertToCodeGen
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.types._
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
-import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, ExpressionInfo, NullIntolerant, UnaryExpression}
+import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionDescription, ExpressionInfo, UnaryExpression}
 import org.apache.spark.sql.catalyst.expressions.codegen.{CodegenContext, ExprCode}
 import org.apache.spark.sql.types._
 
@@ -23,7 +23,7 @@ import java.util.Locale
 )
 case class ConvertTo(inGeometry: Expression, outDataType: String, geometryAPIName: String,
                      functionName: Option[String] = None)
-    extends UnaryExpression with NullIntolerant {
+    extends UnaryExpression {
 
     /**
       * Ensure that the expression is called only for compatible pairing of

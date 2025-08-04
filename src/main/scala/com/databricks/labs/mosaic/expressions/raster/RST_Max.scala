@@ -1,13 +1,12 @@
 package com.databricks.labs.mosaic.expressions.raster
 
-import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALInfo
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
 import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 
@@ -15,7 +14,6 @@ import org.apache.spark.sql.types._
 /** Returns the max value per band of the raster. */
 case class RST_Max(raster: Expression, expressionConfig: MosaicExpressionConfig)
     extends RasterExpression[RST_Max](raster, returnsRaster = false, expressionConfig)
-      with NullIntolerant
       with CodegenFallback {
 
     override def dataType: DataType = ArrayType(DoubleType)

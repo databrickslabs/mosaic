@@ -6,7 +6,7 @@ import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{Expression}
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
@@ -14,7 +14,6 @@ import org.apache.spark.unsafe.types.UTF8String
 /** Returns the data type of the raster. */
 case class RST_Type(raster: Expression, expressionConfig: MosaicExpressionConfig)
     extends RasterExpression[RST_Type](raster, returnsRaster = false, expressionConfig)
-        with NullIntolerant
         with CodegenFallback {
 
     override def dataType: DataType = ArrayType(StringType)

@@ -29,7 +29,7 @@ import org.apache.spark.sql.functions._
 case class ST_Buffer(
     inputGeom: Expression,
     radiusExpr: Expression,
-    bufferStyleParametersExpr: Expression = lit("").expr,
+    bufferStyleParametersExpr: Expression = null, // lit("").expr,
     expressionConfig: MosaicExpressionConfig
 ) extends UnaryVector2ArgExpression[ST_Buffer](inputGeom, radiusExpr, bufferStyleParametersExpr, returnsGeometry = true, expressionConfig) {
 
@@ -63,12 +63,19 @@ object ST_Buffer extends WithExpressionInfo {
           |        POLYGON (...)
           |  """.stripMargin
 
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
-        if (children.size == 2) {
-            ST_Buffer(children.head, Column(children(1)).cast("double").expr, lit("").expr, expressionConfig)
-        } else if (children.size == 3) {
-            ST_Buffer(children.head, Column(children(1)).cast("double").expr, Column(children(2)).cast("string").expr, expressionConfig)
-        } else throw new Exception("unexpected number of arguments")
-    }
+//    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = { (children: Seq[Expression]) =>
+//        if (children.size == 2) {
+//            ST_Buffer(children.head, Column(children(1)).cast("double").expr, lit("").expr, expressionConfig)
+//        } else if (children.size == 3) {
+//            ST_Buffer(children.head, Column(children(1)).cast("double").expr, Column(children(2)).cast("string").expr, expressionConfig)
+//        } else throw new Exception("unexpected number of arguments")
+//    }
 
+    /**
+     * Returns the expression builder (parser for spark SQL).
+     *
+     * @return
+     * An expression builder.
+     */
+    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = null
 }

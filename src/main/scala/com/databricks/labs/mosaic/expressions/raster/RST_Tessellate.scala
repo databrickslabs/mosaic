@@ -7,7 +7,7 @@ import com.databricks.labs.mosaic.expressions.raster.base.RasterTessellateGenera
 import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.catalyst.expressions.{Expression, NullIntolerant}
+import org.apache.spark.sql.catalyst.expressions.{Expression}
 
 /**
   * Returns a set of new rasters which are the result of the tessellation of the
@@ -18,7 +18,6 @@ case class RST_Tessellate(
     resolutionExpr: Expression,
     expressionConfig: MosaicExpressionConfig
 ) extends RasterTessellateGeneratorExpression[RST_Tessellate](rasterExpr, resolutionExpr, expressionConfig)
-      with NullIntolerant
       with CodegenFallback {
 
     /**
