@@ -8,7 +8,7 @@ trait InvokedExpression extends RuntimeReplaceable with ImplicitCastInputTypes {
 
     override def inputTypes: Seq[DataType] = children.map(_.dataType)
 
-    def invoke(companion: Object): Invoke = {
+    def invoke(companion: Object, methodName: String = "eval"): Invoke = {
         val moduleLiteral = Literal.create(
           companion,
           ObjectType(companion.getClass)
@@ -19,7 +19,7 @@ trait InvokedExpression extends RuntimeReplaceable with ImplicitCastInputTypes {
         // call to a method on a singleton object
         Invoke(
           targetObject = moduleLiteral,
-          functionName = "eval",
+          functionName = methodName,
           dataType = dataType,
           arguments = children,
           methodInputTypes = inputTypes,

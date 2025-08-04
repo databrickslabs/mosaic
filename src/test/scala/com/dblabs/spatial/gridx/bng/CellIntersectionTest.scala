@@ -69,7 +69,9 @@ class CellIntersectionTest extends PlanTest with SharedSparkSession {
             .collect()
 
 
-        res
+        res.foreach { case (actual, expected) =>
+            println(s"Actual: $actual, Expected: $expected")
+        }
 
 
 
