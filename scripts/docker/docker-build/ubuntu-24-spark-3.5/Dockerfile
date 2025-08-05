@@ -60,9 +60,9 @@ RUN set -ex \
 ENV ROOTDIR /usr/local
 ENV LD_LIBRARY_PATH /usr/local/lib
 ENV SPARK_VERSION 3.5.0
-ENV GDAL_VERSION 3.9.3
-ENV LIBPROJ_VERSION 9.3.0
-ENV CORES 4
+ENV GDAL_VERSION 3.11.3
+ENV LIBPROJ_VERSION 9.3.1
+ENV CORES 8
 
 WORKDIR $ROOTDIR/
 RUN mkdir -p $ROOTDIR/src
@@ -90,10 +90,10 @@ RUN mkdir -p /usr/lib/jni && ln -s $ROOTDIR/lib/libgdalalljni.so /usr/lib/jni/li
 RUN mkdir -p /usr/lib/ogdi && ln -s $ROOTDIR/lib/libgdal.so /usr/lib/ogdi/libgdal.so
 
 # Add Maven
-ARG MAVEN_VERSION=3.9.6
+ARG MAVEN_VERSION=3.9.11
 ARG USER_HOME_DIR="/root"
 ARG BASE_URL=https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries
-ARG ARG SHA=706f01b20dec0305a822ab614d51f32b07ee11d0218175e55450242e49d2156386483b506b3a4e8a03ac8611bae96395fd5eec15f50d3013d5deed6d1ee18224
+ARG ARG SHA=bcfe4fe305c962ace56ac7b5fc7a08b87d5abd8b7e89027ab251069faebee516b0ded8961445d6d91ec1985dfe30f8153268843c89aa392733d1a3ec956c9978
 
 RUN mkdir -p $ROOTDIR/share/maven $ROOTDIR/share/maven/ref \
   && echo "Downlaoding maven" \
