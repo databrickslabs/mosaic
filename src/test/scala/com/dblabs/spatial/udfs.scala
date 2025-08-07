@@ -4,6 +4,8 @@ import com.dblabs.spatial.vectorx.jts.JTS
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.udf
 
+import scala.util.Try
+
 object udfs {
 
     def st_aswkb: UserDefinedFunction =

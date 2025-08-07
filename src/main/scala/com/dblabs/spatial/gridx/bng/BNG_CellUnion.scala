@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.types._
 import org.locationtech.jts.geom.Geometry
 
-case class BNG_CellIntersection(
+case class BNG_CellUnion(
     leftChip: Expression,
     rightChip: Expression
 ) extends InvokedExpression
@@ -25,16 +25,16 @@ case class BNG_CellIntersection(
           )
         )
     override def nullable: Boolean = true
-    override def prettyName: String = "bng_cellintersection"
+    override def prettyName: String = "bng_cellunion"
     override def replacement: Expression =
         childType match {
-            case LongType   => invoke(BNG_CellIntersection, "evalLong")
-            case StringType => invoke(BNG_CellIntersection, "evalString")
+            case LongType   => invoke(BNG_CellUnion, "evalLong")
+            case StringType => invoke(BNG_CellUnion, "evalString")
         }
 
 }
 
-object BNG_CellIntersection extends WithExpressionInfo {
+object BNG_CellUnion extends WithExpressionInfo {
 
     def evalLong(chip1: InternalRow, chip2: InternalRow): InternalRow = {
         // Note: we do check twice for early exit cases
@@ -42,22 +42,20 @@ object BNG_CellIntersection extends WithExpressionInfo {
         // and avoids unnecessary WKB parsing at the same time
         if (chip1.getBoolean(0)) return chip1
         if (chip2.getBoolean(0)) return chip2
-        val cell1 = chip1.getLong(1)
-        val cell2 = chip2.getLong(1)
+        val cellId = chip1.getLong(1)
+        require(chip2.getLong(1) == cellId, "Can only union chips with the same grid cell id")
         val geom1 = JTS.fromWKB(chip1.getBinary(2))
         val geom2 = JTS.fromWKB(chip2.getBinary(2))
-        val res = evalLong((chip1.getBoolean(0), cell1, geom1), (chip1.getBoolean(0), cell2, geom2))
-        InternalRow.fromSeq(Seq(res._1, res._2, JTS.toWKB(res._3)))
+        val union = evalLong((chip1.getBoolean(0), cellId, geom1), (chip2.getBoolean(0), cellId, geom2))
+        InternalRow.fromSeq(Seq(union._1, union._2, JTS.toWKB(union._3)))
     }
 
     def evalLong(chip1: (Boolean, Long, Geometry), chip2: (Boolean, Long, Geometry)): (Boolean, Long, Geometry) = {
-        // Left hand rule, only chip1 survives intersection
-        // if chips are different then empty intersection
         if (chip1._2 != chip2._2) (chip1._1, chip1._2, JTS.emptyPolygon)
         else {
             if (chip1._1) chip1
             else if (chip2._1) chip2
-            else (chip1._1, chip1._2, chip1._3.intersection(chip2._3))
+            else (chip1._1, chip1._2, chip1._3.union(chip2._3))
         }
     }
 
@@ -67,35 +65,27 @@ object BNG_CellIntersection extends WithExpressionInfo {
         // and avoids unnecessary WKB parsing at the same time
         if (chip1.getBoolean(0)) return chip1
         if (chip2.getBoolean(0)) return chip2
-        val cell1 = chip1.getString(1)
-        val cell2 = chip2.getString(1)
+        val cellId = chip1.getString(1)
+        require(chip2.getString(1) == cellId, "Can only union chips with the same grid cell id")
         val geom1 = JTS.fromWKB(chip1.getBinary(2))
         val geom2 = JTS.fromWKB(chip2.getBinary(2))
-        val res = evalString((chip1.getBoolean(0), cell1, geom1), (chip1.getBoolean(0), cell2, geom2))
-        InternalRow(res._1, res._2, JTS.toWKB(res._3))
+        val union = evalString((chip1.getBoolean(0), cellId, geom1), (chip2.getBoolean(0), cellId, geom2))
+        InternalRow.fromSeq(Seq(union._1, union._2, JTS.toWKB(union._3)))
     }
 
     def evalString(chip1: (Boolean, String, Geometry), chip2: (Boolean, String, Geometry)): (Boolean, String, Geometry) = {
-        // Left hand rule, only chip1 survives intersection
-        // if chips are different then empty intersection
         if (chip1._2 != chip2._2) (chip1._1, chip1._2, JTS.emptyPolygon)
         else {
             if (chip1._1) chip1
             else if (chip2._1) chip2
-            else (chip1._1, chip1._2, chip1._3.intersection(chip2._3))
+            else (chip1._1, chip1._2, chip1._3.union(chip2._3))
         }
     }
 
-    override def name: String = "bng_cellintersection"
+    override def name: String = "bng_cellunion"
 
-    /**
-      * Returns the expression builder (parser for spark SQL).
-      *
-      * @return
-      *   An expression builder.
-      */
     override def builder(expressionConfig: ExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[BNG_CellIntersection](2, expressionConfig)
+        GenericExpressionFactory.getBaseBuilder[BNG_CellUnion](2, expressionConfig)
     }
 
 }

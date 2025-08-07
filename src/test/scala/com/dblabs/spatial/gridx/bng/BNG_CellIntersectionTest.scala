@@ -1,14 +1,15 @@
 package com.dblabs.spatial.gridx.bng
 
+import com.dblabs.spatial.vectorx.jts.JTS
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.plans.PlanTest
 import org.apache.spark.sql.functions.{col, struct}
 import org.apache.spark.sql.test.SharedSparkSession
 import org.apache.spark.sql.types.{BooleanType, IntegerType, LongType, StringType, StructField, StructType}
 
-class CellIntersectionTest extends PlanTest with SharedSparkSession {
+class BNG_CellIntersectionTest extends PlanTest with SharedSparkSession {
 
-    test("BNG CellArea on sting ids") {
+    test("BNG CellIntersection on sting ids") {
         import com.dblabs.spatial.gridx.bng.functions._
         import com.dblabs.spatial.udfs._
         com.dblabs.spatial.gridx.bng.functions.register(spark)
@@ -28,12 +29,12 @@ class CellIntersectionTest extends PlanTest with SharedSparkSession {
 
         val left = Seq(
             Row(1, true, 1L, "POLYGON ((0 0, 2 0, 2 1, 0 1, 0 0))"),
-            Row(2, true, 1L, "POLYGON ((0 0, 2 0, 2 1, 0 1, 0 0))"),
+            Row(2, false, 1L, "POLYGON ((0 0, 2 0, 2 1, 0 1, 0 0))"),
             Row(3, false, 1L, "POLYGON ((0 0, 2 0, 2 1, 0 1, 0 0))")
         )
         val right = Seq(
             Row(1, true, 1L, "POLYGON ((1 0, 3 0, 3 1, 1 1, 1 0))"),
-            Row(2, false, 1L, "POLYGON ((1 0, 3 0, 3 1, 1 1, 1 0))"),
+            Row(2, true, 1L, "POLYGON ((1 0, 3 0, 3 1, 1 1, 1 0))"),
             Row(3, false, 1L, "POLYGON ((1 0, 3 0, 3 1, 1 1, 1 0))")
         )
 
@@ -61,6 +62,7 @@ class CellIntersectionTest extends PlanTest with SharedSparkSession {
 
         val res = leftDf
             .join(rightDf, "case_id")
+            .repartition(3)
             .withColumn("intersection", bng_cell_intersection($"left_chip", $"right_chip"))
             .select($"case_id", st_aswkt($"intersection.wkb").alias("actual_wkt"))
             .join(expDf, "case_id")
@@ -70,6 +72,7 @@ class CellIntersectionTest extends PlanTest with SharedSparkSession {
 
 
         res.foreach { case (actual, expected) =>
+            assert(JTS.fromWKT(actual).equalsNorm(JTS.fromWKT(expected)))
             println(s"Actual: $actual, Expected: $expected")
         }
 

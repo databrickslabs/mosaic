@@ -1,12 +1,10 @@
 package com.dblabs.spatial.gridx.bng
 
 import com.dblabs.spatial.gridx.grid.BNG
-import org.apache.spark.sql.catalyst.FunctionIdentifier
-import org.apache.spark.sql.catalyst.expressions.ExpressionInfo
 import org.apache.spark.sql.catalyst.plans.PlanTest
 import org.apache.spark.sql.test.SharedSparkSession
 
-class CellAreaTest extends PlanTest with SharedSparkSession {
+class BNG_CellAreaTest extends PlanTest with SharedSparkSession {
 
     test("BNG CellArea on sting ids") {
         spark.sparkContext.setLogLevel("ERROR")

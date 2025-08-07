@@ -1,9 +1,11 @@
 package com.dblabs.spatial.gridx.grid
 
-import com.dblabs.spatial.vectorx.jts.JTS
+import com.dblabs.spatial.vectorx.jts.GeometryTypeEnum._
+import com.dblabs.spatial.vectorx.jts.{GeometryTypeEnum, JTS}
 import org.apache.spark.unsafe.types.UTF8String
-import org.locationtech.jts.geom.{Coordinate, Geometry}
+import org.locationtech.jts.geom._
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.util.{Success, Try}
 
@@ -557,6 +559,194 @@ object BNG extends Serializable {
                 idPlaceholder + eLetter * eLetterShift + nLetter * nLetterShift + eBin * eShift + nBin * nShift + quadrant
             }
         id.toLong
+    }
+
+    def geometryKLoop(geometry: Geometry, resolution: Int, k: Int): Set[Long] = {
+        val n: Int = k - 1
+        // This would be much more efficient if we could use the
+        // pre-computed tessellation of the geometry for repeated calls.
+        val chips = getChips(geometry, resolution, keepCoreGeom = false)
+        val (coreCells, borderCells) = chips.partition(_._1)
+        val coreIDs = coreCells.map(_._2).toSet
+
+        // We use nRing as naming for kRing where k = n
+        val borderNRing = borderCells.flatMap(c => kRing(c._2, n))
+        val nRing = coreIDs ++ borderNRing
+
+        val borderKLoop = borderCells.toSet.flatMap(c => this.kLoop(c._2, k))
+
+        val kLoop = borderKLoop.diff(nRing)
+        kLoop
+    }
+
+    def getChips(
+        geometry: Geometry,
+        resolution: Int,
+        keepCoreGeom: Boolean
+    ): Iterator[(Boolean, Long, Geometry)] = {
+        GeometryTypeEnum(geometry.getGeometryType) match {
+            case POINT           => pointChip(geometry, resolution, keepCoreGeom)
+            case MULTIPOINT      => multiPointChips(geometry, resolution, keepCoreGeom)
+            case LINESTRING      => lineFill(geometry, resolution)
+            case MULTILINESTRING => lineFill(geometry, resolution)
+            case _               => tessellate(geometry, resolution, keepCoreGeom)
+        }
+    }
+
+    def pointChip(
+        geometry: Geometry,
+        resolution: Int,
+        keepCoreGeom: Boolean
+    ): Iterator[(Boolean, Long, Geometry)] = {
+        val point = geometry.asInstanceOf[Point]
+        val chipGeom = if (keepCoreGeom) point else null
+        val cellId = pointToIndex(point.getX, point.getY, resolution)
+        Iterator.single((false, cellId, chipGeom))
+    }
+
+    def multiPointChips(
+        geometry: Geometry,
+        resolution: Int,
+        keepCoreGeom: Boolean
+    ): Iterator[(Boolean, Long, Geometry)] = {
+        val n = geometry.getNumGeometries
+        (0 until n).iterator.flatMap { i => pointChip(geometry.getGeometryN(i), resolution, keepCoreGeom) }
+    }
+
+    def lineFill(geometry: Geometry, resolution: Int): Iterator[(Boolean, Long, Geometry)] = {
+        GeometryTypeEnum(geometry.getGeometryType) match {
+            case LINESTRING      => lineDecompose(geometry.asInstanceOf[LineString], resolution)
+            case MULTILINESTRING =>
+                val multiLine = geometry.asInstanceOf[MultiLineString]
+                val lines = (0 until multiLine.getNumGeometries).iterator.map(multiLine.getGeometryN)
+                lines.flatMap(line => lineDecompose(line.asInstanceOf[LineString], resolution))
+            case gt              => throw new Error(s"$gt not supported for line fill/decompose operation.")
+        }
+    }
+
+    // TODO: This should be possible to optimize by better handling of the
+    //      intersection of the line with the index geometry.
+    // perhaps queue logic can be replaced with a more efficient way of selecting
+    // what to process next.
+    private def lineDecompose(
+        line: LineString,
+        resolution: Int
+    ): Iterator[(Boolean, Long, Geometry)] = {
+        val start = line.getStartPoint
+        val startIndex = pointToIndex(start.getX, start.getY, resolution)
+
+        @tailrec
+        def traverseLine(
+            line: LineString,
+            queue: Iterator[Long],
+            traversed: Set[Long],
+            chips: Iterator[(Boolean, Long, Geometry)]
+        ): Iterator[(Boolean, Long, Geometry)] = {
+            val newTraversed = traversed ++ queue
+            val (newQueue, newChips) = queue.foldLeft(
+              (Iterator.empty[Long], chips)
+            )((accumulator: (Iterator[Long], Iterator[(Boolean, Long, Geometry)]), current: Long) => {
+                val indexGeom = indexToGeometry(current)
+                val lineSegment = line.intersection(indexGeom)
+                if (!lineSegment.isEmpty) {
+                    val chip = (false, current, lineSegment)
+                    val kRing = this.kRing(current, 1)
+
+                    // Ignore already processed chips and those which are already in the
+                    // queue to be processed
+                    val toQueue = kRing.filterNot((newTraversed ++ accumulator._1).contains)
+                    (accumulator._1 ++ toQueue, accumulator._2 ++ Iterator.single(chip))
+                } else if (newTraversed.size == 1) {
+                    // The line segment intersection was empty, but we only intersected the first point
+                    // with a single cell.
+                    // We need to run an intersection with a first ring because the starting point might be laying
+                    // exactly on the cell boundary.
+                    val kRing = this.kRing(current, 1)
+                    // In theory getting the next from Iterator that is not empty should be safe, but we
+                    // will enqueue all the kRing cells anyway.
+                    val toQueue = kRing.filterNot(newTraversed.contains)
+                    (toQueue, accumulator._2)
+                } else {
+                    accumulator
+                }
+            })
+            if (newQueue.isEmpty) {
+                newChips
+            } else {
+                traverseLine(line, newQueue, newTraversed, newChips)
+            }
+        }
+
+        val result = traverseLine(line, Iterator.single(startIndex), Set.empty[Long], Iterator.empty[(Boolean, Long, Geometry)])
+        result
+    }
+
+    // TODO: This needs some optimization, as now it is moved to BNG and we can
+    //      avoid generic logic that was introducing some overhead.
+    def tessellate(
+        geometry: Geometry,
+        resolution: Int,
+        keepCoreGeom: Boolean
+    ): Iterator[(Boolean, Long, Geometry)] = {
+
+        val radius = getBufferRadius(geometry, resolution)
+        val carvedGeometry = geometry.buffer(-radius)
+
+        // add 1% to the radius to ensure union of carved and border geometries does not have holes inside the original geometry areas
+        val borderGeometry =
+            if (carvedGeometry.isEmpty) {
+                JTS.simplify(
+                  geometry.buffer(radius * 1.01),
+                  0.01 * radius
+                )
+            } else {
+                JTS.simplify(
+                  geometry.getBoundary.buffer(radius * 1.01),
+                  0.01 * radius
+                )
+            }
+
+        // check that the resulting geometry is within the bounds of
+        // the coordinate system (otherwise behaviour will be unpredictable)
+
+        val coreIndices = polyfill(carvedGeometry, resolution)
+        val coreSet = coreIndices.toSet
+        val borderIndices = polyfill(borderGeometry, resolution).filterNot(coreSet.contains)
+
+        val coreChips = coreIndices.map(cell => {
+            val coreGeom = if (keepCoreGeom) indexToGeometry(cell) else null
+            (true, cell, coreGeom)
+        })
+        val borderChips = borderIndices.map(cell => {
+            val cellGeom = indexToGeometry(cell)
+            val intersect = cellGeom.intersection(geometry)
+            val withGeom =
+                if (intersect.isEmpty) (false, cell, intersect)
+                else {
+                    val adjusted =
+                        if (GeometryTypeEnum(intersect.getGeometryType) == GEOMETRYCOLLECTION) {
+                            intersect.difference(cellGeom.getBoundary)
+                        } else {
+                            intersect
+                        }
+                    // Tolerance is set to 0.1 to account for floating point precision issues
+                    // BNG coordinates are integers, so we can use a relatively large tolerance
+                    // as coordinates will be in meters and tolerance is a fraction of a meter.
+                    val isCore = adjusted.equalsExact(cellGeom, 0.1)
+                    if (isCore) {
+                        (true, cell, cellGeom)
+                    } else {
+                        (false, cell, adjusted)
+                    }
+                }
+            if (keepCoreGeom) {
+                withGeom
+            } else {
+                (withGeom._1, withGeom._2, null)
+            }
+        })
+
+        coreChips ++ borderChips
     }
 
 }

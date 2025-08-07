@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 
-case class BNG_KLoop(
+case class BNG_KRing(
     cellId: Expression,
     k: Expression
 ) extends InvokedExpression
@@ -17,27 +17,27 @@ case class BNG_KLoop(
     override def children: Seq[Expression] = Seq(cellId, k)
     override def dataType: DataType = ArrayType(cellId.dataType)
     override def nullable: Boolean = true
-    override def prettyName: String = "bng_kloop"
-    override def replacement: Expression = invoke(BNG_KLoop)
+    override def prettyName: String = "bng_kring"
+    override def replacement: Expression = invoke(BNG_KRing)
 
 }
 
-object BNG_KLoop extends WithExpressionInfo {
+object BNG_KRing extends WithExpressionInfo {
 
     def eval(cellId: UTF8String, k: Int): Any = {
-        val indices = BNG.kLoop(BNG.parse(cellId.toString), k).map(BNG.format)
+        val indices = BNG.kRing(BNG.parse(cellId.toString), k).map(BNG.format)
         ArrayData.toArrayData(indices)
     }
 
     def eval(cellId: Long, k: Int): Any = {
-        val indices = BNG.kLoop(cellId, k)
+        val indices = BNG.kRing(cellId, k)
         ArrayData.toArrayData(indices)
     }
 
-    override def builder(expressionConfig: ExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[BNG_KLoop](2, expressionConfig)
-    }
+    override def name: String = "bng_kring"
 
-    override def name: String = "bng_kloop"
+    override def builder(expressionConfig: ExpressionConfig): FunctionBuilder = {
+        GenericExpressionFactory.getBaseBuilder[BNG_KRing](2, expressionConfig)
+    }
 
 }
