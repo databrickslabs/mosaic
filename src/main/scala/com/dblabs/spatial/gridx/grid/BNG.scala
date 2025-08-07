@@ -2,6 +2,7 @@ package com.dblabs.spatial.gridx.grid
 
 import com.dblabs.spatial.vectorx.jts.GeometryTypeEnum._
 import com.dblabs.spatial.vectorx.jts.{GeometryTypeEnum, JTS}
+import org.apache.spark.sql.types.{BinaryType, BooleanType, DataType, LongType, StructField, StructType}
 import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom._
 
@@ -26,6 +27,15 @@ import scala.util.{Success, Try}
   */
 //noinspection ScalaWeakerAccess
 object BNG extends Serializable {
+
+    def cellType(idType: DataType): StructType =
+        StructType(
+          Array(
+            StructField("is_core", BooleanType, nullable = false),
+            StructField("index_id", idType, nullable = false),
+            StructField("wkb", BinaryType, nullable = false)
+          )
+        )
 
     def crsID: Int = 27700
 

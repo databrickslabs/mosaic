@@ -1,8 +1,7 @@
 package com.dblabs.spatial.gridx.bng
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.types.ChipType
+import com.dblabs.spatial.vectorx.jts.JTS
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, UnsafeProjection, UnsafeRow}
@@ -12,16 +11,13 @@ import org.apache.spark.sql.types._
 
 import scala.collection.mutable.ArrayBuffer
 
-case class CellIntersectionAgg(
+case class BNG_CellIntersectionAgg(
     inputChip: Expression,
-    geometryAPIName: String,
-    indexSystem: IndexSystem,
     mutableAggBufferOffset: Int = 0,
     inputAggBufferOffset: Int = 0
 ) extends TypedImperativeAggregate[ArrayBuffer[Any]]
       with UnaryLike[Expression] {
 
-    val geometryAPI: GeometryAPI = GeometryAPI.apply(geometryAPIName)
     override lazy val deterministic: Boolean = true
     override val child: Expression = inputChip
     override val nullable: Boolean = false
@@ -48,14 +44,14 @@ case class CellIntersectionAgg(
           "can only intersect chips based on the same grid cell"
         )
 
-        val boundary_cells = buffer.iterator.map(_.asInstanceOf[InternalRow]).filter(r => !r.getBoolean(0)).toArray
+        val boundary_cells = buffer.map(_.asInstanceOf[InternalRow]).filter(r => !r.getBoolean(0)).toArray
         if (boundary_cells.length == 0) {
             // There are only core chips in the buffer. Just return the first chip of the buffer.
             buffer.head
         } else {
             // There is at least one boundary chip in the buffer. Core chips have no influence on the intersection.
-            val intersection = boundary_cells.map(r => geometryAPI.geometry(r.getBinary(2), "WKB")).reduce(_.intersection(_))
-            InternalRow(false, index_id, intersection.toWKB)
+            val intersection = boundary_cells.map(r => JTS.fromWKB(r.getBinary(2))).reduce(_.intersection(_))
+            InternalRow(false, index_id, JTS.toWKB(intersection))
         }
     }
 
@@ -82,14 +78,14 @@ case class CellIntersectionAgg(
 
     override def prettyName: String = "grid_cell_intersection_agg"
 
-    override protected def withNewChildInternal(newChild: Expression): CellIntersectionAgg = copy(inputChip = newChild)
+    override protected def withNewChildInternal(newChild: Expression): BNG_CellIntersectionAgg = copy(inputChip = newChild)
 
 }
 
-object CellIntersectionAgg {
+object BNG_CellIntersectionAgg {
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[CellIntersectionAgg].getCanonicalName,
+          classOf[BNG_CellIntersectionAgg].getCanonicalName,
           db.orNull,
           "grid_cell_intersection_agg",
           """

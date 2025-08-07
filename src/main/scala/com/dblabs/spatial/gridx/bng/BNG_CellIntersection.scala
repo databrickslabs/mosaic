@@ -1,6 +1,7 @@
 package com.dblabs.spatial.gridx.bng
 
 import com.dblabs.spatial.expressions._
+import com.dblabs.spatial.gridx.grid.BNG
 import com.dblabs.spatial.vectorx.jts.JTS
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -16,14 +17,7 @@ case class BNG_CellIntersection(
 
     private val childType = leftChip.dataType.asInstanceOf[StructType].fields(1).dataType
     override def children: Seq[Expression] = Seq(leftChip, rightChip)
-    override def dataType: DataType =
-        StructType(
-          Seq(
-            StructField("is_core", BooleanType),
-            StructField("index_id", childType),
-            StructField("wkb", BinaryType)
-          )
-        )
+    override def dataType: DataType = BNG.cellType(childType)
     override def nullable: Boolean = true
     override def prettyName: String = "bng_cellintersection"
     override def replacement: Expression =
