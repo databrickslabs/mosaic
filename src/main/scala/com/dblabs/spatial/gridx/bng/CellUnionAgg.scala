@@ -14,14 +14,13 @@ import scala.collection.mutable
 
 case class CellUnionAgg(
     inputChip: Expression,
-    geometryAPIName: String,
-    indexSystem: IndexSystem,
     mutableAggBufferOffset: Int = 0,
     inputAggBufferOffset: Int = 0
 ) extends TypedImperativeAggregate[mutable.ArrayBuffer[Any]]
       with UnaryLike[Expression] {
+    // TODO: this should be moved to ArrayBuffer[InternalRow] to avoid copying
+    //      also that way we can exit much sooner from any of the compute and just iterate with noops
 
-    val geometryAPI: GeometryAPI = GeometryAPI.apply(geometryAPIName)
     override lazy val deterministic: Boolean = true
     override val child: Expression = inputChip
     override val nullable: Boolean = false
