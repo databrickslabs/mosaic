@@ -2,7 +2,7 @@ package com.dblabs.spatial.gridx.grid
 
 import com.dblabs.spatial.vectorx.jts.GeometryTypeEnum._
 import com.dblabs.spatial.vectorx.jts.{GeometryTypeEnum, JTS}
-import org.apache.spark.sql.types.{BinaryType, BooleanType, DataType, LongType, StructField, StructType}
+import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom._
 
@@ -572,6 +572,7 @@ object BNG extends Serializable {
     }
 
     def geometryKLoop(geometry: Geometry, resolution: Int, k: Int): Set[Long] = {
+        // TODO: MOVE TO ITERATOR
         val n: Int = k - 1
         // This would be much more efficient if we could use the
         // pre-computed tessellation of the geometry for repeated calls.
@@ -587,6 +588,15 @@ object BNG extends Serializable {
 
         val kLoop = borderKLoop.diff(nRing)
         kLoop
+    }
+
+    def geometryKRing(geometry: Geometry, resolution: Int, k: Int): Set[Long] = {
+        // TODO: MOVE TO ITERATOR
+        val chips = getChips(geometry, resolution, keepCoreGeom = false)
+        val (coreCells, borderCells) = chips.partition(_._1)
+        val coreIDs = coreCells.map(_._2).toSet
+        val borderKRing = borderCells.flatMap(c => kRing(c._2, k))
+        coreIDs ++ borderKRing
     }
 
     def getChips(

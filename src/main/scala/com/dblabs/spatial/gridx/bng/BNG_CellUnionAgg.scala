@@ -1,8 +1,7 @@
 package com.dblabs.spatial.gridx.bng
 
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.types.ChipType
+import com.dblabs.spatial.vectorx.jts.JTS
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.catalyst.expressions.{Expression, ExpressionInfo, UnsafeProjection, UnsafeRow}
@@ -12,7 +11,7 @@ import org.apache.spark.sql.types._
 
 import scala.collection.mutable
 
-case class CellUnionAgg(
+case class BNG_CellUnionAgg(
     inputChip: Expression,
     mutableAggBufferOffset: Int = 0,
     inputAggBufferOffset: Int = 0
@@ -48,10 +47,9 @@ case class CellUnionAgg(
         if (core_chips.length == 0) {
             buffer.head
             // buffer has only boundary cells and union operation is associative
-            val union =
-                buffer.iterator.map(_.asInstanceOf[InternalRow]).map(r => geometryAPI.geometry(r.getBinary(2), "WKB")).reduce(_.union(_))
+            val union = buffer.iterator.map(_.asInstanceOf[InternalRow]).map(r => JTS.fromWKB(r.getBinary(2))).reduce(_.union(_))
             // the intersection _could_ create a new core chip. Leave this check out for performance reasons.
-            InternalRow(false, index_id, union.toWKB)
+            InternalRow(false, index_id, JTS.toWKB(union))
         } else {
             // core_chips[0] == any element in core_chips
             core_chips.head
@@ -81,14 +79,14 @@ case class CellUnionAgg(
 
     override def prettyName: String = "grid_cell_union_agg"
 
-    override protected def withNewChildInternal(newChild: Expression): CellUnionAgg = copy(inputChip = newChild)
+    override protected def withNewChildInternal(newChild: Expression): BNG_CellUnionAgg = copy(inputChip = newChild)
 
 }
 
-object CellUnionAgg {
+object BNG_CellUnionAgg {
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[CellUnionAgg].getCanonicalName,
+          classOf[BNG_CellUnionAgg].getCanonicalName,
           db.orNull,
           "grid_cell_union_agg",
           """

@@ -1,48 +1,30 @@
 package com.dblabs.spatial.gridx.bng
 
-import com.databricks.labs.mosaic.core.Mosaic
-import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
-import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.core.types._
+import com.dblabs.spatial.gridx.grid.BNG
+import com.dblabs.spatial.vectorx.jts.JTS
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.TypeCheckResult
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.expressions.{CollectionGenerator, Expression, ExpressionInfo}
 import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
 
-import scala.collection.TraversableOnce
-
-case class MosaicExplode(
+case class BNG_TessellateExplode(
     geom: Expression,
     resolution: Expression,
-    keepCoreGeom: Expression,
-    indexSystem: IndexSystem,
-    geometryAPIName: String
+    keepCoreGeom: Expression
 ) extends CollectionGenerator
       with Serializable
       with CodegenFallback {
 
-    lazy val geometryAPI: GeometryAPI = GeometryAPI(geometryAPIName)
-
     override def position: Boolean = false
-
     override def inline: Boolean = false
-
     override def children: Seq[Expression] = Seq(geom, resolution, keepCoreGeom)
 
-    /**
-      * [[MosaicExplode]] expression can only be called on supported data types.
-      * The supported data types are [[BinaryType]] for WKB encoding,
-      * [[StringType]] for WKT encoding, [[HexType]] ([[StringType]] wrapper)
-      * for HEX encoding and [[InternalGeometryType]] for primitive types
-      * encoding via [[ArrayType]].
-      *
-      * @return
-      *   An instance of [[TypeCheckResult]] indicating success or a failure.
-      */
     override def checkInputDataTypes(): TypeCheckResult = {
-        if (!Seq(BinaryType, StringType, HexType, InternalGeometryType).contains(geom.dataType)) {
+        if (!Seq(BinaryType, StringType).contains(geom.dataType)) {
             TypeCheckResult.TypeCheckFailure("Unsupported geom type.")
         } else if (!Seq(IntegerType, StringType).contains(resolution.dataType)) {
             TypeCheckResult.TypeCheckFailure("Unsupported resolution type.")
@@ -67,19 +49,30 @@ case class MosaicExplode(
       *   [[com.databricks.labs.mosaic.core.types.model.MosaicChip]]. This set
       *   will be used to generate new rows of data.
       */
-    override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
+    override def eval(input: InternalRow): IterableOnce[InternalRow] = {
         val geomRaw = geom.eval(input)
-        val resolutionVal = indexSystem.getResolution(resolution.eval(input))
-        val geometryVal = geometryAPI.geometry(geomRaw, geom.dataType)
-        val keepCoreGeomVal = keepCoreGeom.eval(input).asInstanceOf[Boolean]
+        val resolutionRaw = resolution.eval(input)
+        val keepGeomRaw = keepCoreGeom.eval(input)
+        if (geomRaw == null || resolutionRaw == null || keepGeomRaw == null) {
+            return Seq.empty
+        }
+        val geometryVal = geom.dataType match {
+            case StringType => JTS.fromWKT(geomRaw.asInstanceOf[UTF8String].toString)
+            case BinaryType => JTS.fromWKB(geomRaw.asInstanceOf[Array[Byte]])
+        }
+        val resolutionVal = resolution.dataType match {
+            case StringType  => BNG.resolutionMap(resolutionRaw.asInstanceOf[UTF8String].toString)
+            case IntegerType => resolutionRaw.asInstanceOf[Int]
+        }
+        val keepCoreGeomVal = keepGeomRaw.asInstanceOf[Boolean]
 
-        Mosaic.getChips(geometryVal, resolutionVal, keepCoreGeomVal, indexSystem, geometryAPI)
-            .map(_.formatCellId(indexSystem))
-            .map(row => InternalRow.fromSeq(Seq(row.serialize)))
+        BNG.tessellate(geometryVal, resolutionVal, keepCoreGeomVal)
+            .map(c => InternalRow.fromSeq(Seq((c._1, BNG.format(c._2), if (keepCoreGeomVal) c._3 else null))))
+
     }
 
     override def elementSchema: StructType = {
-        StructType(Array(StructField("index", ChipType(indexSystem.getCellIdDataType))))
+        StructType(Array(StructField("index", ChipType(StringType))))
     }
 
     override def withNewChildrenInternal(newChildren: IndexedSeq[Expression]): Expression =
@@ -87,12 +80,12 @@ case class MosaicExplode(
 
 }
 
-object MosaicExplode {
+object BNG_TessellateExplode {
 
     /** Entry to use in the function registry. */
     def registryExpressionInfo(db: Option[String]): ExpressionInfo =
         new ExpressionInfo(
-          classOf[IndexGeometry].getCanonicalName,
+          classOf[BNG_TessellateExplode].getCanonicalName,
           db.orNull,
           "grid_tessellateexplode",
           """
