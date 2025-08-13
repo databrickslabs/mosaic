@@ -165,3 +165,17 @@ docker/.m2/
 /python/checkpoint/
 /python/checkpoint-new/
 /scripts/docker/docker-build/ubuntu-22-spark-3.4/Dockerfile
+
+# gdal standalone
+gdal_standalone
+gdal_standalone/*
+
+# python dev venv
+python/dev
+
+# hadoop tars
+hadoop-3.4.0.tar.gz
+hadoop-3.4.0.tar.gz.1
+
+# docker m2
+scripts/docker/m2
