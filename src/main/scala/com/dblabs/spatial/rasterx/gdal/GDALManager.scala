@@ -68,7 +68,7 @@ object GDALManager extends Logging {
                     logError(s"Error: ${exception.getMessage}")
             }
         }
-        loadOrNoop("/usr/lib/libgdal.so")
+        loadOrNoop("/usr/lib/jni/libgdalalljni.so.30")
         sharedObjects.foreach(loadOrNoop)
     }
 

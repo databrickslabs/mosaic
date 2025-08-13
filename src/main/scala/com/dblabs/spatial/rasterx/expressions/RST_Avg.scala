@@ -1,59 +1,80 @@
 package com.dblabs.spatial.rasterx.expressions
 
-import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALInfo
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.expressions.base.GenericExpressionFactory
-import com.databricks.labs.mosaic.expressions.raster.base.RasterExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
-import com.dblabs.spatial.expressions.{ExpressionConfig, GenericExpressionFactory, InvokedExpression, WithExpressionInfo, WithNewChildren}
-import com.dblabs.spatial.gridx.bng.BNG_AsWKB
-import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
+import com.dblabs.spatial.expressions._
+import com.dblabs.spatial.rasterx.gdal.GDALManager
+import com.dblabs.spatial.rasterx.gdal.driver.{NodeFileManager, RasterDriver}
+import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.{FunctionBuilder, expressions}
 import org.apache.spark.sql.catalyst.expressions.Expression
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
-import org.apache.spark.unsafe.types.UTF8String
+import org.gdal.gdal.Dataset
 
 /** Returns the avg value per band of the raster. */
 case class RST_Avg(
     tileExpr: Expression,
-    expressionConfig: MosaicExpressionConfig
+    expressionConfig: ExpressionConfig
 ) extends InvokedExpression
-    with WithNewChildren {
+      with WithNewChildren {
 
+    // Allways try to init hconf for node file manager
+    NodeFileManager.init(expressionConfig.hConf)
+    GDALManager.init(expressionConfig)
+
+    private def rasterType = tileExpr.dataType.asInstanceOf[StructType].fields.head.dataType
     override def children: Seq[Expression] = Seq(tileExpr)
     override def dataType: DataType = ArrayType(DoubleType)
     override def nullable: Boolean = true
     override def prettyName: String = "rst_avg"
-    override def replacement: Expression = invoke(RST_Avg)
-
-
-    /** Returns the avg value per band of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile): Any = {
-        import org.json4s._
-        import org.json4s.jackson.JsonMethods._
-        implicit val formats: DefaultFormats.type = org.json4s.DefaultFormats
-
-        val command = s"gdalinfo -stats -json -mm -nogcp -nomd -norat -noct"
-        val gdalInfo = GDALInfo.executeInfo(tile.raster, command)
-        // parse json from gdalinfo
-        val json = parse(gdalInfo).extract[Map[String, Any]]
-        val meanValues =
-            json("bands").asInstanceOf[List[Map[String, Any]]].map { band => band.getOrElse("mean", Double.NaN).asInstanceOf[Double] }
-        ArrayData.toArrayData(meanValues.toArray)
-    }
+    override def replacement: Expression =
+        rasterType match {
+            case StringType => invoke(RST_Avg, "evalPath")
+            case BinaryType => invoke(RST_Avg, "evalBinary")
+        }
 
 }
 
 /** Expression info required for the expression registration for spark SQL. */
 object RST_Avg extends WithExpressionInfo {
 
-    def eval(path: UTF8String): ArrayData = {
-
+    def evalBinary(row: InternalRow): ArrayData = {
+        val buffer = row.getBinary(0)
+        val ds = RasterDriver.readFromBytes(buffer, Map.empty)
+        val metadataRow = row.getMap(1)
+        val metadata = Map[String, String](
+          metadataRow
+              .keyArray()
+              .toSeq(StringType)
+              .zip(metadataRow.valueArray().toSeq(StringType)): _*
+        )
+        val res = execute(ds, metadata)
+        ArrayData.toArrayData(res)
     }
 
-    def execute(path: String): Array[Double] = {
-        val ds = GDAL
+    def evalPath(row: InternalRow): ArrayData = {
+        val path = row.getString(0)
+        val ds = RasterDriver.read(path, Map.empty)
+        val metadataRow = row.getMap(1)
+        val metadata = Map[String, String](
+          metadataRow
+              .keyArray()
+              .toSeq(StringType)
+              .zip(metadataRow.valueArray().toSeq(StringType)): _*
+        )
+        val res = execute(ds, metadata)
+        ArrayData.toArrayData(res)
+    }
+
+    def execute(ds: Dataset, metadata: Map[String, String]): Array[Double] = {
+        (0 to ds.GetRasterCount()).map { bandIndex =>
+            val band = ds.GetRasterBand(bandIndex + 1)
+            if (band == null) Double.NaN
+            else {
+                val stats = band.AsMDArray().GetStatistics()
+                if (stats == null) Double.NaN
+                else stats.getMean
+            }
+        }.toArray
     }
 
     override def name: String = "rst_avg"

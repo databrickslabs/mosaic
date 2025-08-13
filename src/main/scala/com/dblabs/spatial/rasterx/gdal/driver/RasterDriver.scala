@@ -10,6 +10,7 @@ import org.gdal.gdalconst.gdalconstConstants.GA_ReadOnly
 object RasterDriver {
 
     def isLocal(path: String): Boolean = {
+        // TODO: fix the file:/ case
         path.startsWith("/") && !path.startsWith("/Volumes/") && !path.startsWith("/dbfs/")
     }
 
@@ -45,21 +46,21 @@ object RasterDriver {
         s"$format:$cleanZip:$subdataset"
     }
 
-    private def copyToLocal(path: String, isLocal: Boolean, hconf: SerializableConfiguration): String = {
+    private def copyToLocal(path: String, isLocal: Boolean): String = {
         if (isLocal) path
-        else HadoopUtils.copyToLocalTmp(path, hconf)
+        else NodeFileManager.readRemote(path)
     }
 
-    def read(path: String, options: Map[String, String], hconf: SerializableConfiguration): Dataset = {
+    def read(path: String, options: Map[String, String]): Dataset = {
         val isZip = options.getOrElse("isZip", "false").toBoolean
         val isSubdataset = options.getOrElse("isSubdataset", "false").toBoolean
         val isLocal = this.isLocal(path)
-        val readPath = this.copyToLocal(path, isLocal, hconf)
+        val readPath = this.copyToLocal(path, isLocal)
         val cleanPath = this.cleanPath(readPath, isZip, isSubdataset)
         val dataset = org.gdal.gdal.gdal.Open(cleanPath, GA_ReadOnly)
         if (dataset == null) {
             val error = org.gdal.gdal.gdal.GetLastErrorMsg
-            throw new RuntimeException(s"Failed to open dataset at path: $cleanedPath; Error: $error")
+            throw new RuntimeException(s"Failed to open dataset at path: $cleanPath; Error: $error")
         }
         dataset
     }
@@ -76,10 +77,37 @@ object RasterDriver {
         gdal.Open(tempPath)
     }
 
-    def write(ds: Dataset, path: String, options: Map[String, String]): Unit = {
-
+    def write(ds: Dataset, path: String, options: Map[String, String], hconf: SerializableConfiguration): Unit = {
+        val isLocal = this.isLocal(path)
+        val driver = ds.GetDriver()
+        val isZip = options.getOrElse("isZip", "false").toBoolean
+        val isSubdataset = options.getOrElse("isSubdataset", "false").toBoolean
+        val writePath =
+            if (isLocal) path
+            else {
+                val uuid = java.util.UUID.randomUUID().toString.replace("-", "_")
+                val extension = GDAL.getExtension(driver.getShortName)
+                s"${NodeFilePathUtil.rootPath}/$uuid.$extension"
+            }
+        val cleanPath = this.cleanPath(writePath, isZip, isSubdataset)
+        ds.FlushCache()
+        driver.CreateCopy(cleanPath, ds, 0)
+        // If not local, copy the file to the remote path
+        if (!isLocal) {
+            HadoopUtils.copyToPath(cleanPath, path, hconf)
+        }
     }
 
-    def writeToBytes(ds: Dataset, options: Map[String, String]): Array[Byte]
+    def writeToBytes(ds: Dataset, options: Map[String, String]): Array[Byte] = {
+        val isZip = options.getOrElse("isZip", "false").toBoolean
+        val driverName = options.getOrElse("driver", "GTiff")
+        val extension = GDAL.getExtension(driverName)
+        val uuid = java.util.UUID.randomUUID().toString.replace("-", "_")
+        val tempPath =
+            if (isZip) s"/vsizip//vsimem/$uuid.zip/$uuid.$extension"
+            else s"/vsimem/temp_raster_$uuid.$extension"
+        ds.GetDriver.CreateCopy(tempPath, ds, 0)
+        gdal.GetMemFileBuffer(tempPath)
+    }
 
 }

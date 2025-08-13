@@ -38,18 +38,18 @@ object RasterWriter {
         }
     }
 
-    /**
-      * Writes a raster to a specified file system path.
-      *
-      * @param newPath
-      *   The path to write the raster.
-      * @param destroy
-      *   A boolean indicating if the raster should be destroyed after writing.
-      * @return
-      *   The path where written (may differ, e.g. due to subdatasets).
-      */
-    def writeToPath(newPath: String, destroy: Boolean = true, hConf: SerializableConfiguration): String = {
-
-    }
+//    /**
+//      * Writes a raster to a specified file system path.
+//      *
+//      * @param newPath
+//      *   The path to write the raster.
+//      * @param destroy
+//      *   A boolean indicating if the raster should be destroyed after writing.
+//      * @return
+//      *   The path where written (may differ, e.g. due to subdatasets).
+//      */
+//    def writeToPath(newPath: String, destroy: Boolean = true, hConf: SerializableConfiguration): String = {
+//
+//    }
 
 }

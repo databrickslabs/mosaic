@@ -584,7 +584,7 @@ object BNG extends Serializable {
         val borderNRing = borderCells.flatMap(c => kRing(c._2, n))
         val nRing = coreIDs ++ borderNRing
 
-        val borderKLoop = borderCells.toSet.flatMap(c => this.kLoop(c._2, k))
+        val borderKLoop = borderCells.toSet.flatMap((c: (Boolean, Long, Geometry)) => this.kLoop(c._2, k))
 
         val kLoop = borderKLoop.diff(nRing)
         kLoop

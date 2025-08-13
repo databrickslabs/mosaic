@@ -1,6 +1,5 @@
 package com.dblabs.spatial.rasterx.gdal.old
 
-import com.dblabs.spatial.rasterx.gdal.{MosaicRasterBandGDAL, Padding}
 
 import scala.reflect.ClassTag
 

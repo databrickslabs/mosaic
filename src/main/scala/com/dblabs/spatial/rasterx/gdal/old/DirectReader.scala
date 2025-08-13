@@ -1,6 +1,5 @@
 package com.dblabs.spatial.rasterx.gdal.old
 
-import com.dblabs.spatial.rasterx.gdal.MosaicRasterBandGDAL
 
 final class DirectReader(initialCapacity: Int = 0) {
 
