@@ -11,12 +11,12 @@ import scala.collection.mutable
 import scala.util.{Success, Try}
 
 /**
-  * Implements BNG (British National Grid) java implementation. BNG index system
-  * covers the EPSG:27700 bounds. The index system is represented as a square
+  * Implements BNG (British National Grid) java implementation. BNG grid system
+  * covers the EPSG:27700 bounds. The grid system is represented as a square
   * grid, where x and y coordinates are provided as eastings and northings. The
-  * index system supports representation of index ids as integers and as
-  * strings. The index system supports providing resolutions as integer numbers
-  * and as as string cell size descriptors (eg. 500m for resolution where cell
+  * grid system supports representation of cell ids as integers and as
+  * strings. The grid system supports providing resolutions as integer numbers
+  * and as string cell size descriptors (eg. 500m for resolution where cell
   * edge is 500 meters long). Negative resolution values represent resolutions
   * for quad tree representations where each cell is split into orientation
   * quadrants. Orientation quadrants represent south-east, north-east,
@@ -31,9 +31,9 @@ object BNG extends Serializable {
     def cellType(idType: DataType): StructType =
         StructType(
           Array(
-            StructField("is_core", BooleanType, nullable = false),
-            StructField("index_id", idType, nullable = false),
-            StructField("wkb", BinaryType, nullable = false)
+            StructField("cellid", idType, nullable = false),
+            StructField("core", BooleanType, nullable = false),
+            StructField("chip", BinaryType, nullable = false)
           )
         )
 
@@ -49,8 +49,8 @@ object BNG extends Serializable {
 
     /**
       * Resolution mappings from string names to integer encodings. Resolutions
-      * are uses as integers in any index math so we need to convert sizes to
-      * corresponding index resolutions.
+      * are uses as integers in any grid math so we need to convert sizes to
+      * corresponding grid resolutions.
       */
     val resolutionMap: Map[String, Int] =
         Map(
@@ -90,7 +90,7 @@ object BNG extends Serializable {
     /**
       * Matrix representing a mapping between letter portions of the eastings
       * and northings coordinates to a letter pair. Given th small area of
-      * coverage of this index system having a lookup is more efficient than
+      * coverage of this grid system having a lookup is more efficient than
       * performing any math transformations between ints and chars.
       */
     val letterMap: Seq[Seq[String]] =
@@ -113,19 +113,19 @@ object BNG extends Serializable {
 
     /**
       * Provides a string representation from an integer representation of a BNG
-      * index id. The string representations follows letter prefix followed by
+      * cell id. The string representations follows letter prefix followed by
       * easting bin, followed by nothings bin and finally (for quad tree
       * resolutions) followed by quadrant suffix.
       * @param id
       *   Integer id to be formatted.
       * @return
-      *   A string representation of the index id -
+      *   A string representation of the cell id -
       *   "(prefix)(estings_bin)(northins_bin)(suffix)". E.g. SW123987NW where
       *   SW is the prefix, 123 is eastings bin, 987 is northings bin and NW is
       *   suffix.
       */
     def format(id: Long): String = {
-        val digits = indexDigits(id)
+        val digits = cellDigits(id)
         if (digits.length < 6) {
             val prefix = letterMap(digits.slice(3, 5).mkString.toInt)(digits.slice(1, 3).mkString.toInt)(0).toString
             prefix
@@ -142,8 +142,8 @@ object BNG extends Serializable {
     }
 
     /**
-      * Returns a half diagonal of the index geometry. Since this is a planar
-      * index system, there is no need to account for skew, both diagonals have
+      * Returns a half diagonal of the cell geometry. Since this is a planar
+      * grid system, there is no need to account for skew, both diagonals have
       * the same length. It is sufficient to do square root of 2 times the
       * length of the edge to determine the diagonal.
       *
@@ -151,7 +151,7 @@ object BNG extends Serializable {
       *   An instance of [[Geometry]] for which we are computing the optimal
       *   buffer radius.
       * @param resolution
-      *   A resolution to be used to get the centroid index geometry.
+      *   A resolution to be used to get the centroid cell geometry.
       * @return
       *   An optimal radius to buffer the geometry in order to avoid blind spots
       *   when performing polyfill.
@@ -162,7 +162,7 @@ object BNG extends Serializable {
     }
 
     /**
-      * Returns edge size for a given index resolution.
+      * Returns edge size for a given grid resolution.
       * @param resolution
       *   Resolution at which we need to compute the edge size.
       * @return
@@ -178,10 +178,10 @@ object BNG extends Serializable {
     }
 
     /**
-      * Polyfill logic is based on the centroid point of the individual index
+      * Polyfill logic is based on the centroid point of the individual cell
       * geometry. Blind spots do occur near the boundary of the geometry. The
       * decision to use centroid based logic is made to align with what is done
-      * in H3 and unify the logic between index systems.
+      * in H3 and unify the logic between grid systems.
       *
       * @param geometry
       *   Input geometry to be represented.
@@ -194,7 +194,7 @@ object BNG extends Serializable {
         if (geometry.isEmpty) return Iterator.empty
 
         val startPoints = geometry.getCoordinates ++ geometry.getCentroid.getCoordinates
-        val startIndices = startPoints.map(p => pointToIndex(p.getX, p.getY, resolution))
+        val startIndices = startPoints.map(p => pointToCellID(p.getX, p.getY, resolution))
 
         new Iterator[Long] {
             private val visited = mutable.HashSet.empty[Long]
@@ -208,7 +208,7 @@ object BNG extends Serializable {
                     val current = queue.dequeue()
                     if (!visited.contains(current)) {
                         visited += current
-                        val center = indexToGeometry(current).getCentroid
+                        val center = cellIdToGeometry(current).getCentroid
                         if (geometry.contains(center)) {
                             nextElem = Some(current)
                             val neighbors = kLoop(current, 1).filterNot(visited.contains)
@@ -233,32 +233,32 @@ object BNG extends Serializable {
     }
 
     /**
-      * Get the k ring of indices around the provided index id.
+      * Get the k ring of indices around the provided cell id.
       *
-      * @param index
-      *   Index ID to be used as a center of k ring.
+      * @param cellID
+      *   Cell ID to be used as a center of k ring.
       * @param n
-      *   Number of k rings to be generated around the input index.
+      *   Number of k rings to be generated around the input cell ID.
       * @return
-      *   A collection of index IDs forming a k ring.
+      *   A collection of cell IDs forming a k ring.
       */
-    def kRing(index: Long, n: Int): Iterator[Long] = {
-        if (n == 1) Iterator.single(index) ++ kLoop(index, 1)
-        else Iterator.single(index) ++ (1 to n).iterator.flatMap(k => kLoop(index, k))
+    def kRing(cellID: Long, n: Int): Iterator[Long] = {
+        if (n == 1) Iterator.single(cellID) ++ kLoop(cellID, 1)
+        else Iterator.single(cellID) ++ (1 to n).iterator.flatMap(k => kLoop(cellID, k))
     }
 
     /**
-      * Get the k disk of indices around the provided index id.
+      * Get the k loop / k disk of indices around the provided cell id.
       *
-      * @param index
-      *   Index ID to be used as a center of k disk.
+      * @param cellID
+      *   Cell ID to be used as a center of k disk.
       * @param k
-      *   Distance of k disk to be generated around the input index.
+      *   Distance of k disk to be generated around the input cell ID.
       * @return
-      *   A collection of index IDs forming a k disk.
+      *   A collection of cell IDs forming a k disk.
       */
-    def kLoop(index: Long, k: Int): Iterator[Long] = {
-        val digits = indexDigits(index)
+    def kLoop(cellID: Long, k: Int): Iterator[Long] = {
+        val digits = cellDigits(cellID)
         val resolution = getResolution(digits)
         val edgeSize = getEdgeSize(resolution)
         val x = getX(digits, edgeSize)
@@ -269,18 +269,18 @@ object BNG extends Serializable {
             (0 until 2 * k).iterator.map(c => (x + (k - c) * edgeSize, y + k * edgeSize)) ++
             (0 until 2 * k).iterator.map(c => (x - k * edgeSize, y + (k - c) * edgeSize))
 
-        it.map { case (x, y) => pointToIndex(x, y, resolution) }.filter(BNG.isValid)
+        it.map { case (x, y) => pointToCellID(x, y, resolution) }.filter(BNG.isValid)
     }
 
     /**
-      * Checks if the provided index is within bounds of the index system.
-      * @param index
-      *   Index id to be checked.
+      * Checks if the provided cell ID is within bounds of the grid system.
+      * @param cellID
+      *   Cell ID to be checked.
       * @return
       *   Boolean representing validity.
       */
-    def isValid(index: Long): Boolean = {
-        val digits = indexDigits(index)
+    def isValid(cellID: Long): Boolean = {
+        val digits = cellDigits(cellID)
         val xLetterIndex = digits.slice(3, 5).mkString.toInt
         val yLetterIndex = digits.slice(1, 3).mkString.toInt
         val resolution = getResolution(digits)
@@ -291,18 +291,18 @@ object BNG extends Serializable {
     }
 
     /**
-      * Get the index ID corresponding to the provided coordinates.
+      * Get the cell ID corresponding to the provided coordinates.
       *
       * @param eastings
       *   Eastings coordinate of the point.
       * @param northings
       *   Northings coordinate of the point.
       * @param resolution
-      *   Resolution of the index.
+      *   Resolution of the grid.
       * @return
-      *   Index ID in this index system.
+      *   Cell ID in this grid system.
       */
-    def pointToIndex(eastings: Double, northings: Double, resolution: Int): Long = {
+    def pointToCellID(eastings: Double, northings: Double, resolution: Int): Long = {
         require(!eastings.isNaN && !northings.isNaN, throw new IllegalStateException("NaN coordinates are not supported."))
         val eastingsInt = eastings.toInt
         val northingsInt = northings.toInt
@@ -322,14 +322,14 @@ object BNG extends Serializable {
       * Computes the quadrant based on the resolution, coordinates and a
       * divisor.
       * @param resolution
-      *   Resolution of the index system.
+      *   Resolution of the grid system.
       * @param eastings
       *   X coordinate of the point.
       * @param northings
       *   Y coordinate of the point.
       * @param divisor
-      *   Divisor is equal to edge size for positive index resolutions and is
-      *   equal to 2x of the edge size for negative index resolutions.
+      *   Divisor is equal to edge size for positive grid resolutions and is
+      *   equal to 2x of the edge size for negative grid resolutions.
       * @return
       *   An integer representing the quadrant. 0 is reserved for resolutions
       *   that do not have quadrant representation.
@@ -356,8 +356,8 @@ object BNG extends Serializable {
 
     /**
       * BNG resolution can only be an Int value between 0 and 6. Traditional
-      * resolutions only support base 10 edge size of the index. In addition to
-      * 0 to 6 resolution, there are mid way resolutions that split index into
+      * resolutions only support base 10 edge size of the grid. In addition to
+      * 0 to 6 resolution, there are mid way resolutions that split cells into
       * quadrants. Those are denoted as .5 resolutions by convention.
       *
       * @param res
@@ -392,27 +392,27 @@ object BNG extends Serializable {
 
     /**
       * Provides a long representation from a string representation of a BNG
-      * index id. The string representations follows letter prefix followed by
+      * cell id. The string representations follows letter prefix followed by
       * easting bin, followed by nothings bin and finally (for quad tree
       * resolutions) followed by quadrant suffix.
-      * @param index
+      * @param cellID
       *   String id to be parsed.
       * @return
-      *   A long representation of the index id -
+      *   A long representation of the cell id -
       *   "1(eastings_letter_encoding)(northings_letter_encoding)(eastings_bin)(northings_bin)(quadrants)".
       */
-    def parse(index: String): Long = {
-        val prefix = if (index.length >= 2) index.take(2) else s"${index}V"
+    def parse(cellID: String): Long = {
+        val prefix = if (cellID.length >= 2) cellID.take(2) else s"${cellID}V"
         val letterRow = letterMap.find(_.contains(prefix)).get
         val eLetter: Int = letterRow.indexOf(prefix)
         val nLetter: Int = letterMap.indexOf(letterRow)
 
-        if (index.length == 1) {
+        if (cellID.length == 1) {
             encode(eLetter, 0, 0, 0, 0, 1, -1)
         } else {
-            val suffix = index.slice(index.length - 2, index.length)
-            val quadrant: Int = if (quadrants.contains(suffix) && index.length > 2) quadrants.indexOf(suffix) else 0
-            val binDigits = if (quadrant > 0) index.drop(2).dropRight(2) else index.drop(2)
+            val suffix = cellID.slice(cellID.length - 2, cellID.length)
+            val quadrant: Int = if (quadrants.contains(suffix) && cellID.length > 2) quadrants.indexOf(suffix) else 0
+            val binDigits = if (quadrant > 0) cellID.drop(2).dropRight(2) else cellID.drop(2)
             if (binDigits.isEmpty) {
                 encode(eLetter, nLetter, 0, 0, quadrant, 1, -2)
             } else {
@@ -426,16 +426,16 @@ object BNG extends Serializable {
     }
 
     /**
-      * Constructs a geometry representing the index tile corresponding to
-      * provided index id.
+      * Constructs a geometry representing the grid tile corresponding to
+      * provided cell id.
       *
-      * @param index
-      *   Id of the index whose geometry should be returned.
+      * @param cellID
+      *   Id of the cell whose geometry should be returned.
       * @return
-      *   An instance of [[Geometry]] corresponding to index.
+      *   An instance of [[Geometry]] corresponding to cell ID.
       */
-    def indexToGeometry(index: Long): Geometry = {
-        val digits = indexDigits(index)
+    def cellIdToGeometry(cellID: Long): Geometry = {
+        val digits = cellDigits(cellID)
         val resolution = getResolution(digits)
         val edgeSize = getEdgeSize(resolution)
         val x = getX(digits, edgeSize)
@@ -446,20 +446,20 @@ object BNG extends Serializable {
     }
 
     /**
-      * Returns index as a sequence of digits.
-      * @param index
-      *   Index to be split into digits.
+      * Returns cell ID as a sequence of digits.
+      * @param cellID
+      *   Cell ID to be split into digits.
       * @return
-      *   Index digits.
+      *   Cell ID digits.
       */
-    def indexDigits(index: Long): Seq[Int] = {
-        index.toString.map(_.asDigit)
+    def cellDigits(cellID: Long): Seq[Int] = {
+        cellID.toString.map(_.asDigit)
     }
 
     /**
-      * Computes the resolution based on the index digits.
+      * Computes the resolution based on the cell digits.
       * @param digits
-      *   Index digits.
+      *   Cell ID digits.
       * @return
       *   Resolution that results in this length of digits.
       */
@@ -479,13 +479,13 @@ object BNG extends Serializable {
     }
 
     /**
-      * X coordinate based on the digits of the index and the edge size. X
+      * X coordinate based on the digits of the cell id and the edge size. X
       * coordinate is rounded to the edge size precision. X coordinate
       * corresponds to eastings coordinate.
       * @param digits
-      *   Index digits.
+      *   Cell ID digits.
       * @param edgeSize
-      *   Index edge size.
+      *   Cell edge size.
       * @return
       *   X coordinate.
       */
@@ -500,13 +500,13 @@ object BNG extends Serializable {
     }
 
     /**
-      * Y coordinate based on the digits of the index and the edge size. Y
+      * Y coordinate based on the digits of the cell ID and the edge size. Y
       * coordinate is rounded to the edge size precision. Y coordinate
       * corresponds to northings coordinate.
       * @param digits
-      *   Index digits.
+      *   Cell ID digits.
       * @param edgeSize
-      *   Index edge size.
+      *   Cell edge size.
       * @return
       *   Y coordinate.
       */
@@ -522,29 +522,29 @@ object BNG extends Serializable {
 
     def getResolutionStr(resolution: Int): String = resolutionMap.find(_._2 == resolution).map(_._1).getOrElse("")
 
-    def area(index: Long): Double = {
-        val digits = indexDigits(index)
+    def area(cellID: Long): Double = {
+        val digits = cellDigits(cellID)
         val resolution = getResolution(digits)
         val edgeSize = getEdgeSize(resolution).asInstanceOf[Double]
         val area = math.pow(edgeSize / 1000, 2)
         area
     }
 
-    def indexToCenter(index: Long): Coordinate = {
-        val geom = indexToGeometry(index)
+    def cellIdToCenter(cellID: Long): Coordinate = {
+        val geom = cellIdToGeometry(cellID)
         val centroid = geom.getCentroid
         JTS.coordinatesFromXYs(centroid.getX, centroid.getY)
     }
 
-    def indexToBoundary(index: Long): Seq[Coordinate] = {
-        val geom = indexToGeometry(index)
+    def cellIdToBoundary(cellID: Long): Seq[Coordinate] = {
+        val geom = cellIdToGeometry(cellID)
         val coordinates = geom.getCoordinates
         coordinates.map(coord => JTS.coordinatesFromXYs(coord.getX, coord.getY))
     }
 
     def distance(cellId: Long, cellId2: Long): Long = {
-        val digits1 = indexDigits(cellId)
-        val digits2 = indexDigits(cellId2)
+        val digits1 = cellDigits(cellId)
+        val digits2 = cellDigits(cellId2)
         val resolution1 = getResolution(digits1)
         val resolution2 = getResolution(digits2)
         val edgeSize = getEdgeSize(math.min(resolution1, resolution2))
@@ -620,7 +620,7 @@ object BNG extends Serializable {
     ): Iterator[(Boolean, Long, Geometry)] = {
         val point = geometry.asInstanceOf[Point]
         val chipGeom = if (keepCoreGeom) point else null
-        val cellId = pointToIndex(point.getX, point.getY, resolution)
+        val cellId = pointToCellID(point.getX, point.getY, resolution)
         Iterator.single((false, cellId, chipGeom))
     }
 
@@ -645,7 +645,7 @@ object BNG extends Serializable {
     }
 
     // TODO: This should be possible to optimize by better handling of the
-    //      intersection of the line with the index geometry.
+    //      intersection of the line with the cell geometry.
     // perhaps queue logic can be replaced with a more efficient way of selecting
     // what to process next.
     private def lineDecompose(
@@ -653,7 +653,7 @@ object BNG extends Serializable {
         resolution: Int
     ): Iterator[(Boolean, Long, Geometry)] = {
         val start = line.getStartPoint
-        val startIndex = pointToIndex(start.getX, start.getY, resolution)
+        val startCellID = pointToCellID(start.getX, start.getY, resolution)
 
         @tailrec
         def traverseLine(
@@ -666,8 +666,8 @@ object BNG extends Serializable {
             val (newQueue, newChips) = queue.foldLeft(
               (Iterator.empty[Long], chips)
             )((accumulator: (Iterator[Long], Iterator[(Boolean, Long, Geometry)]), current: Long) => {
-                val indexGeom = indexToGeometry(current)
-                val lineSegment = line.intersection(indexGeom)
+                val cellGeom = cellIdToGeometry(current)
+                val lineSegment = line.intersection(cellGeom)
                 if (!lineSegment.isEmpty) {
                     val chip = (false, current, lineSegment)
                     val kRing = this.kRing(current, 1)
@@ -697,7 +697,7 @@ object BNG extends Serializable {
             }
         }
 
-        val result = traverseLine(line, Iterator.single(startIndex), Set.empty[Long], Iterator.empty[(Boolean, Long, Geometry)])
+        val result = traverseLine(line, Iterator.single(startCellID), Set.empty[Long], Iterator.empty[(Boolean, Long, Geometry)])
         result
     }
 
@@ -734,11 +734,11 @@ object BNG extends Serializable {
         val borderIndices = polyfill(borderGeometry, resolution).filterNot(coreSet.contains)
 
         val coreChips = coreIndices.map(cell => {
-            val coreGeom = if (keepCoreGeom) indexToGeometry(cell) else null
+            val coreGeom = if (keepCoreGeom) cellIdToGeometry(cell) else null
             (true, cell, coreGeom)
         })
         val borderChips = borderIndices.map(cell => {
-            val cellGeom = indexToGeometry(cell)
+            val cellGeom = cellIdToGeometry(cell)
             val intersect = cellGeom.intersection(geometry)
             val withGeom =
                 if (intersect.isEmpty) (false, cell, intersect)

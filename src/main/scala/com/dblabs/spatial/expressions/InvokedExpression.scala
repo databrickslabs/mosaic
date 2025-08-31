@@ -1,14 +1,13 @@
 package com.dblabs.spatial.expressions
 
-import org.apache.spark.sql.catalyst.expressions.objects.Invoke
 import org.apache.spark.sql.catalyst.expressions.{ImplicitCastInputTypes, Literal, RuntimeReplaceable}
-import org.apache.spark.sql.types.{DataType, ObjectType}
+import org.apache.spark.sql.types.{BinaryType, DataType, ObjectType, StringType}
 
 trait InvokedExpression extends RuntimeReplaceable with ImplicitCastInputTypes {
 
     override def inputTypes: Seq[DataType] = children.map(_.dataType)
 
-    def invoke(companion: Object, methodName: String = "eval"): Invoke = {
+    def invoke(companion: Object, methodName: String = "eval"): PrettyInvoke = {
         val moduleLiteral = Literal.create(
           companion,
           ObjectType(companion.getClass)
@@ -17,7 +16,8 @@ trait InvokedExpression extends RuntimeReplaceable with ImplicitCastInputTypes {
         // call the eval method on the companion object
         // this isn't a classic static method call, but a
         // call to a method on a singleton object
-        Invoke(
+        new PrettyInvoke(
+          exprName = companion.asInstanceOf[WithExpressionInfo].name,
           targetObject = moduleLiteral,
           functionName = methodName,
           dataType = dataType,
@@ -26,7 +26,18 @@ trait InvokedExpression extends RuntimeReplaceable with ImplicitCastInputTypes {
           propagateNull = true,
           returnNullable = true,
           isDeterministic = true
-        )
+        ) {
+            override def toString(): String = {
+                "testing something"
+            }
+        }
+    }
+
+    def rstInvoke(companion: Object, rdt: DataType): PrettyInvoke = {
+        rdt match {
+            case StringType => invoke(companion, "evalPath")
+            case BinaryType => invoke(companion, "evalBinary")
+        }
     }
 
 }

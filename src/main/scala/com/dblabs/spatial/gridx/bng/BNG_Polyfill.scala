@@ -10,27 +10,43 @@ import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
 
-case class BNG_Polyfill(geom: Expression, resolution: Expression) extends InvokedExpression with WithNewChildren {
+case class BNG_Polyfill(
+    geom: Expression,
+    resolution: Expression
+) extends InvokedExpression {
 
     override def children: Seq[Expression] = Seq(geom, resolution)
     override def dataType: DataType = ArrayType(StringType)
     override def nullable: Boolean = true
     override def prettyName: String = "bng_polyfill"
     override def replacement: Expression = invoke(BNG_Polyfill)
+    override def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0), nc(1))
 
 }
 
 object BNG_Polyfill extends WithExpressionInfo {
 
-    def eval(geom: Any, resolution: Any): ArrayData = {
-        val geometry = geom match {
-            case g: Array[Byte] => JTS.fromWKB(g)
-            case g: String      => JTS.fromWKT(g)
-        }
-        val cells = (resolution match {
-            case r: Int    => execute(geometry, r)
-            case r: String => execute(geometry, r)
-        }).map(UTF8String.fromString)
+    def eval(geom: UTF8String, resolution: UTF8String): ArrayData = {
+        val geometry = JTS.fromWKT(geom.toString)
+        val cells = execute(geometry, resolution.toString).map(UTF8String.fromString)
+        ArrayData.toArrayData(cells.toArray)
+    }
+
+    def eval(geom: UTF8String, resolution: Int): ArrayData = {
+        val geometry = JTS.fromWKT(geom.toString)
+        val cells = execute(geometry, resolution).map(UTF8String.fromString)
+        ArrayData.toArrayData(cells.toArray)
+    }
+
+    def eval(geom: Array[Byte], resolution: UTF8String): ArrayData = {
+        val geometry = JTS.fromWKB(geom)
+        val cells = execute(geometry, resolution.toString).map(UTF8String.fromString)
+        ArrayData.toArrayData(cells.toArray)
+    }
+
+    def eval(geom: Array[Byte], resolution: Int): ArrayData = {
+        val geometry = JTS.fromWKB(geom)
+        val cells = execute(geometry, resolution).map(UTF8String.fromString)
         ArrayData.toArrayData(cells.toArray)
     }
 
@@ -47,8 +63,6 @@ object BNG_Polyfill extends WithExpressionInfo {
 
     override def name: String = "bng_polyfill"
 
-    override def builder(expressionConfig: ExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[BNG_Polyfill](2, expressionConfig)
-    }
+    override def builder(): FunctionBuilder = (c: Seq[Expression]) => new BNG_Polyfill(c(0), c(1))
 
 }

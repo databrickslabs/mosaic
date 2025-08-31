@@ -85,7 +85,7 @@ object H3 extends Serializable {
 
     def isCylindrical: Boolean = true
 
-    // An instance of H3Core to be used for IndexSystem implementation.
+    // An instance of H3Core to be used for Grid System implementation.
     @transient private val h3: H3Core = H3Core.newInstance()
 
     /**
@@ -124,7 +124,7 @@ object H3 extends Serializable {
       *   An instance of [[Geometry]] for which we are computing the optimal
       *   buffer radius.
       * @param resolution
-      *   A resolution to be used to get the centroid index geometry.
+      *   A resolution to be used to get the centroid cell geometry.
       * @return
       *   An optimal radius to buffer the geometry in order to avoid blind spots
       *   when performing polyfill.
@@ -136,16 +136,16 @@ object H3 extends Serializable {
             else if (centroid.getX < -180) (180 - centroid.getX % 180, centroid.getY)
             else (centroid.getX, centroid.getY)
 
-        val centroidIndex = h3.geoToH3(yC, xC, resolution)
-        val indexGeom = indexToGeometry(centroidIndex)
+        val centroidCellID = h3.geoToH3(yC, xC, resolution)
+        val cellGeom = cellIdToGeometry(centroidCellID)
         geometry.getGeometryType match {
             case "Polygon"      =>
                 // If the geometry is a polygon, we can use its centroid to compute the radius
-                indexGeom.getCoordinates.map(c => JTS.point(c).distance(centroid)).max
+                cellGeom.getCoordinates.map(c => JTS.point(c).distance(centroid)).max
             case "MultiPolygon" =>
                 // If the geometry is a multipolygon, we can use the centroid of the first polygon
-                (for (i <- 0 until indexGeom.getNumGeometries) yield {
-                    indexGeom.getGeometryN(i).getCoordinates.map(c => JTS.point(c).distance(centroid)).max
+                (for (i <- 0 until cellGeom.getNumGeometries) yield {
+                    cellGeom.getGeometryN(i).getCoordinates.map(c => JTS.point(c).distance(centroid)).max
                 }).max
 
         }
@@ -157,17 +157,17 @@ object H3 extends Serializable {
       * point of the boundary is appended to the end of the boundary to form a
       * LinearRing.
       *
-      * @param index
-      *   ID of the index whose geometry should be returned.
+      * @param cellID
+      *   ID of the cell whose geometry should be returned.
       * @return
-      *   An instance of [[Geometry]] corresponding to index.
+      *   An instance of [[Geometry]] corresponding to cell ID.
       */
-    def indexToGeometry(index: Long): Geometry = {
-        val boundary = h3.h3ToGeoBoundary(index).asScala
+    def cellIdToGeometry(cellID: Long): Geometry = {
+        val boundary = h3.h3ToGeoBoundary(cellID).asScala
         val extended = boundary ++ List(boundary.head)
 
         val geom =
-            if (crossesNorthPole(index) || crossesSouthPole(index)) makePoleGeometry(boundary, crossesNorthPole(index))
+            if (crossesNorthPole(cellID) || crossesSouthPole(cellID)) makePoleGeometry(boundary, crossesNorthPole(cellID))
             else makeSafeGeometry(extended)
 
         geom.setSRID(crsID)
@@ -185,7 +185,7 @@ object H3 extends Serializable {
     }
 
     /**
-      * H3 polyfill logic is based on the centroid point of the individual index
+      * H3 polyfill logic is based on the centroid point of the individual cell
       * geometry. Blind spots do occur near the boundary of the geometry.
       *
       * @param geometry
@@ -234,57 +234,57 @@ object H3 extends Serializable {
     }
 
     /**
-      * Get the index ID corresponding to the provided coordinates.
+      * Get the cell ID corresponding to the provided coordinates.
       *
       * @param lon
       *   Longitude coordinate of the point.
       * @param lat
       *   Latitude coordinate of the point.
       * @param resolution
-      *   Resolution of the index.
+      *   Resolution of the grid.
       * @return
-      *   Index ID in this index system.
+      *   Cell ID in this grid system.
       */
-    def pointToIndex(lon: Double, lat: Double, resolution: Int): Long = {
+    def pointToCellID(lon: Double, lat: Double, resolution: Int): Long = {
         h3.geoToH3(lat, lon, resolution)
     }
 
     /**
-      * Get the k ring of indices around the provided index id.
+      * Get the k ring of indices around the provided cell id.
       *
-      * @param index
-      *   Index ID to be used as a center of k ring.
+      * @param cellID
+      *   Cell ID to be used as a center of k ring.
       * @param n
-      *   Number of k rings to be generated around the input index.
+      *   Number of k rings to be generated around the input cell.
       * @return
-      *   A collection of index IDs forming a k ring.
+      *   A collection of cell IDs forming a k ring.
       */
-    def kRing(index: Long, n: Int): mutable.Seq[Long] = {
-        h3.kRing(index, n).asScala.map(_.toLong)
+    def kRing(cellID: Long, n: Int): mutable.Seq[Long] = {
+        h3.kRing(cellID, n).asScala.map(_.toLong)
     }
 
     /**
-      * Get the k disk of indices around the provided index id.
+      * Get the k disk of indices around the provided cell id.
       *
-      * @param index
-      *   Index ID to be used as a center of k disk.
+      * @param cellID
+      *   Cell ID to be used as a center of k disk.
       * @param n
-      *   Distance of k disk to be generated around the input index.
+      *   Distance of k disk to be generated around the input cell.
       * @return
-      *   A collection of index IDs forming a k disk.
+      *   A collection of cell IDs forming a k disk.
       */
-    def kLoop(index: Long, n: Int): mutable.Seq[Long] = {
+    def kLoop(cellID: Long, n: Int): mutable.Seq[Long] = {
         // HexRing crashes in case of pentagons.
         // Ensure a KRing fallback in said case.
-        require(index >= 0L)
+        require(cellID >= 0L)
         Try(
-          h3.hexRing(index, n).asScala.map(_.toLong)
+          h3.hexRing(cellID, n).asScala.map(_.toLong)
         ).getOrElse(
           // TODO: this should be improveable
           // 2 runs of kring at n and n-1 seem redundant
           // just kring n and filter via distance should be better
-          // h3.kRing(index, n).asScala.toSet.diff(h3.kRing(index, n - 1).asScala.toSet).map(_.toLong).toSeq
-            h3.kRing(index, n).asScala.filter(cell => h3.h3Distance(index, cell) == n).map(_.toLong)
+          // h3.kRing(cellID, n).asScala.toSet.diff(h3.kRing(cellID, n - 1).asScala.toSet).map(_.toLong).toSeq
+          h3.kRing(cellID, n).asScala.filter(cell => h3.h3Distance(cellID, cell) == n).map(_.toLong)
         )
     }
 
@@ -311,13 +311,13 @@ object H3 extends Serializable {
         h3.geoToH3(geo.lat, geo.lng, h3.h3GetResolution(id))
     }
 
-    def indexToCenter(index: Long): Coordinate = {
-        val geo = h3.h3ToGeo(index)
+    def cellIdToCenter(cellID: Long): Coordinate = {
+        val geo = h3.h3ToGeo(cellID)
         new Coordinate(geo.lat, geo.lng)
     }
 
-    def indexToBoundary(index: Long): mutable.Seq[Coordinate] = {
-        h3.h3ToGeoBoundary(index).asScala.map(p => new Coordinate(p.lat, p.lng))
+    def cellIdToBoundary(cellID: Long): mutable.Seq[Coordinate] = {
+        h3.h3ToGeoBoundary(cellID).asScala.map(p => new Coordinate(p.lat, p.lng))
     }
 
     def distance(cellId: Long, cellId2: Long): Long = Try(h3.h3Distance(cellId, cellId2)).map(_.toLong).getOrElse(0)

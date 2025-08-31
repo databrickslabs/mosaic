@@ -11,32 +11,34 @@ import org.apache.spark.unsafe.types.UTF8String
 case class BNG_KLoop(
     cellId: Expression,
     k: Expression
-) extends InvokedExpression
-      with WithNewChildren {
+) extends InvokedExpression {
 
     override def children: Seq[Expression] = Seq(cellId, k)
-    override def dataType: DataType = ArrayType(cellId.dataType)
+    override def dataType: DataType = ArrayType(StringType)
     override def nullable: Boolean = true
     override def prettyName: String = "bng_kloop"
     override def replacement: Expression = invoke(BNG_KLoop)
+    override def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0), nc(1))
 
 }
 
 object BNG_KLoop extends WithExpressionInfo {
 
-    def eval(cellId: UTF8String, k: Int): Any = {
-        val indices = BNG.kLoop(BNG.parse(cellId.toString), k).map(BNG.format)
+    def eval(cellId: UTF8String, k: Int): ArrayData = {
+        val indices = execute(cellId.toString, k)
         ArrayData.toArrayData(indices)
     }
 
-    def eval(cellId: Long, k: Int): Any = {
-        val indices = BNG.kLoop(cellId, k)
+    def eval(cellId: Long, k: Int): ArrayData = {
+        val indices = execute(BNG.format(cellId), k)
         ArrayData.toArrayData(indices)
     }
 
-    override def builder(expressionConfig: ExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[BNG_KLoop](2, expressionConfig)
+    def execute(cellId: String, k: Int): Iterator[String] = {
+        BNG.kLoop(BNG.parse(cellId), k).map(BNG.format)
     }
+
+    override def builder(): FunctionBuilder = (c: Seq[Expression]) => new BNG_KLoop(c(0), c(1))
 
     override def name: String = "bng_kloop"
 

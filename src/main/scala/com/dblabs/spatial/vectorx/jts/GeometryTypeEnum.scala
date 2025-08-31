@@ -19,4 +19,10 @@ object GeometryTypeEnum extends Enumeration {
             .getOrElse(INVALID)
     }
 
+    def fromTypeId(typeId: Int): GeometryTypeEnum.Value = {
+        GeometryTypeEnum.values
+            .find(_.id == typeId)
+            .getOrElse(INVALID)
+    }
+
 }

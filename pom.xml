@@ -8,8 +8,8 @@
     <version>${mosaic.version}</version>
 
     <properties>
-        <minimum.coverage>0</minimum.coverage>
-        <skipTests>true</skipTests>
+        <minimum.coverage>80</minimum.coverage>
+        <skipTests>false</skipTests>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <encoding>UTF-8</encoding>
@@ -269,7 +269,7 @@
                     <plugin>
                         <groupId>org.scoverage</groupId>
                         <artifactId>scoverage-maven-plugin</artifactId>
-                        <version>1.4.11</version>
+                        <version>2.1.0</version>
                         <executions>
                             <execution>
                                 <id>scoverage-report</id>
@@ -282,7 +282,7 @@
                         </executions>
                         <configuration>
                             <minimumCoverage>${minimum.coverage}</minimumCoverage>
-                            <failOnMinimumCoverage>true</failOnMinimumCoverage>
+                            <failOnMinimumCoverage>false</failOnMinimumCoverage>
                             <scalaVersion>${scala.version}</scalaVersion>
                             <additionalForkedProjectProperties>skipTests=false</additionalForkedProjectProperties>
                         </configuration>

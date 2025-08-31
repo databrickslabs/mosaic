@@ -1,7 +1,1 @@
-com.databricks.labs.mosaic.datasource.ShapefileFileFormat
-com.databricks.labs.mosaic.datasource.GeoDBFileFormat
-com.databricks.labs.mosaic.datasource.OpenGeoDBFileFormat
-com.databricks.labs.mosaic.datasource.OGRFileFormat
-com.databricks.labs.mosaic.datasource.gdal.GDALFileFormat
-com.databricks.labs.mosaic.datasource.UserDefinedFileFormat
-com.databricks.labs.mosaic.datasource.v2.ogrmultiread.OGRMultiReadDataSource
+com.dblabs.spatial.rasterx.ds.gdal.GDAL_DataSource

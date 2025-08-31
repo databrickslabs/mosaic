@@ -23,7 +23,7 @@ class BNG_CellIntersectionTest extends PlanTest with SharedSparkSession {
                 StructField("case_id", IntegerType, nullable = true),
                 StructField("is_core", BooleanType, nullable = true),
                 StructField("index_id", LongType, nullable = true),
-                StructField("wkt", StringType, nullable = true)
+                StructField("chip", StringType, nullable = true)
             )
         )
 
@@ -40,12 +40,12 @@ class BNG_CellIntersectionTest extends PlanTest with SharedSparkSession {
 
         val leftDf = spark
             .createDataFrame(spark.sparkContext.parallelize(left), s)
-            .withColumn("wkb", st_aswkb(col("wkt")))
-            .select($"case_id", struct("is_core", "index_id", "wkb").alias("left_chip"))
+            .withColumn("chip", st_aswkb(col("chip")))
+            .select($"case_id", struct("is_core", "index_id", "chip").alias("left_chip"))
         val rightDf = spark
             .createDataFrame(spark.sparkContext.parallelize(right), s)
-            .withColumn("wkb", st_aswkb(col("wkt")))
-            .select($"case_id", struct("is_core", "index_id", "wkb").alias("right_chip"))
+            .withColumn("chip", st_aswkb(col("chip")))
+            .select($"case_id", struct("is_core", "index_id", "chip").alias("right_chip"))
 
         val expected = Seq(
             Row(1, "POLYGON ((0 0, 2 0, 2 1, 0 1, 0 0))"),
@@ -64,7 +64,7 @@ class BNG_CellIntersectionTest extends PlanTest with SharedSparkSession {
             .join(rightDf, "case_id")
             .repartition(3)
             .withColumn("intersection", bng_cell_intersection($"left_chip", $"right_chip"))
-            .select($"case_id", st_aswkt($"intersection.wkb").alias("actual_wkt"))
+            .select($"case_id", st_aswkt($"intersection.chip").alias("actual_wkt"))
             .join(expDf, "case_id")
             .select($"actual_wkt", $"expected_wkt")
             .as[(String, String)]

@@ -12,8 +12,7 @@ import org.locationtech.jts.geom.Geometry
 case class BNG_CellIntersection(
     leftChip: Expression,
     rightChip: Expression
-) extends InvokedExpression
-      with WithNewChildren {
+) extends InvokedExpression {
 
     private val childType = leftChip.dataType.asInstanceOf[StructType].fields(1).dataType
     override def children: Seq[Expression] = Seq(leftChip, rightChip)
@@ -25,6 +24,7 @@ case class BNG_CellIntersection(
             case LongType   => invoke(BNG_CellIntersection, "evalLong")
             case StringType => invoke(BNG_CellIntersection, "evalString")
         }
+    override def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0), nc(1))
 
 }
 
@@ -40,19 +40,8 @@ object BNG_CellIntersection extends WithExpressionInfo {
         val cell2 = chip2.getLong(1)
         val geom1 = JTS.fromWKB(chip1.getBinary(2))
         val geom2 = JTS.fromWKB(chip2.getBinary(2))
-        val res = evalLong((chip1.getBoolean(0), cell1, geom1), (chip1.getBoolean(0), cell2, geom2))
+        val res = executeLong((chip1.getBoolean(0), cell1, geom1), (chip1.getBoolean(0), cell2, geom2))
         InternalRow.fromSeq(Seq(res._1, res._2, JTS.toWKB(res._3)))
-    }
-
-    def evalLong(chip1: (Boolean, Long, Geometry), chip2: (Boolean, Long, Geometry)): (Boolean, Long, Geometry) = {
-        // Left hand rule, only chip1 survives intersection
-        // if chips are different then empty intersection
-        if (chip1._2 != chip2._2) (chip1._1, chip1._2, JTS.emptyPolygon)
-        else {
-            if (chip1._1) chip1
-            else if (chip2._1) chip2
-            else (chip1._1, chip1._2, chip1._3.intersection(chip2._3))
-        }
     }
 
     def evalString(chip1: InternalRow, chip2: InternalRow): InternalRow = {
@@ -65,11 +54,22 @@ object BNG_CellIntersection extends WithExpressionInfo {
         val cell2 = chip2.getString(1)
         val geom1 = JTS.fromWKB(chip1.getBinary(2))
         val geom2 = JTS.fromWKB(chip2.getBinary(2))
-        val res = evalString((chip1.getBoolean(0), cell1, geom1), (chip1.getBoolean(0), cell2, geom2))
+        val res = executeString((chip1.getBoolean(0), cell1, geom1), (chip1.getBoolean(0), cell2, geom2))
         InternalRow(res._1, res._2, JTS.toWKB(res._3))
     }
 
-    def evalString(chip1: (Boolean, String, Geometry), chip2: (Boolean, String, Geometry)): (Boolean, String, Geometry) = {
+    def executeLong(chip1: (Boolean, Long, Geometry), chip2: (Boolean, Long, Geometry)): (Boolean, Long, Geometry) = {
+        // Left hand rule, only chip1 survives intersection
+        // if chips are different then empty intersection
+        if (chip1._2 != chip2._2) (chip1._1, chip1._2, JTS.emptyPolygon)
+        else {
+            if (chip1._1) chip1
+            else if (chip2._1) chip2
+            else (chip1._1, chip1._2, chip1._3.intersection(chip2._3))
+        }
+    }
+
+    def executeString(chip1: (Boolean, String, Geometry), chip2: (Boolean, String, Geometry)): (Boolean, String, Geometry) = {
         // Left hand rule, only chip1 survives intersection
         // if chips are different then empty intersection
         if (chip1._2 != chip2._2) (chip1._1, chip1._2, JTS.emptyPolygon)
@@ -82,14 +82,6 @@ object BNG_CellIntersection extends WithExpressionInfo {
 
     override def name: String = "bng_cellintersection"
 
-    /**
-      * Returns the expression builder (parser for spark SQL).
-      *
-      * @return
-      *   An expression builder.
-      */
-    override def builder(expressionConfig: ExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[BNG_CellIntersection](2, expressionConfig)
-    }
+    override def builder(): FunctionBuilder = (c: Seq[Expression]) => new BNG_CellIntersection(c(0), c(1))
 
 }

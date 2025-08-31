@@ -13,14 +13,14 @@ case class BNG_GeometryKRing(
     geom: Expression,
     resolution: Expression,
     k: Expression
-) extends InvokedExpression
-      with WithNewChildren {
+) extends InvokedExpression {
 
     override def children: Seq[Expression] = Seq(geom, resolution, k)
     override def dataType: DataType = ArrayType(StringType)
     override def nullable: Boolean = true
     override def prettyName: String = "bng_geometrykring"
     override def replacement: Expression = invoke(BNG_KRing)
+    override def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0), nc(1), nc(2))
 
 }
 
@@ -28,24 +28,23 @@ object BNG_GeometryKRing extends WithExpressionInfo {
 
     def eval(wkb: Array[Byte], resolution: Int, k: Int): Any = {
         val geometry = JTS.fromWKB(wkb)
-        val kRing = BNG.geometryKRing(geometry, resolution, k)
-        val formatted = kRing.map(BNG.format)
-        ArrayData.toArrayData(formatted.toArray)
+        val result = execute(geometry, resolution, k)
+        ArrayData.toArrayData(result.toArray)
     }
 
     def eval(wkt: String, resolution: Int, k: Int): Any = {
         val geometry = JTS.fromWKT(wkt)
-        val kRing = BNG.geometryKRing(geometry, resolution, k)
-        val formatted = kRing.map(BNG.format)
-        ArrayData.toArrayData(formatted.toArray)
+        val result = execute(geometry, resolution, k)
+        ArrayData.toArrayData(result.toArray)
     }
 
-    def eval(geom: Geometry, resolution: Int, k: Int): Any = BNG.geometryKRing(geom, resolution, k)
+    def execute(geom: Geometry, resolution: Int, k: Int): Set[String] = {
+        val kRing = BNG.geometryKRing(geom, resolution, k)
+        kRing.map(BNG.format)
+    }
 
     override def name: String = "bng_geometrykring"
 
-    override def builder(expressionConfig: ExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[BNG_GeometryKRing](3, expressionConfig)
-    }
+    override def builder(): FunctionBuilder = (c: Seq[Expression]) => new BNG_GeometryKRing(c(0), c(1), c(2))
 
 }

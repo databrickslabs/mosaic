@@ -1,64 +1,66 @@
 package com.dblabs.spatial.rasterx.expressions
 
-import com.databricks.labs.mosaic.core.raster.api.GDAL
-import com.databricks.labs.mosaic.core.raster.operator.RasterTranslate.TranslateFormat
-import com.databricks.labs.mosaic.core.types.RasterTileType
-import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
-import com.databricks.labs.mosaic.expressions.base.{GenericExpressionFactory, WithExpressionInfo}
-import com.databricks.labs.mosaic.expressions.raster.base.Raster1ArgExpression
-import com.databricks.labs.mosaic.functions.MosaicExpressionConfig
+import com.dblabs.spatial.expressions._
+import com.dblabs.spatial.rasterx.gdal.RasterDriver
+import com.dblabs.spatial.rasterx.operations.TranslateFormat
+import com.dblabs.spatial.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
-import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
-import org.apache.spark.sql.types.DataType
+import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
+import org.gdal.gdal.{Dataset, gdal}
 
-case class RST_AsFormat (
-                              tileExpr: Expression,
-                              newFormat: Expression,
-                              expressionConfig: MosaicExpressionConfig
-                          ) extends Raster1ArgExpression[RST_AsFormat](
-    tileExpr,
-    newFormat,
-    returnsRaster = true,
-    expressionConfig
-)
-    with CodegenFallback {
+import scala.util.Try
 
-    override def dataType: DataType = {
-        GDAL.enable(expressionConfig)
-        RasterTileType(expressionConfig.getCellIdType, tileExpr, expressionConfig.isRasterUseCheckpoint)
-    }
+case class RST_AsFormat(
+    tileExpr: Expression,
+    newFormat: Expression
+) extends InvokedExpression {
 
-    /** Changes the data type of a band of the raster. */
-    override def rasterTransform(tile: MosaicRasterTile, arg1: Any): Any = {
-
-        val newFormat = arg1.asInstanceOf[UTF8String].toString
-        if (tile.getRaster.driverShortName.getOrElse("") == newFormat) {
-            return tile
-        }
-        val result = TranslateFormat.update(tile.getRaster, newFormat)
-        tile.copy(raster = result).setDriver(newFormat)
-    }
+    private def rasterType = RST_ExpressionUtil.rasterType(tileExpr)
+    override def children: Seq[Expression] = Seq(tileExpr, newFormat, ExpressionConfigExpr())
+    override def dataType: DataType = RST_ExpressionUtil.tileDataType(tileExpr)
+    override def nullable: Boolean = true
+    override def prettyName: String = "rst_asformat"
+    override def replacement: Expression = rstInvoke(RST_AsFormat, rasterType)
+    override protected def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0), nc(1))
 
 }
 
 /** Expression info required for the expression registration for spark SQL. */
 object RST_AsFormat extends WithExpressionInfo {
 
+    def evalBinary(row: InternalRow, newFormat: UTF8String, conf: UTF8String): InternalRow = eval(row, newFormat, conf, BinaryType)
+    def evalPath(row: InternalRow, newFormat: UTF8String, conf: UTF8String): InternalRow = eval(row, newFormat, conf, StringType)
+
+    private def eval(row: InternalRow, newFormat: UTF8String, conf: UTF8String, dt: DataType): InternalRow = {
+        val exprConf = ExpressionConfig.fromB64(conf.toString)
+        RST_ExpressionUtil.init(exprConf)
+        val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, dt)
+        if (ds.GetDriver().getShortName == newFormat.toString) {
+            RasterDriver.releaseDataset(ds)
+            row // effectively a no-op
+        } else {
+            val (resDS, resMtd) = TranslateFormat.update(ds, mtd, newFormat.toString)
+            val res = RasterSerializationUtil.tileToRow((cell, resDS, resMtd), dt, exprConf.hConf)
+            resDS.delete()
+            Try(gdal.Unlink(resDS.GetDescription()))
+            RasterDriver.releaseDataset(ds)
+            res
+        }
+    }
+
+    def execute(ds: Dataset, mtd: Map[String, String], newFormat: String): (Dataset, Map[String, String]) = {
+        if (ds.GetDriver().getShortName == newFormat) {
+            (ds, mtd)
+        } else {
+            TranslateFormat.update(ds, mtd, newFormat)
+        }
+    }
+
     override def name: String = "rst_asformat"
 
-    override def usage: String = "_FUNC_(expr1) - Returns a raster tile in a different underlying format"
-
-    override def example: String =
-        """
-          |    Examples:
-          |      > SELECT _FUNC_(tile, 'GTiff')
-          |       {index_id, updated_raster, parentPath, driver}
-          |  """.stripMargin
-
-    override def builder(expressionConfig: MosaicExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[RST_AsFormat](2, expressionConfig)
-    }
+    override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_AsFormat(c(0), c(1))
 
 }

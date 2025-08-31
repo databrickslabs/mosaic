@@ -11,45 +11,43 @@ import org.apache.spark.unsafe.types.UTF8String
 case class BNG_PointAsBNG(
     geom: Expression,
     resolution: Expression
-) extends InvokedExpression
-      with WithNewChildren {
+) extends InvokedExpression {
 
     override def children: Seq[Expression] = Seq(geom, resolution)
     override def dataType: DataType = StringType
     override def nullable: Boolean = true
     override def prettyName: String = "bng_pointasbng"
     override def replacement: Expression = invoke(BNG_PointAsBNG)
+    override def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0), nc(1))
 
 }
 
 object BNG_PointAsBNG extends WithExpressionInfo {
 
     def eval(wkt: UTF8String, resolution: Int): UTF8String = {
-        val cellID = evalWKT(wkt.toString, resolution)
+        val cellID = executeWKT(wkt.toString, resolution)
         UTF8String.fromString(cellID)
-    }
-
-    def evalWKT(wkt: String, resolution: Int): String = {
-        val geometry = JTS.fromWKT(wkt)
-        val cellID = BNG.pointToIndex(geometry.getCentroid.getX, geometry.getCentroid.getY, resolution)
-        BNG.format(cellID)
     }
 
     def eval(wkb: Array[Byte], resolution: Int): UTF8String = {
-        val cellID = evalWKB(wkb, resolution)
+        val cellID = executeWKB(wkb, resolution)
         UTF8String.fromString(cellID)
     }
 
-    def evalWKB(bytes: Array[Byte], resolution: Int): String = {
+    def executeWKT(wkt: String, resolution: Int): String = {
+        val geometry = JTS.fromWKT(wkt)
+        val cellID = BNG.pointToCellID(geometry.getCentroid.getX, geometry.getCentroid.getY, resolution)
+        BNG.format(cellID)
+    }
+
+    def executeWKB(bytes: Array[Byte], resolution: Int): String = {
         val geometry = JTS.fromWKB(bytes)
-        val cellID = BNG.pointToIndex(geometry.getCentroid.getX, geometry.getCentroid.getY, resolution)
+        val cellID = BNG.pointToCellID(geometry.getCentroid.getX, geometry.getCentroid.getY, resolution)
         BNG.format(cellID)
     }
 
     override def name: String = "bng_pointasbng"
 
-    override def builder(expressionConfig: ExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[BNG_PointAsBNG](2, expressionConfig)
-    }
+    override def builder(): FunctionBuilder = (c: Seq[Expression]) => new BNG_PointAsBNG(c(0), c(1))
 
 }

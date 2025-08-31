@@ -1,6 +1,6 @@
 package com.databricks.labs.mosaic.utils
 
-import com.databricks.labs.mosaic.functions.MosaicContext
+import com.dblabs.spatial.rasterx.gdal.CheckpointManager
 import com.google.common.io.{ByteStreams, Closeables}
 import org.apache.hadoop.fs._
 import org.apache.orc.util.Murmur3
@@ -53,7 +53,8 @@ object HadoopUtils {
     def copyToLocalTmp(inPath: String, hconf: SerializableConfiguration): String = {
         val uuid = java.util.UUID.randomUUID().toString
         val copyFromPath = new Path(cleanPath(inPath))
-        val outputDir = cleanPath(MosaicContext.tmpDir(null)) + s"/$uuid"
+        val ckpPath = CheckpointManager.getCheckpointPath
+        val outputDir = cleanPath(ckpPath) + s"/$uuid"
         copyToLocalDir(copyFromPath.toString, outputDir, hconf)
     }
 

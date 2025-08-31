@@ -23,9 +23,7 @@ object GDALManager extends Logging {
             } match {
                 case Success(_)                    => logInfo("GDAL environment enabled successfully.")
                 case scala.util.Failure(exception) =>
-                    logError("GDAL not enabled. Mosaic with GDAL requires that GDAL be installed on the cluster.")
-                    logError("Please run setup_gdal() to generate the init script for install GDAL install.")
-                    logError("After the init script is generated, please restart the cluster with the init script to complete the setup.")
+                    logError("GDAL not enabled. Rasterx requires that GDAL be installed on the cluster.")
                     logError(s"Error: ${exception.getMessage}")
                     isEnabled = false
                     throw exception
@@ -68,7 +66,7 @@ object GDALManager extends Logging {
                     logError(s"Error: ${exception.getMessage}")
             }
         }
-        loadOrNoop("/usr/lib/jni/libgdalalljni.so.30")
+        loadOrNoop("/usr/lib/libgdalalljni.so")
         sharedObjects.foreach(loadOrNoop)
     }
 

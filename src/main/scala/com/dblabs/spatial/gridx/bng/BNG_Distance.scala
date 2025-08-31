@@ -1,7 +1,7 @@
 package com.dblabs.spatial.gridx.bng
 
-import com.databricks.labs.mosaic.BNG
 import com.dblabs.spatial.expressions._
+import com.dblabs.spatial.gridx.grid.BNG
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.types._
@@ -9,31 +9,32 @@ import org.apache.spark.sql.types._
 case class BNG_Distance(
     cellId: Expression,
     cellId2: Expression
-) extends InvokedExpression
-      with WithNewChildren {
+) extends InvokedExpression {
 
     override def children: Seq[Expression] = Seq(cellId, cellId2)
     override def dataType: DataType = LongType
     override def nullable: Boolean = true
     override def prettyName: String = "bng_kring"
     override def replacement: Expression = invoke(BNG_Distance)
+    override def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0), nc(1))
 
 }
 
 object BNG_Distance extends WithExpressionInfo {
 
-    def eval(cellId: Long, cellId2: Long): Long = {
-        BNG.distance(cellId, cellId2)
-    }
+    def eval(cellId: Long, cellId2: Long): Long = execute(cellId, cellId2)
+    def eval(cellId: String, cellId2: String): Long = execute(cellId, cellId2)
 
-    def eval(cellId: String, cellId2: String): Long = {
-        BNG.distance(BNG.parse(cellId), BNG.parse(cellId2))
+    def execute(cellId: Long, cellId2: Long): Long = BNG.distance(cellId, cellId2)
+
+    def execute(cellId: String, cellId2: String): Long = {
+        val cellIdLong = BNG.parse(cellId)
+        val cellId2Long = BNG.parse(cellId2)
+        BNG.distance(cellIdLong, cellId2Long)
     }
 
     override def name: String = "bng_distance"
 
-    override def builder(expressionConfig: ExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[BNG_Distance](2, expressionConfig)
-    }
+    override def builder(): FunctionBuilder = (c: Seq[Expression]) => new BNG_Distance(c(0), c(1))
 
 }

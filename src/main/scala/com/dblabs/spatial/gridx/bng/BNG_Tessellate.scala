@@ -15,45 +15,43 @@ case class BNG_Tessellate(
     geom: Expression,
     resolution: Expression,
     keepCoreGeom: Expression
-) extends InvokedExpression
-      with WithNewChildren {
+) extends InvokedExpression {
 
     override def children: Seq[Expression] = Seq(geom, resolution, keepCoreGeom)
     override def dataType: DataType = ArrayType(BNG.cellType(StringType))
     override def nullable: Boolean = true
     override def prettyName: String = "bng_tessellate"
     override def replacement: Expression = invoke(BNG_Tessellate)
+    override def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0), nc(1), nc(2))
 
 }
 
 object BNG_Tessellate extends WithExpressionInfo {
 
     def eval(wkt: UTF8String, resolution: Int, keepCoreGeom: Boolean): ArrayData = {
-        val chips = evalWKT(wkt.toString, resolution, keepCoreGeom)
+        val chips = executeWKT(wkt.toString, resolution, keepCoreGeom)
             .map(c => InternalRow.fromSeq(Seq(c._1, c._2, c._3)))
         ArrayData.toArrayData(chips)
     }
 
-    def evalWKT(wkt: String, resolution: Int, keepCoreGeom: Boolean): Iterator[(Boolean, String, Geometry)] = {
+    def eval(wkb: Array[Byte], resolution: Int, keepCoreGeom: Boolean): ArrayData = {
+        val chips = executeWKB(wkb, resolution, keepCoreGeom)
+            .map(c => InternalRow.fromSeq(Seq(c._1, c._2, c._3)))
+        ArrayData.toArrayData(chips)
+    }
+
+    def executeWKT(wkt: String, resolution: Int, keepCoreGeom: Boolean): Iterator[(Boolean, String, Geometry)] = {
         val geometry: Geometry = JTS.fromWKT(wkt)
         BNG.tessellate(geometry, resolution, keepCoreGeom).map(c => c.copy(_2 = BNG.format(c._2)))
     }
 
-    def eval(wkb: Array[Byte], resolution: Int, keepCoreGeom: Boolean): ArrayData = {
-        val chips = evalWKB(wkb, resolution, keepCoreGeom)
-            .map(c => InternalRow.fromSeq(Seq(c._1, c._2, c._3)))
-        ArrayData.toArrayData(chips)
-    }
-
-    def evalWKB(bytes: Array[Byte], i: Int, bool: Boolean): Iterator[(Boolean, String, Geometry)] = {
+    def executeWKB(bytes: Array[Byte], i: Int, bool: Boolean): Iterator[(Boolean, String, Geometry)] = {
         val geometry: Geometry = JTS.fromWKB(bytes)
         BNG.tessellate(geometry, i, bool).map(c => c.copy(_2 = BNG.format(c._2)))
     }
 
     override def name: String = "bng_tessellate"
 
-    override def builder(expressionConfig: ExpressionConfig): FunctionBuilder = {
-        GenericExpressionFactory.getBaseBuilder[BNG_Tessellate](3, expressionConfig)
-    }
+    override def builder(): FunctionBuilder = (c: Seq[Expression]) => new BNG_Tessellate(c(0), c(1), c(2))
 
 }

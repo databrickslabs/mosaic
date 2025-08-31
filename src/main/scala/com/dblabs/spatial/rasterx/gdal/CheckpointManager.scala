@@ -16,7 +16,12 @@ object CheckpointManager {
         checkpointPath = path
     }
 
-    def getCheckpointPath: String = checkpointPath
+    def getCheckpointPath: String = {
+        if (checkpointPath == null || checkpointPath.isEmpty) {
+            throw new IllegalStateException("Checkpoint path is not set. Please initialize CheckpointManager first.")
+        }
+        checkpointPath
+    }
 
     def setUseCheckpoint(use: Boolean): Unit = {
         useCheckpoint = use

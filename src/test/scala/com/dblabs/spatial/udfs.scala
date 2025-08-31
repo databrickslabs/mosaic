@@ -18,4 +18,9 @@ object udfs {
             JTS.toWKT(JTS.fromWKB(wkb))
         })
 
+    def st_buffer: UserDefinedFunction =
+        udf((wkb: Array[Byte], distance: Double) => {
+            JTS.toWKB(JTS.fromWKB(wkb).buffer(distance))
+        })
+
 }
