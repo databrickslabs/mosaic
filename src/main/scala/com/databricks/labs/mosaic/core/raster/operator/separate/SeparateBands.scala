@@ -5,6 +5,9 @@ import com.databricks.labs.mosaic.core.raster.operator.gdal.GDALTranslate
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
 import com.databricks.labs.mosaic.utils.PathUtils
 
+import java.nio.file.{Files, Paths}
+import scala.util.Try
+
 /**
   * ReTile is a helper object for splitting multi-band rasters into
   * single-band-per-row.
@@ -42,7 +45,15 @@ object SeparateBands {
 
             if (isEmpty) dispose(result)
 
-            (isEmpty, result.copy(createInfo = result.createInfo ++ Map("bandIndex" -> (i + 1).toString)), i)
+            val size = Try(Files.size(Paths.get(result.path))).getOrElse(-1L)
+            (
+              isEmpty,
+              result.copy(createInfo =
+                  result.createInfo ++
+                      Map("bandIndex" -> (i + 1).toString, "size" -> size.toString)
+              ),
+              i
+            )
 
         }
 

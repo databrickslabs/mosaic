@@ -18,6 +18,8 @@ import scala.collection.JavaConverters._
 
 class MosaicMultiPointJTS(multiPoint: MultiPoint) extends MosaicGeometryJTS(multiPoint) with MosaicMultiPoint {
 
+    override def getGeometry: Geometry = multiPoint
+
     // noinspection DuplicatedCode
     override def toInternal: InternalGeometry = {
         val points = asSeq.map(_.coord).map(InternalCoord(_))

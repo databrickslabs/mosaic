@@ -9,6 +9,8 @@ import org.locationtech.jts.geom._
 
 class MosaicLineStringJTS(lineString: LineString) extends MosaicGeometryJTS(lineString) with MosaicLineString {
 
+    override def getGeometry: Geometry = lineString
+
     override def getShellPoints: Seq[Seq[MosaicPointJTS]] = Seq(MosaicLineStringJTS.getPoints(lineString))
 
     override def toInternal: InternalGeometry = {

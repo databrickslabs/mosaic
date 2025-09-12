@@ -2,6 +2,7 @@ package com.databricks.labs.mosaic.expressions.raster.base
 
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.{IndexSystem, IndexSystemFactory}
+import com.databricks.labs.mosaic.core.raster.api.GDAL
 import com.databricks.labs.mosaic.core.raster.io.RasterCleaner
 import com.databricks.labs.mosaic.core.types.RasterTileType
 import com.databricks.labs.mosaic.core.types.model.MosaicRasterTile
@@ -71,24 +72,24 @@ abstract class RasterTessellateGeneratorExpression[T <: Expression: ClassTag](
       * @return
       *   Sequence of generated new rasters to be written.
       */
-    def rasterGenerator(raster: MosaicRasterTile, resolution: Int): Seq[MosaicRasterTile]
+    def rasterGenerator(raster: MosaicRasterTile, resolution: Int): Iterator[MosaicRasterTile]
 
     override def eval(input: InternalRow): TraversableOnce[InternalRow] = {
+        GDAL.enable(expressionConfig)
         val rasterType = RasterTileType(tileExpr, expressionConfig.isRasterUseCheckpoint).rasterType
         val tile = MosaicRasterTile
             .deserialize(tileExpr.eval(input).asInstanceOf[InternalRow], indexSystem.getCellIdDataType, rasterType, expressionConfig.hConf)
         val inResolution: Int = indexSystem.getResolution(resolutionExpr.eval(input))
         val generatedChips = rasterGenerator(tile, inResolution)
-            .map(chip => chip.formatCellId(indexSystem))
-
-        val rows = generatedChips
-            .map(chip => InternalRow.fromSeq(Seq(chip.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf))))
 
         RasterCleaner.dispose(tile)
-        generatedChips.foreach(chip => RasterCleaner.dispose(chip))
-        generatedChips.foreach(chip => RasterCleaner.dispose(chip.getRaster))
 
-        rows.iterator
+        generatedChips.map { chip =>
+            val row = InternalRow.fromSeq(Seq(chip.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf)))
+            RasterCleaner.dispose(chip)
+            RasterCleaner.dispose(chip.getRaster)
+            row
+        }
     }
 
     override def makeCopy(newArgs: Array[AnyRef]): Expression =

@@ -1,47 +1,63 @@
 package com.databricks.labs.mosaic.core.raster.gdal
 
-object DirectReader {
+final class DirectReader(initialCapacity: Int = 0) {
 
-    def readWindow(band: MosaicRasterBandGDAL, window: (Int, Int, Int, Int)): Array[Array[Double]] = {
+    private var dataBuf = new Array[Double](initialCapacity)
+    private var maskBuf = new Array[Byte](initialCapacity)
+    private var outputBuf = Array.ofDim[Double](0, 0)
+
+    def readWindow(
+        band: MosaicRasterBandGDAL,
+        window: (Int, Int, Int, Int)
+    ): Array[Array[Double]] = {
         val noData = band.noDataValue
-        val (xStart, yStart, xEnd, yEnd) = window
-
-        val minX = Math.min(xStart, xEnd)
-        val maxX = Math.max(xStart, xEnd)
-        val minY = Math.min(yStart, yEnd)
-        val maxY = Math.max(yStart, yEnd)
-
-        val xs = Math.max(0, minX)
-        val xe = Math.min(maxX, band.xSize)
-        val ys = Math.max(0, minY)
-        val ye = Math.min(maxY, band.ySize)
-
-        val w = xe - xs
-        val h = ye - ys
+        val (x0, y0, x1, y1) = window
+        val xs = math.max(0, math.min(x0, x1))
+        val ys = math.max(0, math.min(y0, y1))
+        val w = math.abs(x1 - x0)
+        val h = math.abs(y1 - y0)
         if (w <= 0 || h <= 0) return null
 
-        val data = Array.ofDim[Double](w * h)
-        val maskData = Array.ofDim[Byte](w * h)
-        band.band.ReadRaster(xs, ys, w, h, data)
-        band.band.GetMaskBand().ReadRaster(xs, ys, w, h, maskData)
-
-        val masked = data.zip(maskData).map { case (d, m) => if (m == 0) noData else d }
-
-        val width = Math.abs(xEnd - xStart)
-        val height = Math.abs(yEnd - yStart)
-        val buffer = Array.fill(height, width)(noData)
-
-        val xOffset = xs - minX
-        val yOffset = ys - minY
-        for (i <- 0 until h) {
-            val srcPos = i * w
-            System.arraycopy(masked, srcPos, buffer(i + yOffset), xOffset, w)
+        val len = w * h
+        if (dataBuf.length < len) {
+            dataBuf = new Array[Double](len)
+            maskBuf = new Array[Byte](len)
         }
 
-        buffer.find(_.exists(_ != noData)) match {
-            case Some(_) => buffer
-            case _       => null
+        // read raw
+        band.band.ReadRaster(xs, ys, w, h, dataBuf)
+        band.band.GetMaskBand().ReadRaster(xs, ys, w, h, maskBuf)
+
+        // track if we ever see a non-noData pixel
+        var hasData = false
+        var i = 0
+        while (i < len) {
+            if (maskBuf(i) == 0) {
+                dataBuf(i) = noData
+            } else if (dataBuf(i) != noData) {
+                hasData = true
+            }
+            i += 1
         }
+
+        if (!hasData) {
+            // everything was masked or equal to noData
+            return null
+        }
+
+        // prepare 2D buffer
+        if (outputBuf.length != h || (h > 0 && outputBuf(0).length != w)) {
+            outputBuf = Array.fill(h, w)(noData)
+        }
+
+        // bulk-copy rows
+        var row = 0
+        while (row < h) {
+            System.arraycopy(dataBuf, row * w, outputBuf(row), 0, w)
+            row += 1
+        }
+
+        outputBuf
     }
 
 }

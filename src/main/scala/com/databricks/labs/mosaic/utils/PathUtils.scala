@@ -3,28 +3,26 @@ package com.databricks.labs.mosaic.utils
 import com.databricks.labs.mosaic.MOSAIC_RASTER_TMP_PREFIX_DEFAULT
 import com.databricks.labs.mosaic.functions.MosaicContext
 
-import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.{Files, Path, Paths}
-import java.time.Clock
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 object PathUtils {
 
     val NO_PATH_STRING = "no_path"
-    val FILE_TOKEN = "file:"
-    val VSI_ZIP_TOKEN = "/vsizip/"
-    val DBFS_FUSE_TOKEN = "/dbfs"
-    val DBFS_TOKEN = "dbfs:"
-    val VOLUMES_TOKEN = "/Volumes"
-    val WORKSPACE_TOKEN = "/Workspace"
+    private val FILE_TOKEN = "file:"
+    private val VSI_ZIP_TOKEN = "/vsizip/"
+    private val DBFS_FUSE_TOKEN = "/dbfs"
+    private val DBFS_TOKEN = "dbfs:"
+    private val VOLUMES_TOKEN = "/Volumes"
+    private val WORKSPACE_TOKEN = "/Workspace"
 
     /**
       * Cleans up variations of path.
-      * - handles subdataset path
-      * - handles "aux.xml" sidecar file
-      * - handles zips, including "/vsizip/"
-      * @param path
+      *   - handles subdataset path
+      *   - handles "aux.xml" sidecar file
+      *   - handles zips, including "/vsizip/"
+      * @param path the cleanup path
       */
     def cleanUpPath(path: String): Unit = {
         // 0.4.3 - new function
@@ -34,7 +32,13 @@ object PathUtils {
         val cleanPath = filePath.replace(VSI_ZIP_TOKEN, "")
         val zipPath = if (cleanPath.endsWith("zip")) cleanPath else s"$cleanPath.zip"
 
+        val fp = Paths.get(cleanPath)
+        val crc = fp.resolveSibling("." + fp.getFileName.toString + ".crc")
+        val crc2 = fp.resolveSibling(fp.getFileName.toString + ".crc")
+
         Try(Files.deleteIfExists(Paths.get(cleanPath)))
+        Try(Files.deleteIfExists(crc))
+        Try(Files.deleteIfExists(crc2))
         Try(Files.deleteIfExists(Paths.get(path)))
         Try(Files.deleteIfExists(Paths.get(filePath)))
         Try(Files.deleteIfExists(Paths.get(pamFilePath)))
@@ -42,38 +46,18 @@ object PathUtils {
             Try(Files.deleteIfExists(Paths.get(zipPath.replace(".zip", ""))))
         }
         Try(Files.deleteIfExists(Paths.get(zipPath)))
-        collectEmptyTmpDirs()
     }
 
-    private def collectEmptyTmpDirs(): Unit = this.synchronized {
-        // iterate over all the directories in the temp location and delete any that are empty
-        // and older than 10 seconds
-        // This needs to be thread safe so we don't try and probe a directory
-        // that has been deleted in another thread
-        val tmpDir = Paths.get(MosaicContext.tmpDir(null)).getParent
-        if (Files.exists(tmpDir)) {
-            tmpDir.toFile
-                .listFiles
-                .filter(_.isDirectory)
-                .filter({ f =>
-                    val attrs = Files.readAttributes(Paths.get(f.getAbsolutePath), classOf[BasicFileAttributes])
-                    val lastModifiedTime = attrs.lastModifiedTime().toInstant
-                    Clock.systemDefaultZone().instant().minusSeconds(10).isAfter(lastModifiedTime)
-                })
-                .filter(_.listFiles.isEmpty)
-                .foreach({ f => Try(f.delete()) })
-        }
-    }
 
     /**
       * Copy provided path to tmp.
-     *
-     * @param inPath
+      *
+      * @param inPath
       *   Path to copy from.
       * @return
       *   The copied path.
       */
-    def copyToTmp(inPath: String): String = {
+    private def copyToTmp(inPath: String): String = {
         val copyFromPath = replaceDBFSTokens(inPath)
         val inPathDir = Paths.get(copyFromPath).getParent.toString
 
@@ -106,8 +90,8 @@ object PathUtils {
 
     /**
       * Create a file under tmp dir.
-      * - Directories are created.
-      * - File itself is not create.
+      *   - Directories are created.
+      *   - File itself is not create.
       * @param extension
       *   The file extension to use.
       * @return
@@ -123,15 +107,14 @@ object PathUtils {
 
     /**
       * File path which had a subdataset.
-      * - split on ":" and return just the path,
-      *   not the subdataset.
-      * - remove any quotes at start and end.
+      *   - split on ":" and return just the path, not the subdataset.
+      *   - remove any quotes at start and end.
       * @param path
       *   Provided path.
       * @return
       *   The path without subdataset.
       */
-    def fromSubdatasetPath(path: String): String = {
+    private def fromSubdatasetPath(path: String): String = {
         val _ :: filePath :: _ :: Nil = path.split(":").toList
         var result = filePath
         if (filePath.startsWith("\"")) result = result.drop(1)
@@ -141,14 +124,14 @@ object PathUtils {
 
     /**
       * Generate regex string of path filename.
-      * - handles fuse paths.
-      * - handles "." in the filename "stem".
+      *   - handles fuse paths.
+      *   - handles "." in the filename "stem".
       * @param path
       *   Provided path.
       * @return
       *   Regex string.
       */
-    def getStemRegex(path: String): String = {
+    private def getStemRegex(path: String): String = {
         val cleanPath = replaceDBFSTokens(path)
         val fileName = Paths.get(cleanPath).getFileName.toString
         val stemName = fileName.substring(0, fileName.lastIndexOf("."))
@@ -159,8 +142,8 @@ object PathUtils {
 
     /**
       * Get subdataset path.
-      * - these paths end with ":subdataset".
-      * - adds "/vsizip/" if needed.
+      *   - these paths end with ":subdataset".
+      *   - adds "/vsizip/" if needed.
       * @param path
       *   Provided path.
       * @return
@@ -176,12 +159,10 @@ object PathUtils {
         s"$format:$vsiPrefix$filePath:$subdataset"
     }
 
-
-
     /**
       * Clean path.
-      * - handles fuse paths.
-      * - handles zip paths
+      *   - handles fuse paths.
+      *   - handles zip paths
       * @param path
       *   Provided path.
       * @return
@@ -198,7 +179,7 @@ object PathUtils {
 
     /**
       * Standardize zip paths.
-      *  - Add "/vsizip/" as needed.
+      *   - Add "/vsizip/" as needed.
       * @param path
       *   Provided path.
       * @return
@@ -207,7 +188,7 @@ object PathUtils {
     def getZipPath(path: String): String = {
         // It is really important that the resulting path is /vsizip// and not /vsizip/
         // /vsizip// is for absolute paths /viszip/ is relative to the current working directory
-        // /vsizip/ wont work on a cluster
+        // /vsizip/ won't work on a cluster
         // see: https://gdal.org/user/virtual_file_systems.html#vsizip-zip-archives
         val isZip = path.endsWith(".zip")
         val readPath = if (path.startsWith(VSI_ZIP_TOKEN)) path else if (isZip) s"$VSI_ZIP_TOKEN$path" else path
@@ -215,9 +196,9 @@ object PathUtils {
     }
 
     /**
-      * Test for whether path is in a fuse location,
-      * looks ahead somewhat beyond DBFS.
-      * - handles DBFS, Volumes, and Workspace paths.
+      * Test for whether path is in a fuse location, looks ahead somewhat beyond
+      * DBFS.
+      *   - handles DBFS, Volumes, and Workspace paths.
       * @param path
       *   Provided path.
       * @return
@@ -227,10 +208,10 @@ object PathUtils {
         // 0.4.3 - new function
         val p = getCleanPath(path)
         val isFuse = p match {
-            case _ if (
-                p.startsWith(s"$DBFS_FUSE_TOKEN/") ||
+            case _
+                if p.startsWith(s"$DBFS_FUSE_TOKEN/") ||
                     p.startsWith(s"$VOLUMES_TOKEN/") ||
-                    p.startsWith(s"$WORKSPACE_TOKEN/")) => true
+                    p.startsWith(s"$WORKSPACE_TOKEN/") => true
             case _ => false
         }
         isFuse
@@ -250,7 +231,7 @@ object PathUtils {
 
     /**
       * Is the path a subdataset?
-      * - Known by ":" after the filename.
+      *   - Known by ":" after the filename.
       * @param path
       *   Provided path.
       * @return
@@ -262,7 +243,7 @@ object PathUtils {
 
     /**
       * Parse the unzipped path from standard out.
-      *  - Called after a prompt is executed to unzip.
+      *   - Called after a prompt is executed to unzip.
       * @param lastExtracted
       *   Standard out line to parse.
       * @param extension
@@ -277,11 +258,11 @@ object PathUtils {
     }
 
     /**
-      * Replace various file path schemas that are not needed
-      * for internal / local handling.
-      * - handles "file:". "dbfs:"
-      * - appropriate for "/dbfs/", "/Volumes/", and "/Workspace/"
-      *   paths, which can be read locally.
+      * Replace various file path schemas that are not needed for internal /
+      * local handling.
+      *   - handles "file:". "dbfs:"
+      *   - appropriate for "/dbfs/", "/Volumes/", and "/Workspace/" paths,
+      *     which can be read locally.
       * @param path
       *   Provided path.
       * @return
@@ -306,7 +287,7 @@ object PathUtils {
       * @param pattern
       *   Regex pattern to match.
       */
-    def wildcardCopy(inDirPath: String, outDirPath: String, pattern: String): Unit = {
+    private def wildcardCopy(inDirPath: String, outDirPath: String, pattern: String): Unit = {
         import org.apache.commons.io.FileUtils
         val copyFromPath = replaceDBFSTokens(inDirPath)
         val copyToPath = replaceDBFSTokens(outDirPath)
@@ -323,8 +304,7 @@ object PathUtils {
             if (path != destination) {
                 if (Files.isDirectory(path)) {
                     FileUtils.copyDirectory(path.toFile, destination.toFile)
-                }
-                else {
+                } else {
                     FileUtils.copyFile(path.toFile, destination.toFile)
                 }
             }

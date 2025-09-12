@@ -88,14 +88,15 @@ case class RST_FromContent(
             Files.createDirectories(Paths.get(tmpPath).getParent)
             Files.write(Paths.get(tmpPath), rasterArr)
 
-            // split to tiles up to specifed threshold
-            var tiles = ReTileOnRead.localSubdivide(tmpPath, PathUtils.NO_PATH_STRING, targetSize)
-            val rows = tiles.map(_.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf))
-            tiles.foreach(RasterCleaner.dispose(_))
+            // split to tiles up to specified threshold
+            val tiles = ReTileOnRead.localSubdivide(tmpPath, PathUtils.NO_PATH_STRING, targetSize)
             Files.deleteIfExists(Paths.get(tmpPath))
             rasterArr = null
-            tiles = null
-            rows.map(row => InternalRow.fromSeq(Seq(row)))
+            tiles.map { tile =>
+                val serialized = tile.formatCellId(indexSystem).serialize(rasterType, expressionConfig.hConf)
+                RasterCleaner.dispose(tile)
+                InternalRow.fromSeq(Seq(serialized))
+            }
         }
     }
 

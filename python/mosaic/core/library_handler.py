@@ -33,13 +33,10 @@ class MosaicLibraryHandler:
     @property
     def auto_attach_enabled(self) -> bool:
         if self._auto_attached_enabled is None:
-            try:
-                result = (
-                    self.spark.conf.get("spark.databricks.labs.mosaic.jar.autoattach")
-                    == "true"
-                )
-            except Py4JJavaError as e:
-                result = True
+            result = (
+                self.spark.conf.get("spark.databricks.labs.mosaic.jar.autoattach", "false")
+                == "true"
+            )
             self._auto_attached_enabled = result
         return self._auto_attached_enabled
 

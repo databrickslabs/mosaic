@@ -182,12 +182,12 @@
             <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
-                <version>2.0.0</version>
+                <version>2.2.0</version>
                 <configuration>
                     <forkMode>once</forkMode>
                     <logForkedProcessCommand>true</logForkedProcessCommand>
                     <reportsDirectory>${project.build.directory}/test-reports</reportsDirectory>
-                    <argLine>-Xms512m -Xmx2g -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=70 -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=n</argLine>
+                    <argLine>-Xms512m -Xmx2g -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=70 -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -agentlib:jdwp=transport=dt_socket,address=5006,server=y,suspend=n</argLine>
                 </configuration>
                 <executions>
                     <execution>

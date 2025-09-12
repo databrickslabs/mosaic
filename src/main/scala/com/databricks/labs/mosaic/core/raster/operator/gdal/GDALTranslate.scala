@@ -47,7 +47,8 @@ object GDALTranslate {
           "driver" -> writeOptions.format,
           "last_command" -> effectiveCommand,
           "last_error" -> errorMsg,
-          "all_parents" -> raster.getParentPath
+          "all_parents" -> raster.getParentPath,
+          "size" -> size.toString
         )
         raster
             .copy(raster = result, createInfo = createInfo)

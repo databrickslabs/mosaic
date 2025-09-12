@@ -16,6 +16,8 @@ class MosaicGeometryCollectionJTS(geomCollection: GeometryCollection)
     extends MosaicGeometryJTS(geomCollection)
       with MosaicGeometryCollection {
 
+    override def getGeometry: Geometry = geomCollection
+
     override def toInternal: InternalGeometry = {
         val n = geomCollection.getNumGeometries
         val geoms = for (i <- 0 until n) yield MosaicGeometryJTS(geomCollection.getGeometryN(i))

@@ -11,6 +11,8 @@ import org.locationtech.jts.geom._
 
 class MosaicMultiPolygonJTS(multiPolygon: MultiPolygon) extends MosaicGeometryJTS(multiPolygon) with MosaicMultiPolygon {
 
+    override def getGeometry: Geometry = multiPolygon
+
     override def toInternal: InternalGeometry = {
         val n = multiPolygon.getNumGeometries
         val polygons = for (i <- 0 until n) yield MosaicPolygonJTS(multiPolygon.getGeometryN(i)).toInternal

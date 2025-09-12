@@ -28,6 +28,8 @@ package object mosaic {
     val MOSAIC_RASTER_TMP_PREFIX_DEFAULT = "/tmp/raster_tmp"
     val MOSAIC_RASTER_BLOCKSIZE = "spark.databricks.labs.mosaic.raster.blocksize"
     val MOSAIC_RASTER_BLOCKSIZE_DEFAULT = "128"
+    val MOSAIC_TILE_SIZE = "spark.databricks.labs.mosaic.tile.size"
+    val MOSAIC_TILE_SIZE_DEFAULT = "33554432" // 32MB in bytes
 
     val MOSAIC_RASTER_READ_STRATEGY = "raster.read.strategy"
     val MOSAIC_RASTER_READ_IN_MEMORY = "in_memory"

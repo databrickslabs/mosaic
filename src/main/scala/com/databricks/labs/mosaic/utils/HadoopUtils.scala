@@ -80,7 +80,8 @@ object HadoopUtils {
         baseSrcPath: Path,
         dstDirPath: Path
     ): Unit = {
-        val baseName = baseSrcPath.getName.takeWhile(_ != '.')
+        val extension = baseSrcPath.getName.split("\\.").lastOption.getOrElse("")
+        val baseName = baseSrcPath.getName.stripSuffix(s".$extension")
         val prefix = baseName + "."
 
         val filter = new PathFilter {
@@ -106,8 +107,9 @@ object HadoopUtils {
         if (!dstFS.exists(outDirPath)) dstFS.mkdirs(outDirPath)
 
         if (srcFS.getFileStatus(copyFromPath).isDirectory) {
-            AtomicDistributedCopy.copyIfNeeded(srcFS, dstFS, copyFromPath, outDirPath)
-            outDirPath.toString
+            val dst = new Path(outDirPath, copyFromPath.getName)
+            AtomicDistributedCopy.copyIfNeeded(srcFS, dstFS, copyFromPath, dst)
+            dst.toString
         } else {
             if (!dstFS.exists(outDirPath)) dstFS.mkdirs(outDirPath)
             copyRelativeFiles(srcFS, dstFS, copyFromPath, outDirPath)
