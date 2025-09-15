@@ -14,13 +14,13 @@ import scala.util.{Success, Try}
   * Implements BNG (British National Grid) java implementation. BNG grid system
   * covers the EPSG:27700 bounds. The grid system is represented as a square
   * grid, where x and y coordinates are provided as eastings and northings. The
-  * grid system supports representation of cell ids as integers and as
-  * strings. The grid system supports providing resolutions as integer numbers
-  * and as string cell size descriptors (eg. 500m for resolution where cell
-  * edge is 500 meters long). Negative resolution values represent resolutions
-  * for quad tree representations where each cell is split into orientation
-  * quadrants. Orientation quadrants represent south-east, north-east,
-  * south-west and north-west orientations.
+  * grid system supports representation of cell ids as integers and as strings.
+  * The grid system supports providing resolutions as integer numbers and as
+  * string cell size descriptors (eg. 500m for resolution where cell edge is 500
+  * meters long). Negative resolution values represent resolutions for quad tree
+  * representations where each cell is split into orientation quadrants.
+  * Orientation quadrants represent south-east, north-east, south-west and
+  * north-west orientations.
   *
   * @see
   *   [[https://en.wikipedia.org/wiki/Ordnance_Survey_National_Grid]]
@@ -264,12 +264,18 @@ object BNG extends Serializable {
         val x = getX(digits, edgeSize)
         val y = getY(digits, edgeSize)
 
-        val it = (0 until 2 * k).iterator.map(c => (x + (c - k) * edgeSize, y - k * edgeSize)) ++
-            (0 until 2 * k).iterator.map(c => (x + k * edgeSize, y + (c - k) * edgeSize)) ++
-            (0 until 2 * k).iterator.map(c => (x + (k - c) * edgeSize, y + k * edgeSize)) ++
-            (0 until 2 * k).iterator.map(c => (x - k * edgeSize, y + (k - c) * edgeSize))
+        val xmin = x - k * edgeSize
+        val xmax = x + k * edgeSize
+        val ymin = y - k * edgeSize
+        val ymax = y + k * edgeSize
 
-        it.map { case (x, y) => pointToCellID(x, y, resolution) }.filter(BNG.isValid)
+        val corners = Iterator((xmin, ymin), (xmin, ymax), (xmax, ymax), (xmax, ymin))
+        val left = (ymin + edgeSize until ymax by edgeSize).iterator.map(y => (xmin, y))
+        val up = (xmin + edgeSize until xmax by edgeSize).iterator.map(x => (x, ymax))
+        val right = (ymin + edgeSize until ymax by edgeSize).iterator.map(y => (xmax, y))
+        val down = (xmin + edgeSize until xmax by edgeSize).iterator.map(x => (x, ymin))
+
+        (corners ++ left ++ right ++ up ++ down).map { case (x, y) => pointToCellID(x, y, resolution) }
     }
 
     /**
@@ -356,8 +362,8 @@ object BNG extends Serializable {
 
     /**
       * BNG resolution can only be an Int value between 0 and 6. Traditional
-      * resolutions only support base 10 edge size of the grid. In addition to
-      * 0 to 6 resolution, there are mid way resolutions that split cells into
+      * resolutions only support base 10 edge size of the grid. In addition to 0
+      * to 6 resolution, there are mid way resolutions that split cells into
       * quadrants. Those are denoted as .5 resolutions by convention.
       *
       * @param res
@@ -556,6 +562,21 @@ object BNG extends Serializable {
         math.abs((x1 - x2) / edgeSize) + math.abs((y1 - y2) / edgeSize)
     }
 
+    def euclideanDistance(cellId: Long, cellId2: Long): Long = {
+        val digits1 = cellDigits(cellId)
+        val digits2 = cellDigits(cellId2)
+        val res1 = getResolution(digits1)
+        val res2 = getResolution(digits2)
+        val edgeSize = getEdgeSize(math.min(res1, res2))
+        val x1 = getX(digits1, edgeSize)
+        val x2 = getX(digits2, edgeSize)
+        val y1 = getY(digits1, edgeSize)
+        val y2 = getY(digits2, edgeSize)
+        // euclidian distance with edge size precision
+        // along diagonal the distance is 1, where manhattan distance would be 2
+        math.max(math.abs(x1 - x2), math.abs(y1 - y2)) / edgeSize
+    }
+
     def encode(eLetter: Int, nLetter: Int, eBin: Int, nBin: Int, quadrant: Int, nPositions: Int, resolution: Int): Long = {
         val idPlaceholder = math.pow(10, 5 + 2 * nPositions - 2) // 1(##)(##)(#...#)(#...#)(#)
         val eLetterShift = math.pow(10, 3 + 2 * nPositions - 2) // (##)(##)(#...#)(#...#)(#)
@@ -574,36 +595,36 @@ object BNG extends Serializable {
     def geometryKLoop(geometry: Geometry, resolution: Int, k: Int): Set[Long] = {
         // TODO: MOVE TO ITERATOR
         val n: Int = k - 1
-        // This would be much more efficient if we could use the
-        // pre-computed tessellation of the geometry for repeated calls.
-        val chips = getChips(geometry, resolution, keepCoreGeom = false)
-        val (coreCells, borderCells) = chips.partition(_._1)
-        val coreIDs = coreCells.map(_._2).toSet
+        // This has to be converted from iterator to a Seq, as we need to know what should be excluded
+        // anything that was core will never be a part of a k-loop
+        val chips = getChips(geometry, resolution, keepCoreGeom = false).toSeq
+        val (coreCells, borderCells) = chips.partition(_._2)
+        val coreIDs = coreCells.map(_._1).toSet
 
         // We use nRing as naming for kRing where k = n
-        val borderNRing = borderCells.flatMap(c => kRing(c._2, n))
+        val borderNRing = borderCells.flatMap(c => kRing(c._1, n))
         val nRing = coreIDs ++ borderNRing
 
-        val borderKLoop = borderCells.toSet.flatMap((c: (Boolean, Long, Geometry)) => this.kLoop(c._2, k))
+        val borderKLoop = borderCells.toSet.flatMap((c: (Long, Boolean, Geometry)) => this.kLoop(c._1, k))
 
         val kLoop = borderKLoop.diff(nRing)
-        kLoop
+        kLoop.filter(BNG.isValid)
     }
 
     def geometryKRing(geometry: Geometry, resolution: Int, k: Int): Set[Long] = {
         // TODO: MOVE TO ITERATOR
-        val chips = getChips(geometry, resolution, keepCoreGeom = false)
-        val (coreCells, borderCells) = chips.partition(_._1)
-        val coreIDs = coreCells.map(_._2).toSet
-        val borderKRing = borderCells.flatMap(c => kRing(c._2, k))
-        coreIDs ++ borderKRing
+        val chips = getChips(geometry, resolution, keepCoreGeom = false).toSeq
+        val (coreCells, borderCells) = chips.partition(_._2)
+        val coreIDs = coreCells.map(_._1).toSet
+        val borderKRing = borderCells.flatMap(c => kRing(c._1, k))
+        (coreIDs ++ borderKRing).filter(BNG.isValid)
     }
 
     def getChips(
         geometry: Geometry,
         resolution: Int,
         keepCoreGeom: Boolean
-    ): Iterator[(Boolean, Long, Geometry)] = {
+    ): Iterator[(Long, Boolean, Geometry)] = {
         GeometryTypeEnum(geometry.getGeometryType) match {
             case POINT           => pointChip(geometry, resolution, keepCoreGeom)
             case MULTIPOINT      => multiPointChips(geometry, resolution, keepCoreGeom)
@@ -617,23 +638,23 @@ object BNG extends Serializable {
         geometry: Geometry,
         resolution: Int,
         keepCoreGeom: Boolean
-    ): Iterator[(Boolean, Long, Geometry)] = {
+    ): Iterator[(Long, Boolean, Geometry)] = {
         val point = geometry.asInstanceOf[Point]
         val chipGeom = if (keepCoreGeom) point else null
         val cellId = pointToCellID(point.getX, point.getY, resolution)
-        Iterator.single((false, cellId, chipGeom))
+        Iterator.single((cellId, false, chipGeom))
     }
 
     def multiPointChips(
         geometry: Geometry,
         resolution: Int,
         keepCoreGeom: Boolean
-    ): Iterator[(Boolean, Long, Geometry)] = {
+    ): Iterator[(Long, Boolean, Geometry)] = {
         val n = geometry.getNumGeometries
         (0 until n).iterator.flatMap { i => pointChip(geometry.getGeometryN(i), resolution, keepCoreGeom) }
     }
 
-    def lineFill(geometry: Geometry, resolution: Int): Iterator[(Boolean, Long, Geometry)] = {
+    def lineFill(geometry: Geometry, resolution: Int): Iterator[(Long, Boolean, Geometry)] = {
         GeometryTypeEnum(geometry.getGeometryType) match {
             case LINESTRING      => lineDecompose(geometry.asInstanceOf[LineString], resolution)
             case MULTILINESTRING =>
@@ -651,7 +672,7 @@ object BNG extends Serializable {
     private def lineDecompose(
         line: LineString,
         resolution: Int
-    ): Iterator[(Boolean, Long, Geometry)] = {
+    ): Iterator[(Long, Boolean, Geometry)] = {
         val start = line.getStartPoint
         val startCellID = pointToCellID(start.getX, start.getY, resolution)
 
@@ -660,16 +681,16 @@ object BNG extends Serializable {
             line: LineString,
             queue: Iterator[Long],
             traversed: Set[Long],
-            chips: Iterator[(Boolean, Long, Geometry)]
-        ): Iterator[(Boolean, Long, Geometry)] = {
+            chips: Iterator[(Long, Boolean, Geometry)]
+        ): Iterator[(Long, Boolean, Geometry)] = {
             val newTraversed = traversed ++ queue
             val (newQueue, newChips) = queue.foldLeft(
               (Iterator.empty[Long], chips)
-            )((accumulator: (Iterator[Long], Iterator[(Boolean, Long, Geometry)]), current: Long) => {
+            )((accumulator: (Iterator[Long], Iterator[(Long, Boolean, Geometry)]), current: Long) => {
                 val cellGeom = cellIdToGeometry(current)
                 val lineSegment = line.intersection(cellGeom)
                 if (!lineSegment.isEmpty) {
-                    val chip = (false, current, lineSegment)
+                    val chip = (current, false, lineSegment)
                     val kRing = this.kRing(current, 1)
 
                     // Ignore already processed chips and those which are already in the
@@ -697,7 +718,7 @@ object BNG extends Serializable {
             }
         }
 
-        val result = traverseLine(line, Iterator.single(startCellID), Set.empty[Long], Iterator.empty[(Boolean, Long, Geometry)])
+        val result = traverseLine(line, Iterator.single(startCellID), Set.empty[Long], Iterator.empty[(Long, Boolean, Geometry)])
         result
     }
 
@@ -707,8 +728,9 @@ object BNG extends Serializable {
         geometry: Geometry,
         resolution: Int,
         keepCoreGeom: Boolean
-    ): Iterator[(Boolean, Long, Geometry)] = {
+    ): Iterator[(Long, Boolean, Geometry)] = {
 
+        val inGeomType = geometry.getGeometryType
         val radius = getBufferRadius(geometry, resolution)
         val carvedGeometry = geometry.buffer(-radius)
 
@@ -733,40 +755,35 @@ object BNG extends Serializable {
         val coreSet = coreIndices.toSet
         val borderIndices = polyfill(borderGeometry, resolution).filterNot(coreSet.contains)
 
-        val coreChips = coreIndices.map(cell => {
+        val coreChips = coreSet.iterator.map(cell => {
             val coreGeom = if (keepCoreGeom) cellIdToGeometry(cell) else null
-            (true, cell, coreGeom)
+            (cell, true, coreGeom)
         })
         val borderChips = borderIndices.map(cell => {
             val cellGeom = cellIdToGeometry(cell)
             val intersect = cellGeom.intersection(geometry)
-            val withGeom =
-                if (intersect.isEmpty) (false, cell, intersect)
-                else {
-                    val adjusted =
-                        if (GeometryTypeEnum(intersect.getGeometryType) == GEOMETRYCOLLECTION) {
-                            intersect.difference(cellGeom.getBoundary)
-                        } else {
-                            intersect
-                        }
-                    // Tolerance is set to 0.1 to account for floating point precision issues
-                    // BNG coordinates are integers, so we can use a relatively large tolerance
-                    // as coordinates will be in meters and tolerance is a fraction of a meter.
-                    val isCore = adjusted.equalsExact(cellGeom, 0.1)
-                    if (isCore) {
-                        (true, cell, cellGeom)
+            if (intersect.isEmpty) (cell, false, intersect)
+            else {
+                val adjusted =
+                    if (GeometryTypeEnum(intersect.getGeometryType) == GEOMETRYCOLLECTION) {
+                        intersect.difference(cellGeom.getBoundary)
                     } else {
-                        (false, cell, adjusted)
+                        intersect
                     }
+                // Tolerance is set to 0.1 to account for floating point precision issues
+                // BNG coordinates are integers, so we can use a relatively large tolerance
+                // as coordinates will be in meters and tolerance is a fraction of a meter.
+                val isCore = adjusted.equalsExact(cellGeom, 0.1)
+                if (isCore) {
+                    if (keepCoreGeom) (cell, true, cellGeom)
+                    else (cell, true, null)
+                } else {
+                    (cell, false, adjusted)
                 }
-            if (keepCoreGeom) {
-                withGeom
-            } else {
-                (withGeom._1, withGeom._2, null)
             }
-        })
+        }).filterNot(_._3.isEmpty)
 
-        coreChips ++ borderChips
+        (coreChips ++ borderChips).filter(t => t._3 == null || t._3.getGeometryType == inGeomType)
     }
 
 }

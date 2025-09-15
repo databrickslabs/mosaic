@@ -22,8 +22,8 @@ case class RST_RasterToWorldCoord(
     override def dataType: DataType =
         StructType(
           Seq(
-            StructField("x", StringType, nullable = true),
-            StructField("y", StringType, nullable = true)
+            StructField("x", DoubleType, nullable = true),
+            StructField("y", DoubleType, nullable = true)
           )
         )
     override def nullable: Boolean = true

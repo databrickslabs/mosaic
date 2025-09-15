@@ -106,7 +106,7 @@ object NodeFilePathUtil {
 
     private def deleteLocalFileWithSiblings(localPath: String): Int = {
         val path = Paths.get(localPath)
-        val fileName = path.getFileName.toString
+        val fileName = path.getFileName.toString.split("\\.").head
         val locks = Paths.get(s"${localPath}_locks")
         val siblings = path.getParent.toFile.listFiles().filter(f => {
             f.getName.startsWith(fileName) || f.getName.startsWith(s".$fileName")

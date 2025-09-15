@@ -53,13 +53,14 @@ object RasterDriver {
         else NodeFileManager.readRemote(path)
     }
 
-    def read(path: String, options: Map[String, String]): Dataset = {
+    def read(path: String, options: Map[String, String], shared: Boolean = false): Dataset = {
         val isZip = options.getOrElse("isZip", "false").toBoolean
         val isSubdataset = options.getOrElse("isSubdataset", "false").toBoolean
         val isLocal = this.isLocal(path)
         val readPath = this.copyToLocal(path, isLocal)
         val cleanPath = this.cleanPath(readPath, isZip, isSubdataset)
-        val dataset = org.gdal.gdal.gdal.Open(cleanPath, GA_ReadOnly)
+        val flags = if (shared) GA_ReadOnly | OF_SHARED else GA_ReadOnly
+        val dataset = org.gdal.gdal.gdal.Open(cleanPath, flags)
         if (dataset == null) {
             val error = org.gdal.gdal.gdal.GetLastErrorMsg
             throw new RuntimeException(s"Failed to open dataset at path: $cleanPath; Error: $error")

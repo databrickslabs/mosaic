@@ -40,6 +40,7 @@ object RST_GetSubdataset extends WithExpressionInfo {
         val subdataset = execute(ds, subsetName.toString)
         val res = RasterSerializationUtil.tileToRow((cell, subdataset, mtd), rdt, exprConf.hConf)
         RasterDriver.releaseDataset(ds)
+        RasterDriver.releaseDataset(subdataset)
         res
     }
 

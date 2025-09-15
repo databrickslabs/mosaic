@@ -6,11 +6,14 @@ import org.apache.spark.sql.connector.read.PartitionReader
 
 class WhitelistReader extends PartitionReader[InternalRow] {
 
-    override def next(): Boolean = false
+    private var hasNext = true
+
+    override def next(): Boolean = hasNext
 
     override def get(): InternalRow = {
+        hasNext = false
         val row = new GenericInternalRow(1)
-        row.setNullAt(0)
+        row.setBoolean(0, value = true)
         row
     }
 

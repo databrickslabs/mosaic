@@ -11,12 +11,13 @@ trait WithExpressionInfo {
 
     def name: String
 
-    def builder(expressionConfig: ExpressionConfig): FunctionBuilder = {
-        throw new IllegalAccessException("Builder not implemented")
-    }
-
     def builder(): FunctionBuilder = {
         throw new IllegalAccessException("Builder not implemented")
     }
+
+    //    // For future use with ExpressionConfig
+    //    def builder(expressionConfig: ExpressionConfig): FunctionBuilder = {
+    //        throw new IllegalAccessException("Builder not implemented")
+    //    }
 
 }

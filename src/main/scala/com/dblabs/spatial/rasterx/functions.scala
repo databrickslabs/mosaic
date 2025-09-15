@@ -8,17 +8,17 @@ import com.dblabs.spatial.rasterx.expressions.constructor._
 import com.dblabs.spatial.rasterx.expressions.generators._
 import com.dblabs.spatial.rasterx.expressions.grid._
 import com.dblabs.spatial.rasterx.gdal.CheckpointManager
-import com.dblabs.spatial.rasterx.util.CheckpointCleanerListener
-import org.apache.spark.sql.{Column, SparkSession}
+import com.dblabs.spatial.rasterx.util.CleanupListener
 import org.apache.spark.sql.adapters.{Column => ColumnAdapter}
 import org.apache.spark.sql.functions.lit
+import org.apache.spark.sql.{Column, SparkSession}
 
 object functions extends Serializable {
 
     def register(spark: SparkSession): Unit = {
         val expressionConfig = ExpressionConfig(spark)
         CheckpointManager.init(expressionConfig)
-        spark.sparkContext.addSparkListener(new CheckpointCleanerListener(spark))
+        spark.sparkContext.addSparkListener(new CleanupListener(spark))
 
         val registry = spark.sessionState.functionRegistry
         val rd = RegistryDelegate(registry)
@@ -155,21 +155,34 @@ object functions extends Serializable {
     def rst_tooverlappingtiles(tileExpr: Column, tileWidth: Column, tileHeight: Column, overlap: Column): Column =
         ColumnAdapter("rst_tooverlappingtiles", Seq(tileExpr, tileWidth, tileHeight, overlap))
 
+    // Grid
+    def rst_h3_rastertogridavg(tileExpr: Column, resolution: Column): Column =
+        ColumnAdapter("rst_h3_rastertogridavg", Seq(tileExpr, resolution))
+    def rst_h3_rastertogridcount(tileExpr: Column, resolution: Column): Column =
+        ColumnAdapter("rst_h3_rastertogridcount", Seq(tileExpr, resolution))
+    def rst_h3_rastertogridmax(tileExpr: Column, resolution: Column): Column =
+        ColumnAdapter("rst_h3_rastertogridmax", Seq(tileExpr, resolution))
+    def rst_h3_rastertogridmin(tileExpr: Column, resolution: Column): Column =
+        ColumnAdapter("rst_h3_rastertogridmin", Seq(tileExpr, resolution))
+    def rst_h3_rastertogridmedian(tileExpr: Column, resolution: Column): Column =
+        ColumnAdapter("rst_h3_rastertogridmedian", Seq(tileExpr, resolution))
+
     // Operations
     def rst_asformat(tileExpr: Column, newFormat: Column): Column = ColumnAdapter("rst_asformat", Seq(tileExpr, newFormat))
     def rst_clip(tileExpr: Column, clip: Column, cutlineAllTouched: Column): Column =
         ColumnAdapter("rst_clip", Seq(tileExpr, clip, cutlineAllTouched))
     def rst_combineavg(tiles: Column): Column = ColumnAdapter("rst_combineavg", Seq(tiles))
     def rst_convolve(tileExpr: Column, kernel: Column): Column = ColumnAdapter("rst_convolve", Seq(tileExpr, kernel))
-    def rst_derivedband(tileExpr: Column, expression: Column): Column = ColumnAdapter("rst_derivedband", Seq(tileExpr, expression))
+    def rst_derivedband(tileExpr: Column, pyfunc: String, funcName: String): Column =
+        ColumnAdapter("rst_derivedband", Seq(tileExpr, lit(pyfunc), lit(funcName)))
     def rst_dtmfromgeoms(geometries: Column, pixelSize: Column, extent: Column): Column =
         ColumnAdapter("rst_dtmfromgeoms", Seq(geometries, pixelSize, extent))
-    def rst_filter(tileExpr: Column, condition: Column, newValue: Column): Column =
-        ColumnAdapter("rst_filter", Seq(tileExpr, condition, newValue))
+    def rst_filter(tileExpr: Column, kernelSize: Column, operation: Column): Column =
+        ColumnAdapter("rst_filter", Seq(tileExpr, kernelSize, operation))
     def rst_initnodata(tileExpr: Column, noDataValue: Column): Column = ColumnAdapter("rst_initnodata", Seq(tileExpr, noDataValue))
     def rst_isempty(tileExpr: Column): Column = ColumnAdapter("rst_isempty", Seq(tileExpr))
     def rst_mapalgebra(tiles: Column, expression: Column): Column = ColumnAdapter("rst_mapalgebra", Seq(tiles, expression))
-    def rst_merge(tiles: Column, method: Column): Column = ColumnAdapter("rst_merge", Seq(tiles, method))
+    def rst_merge(tiles: Column): Column = ColumnAdapter("rst_merge", Seq(tiles))
     def rst_ndvi(tileExpr: Column, nirBand: Column, redBand: Column): Column = ColumnAdapter("rst_ndvi", Seq(tileExpr, nirBand, redBand))
     def rst_rastertoworldcoord(tileExpr: Column, pixelX: Column, pixelY: Column): Column =
         ColumnAdapter("rst_rastertoworldcoord", Seq(tileExpr, pixelX, pixelY))
@@ -177,9 +190,8 @@ object functions extends Serializable {
         ColumnAdapter("rst_rastertoworldcoordx", Seq(tileExpr, pixelX, pixelY))
     def rst_rastertoworldcoordy(tileExpr: Column, pixelX: Column, pixelY: Column): Column =
         ColumnAdapter("rst_rastertoworldcoordy", Seq(tileExpr, pixelX, pixelY))
-    def rst_transform(tileExpr: Column, targetSrid: Column, resampling: Column): Column =
-        ColumnAdapter("rst_transform", Seq(tileExpr, targetSrid, resampling))
-    def rst_tryopen(path: Column, driver: Column): Column = ColumnAdapter("rst_tryopen", Seq(path, driver))
+    def rst_transform(tileExpr: Column, targetSrid: Column): Column = ColumnAdapter("rst_transform", Seq(tileExpr, targetSrid))
+    def rst_tryopen(path: Column): Column = ColumnAdapter("rst_tryopen", Seq(path))
     def rst_updatetype(tileExpr: Column, newType: Column): Column = ColumnAdapter("rst_updatetype", Seq(tileExpr, newType))
     def rst_worldtorastercoord(tileExpr: Column, worldX: Column, worldY: Column): Column =
         ColumnAdapter("rst_worldtorastercoord", Seq(tileExpr, worldX, worldY))

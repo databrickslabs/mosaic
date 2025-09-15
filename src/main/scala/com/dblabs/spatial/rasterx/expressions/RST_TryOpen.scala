@@ -17,7 +17,7 @@ case class RST_TryOpen(
 ) extends InvokedExpression {
 
     private def rasterType = RST_ExpressionUtil.rasterType(tileExpr)
-    override def children: Seq[Expression] = Seq(tileExpr)
+    override def children: Seq[Expression] = Seq(tileExpr, ExpressionConfigExpr())
     override def nullable: Boolean = true
     override def prettyName: String = "rst_tryopen"
     override def replacement: Expression = rstInvoke(RST_TryOpen, rasterType)

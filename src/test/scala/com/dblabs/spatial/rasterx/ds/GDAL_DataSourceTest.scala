@@ -1,6 +1,5 @@
 package com.dblabs.spatial.rasterx.ds
 
-import com.dblabs.spatial.rasterx.RasterDebuger
 import org.apache.spark.sql.catalyst.plans.PlanTest
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.test.SilentSparkSession
@@ -59,11 +58,12 @@ class GDAL_DataSourceTest extends PlanTest with SilentSparkSession {
         val ds = gdal.Open(testFile.toString)
         ds.GetRasterBand(1).AsMDArray().GetStatistics().getValid_count should be >= 0L
 
-//        val dss = Files.list(outPath).filter(p => !p.toString.contains(".crc")).toList.asScala.map(p => gdal.Open(p.toString)).toList
+        val dss = Files.list(outPath).filter(p => !p.toString.contains(".crc")).toList.asScala.map(p => gdal.Open(p.toString)).toList
 //        dss.foreach { ds =>
 //            println("_".repeat(64))
-//            RasterDebuger.printGrayGridDense(ds, 128, 128)
+//            RasterDebuger.printColorGridDenseTruecolor(ds, 128, 128)
 //        }
+//  RasterDebuger.printColorGridDenseTruecolor(dss.head, 128, 128)
 
 //        while (true) {}
 

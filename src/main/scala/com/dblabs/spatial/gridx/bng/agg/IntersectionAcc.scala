@@ -18,7 +18,7 @@ final case class IntersectionAcc(
         JTS.toWKB(g1.intersection(g2))
     }
 
-    def update(isCore: Boolean, id: Long, wkb: Array[Byte]): IntersectionAcc = {
+    def update(id: Long, isCore: Boolean, wkb: Array[Byte]): IntersectionAcc = {
         if (!initialized) { initialized = true; cellID = id }
         else require(cellID == id, "can only intersect chips based on the same grid cell")
 
@@ -41,7 +41,7 @@ final case class IntersectionAcc(
         (boundaryWkb, other.boundaryWkb) match {
             case (null, null) => // all-core on both sides
             case (null, rb)   => boundaryWkb = rb // this had only cores
-            case (_, null)   => // other had only cores
+            case (_, null)    => // other had only cores
             case (lb, rb)     => boundaryWkb = intersectBytes(lb, rb)
         }
         this

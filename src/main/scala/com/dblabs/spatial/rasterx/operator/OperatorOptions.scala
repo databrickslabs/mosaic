@@ -49,7 +49,8 @@ object OperatorOptions {
         val predictor = if (anyFloat) "3" else "2"
 
         val w = ds.GetRasterXSize; val h = ds.GetRasterYSize
-        val blk = math.max(64, math.min(writeOptions.getOrElse("blocksize", "512").toInt, math.min(w, h)))
+        val rawBlk = math.max(64, math.min(writeOptions.getOrElse("blocksize", "512").toInt, math.min(w, h)))
+        val blk = (rawBlk / 16) * 16 // floor to nearest multiple of 16
 
         val coBase = format match {
             case "COG"   => Seq(s"$coFlag BLOCKSIZE=$blk")
@@ -71,11 +72,12 @@ object OperatorOptions {
         val cos = (coBase ++ coComp).mkString(" ")
 
         format match {
-            case "VRT"                   => command
-            case "PNM" if isCalc         => s"$command $ofFlag $format"
-            case "PNM"                   => s"$command $ofFlag $format -ot UInt16 -scale -32768 32767 0 65535"
-            case "Zarr" if missingGeoRef => s"$command $ofFlag $format -to SRC_METHOD=NO_GEOTRANSFORM $cos"
-            case f                       => s"$command $ofFlag $f $cos"
+            case _ if command.startsWith("gdalbuildvrt") => command // VRT does not require additional options
+            case "VRT"                                   => command
+            case "PNM" if isCalc                         => s"$command $ofFlag $format"
+            case "PNM"                                   => s"$command $ofFlag $format -ot UInt16 -scale -32768 32767 0 65535"
+            case "Zarr" if missingGeoRef                 => s"$command $ofFlag $format -to SRC_METHOD=NO_GEOTRANSFORM $cos"
+            case f                                       => s"$command $ofFlag $f $cos"
         }
     }
 

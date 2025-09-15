@@ -10,6 +10,7 @@ import org.apache.spark.sql.sources.DataSourceRegister
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 import org.apache.spark.util.SerializableConfiguration
+import org.gdal.ogr.ogr
 
 import scala.jdk.CollectionConverters.MapHasAsScala
 
@@ -22,16 +23,18 @@ class OGR_DataSource extends TableProvider with DataSourceRegister {
         val sparkSession = SparkSession.builder.getOrCreate
         val config = ExpressionConfig(sparkSession)
         GDALManager.init(config)
+        ogr.RegisterAll()
 
         val hConf = new SerializableConfiguration(sparkSession.sessionState.newHadoopConf)
         val headPath = HadoopUtils.getFirstFile(options.get("path"), hConf)
 
+        NodeFileManager.init(hConf)
         val localPath = NodeFileManager.readRemote(headPath)
 
         val schema = OGR_SchemaInference
             .inferSchemaImpl(
               driverName,
-              headPath,
+              localPath,
               options.asCaseSensitiveMap().asScala.toMap
             )
             .get

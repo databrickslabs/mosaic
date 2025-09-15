@@ -30,14 +30,21 @@ object GDALCalc {
       * @return
       *   Returns the result as a [[Dataset]].
       */
-    def executeCalc(gdalCalcCommand: String, resultPath: String, options: Map[String, String], ds: Dataset): (Dataset, Map[String, String]) = {
+    def executeCalc(
+        gdalCalcCommand: String,
+        resultPath: String,
+        options: Map[String, String],
+        ds: Dataset
+    ): (Dataset, Map[String, String]) = {
         require(gdalCalcCommand.startsWith("gdal_calc"), "Not a valid GDAL Calc command.")
         val effectiveCommand = OperatorOptions.appendOptions(gdalCalcCommand, options, ds)
         val toRun = effectiveCommand.replace("gdal_calc", gdal_calc)
         val commandRes = SysUtils.runCommand(s"python3 $toRun")
         val errorMsg = gdal.GetLastErrorMsg
         val result = gdal.Open(resultPath, GA_ReadOnly)
-        val size = Files.size(Paths.get(resultPath))
+        val size =
+            if (resultPath.startsWith("/vsimem/")) gdal.GetMemFileBuffer(resultPath).length
+            else Files.size(Paths.get(resultPath))
         // noinspection DuplicatedCode
         // TODO: make errors better, this is quite aggressive
         val newOptions = Map(

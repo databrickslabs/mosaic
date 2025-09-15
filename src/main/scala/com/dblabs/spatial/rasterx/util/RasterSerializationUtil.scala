@@ -30,13 +30,13 @@ object RasterSerializationUtil {
         }
     }
 
-    def rowToDS(row: InternalRow, rasterDT: DataType): Dataset = {
+    def rowToDS(row: InternalRow, rasterDT: DataType, shared: Boolean = false): Dataset = {
         val metadataRow = row.getMap(2)
         val metadata = SerializationUtil.createMap[String, String](metadataRow)
         rasterDT match {
             case StringType =>
                 val path = row.getString(1)
-                RasterDriver.read(path, metadata)
+                RasterDriver.read(path, metadata, shared)
             case BinaryType =>
                 val buffer = row.getBinary(1)
                 RasterDriver.readFromBytes(buffer, metadata)

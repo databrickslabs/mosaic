@@ -8,7 +8,7 @@ import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.util.ArrayData
-import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
+import org.apache.spark.sql.types.{ArrayType, BinaryType, DataType, StringType, StructType}
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.gdal.Dataset
 
@@ -17,9 +17,9 @@ case class RST_Merge(
     tileExpr: Expression
 ) extends InvokedExpression {
 
-    private def rasterType = RST_ExpressionUtil.rasterType(tileExpr)
+    private def rasterType = tileExpr.dataType.asInstanceOf[ArrayType].elementType.asInstanceOf[StructType].fields(1).dataType
     override def children: Seq[Expression] = Seq(tileExpr, ExpressionConfigExpr())
-    override def dataType: DataType = RST_ExpressionUtil.tileDataType(tileExpr)
+    override def dataType: DataType = RST_ExpressionUtil.tileDataType(rasterType)
     override def nullable: Boolean = true
     override def prettyName: String = "rst_merge"
     override def replacement: Expression = rstInvoke(RST_Merge, rasterType)

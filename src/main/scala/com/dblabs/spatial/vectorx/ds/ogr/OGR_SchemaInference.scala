@@ -100,8 +100,9 @@ object OGR_SchemaInference extends Serializable {
       * @return
       *   the coerced type.
       */
-    def coerceTypeList(coerceables: Seq[DataType]): DataType = {
+    private[ds] def coerceTypeList(coerceables: Seq[DataType]): DataType = {
         if (coerceables.isEmpty) StringType
+        else if (coerceables.contains(StringType)) StringType
         else if (coerceables.contains(LongType)) LongType
         else if (coerceables.contains(DoubleType)) DoubleType
         else if (coerceables.contains(FloatType)) FloatType
@@ -110,8 +111,8 @@ object OGR_SchemaInference extends Serializable {
         else if (coerceables.contains(BinaryType)) BinaryType
         else if (coerceables.contains(ByteType)) ByteType
         else if (coerceables.contains(BooleanType)) BooleanType
-        else if (coerceables.contains(DateType)) DateType
         else if (coerceables.contains(TimestampType)) TimestampType
+        else if (coerceables.contains(DateType)) DateType
         else StringType
     }
 
@@ -167,6 +168,7 @@ object OGR_SchemaInference extends Serializable {
       * @return
       *   the java.sql.Date.
       */
+    // noinspection ScalaDeprecation
     private def getJavaSQLTimestamp(feature: Feature, id: Int): Timestamp = {
         var year: Array[Int] = Array.fill[Int](1)(0)
         var month: Array[Int] = Array.fill[Int](1)(0)
@@ -176,9 +178,27 @@ object OGR_SchemaInference extends Serializable {
         var second: Array[Float] = Array.fill[Float](1)(0)
         var tz: Array[Int] = Array.fill[Int](1)(0)
         feature.GetFieldAsDateTime(id, year, month, day, hour, minute, second, tz)
-        // noinspection ScalaDeprecation
-        val datetime = new java.sql.Timestamp(year(0), month(0), day(0), hour(0), minute(0), second(0).toInt, tz(0))
-        datetime
+
+        val y = year(0)
+        val m = month(0)
+        val d = day(0)
+        val H = hour(0)
+        val M = minute(0)
+        val s = second(0)
+
+        val sInt = math.floor(s).toInt
+        val nanos = ((s - sInt) * 1e9).round.toInt.max(0)
+
+        val ldt = java.time.LocalDateTime.of(y, m, d, H, M, sInt, nanos)
+
+        val inst = tz(0) match {
+            case 100   => ldt.toInstant(java.time.ZoneOffset.UTC) // UTC
+            case 0 | 1 => ldt.atZone(java.time.ZoneId.systemDefault()).toInstant // unknown/local
+            case off   => ldt.atOffset(java.time.ZoneOffset.ofTotalSeconds(off * 60)).toInstant // minutes offset
+        }
+
+        val ts: java.sql.Timestamp = java.sql.Timestamp.from(inst)
+        ts
     }
 
     /**
@@ -190,10 +210,10 @@ object OGR_SchemaInference extends Serializable {
       *   field index.
       * @return
       */
-    def getDate(feature: Feature, id: Int): Int = {
+    private def getDate(feature: Feature, id: Int): Int = {
         val timestamp = getJavaSQLTimestamp(feature, id)
-        // noinspection ScalaDeprecation
-        val date = new java.sql.Date(timestamp.getYear, timestamp.getMonth, timestamp.getDay)
+        val localDate = timestamp.toLocalDateTime.toLocalDate       // correct Y-M-D
+        val date = java.sql.Date.valueOf(localDate)                 // build sql.Date properly
         DateTimeUtils.fromJavaDate(date)
     }
 
@@ -234,7 +254,8 @@ object OGR_SchemaInference extends Serializable {
                 val geomName = if (name.isEmpty) f"geom_$j" else name
                 Seq(
                   StructField(geomName, geomDataType),
-                  StructField(geomName + "_srid", StringType)
+                  StructField(geomName + "_srid", StringType),
+                  StructField(geomName + "_srid_proj", StringType)
                 )
             })
         StructType(fields)
@@ -260,12 +281,14 @@ object OGR_SchemaInference extends Serializable {
                     // f.FlattenTo2D()
                     Seq(
                       if (asWKB) f.ExportToWkb else f.ExportToWkt,
-                      Try(f.GetSpatialReference.GetAuthorityCode(null)).getOrElse("0")
+                      Try(f.GetSpatialReference.GetAuthorityCode(null)).getOrElse("0"),
+                      Try(f.GetSpatialReference.ExportToProj4).getOrElse("")
                     )
                 } else {
                     Seq(
                       if (asWKB) OGREmptyGeometry.ExportToWkb else OGREmptyGeometry.ExportToWkt,
-                      "0"
+                      "0",
+                      ""
                     )
                 }
 
@@ -285,7 +308,7 @@ object OGR_SchemaInference extends Serializable {
       *   the data source
       */
     def getDataSource(driverName: String, path: String): org.gdal.ogr.DataSource = {
-        val cleanPath = HadoopUtils.cleanPath(path)
+        val cleanPath = HadoopUtils.cleanPath(path).replace("file:", "")
         // 0 is for no update driver
         if (driverName.nonEmpty) {
             ogr.GetDriverByName(driverName).Open(cleanPath, 0)
@@ -315,7 +338,7 @@ object OGR_SchemaInference extends Serializable {
         val layerN = options.getOrElse("layerNumber", "0").toInt
         val layerName = options.getOrElse("layerName", "")
         val inferenceLimit = options.getOrElse("inferenceLimit", "100").toInt
-        val asWKB = options.getOrElse("asWKB", "false").toBoolean
+        val asWKB = options.getOrElse("asWKB", "true").toBoolean
 
         val dataset = getDataSource(driverName, path)
         val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName

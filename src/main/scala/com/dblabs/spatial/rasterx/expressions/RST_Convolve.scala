@@ -56,7 +56,12 @@ object RST_Convolve extends WithExpressionInfo {
         val exprConf = ExpressionConfig.fromB64(conf.toString)
         RST_ExpressionUtil.init(exprConf)
         val tile = RasterSerializationUtil.rowToTile(row, rdt)
-        val kernel = SerializationUtil.create2DArray[Double](kernelAD, kdt)
+        val kernel = kdt match {
+            case DoubleType  => SerializationUtil.create2DArray[Double](kernelAD, kdt)
+            case IntegerType => SerializationUtil.create2DArray[Int](kernelAD, kdt).map(_.map(_.toDouble))
+            case FloatType   => SerializationUtil.create2DArray[Float](kernelAD, kdt).map(_.map(_.toDouble))
+            case LongType    => SerializationUtil.create2DArray[Long](kernelAD, kdt).map(_.map(_.toDouble))
+        }
         val (raster, metadata) = Convolve.convolve(tile._2, tile._3, kernel)
         RasterDriver.releaseDataset(tile._2)
         RasterSerializationUtil.tileToRow((tile._1, raster, metadata), rdt, exprConf.hConf)

@@ -42,7 +42,7 @@ case class BNG_GeometryKRingExplode(
 
             val kRing = BNG.geometryKRing(geometryVal, resolutionVal, kVal)
 
-            kRing.map(row => InternalRow.fromSeq(Seq(BNG.format(row))))
+            kRing.map(row => InternalRow.fromSeq(Seq(UTF8String.fromString(BNG.format(row)))))
         }
     }
 

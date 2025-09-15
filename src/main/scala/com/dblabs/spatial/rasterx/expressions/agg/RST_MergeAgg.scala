@@ -102,6 +102,6 @@ object RST_MergeAgg extends WithExpressionInfo {
 
     override def name: String = "rst_merge_agg"
 
-    override def builder(): FunctionBuilder = (c: Seq[Expression]) => RST_DerivedBandAgg(c(0), c(1), c(2))
+    override def builder(): FunctionBuilder = (c: Seq[Expression]) => RST_MergeAgg(c(0))
 
 }

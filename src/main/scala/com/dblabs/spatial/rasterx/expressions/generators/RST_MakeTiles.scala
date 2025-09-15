@@ -80,7 +80,7 @@ case class RST_MakeTiles(
                     val tileRow = RasterSerializationUtil
                         .tileToRow((cell, ds, mtd), rasterType, exprConf.hConf)
                     RasterDriver.releaseDataset(ds)
-                    tileRow
+                    InternalRow.fromSeq(Seq(tileRow)) // Row wrapping in generator
                 }
         }
     }

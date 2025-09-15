@@ -14,6 +14,8 @@
         <maven.compiler.target>17</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <spec2.version>4.2.0</spec2.version>
+        <jdwp.agent>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005</jdwp.agent>
+        <agentLib />
     </properties>
 
     <dependencies>
@@ -175,8 +177,16 @@
                     <!-- Tests will be run with scalatest-maven-plugin instead -->
                     <skipTests>true</skipTests>
                     <forkCount>1C</forkCount>
-                    <reuseForks>false</reuseForks>
-                    <argLine>@{argLine} -Djava.library.path=/usr/local/lib;/usr/java/packages/lib;/usr/lib64;/lib64;/lib;/usr/lib</argLine>
+                    <reuseForks>true</reuseForks>
+                    <argLine>
+                        @{argLine}
+                        -Djava.library.path=/usr/local/lib;/usr/java/packages/lib;/usr/lib64;/lib64;/lib;/usr/lib;/usr/local/hadoop/lib/native
+                        -Xms2g -Xmx4g
+                        -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+                        -XX:ReservedCodeCacheSize=512m
+                        -XX:InitialCodeCacheSize=256m
+                        -XX:MaxMetaspaceSize=1024m
+                    </argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -187,7 +197,15 @@
                     <forkMode>once</forkMode>
                     <logForkedProcessCommand>true</logForkedProcessCommand>
                     <reportsDirectory>${project.build.directory}/test-reports</reportsDirectory>
-                    <argLine>-Xms512m -Xmx2g -XX:+UseG1GC -XX:+UseStringDeduplication -XX:InitiatingHeapOccupancyPercent=70 -XX:MaxGCPauseMillis=200 -XX:+HeapDumpOnOutOfMemoryError -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005</argLine>
+                    <argLine>
+                        -Djava.library.path=/usr/local/lib:/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib:/usr/local/hadoop/lib/native
+                        -Xms2g -Xmx4g
+                        -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+                        -XX:ReservedCodeCacheSize=512m
+                        -XX:InitialCodeCacheSize=256m
+                        -XX:MaxMetaspaceSize=1024m
+                        ${agentLib}
+                    </argLine>
                 </configuration>
                 <executions>
                     <execution>
@@ -289,18 +307,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-        <profile>
-            <!-- local testing `mvn test -PskipScoverage -DskipTests=false -Dsuite=...` -->
-            <id>skipScoverage</id>
-            <properties>
-                <scala.version>2.12.10</scala.version>
-                <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.5.0</spark.version>
-                <mosaic.version>0.4.3</mosaic.version>
-                <maven.compiler.source>1.8</maven.compiler.source>
-                <maven.compiler.target>1.8</maven.compiler.target>
-            </properties>
         </profile>
     </profiles>
     <distributionManagement>

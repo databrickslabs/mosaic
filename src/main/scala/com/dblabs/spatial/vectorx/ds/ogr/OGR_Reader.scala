@@ -13,7 +13,7 @@ class OGR_Reader(partition: OGR_Partition) extends PartitionReader[InternalRow] 
 
     private val tmpPath = NodeFileManager.readRemote(partition.filePath)
     private val dataset = OGR_SchemaInference.getDataSource(partition.driver, tmpPath)
-    private val layer = dataset.GetLayer(partition.layer)
+    private val layer = if (partition.layer.isEmpty) dataset.GetLayer(0) else dataset.GetLayer(partition.layer)
     layer.ResetReading()
     layer.SetNextByIndex(partition.start)
     private var counter = partition.start

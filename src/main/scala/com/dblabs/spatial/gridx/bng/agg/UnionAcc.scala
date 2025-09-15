@@ -22,7 +22,7 @@ final case class UnionAcc(
         JTS.toWKB(g1.union(g2))
     }
 
-    def update(isCore: Boolean, id: Long, wkb: Array[Byte]): UnionAcc = {
+    def update(id: Long, isCore: Boolean, wkb: Array[Byte]): UnionAcc = {
         if (!initialized) { initialized = true; cellID = id }
         else require(cellID == id, "can only union chips from the same grid cell")
         if (hasCore) return this

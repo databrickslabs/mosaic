@@ -2,6 +2,7 @@ package com.dblabs.spatial.rasterx.operations
 
 import com.dblabs.spatial.rasterx.gdal.GDAL
 import com.dblabs.spatial.rasterx.operator.GDALCalc
+import com.dblabs.spatial.util.NodeFilePathUtil
 import org.gdal.gdal.Dataset
 
 /** NDVI is a helper object for computing NDVI. */
@@ -23,7 +24,7 @@ object NDVI {
         val uuid = java.util.UUID.randomUUID().toString.replace("-", "_")
         val driver = ds.GetDriver
         val extension = GDAL.getExtension(driver.getShortName)
-        val ndviPath = s"/vsimem/ndvi_$uuid.$extension"
+        val ndviPath = s"${NodeFilePathUtil.rootPath}/ndvi_$uuid.$extension" // s"/vsimem/ndvi_$uuid.$extension"
         val inPath = ds.GetDescription()
         // noinspection ScalaStyle
         val gdalCalcCommand =

@@ -17,6 +17,15 @@ object BandAccessors {
         }
     }
 
+    def getMinMax(band: Band): (Double, Double) = {
+        val minmax = Array.ofDim[Double](2)
+        if (Option(band).isEmpty) (Double.NaN, Double.NaN)
+        else {
+            band.ComputeRasterMinMax(minmax, 0)
+            (minmax(0), minmax(1))
+        }
+    }
+
     def getNoDataValue(band: Band): Double = {
         if (Option(band).isEmpty) Double.NaN
         else {
@@ -46,5 +55,35 @@ object BandAccessors {
             case gdalconstConstants.GDT_CFloat64 => "ComplexFloat64"
             case _                               => "Unknown"
         }
+
+    def isEmpty(band: Band): Boolean = {
+        val flags = band.GetMaskFlags()
+        if ((flags & gdalconstConstants.GMF_ALL_VALID) != 0) return false
+        val mask = band.GetMaskBand()
+        if (Option(mask).isEmpty) return true
+
+        val w = band.GetXSize()
+        val h = band.GetYSize()
+        val bW = mask.GetBlockXSize()
+        val bH = mask.GetBlockYSize()
+        val buffer = java.nio.ByteBuffer.allocateDirect(bW * bH)
+
+        var y = 0
+        while (y < h) {
+            val rh = math.min(bH, h - y)
+            var x = 0
+            while (x < w) {
+                val rw = math.min(bW, w - x)
+                buffer.clear()
+                buffer.limit(rw * rh)
+                mask.ReadRaster_Direct(x, y, rw, rh, buffer)
+                var i = 0; val lim = rw * rh
+                while (i < lim) { if ((buffer.get(i) & 0xff) != 0) return false; i += 1 }
+                x += bW
+            }
+            y += bH
+        }
+        true
+    }
 
 }

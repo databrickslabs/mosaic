@@ -18,13 +18,14 @@ case class RegistryDelegate(registry: FunctionRegistry, prefix: Option[String] =
         )
     }
 
-    def register(companion: WithExpressionInfo, ec: ExpressionConfig): Unit = {
-        val name = getName(companion)
-        registry.registerFunction(
-          FunctionIdentifier(name),
-          companion.builder(ec),
-          source = "built-in"
-        )
-    }
+    // For future use with ExpressionConfig
+    //    def register(companion: WithExpressionInfo, ec: ExpressionConfig): Unit = {
+    //        val name = getName(companion)
+    //        registry.registerFunction(
+    //          FunctionIdentifier(name),
+    //          companion.builder(ec),
+    //          source = "built-in"
+    //        )
+    //    }
 
 }

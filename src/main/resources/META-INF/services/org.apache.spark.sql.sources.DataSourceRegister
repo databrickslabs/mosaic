@@ -1,1 +1,3 @@
 com.dblabs.spatial.rasterx.ds.gdal.GDAL_DataSource
+com.dblabs.spatial.vectorx.ds.ogr.OGR_DataSource
+com.dblabs.spatial.vectorx.ds.shp.ShapeFile_DataSource

@@ -19,7 +19,7 @@ case class RST_Transform(
 ) extends InvokedExpression {
 
     private def rasterType = RST_ExpressionUtil.rasterType(tileExpr)
-    override def children: Seq[Expression] = Seq(tileExpr, srid)
+    override def children: Seq[Expression] = Seq(tileExpr, srid, ExpressionConfigExpr())
     override def dataType: DataType = RST_ExpressionUtil.tileDataType(tileExpr)
     override def nullable: Boolean = true
     override def prettyName: String = "rst_transform"

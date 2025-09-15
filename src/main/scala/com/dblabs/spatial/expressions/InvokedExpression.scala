@@ -26,11 +26,7 @@ trait InvokedExpression extends RuntimeReplaceable with ImplicitCastInputTypes {
           propagateNull = true,
           returnNullable = true,
           isDeterministic = true
-        ) {
-            override def toString(): String = {
-                "testing something"
-            }
-        }
+        )
     }
 
     def rstInvoke(companion: Object, rdt: DataType): PrettyInvoke = {

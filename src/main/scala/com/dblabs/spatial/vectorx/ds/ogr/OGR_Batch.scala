@@ -2,6 +2,7 @@ package com.dblabs.spatial.vectorx.ds.ogr
 
 import com.dblabs.spatial.expressions.ExpressionConfig
 import com.dblabs.spatial.util.{HadoopUtils, NodeFileManager}
+import org.apache.logging.log4j.core.appender.rolling.FileExtension
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.connector.read.{Batch, InputPartition, PartitionReaderFactory, Scan}
 import org.apache.spark.sql.functions.{col, explode, udf}
@@ -33,19 +34,26 @@ class OGR_Batch(schema: StructType, options: Map[String, String]) extends Scan w
         val filesDf = files.toDF("path")
 
         val offsetsUDF = udf { (path: String) =>
-            val localPath = NodeFileManager.readRemote(path)
-            val dataset = OGR_SchemaInference.getDataSource(driverName, localPath)
-            val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
-            val layer = dataset.GetLayerByName(resolvedLayerName)
-            layer.ResetReading()
-            val nRecords = layer.GetFeatureCount().toInt
-            HadoopUtils.deleteIfExists(localPath, exprConfig.hConf)
-            (0 to nRecords by chunkSize).map(s => (path, s, Math.min(s + chunkSize, nRecords))).toArray
+            try {
+                // sidecar files will be ignored here
+                val localPath = NodeFileManager.readRemote(path)
+                val dataset = OGR_SchemaInference.getDataSource(driverName, localPath)
+                val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
+                val layer = dataset.GetLayerByName(resolvedLayerName)
+                layer.ResetReading()
+                val nRecords = layer.GetFeatureCount().toInt
+                NodeFileManager.releaseRemote(path)
+                (0 to nRecords by chunkSize).map(s => (path, s, Math.min(s + chunkSize, nRecords))).toArray
+            } catch {
+                case e: Exception => Array.empty[(String, Int, Int)]
+            }
+
         }
 
         val offsets = filesDf
             .select(offsetsUDF(filesDf("path")).as("offsets"))
             .select(explode(col("offsets")).as("offset"))
+            .select("offset.*")
             .as[(String, Int, Int)]
             .collect()
 

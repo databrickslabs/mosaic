@@ -21,6 +21,7 @@ object functions extends Serializable {
         rd.register(BNG_Centroid)
         rd.register(BNG_Distance)
         rd.register(BNG_EastNorthAsBNG)
+        rd.register(BNG_EuclideanDistance)
         rd.register(BNG_GeometryKLoop)
         rd.register(BNG_GeometryKRing)
         rd.register(BNG_KLoop)
@@ -49,18 +50,19 @@ object functions extends Serializable {
     def bng_cell_union(c1: Column, c2: Column): Column = ColumnAdapter("bng_cellunion", Seq(c1, c2))
     def bng_centroid(cellId: Column): Column = ColumnAdapter("bng_centroid", Seq(cellId))
     def bng_distance(c1: Column, c2: Column): Column = ColumnAdapter("bng_distance", Seq(c1, c2))
-    def bng_eastnorthasbng(east: Column, north: Column): Column = ColumnAdapter("bng_eastnorthasbng", Seq(east, north))
+    def bng_eastnorthasbng(east: Column, north: Column, resolution: Column): Column = ColumnAdapter("bng_eastnorthasbng", Seq(east, north, resolution))
+    def bng_euclideandistance(c1: Column, c2: Column): Column = ColumnAdapter("bng_euclideandistance", Seq(c1, c2))
     def bng_geometry_kloop(geom: Column, res: Column, k: Column): Column = ColumnAdapter("bng_geometrykloop", Seq(geom, res, k))
     def bng_geometry_kring(geom: Column, res: Column, k: Column): Column = ColumnAdapter("bng_geometrykring", Seq(geom, res, k))
     def bng_kloop(cellId: Column, k: Column): Column = ColumnAdapter("bng_kloop", Seq(cellId, k))
     def bng_kring(cellId: Column, k: Column): Column = ColumnAdapter("bng_kring", Seq(cellId, k))
-    def bng_pointasbng(point: Column): Column = ColumnAdapter("bng_pointasbng", Seq(point))
+    def bng_pointasbng(point: Column, resolution: Column): Column = ColumnAdapter("bng_pointasbng", Seq(point, resolution))
     def bng_polyfill(geom: Column, res: Column): Column = ColumnAdapter("bng_polyfill", Seq(geom, res))
     def bng_tessellate(geom: Column, res: Column): Column = ColumnAdapter("bng_tessellate", Seq(geom, res, lit(true)))
 
     // Aggregators
-    def bng_cell_intersection_agg(c1: Column, c2: Column): Column = ColumnAdapter("bng_cellintersectionagg", Seq(c1, c2))
-    def bng_cell_union_agg(c1: Column, c2: Column): Column = ColumnAdapter("bng_cellunion", Seq(c1, c2))
+    def bng_cell_intersection_agg(c1: Column): Column = ColumnAdapter("bng_cell_intersection_agg", Seq(c1))
+    def bng_cell_union_agg(c1: Column): Column = ColumnAdapter("bng_cell_union_agg", Seq(c1))
 
     // Generators
     def bng_geometry_kloopexplode(geom: Column, res: Column, k: Column): Column =

@@ -1,9 +1,11 @@
 package com.dblabs.spatial.rasterx.expressions
 
 import com.dblabs.spatial.expressions._
-import com.dblabs.spatial.rasterx.gdal.RasterDriver
+import com.dblabs.spatial.rasterx.gdal.{GDAL, RasterDriver}
 import com.dblabs.spatial.rasterx.operations.NDVI
+import com.dblabs.spatial.rasterx.operator.GDALTranslate
 import com.dblabs.spatial.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.dblabs.spatial.util.NodeFilePathUtil
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -31,18 +33,26 @@ case class RST_NDVI(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_NDVI extends WithExpressionInfo {
 
-    def evalPath(row: InternalRow, redIndex: Int, nirIndex: Int, conf: UTF8String): InternalRow =
-        eval(row, redIndex, nirIndex, conf, StringType)
-    def evalBinary(row: InternalRow, redIndex: Int, nirIndex: Int, conf: UTF8String): InternalRow =
-        eval(row, redIndex, nirIndex, conf, BinaryType)
-
-    def eval(row: InternalRow, redIndex: Int, nirIndex: Int, conf: UTF8String, dt: DataType): InternalRow = {
+    def evalPath(row: InternalRow, redIndex: Int, nirIndex: Int, conf: UTF8String): InternalRow = {
         val exprConf = ExpressionConfig.fromB64(conf.toString)
         RST_ExpressionUtil.init(exprConf)
-        val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, dt)
+        val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, StringType)
         val (resultDs, resMtd) = execute(ds, redIndex, nirIndex, mtd)
         RasterDriver.releaseDataset(ds)
-        RasterSerializationUtil.tileToRow((cell, resultDs, resMtd), dt, exprConf.hConf)
+        RasterSerializationUtil.tileToRow((cell, resultDs, resMtd), StringType, exprConf.hConf)
+    }
+    def evalBinary(row: InternalRow, redIndex: Int, nirIndex: Int, conf: UTF8String): InternalRow = {
+        val exprConf = ExpressionConfig.fromB64(conf.toString)
+        RST_ExpressionUtil.init(exprConf)
+        val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, BinaryType)
+        val extension = GDAL.getExtension(ds.GetDriver.getShortName)
+        val uuid = java.util.UUID.randomUUID().toString.replace("-", "_")
+        val (dsCpy, dsMtd) =
+            GDALTranslate.executeTranslate(s"${NodeFilePathUtil.rootPath}/ndvi_temp_$uuid.$extension", ds, "gdal_translate", mtd)
+        val (resultDs, resMtd) = execute(dsCpy, redIndex, nirIndex, dsMtd)
+        RasterDriver.releaseDataset(ds)
+        RasterDriver.releaseDataset(dsCpy)
+        RasterSerializationUtil.tileToRow((cell, resultDs, resMtd), BinaryType, exprConf.hConf)
     }
 
     def execute(ds: Dataset, redIndex: Int, nirIndex: Int, options: Map[String, String]): (Dataset, Map[String, String]) = {
@@ -52,6 +62,5 @@ object RST_NDVI extends WithExpressionInfo {
     override def name: String = "rst_ndvi"
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_NDVI(c(0), c(1), c(2))
-
 
 }

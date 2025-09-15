@@ -21,11 +21,19 @@ object Convolve {
 
         val outputRaster = gdal.Open(tmpPath, GF_Write)
 
+        val kernelH = kernel.length
+        require(kernelH % 2 == 1, "Kernel size must be odd")
+        val stride = kernelH / 2
+        val resultBuf: Array[Double] = Array.emptyDoubleArray
+        val trimBuf: Array[Double] = Array.emptyDoubleArray
+
         for (bandIndex <- 1 to ds.GetRasterCount()) {
             val band = ds.GetRasterBand(bandIndex)
             val outputBand = outputRaster.GetRasterBand(bandIndex)
-            convolve(band, kernel, outputBand)
+            convolve(band, kernel, outputBand, stride, resultBuf, trimBuf)
         }
+
+        outputRaster.FlushCache()
 
         val errorMsg = gdal.GetLastErrorMsg
         val newOptions = Map(
@@ -45,44 +53,70 @@ object Convolve {
         (outputRaster, newOptions)
     }
 
-    private def convolve(band: Band, kernel: Array[Array[Double]], outputBand: Band): Unit = {
-        val kernelSize = kernel.length
-        require(kernelSize % 2 == 1, "Kernel size must be odd")
-
+    private def convolve(
+        band: Band,
+        kernel: Array[Array[Double]],
+        outputBand: Band,
+        stride: Int,
+        _resultBuf: Array[Double],
+        _trimBuf: Array[Double]
+    ): Unit = {
         val xSize = band.GetXSize()
-        val xBlockSize = band.GetBlockXSize()
         val ySize = band.GetYSize()
+        val xBlockSize = band.GetBlockXSize()
         val yBlockSize = band.GetBlockYSize()
-        val stride = kernelSize / 2
 
-        for (yOffset <- 0 until ySize by yBlockSize) {
-            for (xOffset <- 0 until xSize by xBlockSize) {
+        var resultBuf = _resultBuf
+        var trimBuf = _trimBuf
 
-                val currentBlock = GDALBlock(
+        var yOffset = 0
+        while (yOffset < ySize) {
+            val h = math.min(yBlockSize, ySize - yOffset)
+            var xOffset = 0
+            while (xOffset < xSize) {
+                val w = math.min(xBlockSize, xSize - xOffset)
+
+                val current = GDALBlock(
                   band,
                   stride,
                   xOffset,
                   yOffset,
-                  xBlockSize,
-                  yBlockSize
+                  w,
+                  h
                 )
 
-                val result = Array.ofDim[Double](currentBlock.block.length)
+                val resultLen = current.block.length
+                if (resultBuf.length != resultLen) resultBuf = new Array[Double](resultLen)
+                val trimmedW = current.width - 2 * stride
+                val trimmedH = current.height - 2 * stride
+                val trimLen = math.max(0, trimmedW) * math.max(0, trimmedH)
+                if (trimBuf.length != trimLen) trimBuf = new Array[Double](trimLen)
 
-                for (y <- 0 until currentBlock.height) {
-                    for (x <- 0 until currentBlock.width) {
-                        result(y * currentBlock.width + x) = currentBlock.convolveAt(x, y, kernel)
+                var y = 0
+                while (y < current.height) {
+                    var x = 0
+                    val rowBase = y * current.width
+                    while (x < current.width) {
+                        resultBuf(rowBase + x) = current.convolveAt(x, y, kernel)
+                        x += 1
                     }
+                    y += 1
                 }
 
-                val trimmedResult = currentBlock.copy(block = result).trimBlock(stride)
+                if (trimLen > 0) {
+                    var ty = 0
+                    while (ty < trimmedH) {
+                        val srcRow = (ty + stride) * current.width + stride
+                        val dstRow = ty * trimmedW
+                        System.arraycopy(resultBuf, srcRow, trimBuf, dstRow, trimmedW)
+                        ty += 1
+                    }
+                    outputBand.WriteRaster(xOffset, yOffset, trimmedW, trimmedH, trimBuf)
+                }
 
-                outputBand.WriteRaster(xOffset, yOffset, trimmedResult.width, trimmedResult.height, trimmedResult.block)
-                outputBand.FlushCache()
-                outputBand.GetMaskBand().WriteRaster(xOffset, yOffset, trimmedResult.width, trimmedResult.height, trimmedResult.maskBlock)
-                outputBand.GetMaskBand().FlushCache()
-
+                xOffset += xBlockSize
             }
+            yOffset += yBlockSize
         }
     }
 

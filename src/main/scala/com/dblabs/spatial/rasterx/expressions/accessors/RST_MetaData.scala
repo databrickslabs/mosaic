@@ -1,7 +1,6 @@
 package com.dblabs.spatial.rasterx.expressions.accessors
 
 import com.dblabs.spatial.expressions._
-import com.dblabs.spatial.rasterx.expressions.RST_DerivedBand
 import com.dblabs.spatial.rasterx.gdal.RasterDriver
 import com.dblabs.spatial.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
 import com.dblabs.spatial.util.SerializationUtil
@@ -25,7 +24,7 @@ case class RST_MetaData(
     override def dataType: DataType = MapType(StringType, StringType)
     override def nullable: Boolean = true
     override def prettyName: String = "rst_metadata"
-    override def replacement: Expression = rstInvoke(RST_DerivedBand, rasterType)
+    override def replacement: Expression = rstInvoke(RST_MetaData, rasterType)
     override def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0))
 
 }

@@ -33,7 +33,9 @@ object ClipToGeom {
           resultFileName,
           Array(ds),
           options,
-          command = s"gdalwarp -wo CUTLINE_ALL_TOUCHED=$cutlineToken -cutline $clipperFile -crop_to_cutline -oo GEOM_POSSIBLE_NAMES=WKT"
+          // -q flag for quiet, as there is CRS warning spam
+          // we already ensured geoms are in Raster CRS
+          command = s"gdalwarp -q -wo CUTLINE_ALL_TOUCHED=$cutlineToken -cutline $clipperFile -crop_to_cutline -oo GEOM_POSSIBLE_NAMES=WKT"
         )
         cleanUpClipper(clipperFile)
         result
@@ -48,7 +50,9 @@ object ClipToGeom {
         val wkt = JTS.toWKT(adjustedGeom)
         val uuid = java.util.UUID.randomUUID().toString.replace("-", "_")
         val tmpFileName = s"${NodeFilePathUtil.rootPath}/$uuid/clip_$uuid.csv"
+        val tmpPrjName = s"${NodeFilePathUtil.rootPath}/$uuid/clip_$uuid.prj"
         val tmpFile = Paths.get(tmpFileName)
+        val tmpPrj = Paths.get(tmpPrjName)
         Files.createDirectories(tmpFile.getParent)
         val writer = Files.newBufferedWriter(tmpFile)
         try {
@@ -57,6 +61,7 @@ object ClipToGeom {
         } finally {
             writer.close()
         }
+        Files.writeString(tmpPrj, ds.GetSpatialRef.ExportToWkt)
         tmpFile.toAbsolutePath.toString
     }
 
@@ -78,7 +83,11 @@ object ClipToGeom {
     }
 
     private def cleanUpClipper(fileName: String): Unit = {
-        Files.deleteIfExists(Paths.get(fileName))
+        val clipFile = Paths.get(fileName)
+        Files.deleteIfExists(clipFile)
+        val prjFile = Paths.get(fileName.replace(".csv", ".prj"))
+        Files.deleteIfExists(prjFile)
+        Files.deleteIfExists(clipFile.getParent)
     }
 
 }

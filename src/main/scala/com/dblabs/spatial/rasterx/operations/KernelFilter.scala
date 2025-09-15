@@ -75,8 +75,11 @@ object KernelFilter {
 
                 outBand.WriteRaster(xOffset, yOffset, trimmedResult.width, trimmedResult.height, trimmedResult.block)
                 outBand.FlushCache()
-                outBand.GetMaskBand().WriteRaster(xOffset, yOffset, trimmedResult.width, trimmedResult.height, trimmedResult.maskBlock)
-                outBand.GetMaskBand().FlushCache()
+                // Commented out due to "ERROR 8: GDALRasterBand::RasterIO(): attempt to write to a nodata implicit mask band."
+                // seems that this write was a noop anyways
+                // we need to figure a stable way for alpha bands / nodata masks to work with these operations
+//                outBand.GetMaskBand().WriteRaster(xOffset, yOffset, trimmedResult.width, trimmedResult.height, trimmedResult.maskBlock)
+//                outBand.GetMaskBand().FlushCache()
 
             }
         }

@@ -43,7 +43,7 @@ object RST_H3_RasterToGridCount extends WithExpressionInfo {
         RST_H3_RasterToGrid.execute[Int](ds, resolution, meanF)
     }
 
-    override def name: String = "rst_rastertogridcount"
+    override def name: String = "rst_h3_rastertogridcount"
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_H3_RasterToGridCount(c(0), c(1))
 

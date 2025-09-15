@@ -45,7 +45,7 @@ case class RST_ToOverlappingTiles(
         iter.map { case (resDs, resMtd) =>
             val tile = RasterSerializationUtil.tileToRow((cell, resDs, resMtd), rasterType, exprConf.hConf)
             RasterDriver.releaseDataset(resDs)
-            tile
+            InternalRow.fromSeq(Seq(tile)) // Row wrapping in generator
         }
     }
 

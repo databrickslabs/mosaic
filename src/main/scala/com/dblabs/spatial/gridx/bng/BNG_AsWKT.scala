@@ -15,7 +15,7 @@ case class BNG_AsWKT(
     override def children: Seq[Expression] = Seq(cellID)
     override def dataType: DataType = StringType
     override def nullable: Boolean = true
-    override def prettyName: String = "bng_aswkb"
+    override def prettyName: String = "bng_aswkt"
     override def replacement: Expression = invoke(BNG_AsWKT)
     override def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0))
 
@@ -36,7 +36,7 @@ object BNG_AsWKT extends WithExpressionInfo {
         JTS.toWKT(geom)
     }
 
-    override def name: String = "bng_aswkb"
+    override def name: String = "bng_aswkt"
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new BNG_AsWKT(c(0))
 

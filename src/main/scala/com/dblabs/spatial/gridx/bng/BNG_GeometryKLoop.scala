@@ -27,16 +27,16 @@ case class BNG_GeometryKLoop(
 
 object BNG_GeometryKLoop extends WithExpressionInfo {
 
-    def eval(geom: UTF8String, res: Int, k: Int): Any = {
+    def eval(geom: UTF8String, res: Int, k: Int): Array[String] = {
         val geometry = JTS.fromWKT(geom.toString)
         val result = execute(geometry, res, k)
-        ArrayData.toArrayData(result.toArray)
+        result.toArray
     }
 
-    def eval(geom: Array[Byte], res: Int, k: Int): Any = {
+    def eval(geom: Array[Byte], res: Int, k: Int): Array[String] = {
         val geometry = JTS.fromWKB(geom)
         val result = execute(geometry, res, k)
-        ArrayData.toArrayData(result.toArray)
+        result.toArray
     }
 
     def execute(geom: Geometry, res: Int, k: Int): Set[String] = {

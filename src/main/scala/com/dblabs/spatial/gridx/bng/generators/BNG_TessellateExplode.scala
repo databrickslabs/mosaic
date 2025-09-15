@@ -22,7 +22,7 @@ case class BNG_TessellateExplode(
     override def position: Boolean = false
     override def inline: Boolean = false
     override def children: Seq[Expression] = Seq(geom, resolution, keepCoreGeom)
-    override def elementSchema: StructType = StructType(Array(StructField("cell", BNG.cellType(StringType))))
+    override def elementSchema: StructType = StructType(Seq(StructField("cellId", StringType)))
     override def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0), nc(1), nc(2))
 
     /**
@@ -55,8 +55,17 @@ case class BNG_TessellateExplode(
         }
         val keepCoreGeomVal = keepGeomRaw.asInstanceOf[Boolean]
 
-        BNG.tessellate(geometryVal, resolutionVal, keepCoreGeomVal)
-            .map(c => InternalRow.fromSeq(Seq((c._1, BNG.format(c._2), if (keepCoreGeomVal) c._3 else null))))
+        BNG
+            .tessellate(geometryVal, resolutionVal, keepCoreGeomVal)
+            .map(c => {
+                val cellId = UTF8String.fromString(BNG.format(c._1))
+                val g = geom.dataType match {
+                    case StringType if keepCoreGeomVal => UTF8String.fromString(JTS.toWKT(c._3))
+                    case BinaryType if keepCoreGeomVal => JTS.toWKB(c._3)
+                    case _                             => null
+                }
+                InternalRow.fromSeq(Seq(cellId, c._2, g))
+            })
 
     }
 

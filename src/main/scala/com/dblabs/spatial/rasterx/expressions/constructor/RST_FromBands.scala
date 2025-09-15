@@ -17,9 +17,9 @@ case class RST_FromBands(
     bandsExpr: Expression
 ) extends InvokedExpression {
 
-    private def rasterType = bandsExpr.dataType.asInstanceOf[StructType].fields(1).dataType
+    private def rasterType = bandsExpr.dataType.asInstanceOf[ArrayType].elementType.asInstanceOf[StructType].fields(1).dataType
     override def children: Seq[Expression] = Seq(bandsExpr, ExpressionConfigExpr())
-    override def dataType: DataType = RST_ExpressionUtil.tileDataType(bandsExpr)
+    override def dataType: DataType = RST_ExpressionUtil.tileDataType(rasterType)
     override def nullable: Boolean = true
     override def prettyName: String = "rst_frombands"
     override def replacement: Expression = rstInvoke(RST_FromBands, rasterType)

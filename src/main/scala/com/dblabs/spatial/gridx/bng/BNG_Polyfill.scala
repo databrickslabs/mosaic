@@ -5,7 +5,6 @@ import com.dblabs.spatial.gridx.grid.BNG
 import com.dblabs.spatial.vectorx.jts.JTS
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions._
-import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
@@ -26,28 +25,28 @@ case class BNG_Polyfill(
 
 object BNG_Polyfill extends WithExpressionInfo {
 
-    def eval(geom: UTF8String, resolution: UTF8String): ArrayData = {
+    def eval(geom: UTF8String, resolution: UTF8String): Array[String] = {
         val geometry = JTS.fromWKT(geom.toString)
-        val cells = execute(geometry, resolution.toString).map(UTF8String.fromString)
-        ArrayData.toArrayData(cells.toArray)
+        val cells = execute(geometry, resolution.toString)
+        cells.toArray
     }
 
-    def eval(geom: UTF8String, resolution: Int): ArrayData = {
+    def eval(geom: UTF8String, resolution: Int): Array[String] = {
         val geometry = JTS.fromWKT(geom.toString)
-        val cells = execute(geometry, resolution).map(UTF8String.fromString)
-        ArrayData.toArrayData(cells.toArray)
+        val cells = execute(geometry, resolution)
+        cells.toArray
     }
 
-    def eval(geom: Array[Byte], resolution: UTF8String): ArrayData = {
+    def eval(geom: Array[Byte], resolution: UTF8String): Array[String] = {
         val geometry = JTS.fromWKB(geom)
-        val cells = execute(geometry, resolution.toString).map(UTF8String.fromString)
-        ArrayData.toArrayData(cells.toArray)
+        val cells = execute(geometry, resolution.toString)
+        cells.toArray
     }
 
-    def eval(geom: Array[Byte], resolution: Int): ArrayData = {
+    def eval(geom: Array[Byte], resolution: Int): Array[String] = {
         val geometry = JTS.fromWKB(geom)
-        val cells = execute(geometry, resolution).map(UTF8String.fromString)
-        ArrayData.toArrayData(cells.toArray)
+        val cells = execute(geometry, resolution)
+        cells.toArray
     }
 
     def execute(geom: Geometry, resolution: Int): Iterator[String] = {

@@ -9,6 +9,7 @@ import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.expressions.aggregate.{ImperativeAggregate, TypedImperativeAggregate}
 import org.apache.spark.sql.catalyst.trees.UnaryLike
 import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 
 final case class BNG_CellUnionAgg(
     inputChip: Expression,
@@ -17,10 +18,11 @@ final case class BNG_CellUnionAgg(
 ) extends TypedImperativeAggregate[UnionAcc]
       with UnaryLike[Expression] {
 
+    private def idType = inputChip.dataType.asInstanceOf[StructType].fields(0).dataType
     override lazy val deterministic = true
     override val child: Expression = inputChip
     override val nullable = false
-    override val dataType: DataType = BNG.cellType(LongType)
+    override val dataType: DataType = BNG.cellType(idType)
     override def withNewMutableAggBufferOffset(n: Int): ImperativeAggregate = copy(mutableAggBufferOffset = n)
     override def withNewInputAggBufferOffset(n: Int): ImperativeAggregate = copy(inputAggBufferOffset = n)
     override def prettyName: String = "bng_cell_union_agg"
@@ -31,16 +33,24 @@ final case class BNG_CellUnionAgg(
     override def deserialize(bytes: Array[Byte]): UnionAcc = UnionAcc.deserialize(bytes)
 
     override def update(b: UnionAcc, in: InternalRow): UnionAcc = {
-        val r = child.eval(in).asInstanceOf[InternalRow] // (isCore:Boolean, id:Long, wkb:Binary)
-        b.update(r.getBoolean(0), r.getLong(1), r.getBinary(2))
+        val r = child.eval(in).asInstanceOf[InternalRow] //
+        val cellId = idType match {
+            case StringType => BNG.parse(r.getString(0))
+            case LongType   => r.getLong(0)
+        }
+        b.update(cellId, r.getBoolean(1), r.getBinary(2))
     }
 
     override def merge(a: UnionAcc, c: UnionAcc): UnionAcc = a.merge(c)
 
     override def eval(b: UnionAcc): Any = {
         require(b.initialized, "empty aggregation buffer")
-        if (b.hasCore) InternalRow(true, b.cellID, JTS.toWKB(BNG.cellIdToGeometry(b.cellID)))
-        else InternalRow(false, b.cellID, if (b.unionWkb eq null) JTS.toWKB(JTS.emptyPolygon) else b.unionWkb)
+        val id = idType match {
+            case StringType => UTF8String.fromString(BNG.format(b.cellID))
+            case LongType   => b.cellID
+        }
+        if (b.hasCore) InternalRow(id, true, JTS.toWKB(BNG.cellIdToGeometry(b.cellID)))
+        else InternalRow(id, false, if (b.unionWkb eq null) JTS.toWKB(JTS.emptyPolygon) else b.unionWkb)
     }
 
 }

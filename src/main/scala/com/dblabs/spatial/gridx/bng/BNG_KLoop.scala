@@ -25,17 +25,21 @@ case class BNG_KLoop(
 object BNG_KLoop extends WithExpressionInfo {
 
     def eval(cellId: UTF8String, k: Int): ArrayData = {
-        val indices = execute(cellId.toString, k)
+        val indices = execute(cellId.toString, k).map(UTF8String.fromString).toArray
         ArrayData.toArrayData(indices)
     }
 
     def eval(cellId: Long, k: Int): ArrayData = {
-        val indices = execute(BNG.format(cellId), k)
+        val indices = execute(BNG.format(cellId), k).map(UTF8String.fromString).toArray
         ArrayData.toArrayData(indices)
     }
 
     def execute(cellId: String, k: Int): Iterator[String] = {
         BNG.kLoop(BNG.parse(cellId), k).map(BNG.format)
+    }
+
+    def execute(cellId: Long, k: Int): Iterator[String] = {
+        BNG.kLoop(cellId, k).map(BNG.format)
     }
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new BNG_KLoop(c(0), c(1))

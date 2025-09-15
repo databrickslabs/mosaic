@@ -44,7 +44,7 @@ case class RST_H3_Tessellate(
             .map { case (newCell, resDs, resMtd) =>
                 val tile = RasterSerializationUtil.tileToRow((newCell, resDs, resMtd), rasterType, exprConf.hConf)
                 RasterDriver.releaseDataset(resDs)
-                tile
+                InternalRow.fromSeq(Seq(tile)) // Row wrapping in generator
             }
 
     }

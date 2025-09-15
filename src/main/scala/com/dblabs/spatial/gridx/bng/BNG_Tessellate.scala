@@ -2,11 +2,11 @@ package com.dblabs.spatial.gridx.bng
 
 import com.dblabs.spatial.expressions._
 import com.dblabs.spatial.gridx.grid.BNG
+import com.dblabs.spatial.gridx.grid.BNG.getResolution
 import com.dblabs.spatial.vectorx.jts.JTS
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions._
-import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.locationtech.jts.geom.Geometry
@@ -28,26 +28,38 @@ case class BNG_Tessellate(
 
 object BNG_Tessellate extends WithExpressionInfo {
 
-    def eval(wkt: UTF8String, resolution: Int, keepCoreGeom: Boolean): ArrayData = {
+    def eval(wkt: UTF8String, resolution: Int, keepCoreGeom: Boolean): Array[InternalRow] = {
         val chips = executeWKT(wkt.toString, resolution, keepCoreGeom)
-            .map(c => InternalRow.fromSeq(Seq(c._1, c._2, c._3)))
-        ArrayData.toArrayData(chips)
+            .map(c => InternalRow.fromSeq(Seq(UTF8String.fromString(c._1), c._2, JTS.toWKB(c._3))))
+        chips.toArray
     }
 
-    def eval(wkb: Array[Byte], resolution: Int, keepCoreGeom: Boolean): ArrayData = {
+    def eval(wkb: Array[Byte], resolution: Int, keepCoreGeom: Boolean): Array[InternalRow] = {
         val chips = executeWKB(wkb, resolution, keepCoreGeom)
-            .map(c => InternalRow.fromSeq(Seq(c._1, c._2, c._3)))
-        ArrayData.toArrayData(chips)
+            .map(c => InternalRow.fromSeq(Seq(UTF8String.fromString(c._1), c._2, JTS.toWKB(c._3))))
+        chips.toArray
     }
 
-    def executeWKT(wkt: String, resolution: Int, keepCoreGeom: Boolean): Iterator[(Boolean, String, Geometry)] = {
+    def eval(wkt: UTF8String, resolution: UTF8String, keepCoreGeom: Boolean): Array[InternalRow] = {
+        val chips = executeWKT(wkt.toString, BNG.resolutionMap(resolution.toString), keepCoreGeom)
+            .map(c => InternalRow.fromSeq(Seq(UTF8String.fromString(c._1), c._2, JTS.toWKB(c._3))))
+        chips.toArray
+    }
+
+    def eval(wkb: Array[Byte], resolution: UTF8String, keepCoreGeom: Boolean): Array[InternalRow] = {
+        val chips = executeWKB(wkb, BNG.resolutionMap(resolution.toString), keepCoreGeom)
+            .map(c => InternalRow.fromSeq(Seq(UTF8String.fromString(c._1), c._2, JTS.toWKB(c._3))))
+        chips.toArray
+    }
+
+    def executeWKT(wkt: String, resolution: Int, keepCoreGeom: Boolean): Iterator[(String, Boolean, Geometry)] = {
         val geometry: Geometry = JTS.fromWKT(wkt)
-        BNG.tessellate(geometry, resolution, keepCoreGeom).map(c => c.copy(_2 = BNG.format(c._2)))
+        BNG.tessellate(geometry, resolution, keepCoreGeom).map(c => c.copy(_1 = BNG.format(c._1)))
     }
 
-    def executeWKB(bytes: Array[Byte], i: Int, bool: Boolean): Iterator[(Boolean, String, Geometry)] = {
+    def executeWKB(bytes: Array[Byte], i: Int, bool: Boolean): Iterator[(String, Boolean, Geometry)] = {
         val geometry: Geometry = JTS.fromWKB(bytes)
-        BNG.tessellate(geometry, i, bool).map(c => c.copy(_2 = BNG.format(c._2)))
+        BNG.tessellate(geometry, i, bool).map(c => c.copy(_1 = BNG.format(c._1)))
     }
 
     override def name: String = "bng_tessellate"

@@ -2,9 +2,11 @@ package com.dblabs.spatial.rasterx.operations
 
 import com.dblabs.spatial.rasterx.gdal.{GDAL, RasterDriver}
 import com.dblabs.spatial.rasterx.operator.{GDALBuildVRT, GDALTranslate}
+import com.dblabs.spatial.util.NodeFilePathUtil
 import org.gdal.gdal.Dataset
 
 import java.io.File
+import java.nio.file.{Files, Paths}
 import scala.xml.{Elem, UnprefixedAttribute, XML}
 
 /** MergeRasters is a helper object for merging rasters. */
@@ -27,7 +29,7 @@ object PixelCombineRasters {
         val uuid = java.util.UUID.randomUUID().toString.replace("-", "_")
         val outShortName = dss.head.GetDriver().getShortName
         val extension = GDAL.getExtension(outShortName)
-        val vrtPath = s"/vsimem/combine_rasters_vrt_$uuid.vrt"
+        val vrtPath = s"${NodeFilePathUtil.rootPath}/combine_rasters_vrt_$uuid.vrt"
         val rasterPath = s"/vsimem/combine_rasters_$uuid.$extension"
 
         val vrtRaster = GDALBuildVRT.executeVRT(
@@ -47,6 +49,8 @@ object PixelCombineRasters {
           command = s"gdal_translate",
           options
         )
+
+        Files.deleteIfExists(Paths.get(vrtPath))
 
         result
     }

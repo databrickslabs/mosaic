@@ -25,17 +25,21 @@ case class BNG_KRing(
 object BNG_KRing extends WithExpressionInfo {
 
     def eval(cellId: UTF8String, k: Int): ArrayData = {
-        val indices = execute(cellId.toString, k)
+        val indices = execute(cellId.toString, k).map(UTF8String.fromString).toArray
         ArrayData.toArrayData(indices)
     }
 
     def eval(cellId: Long, k: Int): ArrayData = {
-        val indices = execute(BNG.format(cellId), k)
+        val indices = execute(BNG.format(cellId), k).map(UTF8String.fromString).toArray
         ArrayData.toArrayData(indices)
     }
 
     def execute(cellId: String, k: Int): Iterator[String] = {
         BNG.kRing(BNG.parse(cellId), k).map(BNG.format)
+    }
+
+    def execute(cellId: Long, k: Int): Iterator[String] = {
+        BNG.kRing(cellId, k).map(BNG.format)
     }
 
     override def name: String = "bng_kring"

@@ -1,8 +1,5 @@
 package com.dblabs.spatial.ds.whitelist
 
-import com.dblabs.spatial.expressions.ExpressionConfig
-import com.dblabs.spatial.rasterx.gdal.GDALManager
-import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.connector.catalog.{Table, TableProvider}
 import org.apache.spark.sql.connector.expressions.Transform
 import org.apache.spark.sql.sources.DataSourceRegister
@@ -14,9 +11,6 @@ import scala.jdk.CollectionConverters.MapHasAsScala
 class WhitelistDataSource extends TableProvider with DataSourceRegister {
 
     override def inferSchema(options: CaseInsensitiveStringMap): StructType = {
-        val sparkSession = SparkSession.builder.getOrCreate
-        val conf = ExpressionConfig(sparkSession)
-        GDALManager.init(conf)
         StructType(Array(StructField("did_read", BooleanType)))
     }
 

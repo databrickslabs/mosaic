@@ -7,6 +7,7 @@ import com.dblabs.spatial.rasterx.util.{RST_ExpressionUtil, RasterSerializationU
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.gdal.Dataset
@@ -16,9 +17,9 @@ case class RST_CombineAvg(
     tileExpr: Expression
 ) extends InvokedExpression {
 
-    private def rasterType = RST_ExpressionUtil.rasterType(tileExpr)
+    private def rasterType = tileExpr.dataType.asInstanceOf[ArrayType].elementType.asInstanceOf[StructType].fields(1).dataType
     override def children: Seq[Expression] = Seq(tileExpr, ExpressionConfigExpr())
-    override def dataType: DataType = RST_ExpressionUtil.tileDataType(tileExpr)
+    override def dataType: DataType = RST_ExpressionUtil.tileDataType(rasterType)
     override def nullable: Boolean = true
     override def prettyName: String = "rst_combineavg"
     override def replacement: Expression = rstInvoke(RST_CombineAvg, rasterType)
@@ -29,14 +30,13 @@ case class RST_CombineAvg(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_CombineAvg extends WithExpressionInfo {
 
-    def eval(row: InternalRow, conf: UTF8String, dt: DataType): InternalRow = {
+    def evalPath(row: ArrayData, conf: UTF8String): InternalRow = eval(row, conf, StringType)
+    def evalBinary(row: ArrayData, conf: UTF8String): InternalRow = eval(row, conf, BinaryType)
+
+    def eval(array: ArrayData, conf: UTF8String, dt: DataType): InternalRow = {
         val exprConf = ExpressionConfig.fromB64(conf.toString)
         RST_ExpressionUtil.init(exprConf)
-        val tilesRaw = row.getArray(0)
-        val tiles = (0 until tilesRaw.numElements()).map { i =>
-            val tile = tilesRaw.getStruct(i, 3)
-            RasterSerializationUtil.rowToTile(tile, dt)
-        }
+        val tiles = RasterSerializationUtil.arrayToTiles(array, dt)
         val (cellID, combinedRaster, mtd) = execute(tiles)
         tiles.foreach(t => RasterDriver.releaseDataset(t._2))
         RasterSerializationUtil.tileToRow((cellID, combinedRaster, mtd), dt, exprConf.hConf)

@@ -5,7 +5,6 @@ import com.dblabs.spatial.gridx.grid.BNG
 import com.dblabs.spatial.vectorx.jts.JTS
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
-import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types._
 import org.locationtech.jts.geom.Geometry
 
@@ -19,23 +18,23 @@ case class BNG_GeometryKRing(
     override def dataType: DataType = ArrayType(StringType)
     override def nullable: Boolean = true
     override def prettyName: String = "bng_geometrykring"
-    override def replacement: Expression = invoke(BNG_KRing)
+    override def replacement: Expression = invoke(BNG_GeometryKRing)
     override def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0), nc(1), nc(2))
 
 }
 
 object BNG_GeometryKRing extends WithExpressionInfo {
 
-    def eval(wkb: Array[Byte], resolution: Int, k: Int): Any = {
+    def eval(wkb: Array[Byte], resolution: Int, k: Int): Array[String] = {
         val geometry = JTS.fromWKB(wkb)
         val result = execute(geometry, resolution, k)
-        ArrayData.toArrayData(result.toArray)
+        result.toArray
     }
 
-    def eval(wkt: String, resolution: Int, k: Int): Any = {
+    def eval(wkt: String, resolution: Int, k: Int): Array[String] = {
         val geometry = JTS.fromWKT(wkt)
         val result = execute(geometry, resolution, k)
-        ArrayData.toArrayData(result.toArray)
+        result.toArray
     }
 
     def execute(geom: Geometry, resolution: Int, k: Int): Set[String] = {

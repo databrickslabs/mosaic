@@ -23,4 +23,15 @@ object udfs {
             JTS.toWKB(JTS.fromWKB(wkb).buffer(distance))
         })
 
+    def st_area: UserDefinedFunction =
+        udf((wkb: Array[Byte]) => {
+            Try(JTS.fromWKB(wkb).getArea).getOrElse(0.0)
+        })
+
+    def st_type: UserDefinedFunction = {
+        udf((wkb: Array[Byte]) => {
+            JTS.fromWKB(wkb).getGeometryType
+        })
+    }
+
 }

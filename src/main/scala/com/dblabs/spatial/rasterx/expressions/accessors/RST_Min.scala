@@ -2,6 +2,7 @@ package com.dblabs.spatial.rasterx.expressions.accessors
 
 import com.dblabs.spatial.expressions._
 import com.dblabs.spatial.rasterx.gdal.RasterDriver
+import com.dblabs.spatial.rasterx.operations.BandAccessors
 import com.dblabs.spatial.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -46,9 +47,9 @@ object RST_Min extends WithExpressionInfo {
             val band = ds.GetRasterBand(bandIndex)
             if (band == null) Double.NaN
             else {
-                val stats = band.AsMDArray().GetStatistics()
-                if (stats == null) Double.NaN
-                else stats.getMin
+                val (min, _) = BandAccessors.getMinMax(band)
+                band.delete()
+                min
             }
         }.toArray
     }
