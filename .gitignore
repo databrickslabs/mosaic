@@ -176,8 +176,7 @@ scripts/docker/m2
 python/dev
 
 # hadoop archive
-hadoop-3.4.0.tar.gz
-hadoop-3.4.0.tar.gz.1
+hadoop*\.tar\.gz*
 
 # bash scrapfile
 bash_scraparea.sh
