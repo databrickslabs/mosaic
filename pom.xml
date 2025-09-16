@@ -257,7 +257,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${basedir}/python/mosaic/lib</outputDirectory>
+                            <outputDirectory>${basedir}/python/lib</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${basedir}/target/</directory>

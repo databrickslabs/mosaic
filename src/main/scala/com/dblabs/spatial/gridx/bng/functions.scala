@@ -9,7 +9,11 @@ import org.apache.spark.sql.{Column, SparkSession}
 
 object functions extends Serializable {
 
+    var initialized = false
+
     def register(spark: SparkSession): Unit = {
+        if (initialized) return // Prevent multiple registrations
+
         val registry = spark.sessionState.functionRegistry
         val rd = RegistryDelegate(registry)
 
@@ -41,6 +45,7 @@ object functions extends Serializable {
         rd.register(BNG_KRingExplode)
         rd.register(BNG_TessellateExplode)
 
+        initialized = true
     }
 
     def bng_aswkb(cellId: Column): Column = ColumnAdapter("bng_aswkb", Seq(cellId))
@@ -50,7 +55,8 @@ object functions extends Serializable {
     def bng_cell_union(c1: Column, c2: Column): Column = ColumnAdapter("bng_cellunion", Seq(c1, c2))
     def bng_centroid(cellId: Column): Column = ColumnAdapter("bng_centroid", Seq(cellId))
     def bng_distance(c1: Column, c2: Column): Column = ColumnAdapter("bng_distance", Seq(c1, c2))
-    def bng_eastnorthasbng(east: Column, north: Column, resolution: Column): Column = ColumnAdapter("bng_eastnorthasbng", Seq(east, north, resolution))
+    def bng_eastnorthasbng(east: Column, north: Column, resolution: Column): Column =
+        ColumnAdapter("bng_eastnorthasbng", Seq(east, north, resolution))
     def bng_euclideandistance(c1: Column, c2: Column): Column = ColumnAdapter("bng_euclideandistance", Seq(c1, c2))
     def bng_geometry_kloop(geom: Column, res: Column, k: Column): Column = ColumnAdapter("bng_geometrykloop", Seq(geom, res, k))
     def bng_geometry_kring(geom: Column, res: Column, k: Column): Column = ColumnAdapter("bng_geometrykring", Seq(geom, res, k))

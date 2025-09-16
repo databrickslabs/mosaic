@@ -59,7 +59,9 @@ object HadoopUtils {
     def listHadoopDirs(inPath: String, hconf: SerializableConfiguration): Seq[String] = {
         val path = new Path(new URI(cleanPath(inPath)))
         val fs = path.getFileSystem(hconf.value)
-        fs.listStatus(path)
+        if (!fs.exists(path)) Seq.empty[String]
+        else fs
+            .listStatus(path)
             .filter(_.isDirectory)
             .map(_.getPath.toString)
     }

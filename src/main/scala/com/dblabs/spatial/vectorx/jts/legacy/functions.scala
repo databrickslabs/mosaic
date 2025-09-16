@@ -8,10 +8,16 @@ import org.apache.spark.sql.{Column, SparkSession}
 
 object functions extends Serializable {
 
+    var initialized = false
+
     def register(spark: SparkSession): Unit = {
+        if (initialized) return // Prevent multiple registrations
+
         val registry = spark.sessionState.functionRegistry
         val rd = RegistryDelegate(registry)
         rd.register(ST_LegacyAsWKB)
+
+        initialized = true
     }
 
     def st_legacyaswkb(geom: Column): Column = ColumnAdapter("st_legacyaswkb", Seq(geom))

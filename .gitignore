@@ -184,3 +184,7 @@ bash_scraparea.sh
 # auxiliary locations
 /artifacts/
 /scripts/docker/m2/
+
+# python venv
+/python/py312/
+/python/lib/

@@ -15,7 +15,11 @@ import org.apache.spark.sql.{Column, SparkSession}
 
 object functions extends Serializable {
 
+    var initialized = false
+
     def register(spark: SparkSession): Unit = {
+        if (initialized) return // Prevent multiple registrations
+
         val expressionConfig = ExpressionConfig(spark)
         CheckpointManager.init(expressionConfig)
         spark.sparkContext.addSparkListener(new CleanupListener(spark))
@@ -101,6 +105,7 @@ object functions extends Serializable {
         rd.register(RST_WorldToRasterCoordX)
         rd.register(RST_WorldToRasterCoordY)
 
+        initialized = true
     }
 
     // Accessors
