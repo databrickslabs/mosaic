@@ -1,0 +1,1 @@
+mvn test -DskipTests=False -DagentLib='${jdwp.agent}' -DwildcardSuites=com.dblabs.spatial.gridx.bng.CellIntersectionTest

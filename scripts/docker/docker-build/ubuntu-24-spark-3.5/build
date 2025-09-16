@@ -1,4 +1,0 @@
-#!/bin/bash
-# use --no-cache to force clean build
-#docker build --no-cache -t "mosaic-dev:ubuntu22-gdal$GDAL_VERSION-spark$SPARK_VERSION" .
-docker build -t "rasterx-dev:ubuntu24-gdal311-spark35" .

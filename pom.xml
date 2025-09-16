@@ -3,9 +3,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.databricks.labs</groupId>
-    <artifactId>mosaic</artifactId>
-    <version>${mosaic.version}</version>
+    <groupId>com.dblabs</groupId>
+    <artifactId>spatial</artifactId>
+    <version>0.1.0</version>
 
     <properties>
         <minimum.coverage>80</minimum.coverage>
@@ -65,12 +65,17 @@
             <scope>test</scope>
         </dependency>
         <!-- spark -->
+        <!--suppress VulnerableLibrariesLocal -->
+        <!-- Potential Stack Overflow Exception for ClassUtils.getClass(...) -->
+        <!-- Not a problem for this project -->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${scala.compat.version}</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
         </dependency>
+        <!--suppress VulnerableLibrariesLocal -->
+        <!-- Android vulnerability does not apply to this project -->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_${scala.compat.version}</artifactId>
@@ -280,7 +285,6 @@
                 <scala.version>2.13.12</scala.version>
                 <scala.compat.version>2.13</scala.compat.version>
                 <spark.version>4.0.0</spark.version>
-                <mosaic.version>0.4.3</mosaic.version>
             </properties>
             <build>
                 <plugins>

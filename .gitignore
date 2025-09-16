@@ -181,3 +181,7 @@ hadoop-3.4.0.tar.gz.1
 
 # bash scrapfile
 bash_scraparea.sh
+
+# auxiliary locations
+/artifacts/
+/scripts/docker/m2/
