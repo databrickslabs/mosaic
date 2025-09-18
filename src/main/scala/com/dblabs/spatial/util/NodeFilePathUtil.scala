@@ -130,7 +130,7 @@ object NodeFilePathUtil {
         val localPath = this.nodeFilePath(remotePath).toString
         def untilCanRead(): Int = {
             var (canRead, n) = this.canRead(remotePath)
-            while (!canRead && n < 0) {
+            while (!canRead && n <= 0) {
                 Thread.sleep(10) // wait until the file is ready to be read
                 val (c, k) = this.canRead(remotePath)
                 canRead = c
@@ -148,10 +148,11 @@ object NodeFilePathUtil {
                 // if write lock was not created, it means that the file is being written by another node
                 // we should not create read lock, we need to wait until the file is ready to be read
                 val n = untilCanRead() // wait until the file is ready to be read
-                val readLock = locks.resolve(s"l$n") // read lock is always l1, l2, ..., ln
+                val k = math.max(n, 1) // ensure that n is at least 1
+                val readLock = locks.resolve(s"l$k") // read lock is always l1, l2, ..., ln
                 readLock.toFile.createNewFile() // create read lock
-                locksMap.addOne((remotePath, s"l$n")) // store the lock in the map
-                (localPath, n) // return n to indicate that read lock was created
+                locksMap.addOne((remotePath, s"l$k")) // store the lock in the map
+                (localPath, k) // return n to indicate that read lock was created
             } else {
                 // write lock created
                 HadoopUtils.copyToPath(remotePath, localPath, hconf) // copy the file to the local path
@@ -161,10 +162,11 @@ object NodeFilePathUtil {
             }
         } else {
             val n = untilCanRead() // wait until the file is ready to be read
-            val readLock = locks.resolve(s"l$n") // read lock is always l1, l2, ..., ln
+            val k = math.max(n, 1) // ensure that n is at least 1
+            val readLock = locks.resolve(s"l$k") // read lock is always l1, l2, ..., ln
             readLock.toFile.createNewFile() // create read lock
-            locksMap.addOne((remotePath, s"l$n")) // store the lock in the map
-            (localPath, n)
+            locksMap.addOne((remotePath, s"l$k")) // store the lock in the map
+            (localPath, k)
         }
     }
 

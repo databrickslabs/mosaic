@@ -9,10 +9,11 @@ import org.apache.spark.sql.{Column, SparkSession}
 
 object functions extends Serializable {
 
-    var initialized = false
+    val flag = "com.dblabs.spatial.gridx.bng.registered"
 
     def register(spark: SparkSession): Unit = {
-        if (initialized) return // Prevent multiple registrations
+        val sc = spark.sparkContext
+        if (sc.getConf.get(flag, "false") == "true") return // Prevent multiple registrations
 
         val registry = spark.sessionState.functionRegistry
         val rd = RegistryDelegate(registry)
@@ -45,7 +46,7 @@ object functions extends Serializable {
         rd.register(BNG_KRingExplode)
         rd.register(BNG_TessellateExplode)
 
-        initialized = true
+        sc.getConf.set(flag, "true")
     }
 
     def bng_aswkb(cellId: Column): Column = ColumnAdapter("bng_aswkb", Seq(cellId))

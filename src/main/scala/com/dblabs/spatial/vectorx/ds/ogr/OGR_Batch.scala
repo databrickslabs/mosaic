@@ -2,7 +2,6 @@ package com.dblabs.spatial.vectorx.ds.ogr
 
 import com.dblabs.spatial.expressions.ExpressionConfig
 import com.dblabs.spatial.util.{HadoopUtils, NodeFileManager}
-import org.apache.logging.log4j.core.appender.rolling.FileExtension
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.connector.read.{Batch, InputPartition, PartitionReaderFactory, Scan}
 import org.apache.spark.sql.functions.{col, explode, udf}
@@ -37,7 +36,7 @@ class OGR_Batch(schema: StructType, options: Map[String, String]) extends Scan w
             try {
                 // sidecar files will be ignored here
                 val localPath = NodeFileManager.readRemote(path)
-                val dataset = OGR_SchemaInference.getDataSource(driverName, localPath)
+                val dataset = OGR_Driver.open(localPath, driverName)
                 val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
                 val layer = dataset.GetLayerByName(resolvedLayerName)
                 layer.ResetReading()

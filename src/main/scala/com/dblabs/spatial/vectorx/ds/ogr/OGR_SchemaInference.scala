@@ -1,6 +1,5 @@
 package com.dblabs.spatial.vectorx.ds.ogr
 
-import com.dblabs.spatial.util.HadoopUtils
 import org.apache.spark.sql.catalyst.analysis.TypeCoercion
 import org.apache.spark.sql.catalyst.util.DateTimeUtils
 import org.apache.spark.sql.types._
@@ -298,26 +297,6 @@ object OGR_SchemaInference extends Serializable {
     }
 
     /**
-      * Load the data source from the given path using the specified driver.
-      *
-      * @param driverName
-      *   the name of the OGR driver
-      * @param path
-      *   the path to the file
-      * @return
-      *   the data source
-      */
-    def getDataSource(driverName: String, path: String): org.gdal.ogr.DataSource = {
-        val cleanPath = HadoopUtils.cleanPath(path).replace("file:", "")
-        // 0 is for no update driver
-        if (driverName.nonEmpty) {
-            ogr.GetDriverByName(driverName).Open(cleanPath, 0)
-        } else {
-            ogr.Open(cleanPath, 0)
-        }
-    }
-
-    /**
       * Infer the schema of an OGR file.
       *
       * @param driverName
@@ -340,7 +319,7 @@ object OGR_SchemaInference extends Serializable {
         val inferenceLimit = options.getOrElse("inferenceLimit", "100").toInt
         val asWKB = options.getOrElse("asWKB", "true").toBoolean
 
-        val dataset = getDataSource(driverName, path)
+        val dataset = OGR_Driver.open(path, driverName)
         val resolvedLayerName = if (layerName.isEmpty) dataset.GetLayer(layerN).GetName() else layerName
         val layer = dataset.GetLayer(resolvedLayerName)
         layer.ResetReading()
