@@ -1,27 +1,22 @@
 package com.dblabs.spatial.util
 
-import java.io.{BufferedReader, ByteArrayOutputStream, InputStreamReader, PrintWriter}
+import java.io.{BufferedReader, InputStreamReader}
 
 object SysUtils {
 
     import sys.process._
 
-    def runCommand(cmd: String): (String, String, String) = {
-        val stdoutStream = new ByteArrayOutputStream
-        val stderrStream = new ByteArrayOutputStream
-        val stdoutWriter = new PrintWriter(stdoutStream)
-        val stderrWriter = new PrintWriter(stderrStream)
-        val exitValue =
-            try {
-                // noinspection ScalaStyle
-                cmd.!!(ProcessLogger(stdoutWriter.println, stderrWriter.println))
-            } catch {
-                case e: Exception => s"ERROR: ${e.getMessage}"
-            } finally {
-                stdoutWriter.close()
-                stderrWriter.close()
-            }
-        (exitValue, stdoutStream.toString, stderrStream.toString)
+    def runCommand(parts: Seq[String]): (String, String, String) = {
+        val out = new StringBuilder
+        val err = new StringBuilder
+        val _ = Process(parts).!(
+          ProcessLogger(
+            s => out.append(s).append('\n'),
+            e => err.append(e).append('\n')
+          )
+        ) // waits & reaps
+        val stdout = out.toString
+        (stdout, stdout, err.toString) // keep legacy tuple contract
     }
 
     def runScript(cmd: Array[String]): (String, String, String) = {
@@ -40,7 +35,7 @@ object SysUtils {
         stderrStream.close()
         (s"$exitValue", stdinOutput, stderrOutput)
     }
-    
+
     def getLastOutputLine(prompt: (String, String, String)): String = {
         val (_, stdout, _) = prompt
         val lines = stdout.split("\n")

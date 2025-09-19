@@ -10,7 +10,7 @@ import java.nio.file.{Files, Paths}
 object GDALCalc {
 
     private val gdal_calc: String = {
-        val calcPath = SysUtils.runCommand("which gdal_calc.py")._1.split("\n").headOption.getOrElse("")
+        val calcPath = SysUtils.runCommand(Seq("which", "gdal_calc.py"))._1.split("\n").headOption.getOrElse("")
         if (calcPath.isEmpty) {
             throw new RuntimeException("Could not find gdal_calc.py.")
         }
@@ -39,7 +39,7 @@ object GDALCalc {
         require(gdalCalcCommand.startsWith("gdal_calc"), "Not a valid GDAL Calc command.")
         val effectiveCommand = OperatorOptions.appendOptions(gdalCalcCommand, options, ds)
         val toRun = effectiveCommand.replace("gdal_calc", gdal_calc)
-        val commandRes = SysUtils.runCommand(s"python3 $toRun")
+        val commandRes = SysUtils.runCommand(Seq("python3") ++ toRun.split(" ").filterNot(_.isEmpty).toSeq)
         val errorMsg = gdal.GetLastErrorMsg
         val result = gdal.Open(resultPath, GA_ReadOnly)
         val size =
