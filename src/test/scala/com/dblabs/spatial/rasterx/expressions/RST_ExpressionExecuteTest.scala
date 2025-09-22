@@ -1,7 +1,7 @@
 package com.dblabs.spatial.rasterx.expressions
 
 import com.dblabs.spatial.rasterx.expressions.accessors.RST_BoundingBox
-import com.dblabs.spatial.rasterx.gdal.GDALManager
+import com.dblabs.spatial.rasterx.gdal.{GDALManager, RasterDriver}
 import com.dblabs.spatial.rasterx.operator.GDALTranslate
 import org.gdal.gdal.{Dataset, gdal}
 import org.scalatest.BeforeAndAfterAll
@@ -9,6 +9,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 
 import java.nio.file.{Files, Paths}
+import scala.jdk.CollectionConverters.CollectionHasAsScala
 
 class RST_ExpressionExecuteTest extends AnyFunSuite with BeforeAndAfterAll {
 
@@ -30,7 +31,7 @@ class RST_ExpressionExecuteTest extends AnyFunSuite with BeforeAndAfterAll {
         val (convertedDs, _) = RST_AsFormat.execute(ds, Map("TILED" -> "YES"), "PNM")
         convertedDs should not be null
         convertedDs.GetDriver().getShortName shouldBe "PNM"
-        convertedDs.delete()
+        RasterDriver.releaseDataset(convertedDs)
     }
 
     test("RST_Clip should clip raster to specified bounds") {
@@ -39,7 +40,7 @@ class RST_ExpressionExecuteTest extends AnyFunSuite with BeforeAndAfterAll {
         clippedDs should not be null
         clippedDs.getRasterXSize should be <= ds.getRasterXSize
         clippedDs.getRasterYSize should be <= ds.getRasterYSize
-        clippedDs.delete()
+        RasterDriver.releaseDataset(clippedDs)
     }
 
     test("RST_CombineAvg should combine rasters by average") {
@@ -48,7 +49,7 @@ class RST_ExpressionExecuteTest extends AnyFunSuite with BeforeAndAfterAll {
         combinedDs.getRasterCount shouldBe ds.getRasterCount
         combinedDs.getRasterXSize shouldBe ds.getRasterXSize
         combinedDs.getRasterYSize shouldBe ds.getRasterYSize
-        combinedDs.delete()
+        RasterDriver.releaseDataset(combinedDs)
     }
 
     test("RST_Convolve should apply convolution kernel to raster") {
@@ -64,8 +65,8 @@ class RST_ExpressionExecuteTest extends AnyFunSuite with BeforeAndAfterAll {
         convolvedDs.getRasterCount shouldBe miniDs.getRasterCount
         convolvedDs.getRasterXSize shouldBe miniDs.getRasterXSize
         convolvedDs.getRasterYSize shouldBe miniDs.getRasterYSize
-        convolvedDs.delete()
-        miniDs.delete()
+        RasterDriver.releaseDataset(convolvedDs)
+        RasterDriver.releaseDataset(miniDs)
         Files.deleteIfExists(Paths.get(miniDsPath))
     }
 
@@ -76,7 +77,7 @@ class RST_ExpressionExecuteTest extends AnyFunSuite with BeforeAndAfterAll {
         derivedDs.getRasterCount == ds.getRasterCount shouldBe true
         derivedDs.getRasterXSize == ds.getRasterXSize shouldBe true
         derivedDs.getRasterYSize == ds.getRasterYSize shouldBe true
-        derivedDs.delete()
+        RasterDriver.releaseDataset(derivedDs)
     }
 
     test("RST_Filter should apply filter to raster") {
@@ -87,8 +88,8 @@ class RST_ExpressionExecuteTest extends AnyFunSuite with BeforeAndAfterAll {
         filteredDs.getRasterCount shouldBe miniDs.getRasterCount
         filteredDs.getRasterXSize shouldBe miniDs.getRasterXSize
         filteredDs.getRasterYSize shouldBe miniDs.getRasterYSize
-        filteredDs.delete()
-        miniDs.delete()
+        RasterDriver.releaseDataset(filteredDs)
+        RasterDriver.releaseDataset(miniDs)
         Files.deleteIfExists(Paths.get(miniDsPath))
     }
 
@@ -112,7 +113,9 @@ class RST_ExpressionExecuteTest extends AnyFunSuite with BeforeAndAfterAll {
         mappedDs.getRasterCount shouldBe ds.getRasterCount
         mappedDs.getRasterXSize shouldBe ds.getRasterXSize
         mappedDs.getRasterYSize shouldBe ds.getRasterYSize
-        mappedDs.delete()
+        val tmpFiles = mappedDs.GetFileList().asScala.toSeq.map(_.toString)
+        RasterDriver.releaseDataset(mappedDs)
+        tmpFiles.foreach(f => Files.deleteIfExists(Paths.get(f)))
     }
 
     test("RST_Merge should merge multiple rasters") {
@@ -121,7 +124,7 @@ class RST_ExpressionExecuteTest extends AnyFunSuite with BeforeAndAfterAll {
         mergedDs.getRasterCount shouldBe ds.getRasterCount
         mergedDs.getRasterXSize should be >= ds.getRasterXSize
         mergedDs.getRasterYSize should be >= ds.getRasterYSize
-        mergedDs.delete()
+        RasterDriver.releaseDataset(mergedDs)
     }
 
     test("RST_NDVI should compute NDVI from raster") {
@@ -130,9 +133,9 @@ class RST_ExpressionExecuteTest extends AnyFunSuite with BeforeAndAfterAll {
         ndviDs.getRasterCount shouldBe 1
         ndviDs.getRasterXSize shouldBe ds.getRasterXSize
         ndviDs.getRasterYSize shouldBe ds.getRasterYSize
-        val path = ndviDs.GetDescription()
-        ndviDs.delete()
-        Files.deleteIfExists(Paths.get(path))
+        val tmpFiles = ndviDs.GetFileList().asScala.toSeq.map(_.toString)
+        RasterDriver.releaseDataset(ndviDs)
+        tmpFiles.foreach(f => Files.deleteIfExists(Paths.get(f)))
     }
 
     test("RST_RasterToWorldCoord should convert raster to world coordinates") {

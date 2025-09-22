@@ -1,22 +1,30 @@
 package com.dblabs.spatial.util
 
-import java.io.{BufferedReader, InputStreamReader}
+import java.io.{BufferedReader, InputStream, InputStreamReader}
 
 object SysUtils {
 
     import sys.process._
 
     def runCommand(parts: Seq[String]): (String, String, String) = {
-        val out = new StringBuilder
-        val err = new StringBuilder
-        val _ = Process(parts).!(
-          ProcessLogger(
-            s => out.append(s).append('\n'),
-            e => err.append(e).append('\n')
-          )
-        ) // waits & reaps
-        val stdout = out.toString
-        (stdout, stdout, err.toString) // keep legacy tuple contract
+        val outSb = new StringBuilder
+        val errSb = new StringBuilder
+
+        def drain(is: InputStream, sb: StringBuilder): Unit = {
+            val src = scala.io.Source.fromInputStream(is)
+            try sb.appendAll(src.mkString) finally { src.close(); is.close() }
+        }
+
+        val io = new ProcessIO(
+            in  => try in.close() catch { case _: Throwable => () },                // never leave stdin open
+            out => drain(out, outSb),                                              // fully consume stdout
+            err => drain(err, errSb)                                               // fully consume stderr
+        )
+
+        val p = Process(parts).run(io)                                           // start with custom IO
+        p.exitValue()                                                            // blocks and reaps the direct child
+        val stdout = outSb.toString
+        (stdout, stdout, errSb.toString)                                         // keep your legacy tuple
     }
 
     def runScript(cmd: Array[String]): (String, String, String) = {

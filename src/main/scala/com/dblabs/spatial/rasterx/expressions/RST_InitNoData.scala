@@ -38,7 +38,9 @@ object RST_InitNoData extends WithExpressionInfo {
         val (cell, ds, mdt) = RasterSerializationUtil.rowToTile(row, rdt)
         val (resultDs, newMdt) = execute(ds, mdt)
         RasterDriver.releaseDataset(ds)
-        RasterSerializationUtil.tileToRow((cell, resultDs, newMdt), rdt, exprConf.hConf)
+        val res = RasterSerializationUtil.tileToRow((cell, resultDs, newMdt), rdt, exprConf.hConf)
+        RasterDriver.releaseDataset(resultDs)
+        res
     }
 
     def execute(ds: Dataset, options: Map[String, String]): (Dataset, Map[String, String]) = {

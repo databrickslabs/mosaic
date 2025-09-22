@@ -44,8 +44,7 @@ object RST_AsFormat extends WithExpressionInfo {
         } else {
             val (resDS, resMtd) = TranslateFormat.update(ds, mtd, newFormat.toString)
             val res = RasterSerializationUtil.tileToRow((cell, resDS, resMtd), dt, exprConf.hConf)
-            resDS.delete()
-            Try(gdal.Unlink(resDS.GetDescription()))
+            RasterDriver.releaseDataset(resDS)
             RasterDriver.releaseDataset(ds)
             res
         }

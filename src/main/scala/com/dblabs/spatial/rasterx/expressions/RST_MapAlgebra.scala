@@ -12,7 +12,10 @@ import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.catalyst.util.ArrayData
 import org.apache.spark.sql.types.{ArrayType, BinaryType, DataType, StringType, StructType}
 import org.apache.spark.unsafe.types.UTF8String
-import org.gdal.gdal.Dataset
+import org.gdal.gdal.{Dataset, gdal}
+
+import java.nio.file.{Files, Paths}
+import scala.util.Try
 
 /** The expression for map algebra. */
 case class RST_MapAlgebra(
@@ -39,7 +42,9 @@ object RST_MapAlgebra extends WithExpressionInfo {
         val dss = RasterSerializationUtil.arrayToTiles(array, StringType)
         val (result, mtd) = execute(dss.map(_._2), dss.head._3, spec.toString)
         dss.foreach(ds => RasterDriver.releaseDataset(ds._2))
-        RasterSerializationUtil.tileToRow((dss.head._1, result, mtd), StringType, exprConf.hConf)
+        val res = RasterSerializationUtil.tileToRow((dss.head._1, result, mtd), StringType, exprConf.hConf)
+        RasterDriver.releaseDataset(result)
+        res
     }
 
     def evalBinary(array: ArrayData, spec: UTF8String, conf: UTF8String): InternalRow = {
@@ -53,10 +58,17 @@ object RST_MapAlgebra extends WithExpressionInfo {
             val path = s"${NodeFilePathUtil.rootPath}/$uuid.$extension"
             val (dsCpy, mtd) = GDALTranslate.executeTranslate(path, ds._2, "gdal_translate", ds._3)
             RasterDriver.releaseDataset(ds._2)
-            (ds._1, dsCpy, mtd)
+            (ds._1, dsCpy, mtd, path)
         }
         val (result, mtd) = execute(dssCpy.map(_._2), dss.head._3, spec.toString)
-        RasterSerializationUtil.tileToRow((dssCpy.head._1, result, mtd), BinaryType, exprConf.hConf)
+        val res = RasterSerializationUtil.tileToRow((dssCpy.head._1, result, mtd), BinaryType, exprConf.hConf)
+        dssCpy.foreach(ds => RasterDriver.releaseDataset(ds._2))
+        dssCpy.foreach(ds => Files.deleteIfExists(Paths.get(ds._4)))
+        // result is computed via gdalcalc so it is not in /vsimem/, we need to delete it manually
+        val resPath = result.GetDescription()
+        RasterDriver.releaseDataset(result)
+        Try(Files.deleteIfExists(Paths.get(resPath)))
+        res
     }
 
     def execute(dss: Seq[Dataset], options: Map[String, String], spec: String): (Dataset, Map[String, String]) = {

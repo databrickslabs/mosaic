@@ -3,26 +3,21 @@ package com.dblabs.spatial.util
 import org.apache.hadoop.util.hash.MurmurHash
 import org.apache.spark.util.SerializableConfiguration
 
-import java.nio.file.{FileAlreadyExistsException, Files, Path, Paths}
-import java.util.concurrent.ConcurrentHashMap
+import java.nio.file.{Files, Path, Paths}
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.{CompletableFuture, ConcurrentHashMap}
 import scala.util.control.NonFatal
 
 object NodeFilePathUtil {
 
     private val hasher = MurmurHash.getInstance()
-    val rootPath: Path = Paths.get("/tmp/gdal_local_files")
-    private val locksMap = new ConcurrentHashMap[String, String]()
-    private val writerTTL = 500 // milliseconds
-    private val sleepTime = 10 // milliseconds
-    private val maxWaitTime = 10000 // milliseconds
-    private val L0 = "l0" // write lock
-    private val READ_L_PATTERN = "l_\\d+_\\d+" // l_<threadId>_<nowMs>
+    private val uuid = this.hashCode().toHexString
+    val rootPath: Path = Paths.get(s"/tmp/gdal_local_files/$uuid")
+    private val maxRetries = 3
+    private val tinyBackoffMs = 2L
 
-    private def nowMs(): Long = System.currentTimeMillis()
-
-    private def murmurParent(remote: String): String = {
-        s"mm3_${hasher.hash(remote.getBytes).toString.replace("-", "_")}"
-    }
+    private final case class Entry(dir: Path, ready: CompletableFuture[Path], readers: AtomicInteger)
+    private val entries = new ConcurrentHashMap[String, Entry]()
 
     private def filename(remote: String): String = {
         val noPrefix = remote.split("://").last
@@ -31,220 +26,94 @@ object NodeFilePathUtil {
         else noPrefix
     }
 
+    private def murmur(s: String): String = s"mm3_${hasher.hash(s.getBytes).toString.replace("-", "_")}"
+    private def base(remote: String): String = remote.split("://").last.split('/').last
+    private def cacheDir(remote: String): Path = rootPath.resolve(murmur(remote))
+    private def primary(remote: String): Path = cacheDir(remote).resolve(base(remote))
+    private def murmurParent(remote: String): String = s"mm3_${hasher.hash(remote.getBytes).toString.replace("-", "_")}"
     private def parentDir(remote: String): Path = rootPath.resolve(murmurParent(remote))
-
     private def nodeFilePath(remote: String): Path = parentDir(remote).resolve(filename(remote))
 
-    private def locksPath(remote: String): Path = Paths.get(s"${nodeFilePath(remote)}_locks")
+    /**
+      * Ensure copy exists (primary + sidecars via HadoopUtils) and acquire read
+      * lock.
+      */
+    def readLock(remotePath: String, hconf: SerializableConfiguration): (String, Int) = {
+        val localPath = nodeFilePath(remotePath)
+        val key = localPath.toString
+        var attempts = 0
+        var lastErr: Throwable = null
 
-    private def safeList(dir: Path): Array[String] = {
-        val f = dir.toFile
-        if (!f.exists()) Array.empty[String]
-        else {
-            val files = f.listFiles()
-            if (files == null) Array.empty[String]
-            else files
-                .map(_.getName)
-                .filter(name => name == L0 || name.matches(READ_L_PATTERN))
+        while (attempts <= maxRetries) {
+            attempts += 1
+            var e = entries.get(key)
+            if (e == null) {
+                val created = Entry(localPath, new CompletableFuture[Path](), new AtomicInteger(0))
+                val prev = entries.putIfAbsent(key, created)
+                if (prev == null) {
+                    // I am the copier
+                    try {
+                        Files.createDirectories(localPath.getParent)
+                        HadoopUtils.copyToPath(remotePath, localPath.toString, hconf) // copies primary + sidecars
+                        created.ready.complete(localPath)
+                        e = created
+                    } catch {
+                        case NonFatal(err) =>
+                            created.ready.completeExceptionally(err)
+                            lastErr = err
+                            scala.util.Try(deleteWithSiblings(localPath.toString))
+                            entries.remove(key, created)
+                            Thread.`yield`(); if (tinyBackoffMs > 0) Thread.sleep(tinyBackoffMs)
+                            e = null // retry loop; a waiter may become the next copier
+                    }
+                } else {
+                    e = prev
+                }
+            }
+
+            if (e != null) {
+                try {
+                    e.ready.join() // throws if copier failed
+                    val n = e.readers.incrementAndGet()
+                    return (primary(remotePath).toString, n)
+                } catch {
+                    case ex: Throwable =>
+                        lastErr = Option(ex.getCause).getOrElse(ex)
+                        entries.remove(key, e) // allow a fresh attempt
+                        Thread.`yield`(); if (tinyBackoffMs > 0) Thread.sleep(tinyBackoffMs)
+                    // loop to retry
+                }
+            }
         }
+        throw new RuntimeException(s"Failed to materialize $remotePath after $maxRetries retries.", lastErr)
     }
 
-    private def readerLocks(dir: Path): Array[String] = safeList(dir).filter(_ != L0)
-
-    private def getMTime(path: Path): Long = {
-        try Files.getLastModifiedTime(path).toMillis
-        catch { case NonFatal(_) => 0L }
+    /** Release read lock; delete cache dir when refcount hits zero. */
+    def releaseReadLock(remotePath: String, hconf: SerializableConfiguration): Int = {
+        val localPath = nodeFilePath(remotePath)
+        val key = localPath.toString
+        val e = entries.get(key)
+        if (e == null) return 0
+        val n = e.readers.decrementAndGet()
+        if (n <= 0) {
+            scala.util.Try(deleteWithSiblings(localPath.toString))
+            entries.remove(key, e)
+            0
+        } else n
     }
 
-    private def tryDelete(path: Path): Boolean = {
-        try Files.deleteIfExists(path)
-        catch { case NonFatal(_) => false }
-    }
-
-    private def isWriterStale(filePath: Path, locks: Path): Boolean = {
-        val l0 = locks.resolve(L0)
-        locks.toFile.exists() &&
-        l0.toFile.exists() &&
-        !filePath.toFile.exists() &&
-        (nowMs() - getMTime(l0) > writerTTL)
-    }
-
-    private def generateReadLockName(): String = s"l_${Thread.currentThread().getId}_${nowMs()}"
-
-    private def acquireReadLock(locks: Path): String = {
-        val name = generateReadLockName()
-        val p = locks.resolve(name)
-        try {
-            Files.createFile(p)
-            name
-        } catch {
-            case _: FileAlreadyExistsException => name // same thread same ms; treat as already-held
-        }
-    }
-
-    private def canRead(remote: String): (Boolean, Int) = {
-        // both file and locks must exist
-        // they will be created by the writer node at the same time
-        // if locks directory does not exist, it means the file is not being written or read
-        // or we are in the process of deleting the file
-        val file = nodeFilePath(remote)
-        val locks = locksPath(remote)
-        val fileExists = file.toFile.exists()
-        val locksExists = locks.toFile.exists()
-        val allLocks = safeList(locks) // l\d+ only
-        val hasReaders = allLocks.exists(_ != L0)
-        val l0 = locks.resolve(L0)
-
-        if (isWriterStale(file, locks)) {
-            if (!fileExists && !hasReaders) {
-                // stale writer, no file, no readers => reset writer lock only
-                tryDelete(l0)
-                // optional: if locks is now empty, remove dir
-                if (allLocks.isEmpty) tryDelete(locks)
-                // signal: no file, a new writer should start
-                return (false, 0)
-            } else if (fileExists) {
-                // file published (or recovered) => just clear stale l0; never delete the file
-                tryDelete(l0)
-                // proceed to normal evaluation below (readers may form)
-            } // if readers exist, do nothing here—let them finish
-        }
-
-        if (!locksExists) return (false, 0) // no locks dir => no file => need to write first
-
-        if (hasReaders) {
-            val nReaders = readerLocks(locks).length
-            return (true, math.max(1, nReaders + 1)) // safe to read, +1 for
-        }
-
-        if (fileExists && !allLocks.contains(L0)) return (false, 1) // file exists, no readers, no writer => safe to read, create l1
-        if (allLocks.contains(L0)) return (false, -1) // writer active, cannot read
-        (false, 0) // no file, no readers, no writer => need to write first
-    }
-
-    private def createFile(path: Path): Int = {
-        try {
-            Files.createFile(path) // create file
-            1
-        } catch {
-            case _: FileAlreadyExistsException => 0 // if file already exists, return 0
-            case NonFatal(_)                   => 0 // for any other error, return 0
-        }
-    }
-
-    private def updateWriteToReadLock(remotePath: String): String = {
-        val locks = locksPath(remotePath)
-        if (!locks.toFile.exists()) return ""
-        val name = acquireReadLock(locks) // create our reader first
-        val writerLock = locks.resolve(L0)
-        tryDelete(writerLock) // best-effort delete write lock
-        name
-    }
-
-    private def writeLock(remotePath: String): Int = {
-        val locks = locksPath(remotePath)
-        if (!locks.toFile.exists()) {
-            locks.toFile.mkdirs()
-            return createFile(locks.resolve(L0))
-        }
-        val l0 = locks.resolve(L0)
-        val l0Exists = l0.toFile.exists()
-        val readersExist = readerLocks(locks).nonEmpty
-        val isStale = isWriterStale(nodeFilePath(remotePath), locks)
-        if ((!l0Exists && !readersExist) || isStale) {
-            if (isStale) tryDelete(l0) // best-effort delete stale l0
-            createFile(l0) // create write lock or return 0 if it errors
-        } else {
-            0 // return 0 to indicate that write lock was not created
-        }
-    }
-
-    private def deleteLocalFileWithSiblings(localPath: String): Int = {
+    private def deleteWithSiblings(localPath: String): Unit = {
         val path = Paths.get(localPath)
         val fileName = path.getFileName.toString.split("\\.").head
-        val locks = Paths.get(s"${localPath}_locks")
         val parent = path.getParent
         val siblings = Option(parent.toFile.listFiles())
             .getOrElse(Array.empty)
             .filter(f => {
                 f.getName.startsWith(fileName) || f.getName.startsWith(s".$fileName")
             })
-        if (siblings.nonEmpty) {
-            siblings.foreach(s => tryDelete(s.toPath))
-            if (locks.toFile.exists()) tryDelete(locks) // delete locks directory if exists
-            val remaining = Option(parent.toFile.listFiles()).getOrElse(Array.empty)
-            if (remaining.isEmpty) {
-                // if parent directory is empty, delete it
-                Files.deleteIfExists(parent)
-            }
-            1 // return 1 to indicate that local file and its siblings were removed
-        } else {
-            0 // return 0 to indicate that no files were removed
-        }
-    }
-
-    def readLock(remotePath: String, hconf: SerializableConfiguration): (String, Int) = {
-        val localPath = this.nodeFilePath(remotePath).toString
-
-        def untilCanRead(): Int = {
-            val start = nowMs()
-            var n = 0
-            var can = false
-            while ({
-                val res = this.canRead(remotePath)
-                can = res._1; n = res._2
-                !can && (n <= 0) && (nowMs() - start) < maxWaitTime
-            }) {
-                Thread.sleep(sleepTime + (math.random * 0.1 * sleepTime).toInt)
-            }
-            if (!can && n <= 0) {
-                // timeout
-                // force write assume writer is dead and what was written is lost
-                val locks = locksPath(remotePath)
-                if (locks.toFile.exists() && readerLocks(locks).nonEmpty) return 1 // readers appeared; join instead of purging
-                val file = nodeFilePath(remotePath)
-
-                Option(locks.toFile.listFiles()).getOrElse(Array.empty).foreach(f => Files.deleteIfExists(f.toPath))
-                Files.deleteIfExists(locks)
-                Files.deleteIfExists(file)
-                locks.toFile.mkdirs()
-                Files.createFile(locks.resolve(L0))
-                HadoopUtils.copyToPath(remotePath, localPath, hconf)
-                val myReader = updateWriteToReadLock(remotePath) // capture our read lock name
-                if (myReader.nonEmpty) locksMap.put(remotePath, myReader) // store the lock in the map
-                return 1
-            }
-            n
-        }
-
-        val locks = locksPath(remotePath)
-        if (!locks.toFile.exists()) locks.toFile.mkdirs()
-
-        val _ = untilCanRead()
-        val name = acquireReadLock(locks)
-        locksMap.put(remotePath, name) // store the lock in the map
-        val readers = readerLocks(locks).length // with our lock
-        (localPath, readers)
-    }
-
-    def releaseReadLock(remotePath: String, hconf: SerializableConfiguration): Int = {
-        val lock = Option(locksMap.get(remotePath))
-        val localPath = this.nodeFilePath(remotePath).toString
-        lock match {
-            case Some(lockName) =>
-                locksMap.remove(remotePath)
-                val locks = locksPath(remotePath)
-                if (locks.toFile.exists()) {
-                    val readLock = locks.resolve(lockName)
-                    if (readLock.toFile.exists()) tryDelete(readLock)
-                    if (readerLocks(locks).isEmpty) {
-                        tryDelete(locks)
-                        deleteLocalFileWithSiblings(localPath)
-                    }
-                }
-                1
-            case None           => 0
-        }
+        if (siblings.nonEmpty) siblings.foreach(s => Files.deleteIfExists(s.toPath))
+        val remaining = Option(parent.toFile.listFiles()).getOrElse(Array.empty)
+        if (remaining.isEmpty) Files.deleteIfExists(parent)
     }
 
 }

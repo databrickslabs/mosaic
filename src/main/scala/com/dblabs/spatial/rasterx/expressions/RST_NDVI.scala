@@ -13,6 +13,9 @@ import org.apache.spark.sql.types.{BinaryType, DataType, StringType}
 import org.apache.spark.unsafe.types.UTF8String
 import org.gdal.gdal.Dataset
 
+import java.nio.file.{Files, Paths}
+import scala.util.Try
+
 /** The expression for computing NDVI index. */
 case class RST_NDVI(
     tileExpr: Expression,
@@ -47,12 +50,17 @@ object RST_NDVI extends WithExpressionInfo {
         val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, BinaryType)
         val extension = GDAL.getExtension(ds.GetDriver.getShortName)
         val uuid = java.util.UUID.randomUUID().toString.replace("-", "_")
-        val (dsCpy, dsMtd) =
-            GDALTranslate.executeTranslate(s"${NodeFilePathUtil.rootPath}/ndvi_temp_$uuid.$extension", ds, "gdal_translate", mtd)
+        val cpyPath = s"${NodeFilePathUtil.rootPath}/ndvi_temp_$uuid.$extension"
+        val (dsCpy, dsMtd) = GDALTranslate.executeTranslate(cpyPath, ds, "gdal_translate", mtd)
         val (resultDs, resMtd) = execute(dsCpy, redIndex, nirIndex, dsMtd)
+        val resPath = resultDs.GetDescription()
         RasterDriver.releaseDataset(ds)
         RasterDriver.releaseDataset(dsCpy)
-        RasterSerializationUtil.tileToRow((cell, resultDs, resMtd), BinaryType, exprConf.hConf)
+        Try(Files.deleteIfExists(Paths.get(cpyPath))) // ndvi_temp file is not stored in /vsimem/ so we need to delete it
+        val res = RasterSerializationUtil.tileToRow((cell, resultDs, resMtd), BinaryType, exprConf.hConf)
+        Try(Files.deleteIfExists(Paths.get(resPath))) // resultDs is not stored in /vsimem/ so we need to delete it
+        RasterDriver.releaseDataset(resultDs)
+        res
     }
 
     def execute(ds: Dataset, redIndex: Int, nirIndex: Int, options: Map[String, String]): (Dataset, Map[String, String]) = {

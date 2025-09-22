@@ -1,6 +1,7 @@
 package com.dblabs.spatial.rasterx.expressions
 
 import com.dblabs.spatial.expressions._
+import com.dblabs.spatial.rasterx.gdal.RasterDriver
 import com.dblabs.spatial.rasterx.operations.{GDALRasterize, InterpolateElevation}
 import com.dblabs.spatial.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
 import com.dblabs.spatial.vectorx.jts.JTS
@@ -95,7 +96,9 @@ object RST_DTMFromGeoms extends WithExpressionInfo {
           Map.empty
         )
 
-        RasterSerializationUtil.tileToRow((0L, outputRaster._1, outputRaster._2), BinaryType, exprConf.hConf)
+        val res = RasterSerializationUtil.tileToRow((0L, outputRaster._1, outputRaster._2), BinaryType, exprConf.hConf)
+        RasterDriver.releaseDataset(outputRaster._1)
+        res
     }
 
     override def name: String = "rst_dtmfromgeoms"

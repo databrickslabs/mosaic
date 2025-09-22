@@ -64,7 +64,9 @@ object RST_Convolve extends WithExpressionInfo {
         }
         val (raster, metadata) = Convolve.convolve(tile._2, tile._3, kernel)
         RasterDriver.releaseDataset(tile._2)
-        RasterSerializationUtil.tileToRow((tile._1, raster, metadata), rdt, exprConf.hConf)
+        val res = RasterSerializationUtil.tileToRow((tile._1, raster, metadata), rdt, exprConf.hConf)
+        RasterDriver.releaseDataset(raster)
+        res
     }
 
     def execute(tile: (Long, Dataset, Map[String, String]), kernel: Array[Array[Double]]): (Dataset, Map[String, String]) = {

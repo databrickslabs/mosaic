@@ -36,9 +36,11 @@ object RST_UpdateType extends WithExpressionInfo {
         val exprConf = ExpressionConfig.fromB64(conf.toString)
         RST_ExpressionUtil.init(exprConf)
         val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, rdt)
-        val res = execute(ds, mtd, newType.toString)
+        val result = execute(ds, mtd, newType.toString)
         RasterDriver.releaseDataset(ds)
-        RasterSerializationUtil.tileToRow((cell, res._1, res._2), rdt, exprConf.hConf)
+        val res = RasterSerializationUtil.tileToRow((cell, result._1, result._2), rdt, exprConf.hConf)
+        RasterDriver.releaseDataset(result._1)
+        res
     }
 
     def execute(ds: Dataset, options: Map[String, String], newType: String): (Dataset, Map[String, String]) = {

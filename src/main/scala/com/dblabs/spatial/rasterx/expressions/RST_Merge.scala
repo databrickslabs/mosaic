@@ -41,7 +41,9 @@ object RST_Merge extends WithExpressionInfo {
         val cell = tiles.head._1
         val (mergedDs, options) = execute(dss.toArray, tiles.head._3)
         dss.foreach(ds => RasterDriver.releaseDataset(ds))
-        RasterSerializationUtil.tileToRow((cell, mergedDs, options), rdt, exprConf.hConf)
+        val res = RasterSerializationUtil.tileToRow((cell, mergedDs, options), rdt, exprConf.hConf)
+        RasterDriver.releaseDataset(mergedDs)
+        res
     }
 
     def execute(dss: Array[Dataset], options: Map[String, String]): (Dataset, Map[String, String]) = {

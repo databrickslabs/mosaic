@@ -42,7 +42,9 @@ object RST_DerivedBand extends WithExpressionInfo {
         val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, rdt)
         val (newDs, newMtd) = execute(Seq(ds), mtd, pythonFunc.toString, funcName.toString)
         RasterDriver.releaseDataset(ds)
-        RasterSerializationUtil.tileToRow((cell, newDs, newMtd), rdt, exprConf.hConf)
+        val res = RasterSerializationUtil.tileToRow((cell, newDs, newMtd), rdt, exprConf.hConf)
+        RasterDriver.releaseDataset(newDs)
+        res
     }
 
     def execute(dss: Seq[Dataset], mtd: Map[String, String], pythonFunc: String, funcName: String): (Dataset, Map[String, String]) = {

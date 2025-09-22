@@ -51,7 +51,9 @@ object RST_Clip extends WithExpressionInfo {
         }
         val (resultDs, metadata) = execute(ds, options, geometry, cutlineAllTouched)
         RasterDriver.releaseDataset(ds)
-        RasterSerializationUtil.tileToRow((row.getLong(0), resultDs, metadata), dt, exprConf.hConf)
+        val res = RasterSerializationUtil.tileToRow((row.getLong(0), resultDs, metadata), dt, exprConf.hConf)
+        RasterDriver.releaseDataset(resultDs)
+        res
     }
 
     def execute(ds: Dataset, options: Map[String, String], geom: Geometry, cutlineAllTouched: Boolean): (Dataset, Map[String, String]) = {

@@ -39,7 +39,9 @@ object RST_CombineAvg extends WithExpressionInfo {
         val tiles = RasterSerializationUtil.arrayToTiles(array, dt)
         val (cellID, combinedRaster, mtd) = execute(tiles)
         tiles.foreach(t => RasterDriver.releaseDataset(t._2))
-        RasterSerializationUtil.tileToRow((cellID, combinedRaster, mtd), dt, exprConf.hConf)
+        val res = RasterSerializationUtil.tileToRow((cellID, combinedRaster, mtd), dt, exprConf.hConf)
+        RasterDriver.releaseDataset(combinedRaster)
+        res
     }
 
     def execute(tiles: Seq[(Long, Dataset, Map[String, String])]): (Long, Dataset, Map[String, String]) = {

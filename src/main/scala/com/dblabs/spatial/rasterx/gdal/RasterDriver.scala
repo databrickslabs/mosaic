@@ -73,7 +73,10 @@ object RasterDriver {
             ds.FlushCache()
             val files = ds.GetFileList().asScala.toSeq.map(_.toString)
             ds.delete()
-            files.foreach(f => NodeFileManager.releaseRemote(f))
+            files.foreach(f => {
+                if (f.contains("/vsimem/")) gdal.Unlink(f)
+                else NodeFileManager.releaseRemote(f)
+            })
         }
     }
 

@@ -9,8 +9,10 @@ import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
 import org.apache.spark.sql.types._
 import org.apache.spark.unsafe.types.UTF8String
-import org.gdal.gdal.Dataset
+import org.gdal.gdal.{Dataset, gdal}
 import org.gdal.osr.SpatialReference
+
+import scala.util.Try
 
 /** Returns the upper left x of the raster. */
 case class RST_Transform(
@@ -40,7 +42,9 @@ object RST_Transform extends WithExpressionInfo {
         val (cell, ds, options) = RasterSerializationUtil.rowToTile(row, dt)
         val (resultDs, metadata) = execute(ds, options, srid)
         RasterDriver.releaseDataset(ds)
-        RasterSerializationUtil.tileToRow((cell, resultDs, metadata), dt, exprConf.hConf)
+        val res = RasterSerializationUtil.tileToRow((cell, resultDs, metadata), dt, exprConf.hConf)
+        RasterDriver.releaseDataset(resultDs)
+        res
     }
 
     def execute(ds: Dataset, options: Map[String, String], srid: Int): (Dataset, Map[String, String]) = {
