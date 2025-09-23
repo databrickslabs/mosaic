@@ -9,7 +9,7 @@ import rasterx.functions
 
 HERE = Path(__file__).resolve()
 LIBDIR = (HERE.parents[2] / "lib").resolve()  # simpler, robust
-candidates = sorted(LIBDIR.glob("spatial-*-jar-with-dependencies.jar"))
+candidates = sorted(LIBDIR.glob("geobrix-*-jar-with-dependencies.jar"))
 JAR = candidates[-1].resolve()
 JAR_URI = JAR.as_uri()
 
