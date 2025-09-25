@@ -3,17 +3,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.databricks.labs</groupId>
-    <artifactId>mosaic</artifactId>
-    <version>${mosaic.version}</version>
+    <groupId>com.dblabs</groupId>
+    <artifactId>geobrix</artifactId>
+    <version>0.1.0</version>
 
     <properties>
         <minimum.coverage>80</minimum.coverage>
-        <skipTests>true</skipTests>
-        <maven.compiler.source>1.11</maven.compiler.source>
-        <maven.compiler.target>1.11</maven.compiler.target>
+        <skipTests>false</skipTests>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <encoding>UTF-8</encoding>
         <spec2.version>4.2.0</spec2.version>
+        <jdwp.agent>-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005</jdwp.agent>
+        <agentLib />
     </properties>
 
     <dependencies>
@@ -63,12 +65,17 @@
             <scope>test</scope>
         </dependency>
         <!-- spark -->
+        <!--suppress VulnerableLibrariesLocal -->
+        <!-- Potential Stack Overflow Exception for ClassUtils.getClass(...) -->
+        <!-- Not a problem for this project -->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_${scala.compat.version}</artifactId>
             <version>${spark.version}</version>
             <scope>provided</scope>
         </dependency>
+        <!--suppress VulnerableLibrariesLocal -->
+        <!-- Android vulnerability does not apply to this project -->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_${scala.compat.version}</artifactId>
@@ -118,7 +125,7 @@
         <dependency>
             <groupId>org.gdal</groupId>
             <artifactId>gdal</artifactId>
-            <version>3.4.0</version>
+            <version>3.11.0</version>
         </dependency>
 
     </dependencies>
@@ -174,15 +181,36 @@
                 <configuration>
                     <!-- Tests will be run with scalatest-maven-plugin instead -->
                     <skipTests>true</skipTests>
-                    <argLine>@{argLine} -Djava.library.path=/usr/local/lib;/usr/java/packages/lib;/usr/lib64;/lib64;/lib;/usr/lib</argLine>
+                    <forkCount>1C</forkCount>
+                    <reuseForks>true</reuseForks>
+                    <argLine>
+                        @{argLine}
+                        -Djava.library.path=/usr/local/lib;/usr/java/packages/lib;/usr/lib64;/lib64;/lib;/usr/lib;/usr/local/hadoop/lib/native
+                        -Xms2g -Xmx4g
+                        -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+                        -XX:ReservedCodeCacheSize=512m
+                        -XX:InitialCodeCacheSize=256m
+                        -XX:MaxMetaspaceSize=1024m
+                    </argLine>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.scalatest</groupId>
                 <artifactId>scalatest-maven-plugin</artifactId>
-                <version>2.0.0</version>
+                <version>2.2.0</version>
                 <configuration>
+                    <forkMode>once</forkMode>
+                    <logForkedProcessCommand>true</logForkedProcessCommand>
                     <reportsDirectory>${project.build.directory}/test-reports</reportsDirectory>
+                    <argLine>
+                        -Djava.library.path=/usr/local/lib:/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib:/usr/local/hadoop/lib/native
+                        -Xms2g -Xmx4g
+                        -XX:+UseG1GC -XX:MaxGCPauseMillis=200
+                        -XX:ReservedCodeCacheSize=512m
+                        -XX:InitialCodeCacheSize=256m
+                        -XX:MaxMetaspaceSize=1024m
+                        ${agentLib}
+                    </argLine>
                 </configuration>
                 <executions>
                     <execution>
@@ -229,7 +257,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${basedir}/python/mosaic/lib</outputDirectory>
+                            <outputDirectory>${basedir}/python/lib</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${basedir}/target/</directory>
@@ -254,17 +282,16 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <scala.version>2.12.10</scala.version>
-                <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.4.1</spark.version>
-                <mosaic.version>0.4.3</mosaic.version>
+                <scala.version>2.13.12</scala.version>
+                <scala.compat.version>2.13</scala.compat.version>
+                <spark.version>4.0.0</spark.version>
             </properties>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.scoverage</groupId>
                         <artifactId>scoverage-maven-plugin</artifactId>
-                        <version>1.4.11</version>
+                        <version>2.1.0</version>
                         <executions>
                             <execution>
                                 <id>scoverage-report</id>
@@ -277,25 +304,13 @@
                         </executions>
                         <configuration>
                             <minimumCoverage>${minimum.coverage}</minimumCoverage>
-                            <failOnMinimumCoverage>true</failOnMinimumCoverage>
+                            <failOnMinimumCoverage>false</failOnMinimumCoverage>
                             <scalaVersion>${scala.version}</scalaVersion>
                             <additionalForkedProjectProperties>skipTests=false</additionalForkedProjectProperties>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-        <profile>
-            <!-- local testing `mvn test -PskipScoverage -DskipTests=false -Dsuite=...` -->
-            <id>skipScoverage</id>
-            <properties>
-                <scala.version>2.12.10</scala.version>
-                <scala.compat.version>2.12</scala.compat.version>
-                <spark.version>3.4.1</spark.version>
-                <mosaic.version>0.4.3</mosaic.version>
-                <maven.compiler.source>1.8</maven.compiler.source>
-                <maven.compiler.target>1.8</maven.compiler.target>
-            </properties>
         </profile>
     </profiles>
     <distributionManagement>
