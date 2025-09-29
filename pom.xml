@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.dblabs</groupId>
+    <groupId>com.databricks.labs</groupId>
     <artifactId>geobrix</artifactId>
     <version>0.1.0</version>
 
@@ -311,6 +311,15 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <!-- local testing `mvn test -PskipScoverage -DskipTests=false -Dsuite=...` -->
+            <id>skipScoverage</id>
+            <properties>
+                <scala.version>2.13.12</scala.version>
+                <scala.compat.version>2.13</scala.compat.version>
+                <spark.version>4.0.0</spark.version>
+            </properties>
         </profile>
     </profiles>
     <distributionManagement>

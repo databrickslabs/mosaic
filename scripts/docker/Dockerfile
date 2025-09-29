@@ -100,11 +100,12 @@ RUN cd src/gdal-${GDAL_VERSION} \
     && ldconfig
 
 
-# Copy binaries to the location expected to be by Mosaic
+# Copy binaries to the location expected to be by the project
 RUN ln -s $ROOTDIR/lib/libgdal.so /usr/lib/libgdal.so
 RUN ln -s $ROOTDIR/lib/libgdal.so.30 /usr/lib/libgdal.so.30
 RUN ln -s $ROOTDIR/lib/libgdal.so.30.0.3 /usr/lib/libgdal.so.30.0.3
-RUN mkdir -p /usr/lib/jni && ln -s $ROOTDIR/lib/libgdalalljni.so /usr/lib/jni/libgdalalljni.so.30
+RUN ln -s $ROOTDIR/lib/jni/libgdalalljni.so /usr/lib/libgdalalljni.so
+RUN mkdir -p /usr/lib/jni && ln -s $ROOTDIR/lib/jni/libgdalalljni.so /usr/lib/jni/libgdalalljni.so.30
 RUN mkdir -p /usr/lib/ogdi && ln -s $ROOTDIR/lib/libgdal.so /usr/lib/ogdi/libgdal.so
 
 # Add Maven
@@ -114,13 +115,13 @@ ARG BASE_URL=https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries
 ARG SHA=bcfe4fe305c962ace56ac7b5fc7a08b87d5abd8b7e89027ab251069faebee516b0ded8961445d6d91ec1985dfe30f8153268843c89aa392733d1a3ec956c9978
 
 RUN mkdir -p $ROOTDIR/share/maven $ROOTDIR/share/maven/ref \
-  && echo "Downlaoding maven" \
+  && echo "Downloading maven" \
   && curl -fsSL -o /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz \
   \
   && echo "Checking download hash" \
   && echo "${SHA}  /tmp/apache-maven.tar.gz" | sha512sum -c - \
   \
-  && echo "Unziping maven" \
+  && echo "Unzipping maven" \
   && tar -xzf /tmp/apache-maven.tar.gz -C $ROOTDIR/share/maven --strip-components=1 \
   \
   && echo "Cleaning and setting links" \
@@ -136,6 +137,7 @@ RUN pip3 install --upgrade pip --ignore-installed --break-system-packages
 RUN pip3 install build wheel keplergl ipython pyspark==$SPARK_VERSION --break-system-packages
 RUN pip3 install black build isort py4j requests --break-system-packages
 RUN pip3 install gdal==$GDAL_VERSION --break-system-packages
+RUN pip3 install pytest --break-system-packages
 
 # Clean up
 RUN apt-get purge -y --auto-remove $buildDeps \
