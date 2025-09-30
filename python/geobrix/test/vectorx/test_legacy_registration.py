@@ -3,7 +3,7 @@ import pytest
 from pathlib import Path
 
 from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
+from pyspark.sql import functions as f
 
 HERE = Path(__file__).resolve()
 LIBDIR = (HERE.parents[2] / "lib").resolve()   # simpler, robust
@@ -23,7 +23,7 @@ def spark():
 
 
 def test_legacy_functions_registration(spark):
-    import vectorx.jts.legacy.functions as legacy_funcs
+    from geobrix.vectorx.jts.legacy import functions as legacy_funcs
     legacy_funcs.register(spark)
     df = spark.sql("show functions like 'st_legacyaswkb'")
     assert df.count() is not None

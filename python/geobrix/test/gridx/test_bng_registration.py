@@ -3,7 +3,7 @@ import pytest
 from pathlib import Path
 
 from pyspark.sql import SparkSession
-from pyspark.sql import functions as F
+from pyspark.sql import functions as f
 
 HERE = Path(__file__).resolve()
 LIBDIR = (HERE.parents[2] / "lib").resolve()   # simpler, robust
@@ -23,8 +23,8 @@ def spark():
 
 
 def test_bng_functions_registration(spark):
-    import gridx.bng.functions as bng_funcs
+    from geobrix.gridx.bng import functions as bng_funcs
     bng_funcs.register(spark)
-    df = spark.range(1).select(bng_funcs.bng_aswkb(F.lit("TQ388791")).alias("wkb"))
+    df = spark.range(1).select(bng_funcs.bng_aswkb(f.lit("TQ388791")).alias("wkb"))
     row = df.collect()[0]
     assert row["wkb"] is not None

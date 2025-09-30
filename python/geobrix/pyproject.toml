@@ -1,0 +1,61 @@
+[project]
+name = "dblabs-geobrix"
+authors = [{ name = "Databricks" }]
+dynamic = ["version"]
+description = "GeoBriX: A high-performance spatial processing library for Apache Spark."
+readme = "README.md"
+requires-python = ">=3.10, <3.13"
+license = { text = "Databricks License" }
+classifiers = [
+    "License :: Other/Proprietary License",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "pyspark>=4.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/databrickslabs/mosaic" # TODO: rename when new URL is available
+
+[project.optional-dependencies]
+dev = [
+    "isort",
+    "black",
+    "build",
+]
+test = [
+    "pytest>=7.0",
+]
+
+[tool.setuptools.packages.find]
+# This section is intentionally left empty.
+# setuptools will find packages automatically.
+
+[tool.setuptools.package-data]
+geobrix = ["lib/*.jar", "resources/*.png"]
+
+[tool.setuptools.dynamic]
+version = {attr = "geobrix.__version__"}
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
+known_first_party = ["geobrix"]
+default_section = "THIRDPARTY"
+
+[tool.flake8]
+ignore = ["E203", "E266", "E501", "W503"]
+max-line-length = 88
+max-complexity = 20
+select = ["B", "C", "E", "F", "W", "T4"]
+exclude = [".git", "__pycache__", "docs/conf.py", "dist"]
+
+[tool.mypy]
+files = ["geobrix"]
+ignore_missing_imports = true

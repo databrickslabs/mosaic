@@ -25,7 +25,5 @@ cd /root/geobrix && mvn package -DskipTests
 # - refer to dockerfile for what is already built
 echo "\n::: [4] ... build python :::\n"
 echo 'export JUPYTER_PLATFORM_DIRS=1' >> ~/.bashrc
-cp "$(find /root/geobrix/python/lib -name "geobrix-*-jar-with-dependencies.jar")" /usr/local/lib/python3.12/dist-packages/pyspark/jars
-cd /root/geobrix/python/gridx && pip install . --break-system-packages
-cd /root/geobrix/python/rasterx && pip install . --break-system-packages
-cd /root/geobrix/python/vectorx && pip install . --break-system-packages
+cp "$(find /root/geobrix/python/geobrix/lib -name "geobrix-*-jar-with-dependencies.jar")" /usr/local/lib/python3.12/dist-packages/pyspark/jars
+cd /root/geobrix/python/geobrix && pip install . --break-system-packages
