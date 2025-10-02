@@ -4,7 +4,7 @@
 # [3] if you want to run tests within the container shell
 # - [a] `unset JAVA_TOOL_OPTIONS` is needed to execute JVM tests
 # - [b] then can test e.g. `mvn -X test -DskipTests=false -Dsuites=com.databricks.labs.gbx.ds.WhitelistDSTest`
-#       and `python3 -m unittest gridx/test/test_bng_registration.py` from ./python dir
+#       and `pytest` from ./python/geobrix dir
 # - [c] you may need to run `mvn clean` occasionally
 # ... don't need to specify -PskipCoverage (see settings.xml)
 # [4] `docker stop geobrix-dev` whenever done to terminate the container
