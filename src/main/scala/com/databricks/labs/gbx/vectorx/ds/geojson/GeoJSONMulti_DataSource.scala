@@ -1,4 +1,4 @@
-package com.databricks.labs.gbx.vectorx.ds.shp
+package com.databricks.labs.gbx.vectorx.ds.geojson
 
 import com.databricks.labs.gbx.ds.DataSourceExtras
 import com.databricks.labs.gbx.vectorx.ds.ogr.OGR_DataSource
@@ -9,13 +9,13 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
 
 //noinspection ScalaUnusedSymbol
-class ShapeFile_DataSource extends OGR_DataSource with DataSourceExtras{
+class GeoJSONMulti_DataSource extends OGR_DataSource with DataSourceExtras {
 
     override def dsExtraMap(): Map[String, String] = Map(
-        "driverName" -> "ESRI Shapefile"
+        "driverName" -> "GeoJSONSeq"
     )
 
-    override def shortName(): String = "shapefile"
+    override def shortName(): String = "geojson_multi"
 
     override def inferSchema(options: CaseInsensitiveStringMap): StructType = {
         super.inferSchema(extraCaseInsensitiveStringMap(options))

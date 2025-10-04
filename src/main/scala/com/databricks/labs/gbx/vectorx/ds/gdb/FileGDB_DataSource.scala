@@ -1,4 +1,4 @@
-package com.databricks.labs.gbx.vectorx.ds.shp
+package com.databricks.labs.gbx.vectorx.ds.gdb
 
 import com.databricks.labs.gbx.ds.DataSourceExtras
 import com.databricks.labs.gbx.vectorx.ds.ogr.OGR_DataSource
@@ -7,15 +7,14 @@ import org.apache.spark.sql.connector.expressions.Transform
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.util.CaseInsensitiveStringMap
 
-
 //noinspection ScalaUnusedSymbol
-class ShapeFile_DataSource extends OGR_DataSource with DataSourceExtras{
+class FileGDB_DataSource extends OGR_DataSource with DataSourceExtras {
 
     override def dsExtraMap(): Map[String, String] = Map(
-        "driverName" -> "ESRI Shapefile"
+        "driverName" -> "OpenFileGDB"
     )
 
-    override def shortName(): String = "shapefile"
+    override def shortName(): String = "file_gdb"
 
     override def inferSchema(options: CaseInsensitiveStringMap): StructType = {
         super.inferSchema(extraCaseInsensitiveStringMap(options))
