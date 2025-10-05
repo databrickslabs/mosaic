@@ -11,9 +11,14 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 //noinspection ScalaUnusedSymbol
 class GeoJSON_DataSource extends OGR_DataSource with DataSourceExtras{
 
-    override def dsExtraMap(): Map[String, String] = Map(
-        "driverName" -> "GeoJSON"
-    )
+    // default to multi = true given common use
+    override def dsExtraMap(checkMap: Map[String, String] = Map.empty): Map[String, String] = {
+        if (checkMap.getOrElse("multi", "true").toBoolean) {
+            Map("driverName" -> "GeoJSONSeq")
+        } else {
+            Map("driverName" -> "GeoJSON")
+        }
+    }
 
     override def shortName(): String = "geojson"
 

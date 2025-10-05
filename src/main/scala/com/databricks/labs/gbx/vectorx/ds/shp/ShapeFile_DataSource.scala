@@ -11,7 +11,7 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap
 //noinspection ScalaUnusedSymbol
 class ShapeFile_DataSource extends OGR_DataSource with DataSourceExtras{
 
-    override def dsExtraMap(): Map[String, String] = Map(
+    override def dsExtraMap(checkMap: Map[String, String] = Map.empty): Map[String, String] = Map(
         "driverName" -> "ESRI Shapefile"
     )
 

@@ -63,15 +63,16 @@ class OGR_DataSourceTest extends PlanTest with SilentSparkSession {
 
         val res_gj = spark.read
             .format("geojson")
+            .option("multi", "false")
             .load(gjPath)
 
         res_gj.count() shouldEqual 1L // single geom
 
         val res_gj1 = spark.read
-            .format("geojson_multi")
+            .format("geojson")
             .load(gjPath)
 
-        res_gj1.count() should be > 1L // individual geoms
+        res_gj1.count() should be > 1L // newline geoms
 
         // gpkg (zip fails)
 
