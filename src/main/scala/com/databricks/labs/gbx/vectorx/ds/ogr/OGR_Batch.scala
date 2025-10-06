@@ -15,7 +15,7 @@ class OGR_Batch(schema: StructType, options: Map[String, String]) extends Scan w
 
     override def planInputPartitions(): Array[InputPartition] = {
         val inPath = options("path")
-        val chunkSize = options("chunkSize").toInt
+        val chunkSize = options.getOrElse("chunkSize", "10000").toInt
         val driverName = options.getOrElse("driverName", "")
         val layerN = options.getOrElse("layerNumber", "0").toInt
         val layerName = options.getOrElse("layerName", "")
