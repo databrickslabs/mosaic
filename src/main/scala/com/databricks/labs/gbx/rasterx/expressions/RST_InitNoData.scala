@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.{GDAL, RasterDriver}
 import com.databricks.labs.gbx.rasterx.operator.GDALWarp
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -32,16 +32,21 @@ object RST_InitNoData extends WithExpressionInfo {
     def evalPath(row: InternalRow, conf: UTF8String): InternalRow = eval(row, conf, StringType)
     def evalBinary(row: InternalRow, conf: UTF8String): InternalRow = eval(row, conf, BinaryType)
 
-    def eval(row: InternalRow, conf: UTF8String, rdt: DataType): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val (cell, ds, mdt) = RasterSerializationUtil.rowToTile(row, rdt)
-        val (resultDs, newMdt) = execute(ds, mdt)
-        RasterDriver.releaseDataset(ds)
-        val res = RasterSerializationUtil.tileToRow((cell, resultDs, newMdt), rdt, exprConf.hConf)
-        RasterDriver.releaseDataset(resultDs)
-        res
-    }
+    def eval(row: InternalRow, conf: UTF8String, rdt: DataType): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val (cell, ds, mdt) = RasterSerializationUtil.rowToTile(row, rdt)
+              val (resultDs, newMdt) = execute(ds, mdt)
+              RasterDriver.releaseDataset(ds)
+              val res = RasterSerializationUtil.tileToRow((cell, resultDs, newMdt), rdt, exprConf.hConf)
+              RasterDriver.releaseDataset(resultDs)
+              res
+          },
+          row,
+          rdt
+        )
 
     def execute(ds: Dataset, options: Map[String, String]): (Dataset, Map[String, String]) = {
         val noDataValues = (1 to ds.GetRasterCount())
@@ -66,6 +71,5 @@ object RST_InitNoData extends WithExpressionInfo {
     override def name: String = "gbx_rst_initnodata"
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_InitNoData(c(0))
-
 
 }

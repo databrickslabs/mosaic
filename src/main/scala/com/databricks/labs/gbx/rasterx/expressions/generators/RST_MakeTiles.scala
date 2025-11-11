@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions.generators
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.{BalancedSubdivision, RasterAccessors}
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -55,35 +55,40 @@ case class RST_MakeTiles(
       * @return
       *   The tiles.
       */
-    override def eval(input: InternalRow): IterableOnce[InternalRow] = {
-        val conf = exprConfExpr.eval(input).asInstanceOf[UTF8String]
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
+    override def eval(input: InternalRow): IterableOnce[InternalRow] =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val conf = exprConfExpr.eval(input).asInstanceOf[UTF8String]
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
 
-        val rawTile = tileExpr.eval(input).asInstanceOf[InternalRow]
-        val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(rawTile, rasterType)
+              val rawTile = tileExpr.eval(input).asInstanceOf[InternalRow]
+              val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(rawTile, rasterType)
 
-        val targetSize = sizeInMBExpr.eval(input).asInstanceOf[Int]
-        val inputSize = RasterAccessors.memSize(ds)
+              val targetSize = sizeInMBExpr.eval(input).asInstanceOf[Int]
+              val inputSize = RasterAccessors.memSize(ds)
 
-        if (targetSize <= 0 && inputSize <= Integer.MAX_VALUE) {
-            // - no split required
-            RasterDriver.releaseDataset(ds)
-            Seq(rawTile).iterator
-        } else {
-            // target size is > 0 and raster size > target size
-            val iterator = BalancedSubdivision.splitRasterIter(ds, mtd, targetSize)
-            RST_ExpressionUtil.addCleanupListener(iterator)
-            iterator
-                .map { case (ds, mtd) =>
-                    // convert the dataset to a row}
-                    val tileRow = RasterSerializationUtil
-                        .tileToRow((cell, ds, mtd), rasterType, exprConf.hConf)
-                    RasterDriver.releaseDataset(ds)
-                    InternalRow.fromSeq(Seq(tileRow)) // Row wrapping in generator
-                }
-        }
-    }
+              if (targetSize <= 0 && inputSize <= Integer.MAX_VALUE) {
+                  // - no split required
+                  RasterDriver.releaseDataset(ds)
+                  Seq(rawTile).iterator
+              } else {
+                  // target size is > 0 and raster size > target size
+                  val iterator = BalancedSubdivision.splitRasterIter(ds, mtd, targetSize)
+                  RST_ExpressionUtil.addCleanupListener(iterator)
+                  iterator
+                      .map { case (ds, mtd) =>
+                          // convert the dataset to a row}
+                          val tileRow = RasterSerializationUtil
+                              .tileToRow((cell, ds, mtd), rasterType, exprConf.hConf)
+                          RasterDriver.releaseDataset(ds)
+                          InternalRow.fromSeq(Seq(tileRow)) // Row wrapping in generator
+                      }
+              }
+          },
+          input,
+          rasterType
+        )
 
 }
 

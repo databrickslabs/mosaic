@@ -2,6 +2,8 @@ package com.databricks.labs.gbx.rasterx.operator
 
 import org.gdal.gdal.{BuildVRTOptions, Dataset, gdal}
 
+import scala.util.Try
+
 /** GDALBuildVRT is a wrapper for the GDAL BuildVRT command. */
 object GDALBuildVRT {
 
@@ -27,7 +29,7 @@ object GDALBuildVRT {
         // Assuming 8 bytes per pixel for double type
         // this may be a bit wasteful if the raster is not double type,
         // VRTs are just config files so this is best effort approximate
-        val size = result.getRasterXSize * result.getRasterYSize * result.getRasterCount * 8
+        val size = Try(result.getRasterXSize * result.getRasterYSize * result.getRasterCount * 8).getOrElse(-1L)
         val newOptions = Map(
           "path" -> outputPath,
           "parentPath" -> options.getOrElse("parentPath", dss.head.GetDescription()),
@@ -40,7 +42,7 @@ object GDALBuildVRT {
           "isZipped" -> "false",
           "isSubset" -> "false"
         )
-        result.FlushCache()
+        Try(result.FlushCache())
         (result, newOptions)
     }
 

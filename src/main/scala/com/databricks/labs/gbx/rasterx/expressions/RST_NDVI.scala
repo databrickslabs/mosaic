@@ -4,7 +4,7 @@ import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigEx
 import com.databricks.labs.gbx.rasterx.gdal.{GDAL, RasterDriver}
 import com.databricks.labs.gbx.rasterx.operations.NDVI
 import com.databricks.labs.gbx.rasterx.operator.GDALTranslate
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import com.databricks.labs.gbx.util.NodeFilePathUtil
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -37,31 +37,43 @@ case class RST_NDVI(
 object RST_NDVI extends WithExpressionInfo {
 
     def evalPath(row: InternalRow, redIndex: Int, nirIndex: Int, conf: UTF8String): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, StringType)
-        val (resultDs, resMtd) = execute(ds, redIndex, nirIndex, mtd)
-        RasterDriver.releaseDataset(ds)
-        RasterSerializationUtil.tileToRow((cell, resultDs, resMtd), StringType, exprConf.hConf)
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, StringType)
+              val (resultDs, resMtd) = execute(ds, redIndex, nirIndex, mtd)
+              RasterDriver.releaseDataset(ds)
+              RasterSerializationUtil.tileToRow((cell, resultDs, resMtd), StringType, exprConf.hConf)
+          },
+          row,
+          StringType
+        )
+
     }
-    def evalBinary(row: InternalRow, redIndex: Int, nirIndex: Int, conf: UTF8String): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, BinaryType)
-        val extension = GDAL.getExtension(ds.GetDriver.getShortName)
-        val uuid = java.util.UUID.randomUUID().toString.replace("-", "_")
-        val cpyPath = s"${NodeFilePathUtil.rootPath}/ndvi_temp_$uuid.$extension"
-        val (dsCpy, dsMtd) = GDALTranslate.executeTranslate(cpyPath, ds, "gdal_translate", mtd)
-        val (resultDs, resMtd) = execute(dsCpy, redIndex, nirIndex, dsMtd)
-        val resPath = resultDs.GetDescription()
-        RasterDriver.releaseDataset(ds)
-        RasterDriver.releaseDataset(dsCpy)
-        Try(Files.deleteIfExists(Paths.get(cpyPath))) // ndvi_temp file is not stored in /vsimem/ so we need to delete it
-        val res = RasterSerializationUtil.tileToRow((cell, resultDs, resMtd), BinaryType, exprConf.hConf)
-        Try(Files.deleteIfExists(Paths.get(resPath))) // resultDs is not stored in /vsimem/ so we need to delete it
-        RasterDriver.releaseDataset(resultDs)
-        res
-    }
+    def evalBinary(row: InternalRow, redIndex: Int, nirIndex: Int, conf: UTF8String): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, BinaryType)
+              val extension = GDAL.getExtension(ds.GetDriver.getShortName)
+              val uuid = java.util.UUID.randomUUID().toString.replace("-", "_")
+              val cpyPath = s"${NodeFilePathUtil.rootPath}/ndvi_temp_$uuid.$extension"
+              val (dsCpy, dsMtd) = GDALTranslate.executeTranslate(cpyPath, ds, "gdal_translate", mtd)
+              val (resultDs, resMtd) = execute(dsCpy, redIndex, nirIndex, dsMtd)
+              val resPath = resultDs.GetDescription()
+              RasterDriver.releaseDataset(ds)
+              RasterDriver.releaseDataset(dsCpy)
+              Try(Files.deleteIfExists(Paths.get(cpyPath))) // ndvi_temp file is not stored in /vsimem/ so we need to delete it
+              val res = RasterSerializationUtil.tileToRow((cell, resultDs, resMtd), BinaryType, exprConf.hConf)
+              Try(Files.deleteIfExists(Paths.get(resPath))) // resultDs is not stored in /vsimem/ so we need to delete it
+              RasterDriver.releaseDataset(resultDs)
+              res
+          },
+          row,
+          BinaryType
+        )
 
     def execute(ds: Dataset, redIndex: Int, nirIndex: Int, options: Map[String, String]): (Dataset, Map[String, String]) = {
         NDVI.compute(ds, options, redIndex, nirIndex)

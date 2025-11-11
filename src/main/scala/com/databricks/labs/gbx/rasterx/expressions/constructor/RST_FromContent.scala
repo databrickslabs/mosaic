@@ -2,7 +2,7 @@ package com.databricks.labs.gbx.rasterx.expressions.constructor
 
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.GDAL
-import com.databricks.labs.gbx.rasterx.util.RST_ExpressionUtil
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil}
 import com.databricks.labs.gbx.util.SerializationUtil
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -31,22 +31,29 @@ case class RST_FromContent(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_FromContent extends WithExpressionInfo {
 
-    def eval(content: Array[Byte], driver: UTF8String, conf: UTF8String): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val mtd = Map(
-          "driver" -> driver.toString,
-          "extension" -> GDAL.getExtension(driver.toString),
-          "size" -> content.length.toString
-        )
-        val mapData = SerializationUtil.toMapData[String, String](mtd)
-        val row = InternalRow.fromSeq(Seq(null, content, mapData))
-        row
-    }
+    def eval(content: Array[Byte], driver: UTF8String, conf: UTF8String): InternalRow =
+        Option(
+          RST_ErrorHandler.safeEval(
+            () => {
+                val exprConf = ExpressionConfig.fromB64(conf.toString)
+                RST_ExpressionUtil.init(exprConf)
+                val mtd = Map(
+                  "driver" -> driver.toString,
+                  "extension" -> GDAL.getExtension(driver.toString),
+                  "size" -> content.length.toString
+                )
+                val mapData = SerializationUtil.toMapData[String, String](mtd)
+                val row = InternalRow.fromSeq(Seq(null, content, mapData))
+                row
+            },
+            null,
+            BinaryType,
+            conf
+          )
+        ).map(_.asInstanceOf[InternalRow]).orNull
 
     override def name: String = "gbx_rst_fromcontent"
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_FromContent(c(0), c(1))
-
 
 }

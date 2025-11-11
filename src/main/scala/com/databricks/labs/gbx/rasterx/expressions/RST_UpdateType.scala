@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.{GDAL, RasterDriver}
 import com.databricks.labs.gbx.rasterx.operator.GDALTranslate
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -32,16 +32,21 @@ object RST_UpdateType extends WithExpressionInfo {
     def evalPath(row: InternalRow, newType: UTF8String, conf: UTF8String): InternalRow = eval(row, newType, conf, StringType)
     def evalBinary(row: InternalRow, newType: UTF8String, conf: UTF8String): InternalRow = eval(row, newType, conf, BinaryType)
 
-    def eval(row: InternalRow, newType: UTF8String, conf: UTF8String, rdt: DataType): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, rdt)
-        val result = execute(ds, mtd, newType.toString)
-        RasterDriver.releaseDataset(ds)
-        val res = RasterSerializationUtil.tileToRow((cell, result._1, result._2), rdt, exprConf.hConf)
-        RasterDriver.releaseDataset(result._1)
-        res
-    }
+    def eval(row: InternalRow, newType: UTF8String, conf: UTF8String, rdt: DataType): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, rdt)
+              val result = execute(ds, mtd, newType.toString)
+              RasterDriver.releaseDataset(ds)
+              val res = RasterSerializationUtil.tileToRow((cell, result._1, result._2), rdt, exprConf.hConf)
+              RasterDriver.releaseDataset(result._1)
+              res
+          },
+          row,
+          rdt
+        )
 
     def execute(ds: Dataset, options: Map[String, String], newType: String): (Dataset, Map[String, String]) = {
         val uuid = java.util.UUID.randomUUID().toString.replace("-", "_")
@@ -59,6 +64,5 @@ object RST_UpdateType extends WithExpressionInfo {
     override def name: String = "gbx_rst_updatetype"
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_UpdateType(c(0), c(1))
-
 
 }

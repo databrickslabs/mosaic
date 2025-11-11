@@ -39,6 +39,10 @@ case class ExpressionConfig(
         configs.getOrElse("spark.databricks.labs.gbx.raster.use.checkpoint", "false").toBoolean
     }
 
+    def crashExpressions: Boolean = {
+        configs.getOrElse("spark.databricks.labs.gbx.expressions.crash.on.error", "false").toBoolean
+    }
+
 }
 
 object ExpressionConfig {

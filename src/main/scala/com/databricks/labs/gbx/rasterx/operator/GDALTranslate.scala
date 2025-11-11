@@ -49,7 +49,7 @@ object GDALTranslate {
           "isZipped" -> "false",
           "isSubset" -> "false"
         )
-        result.FlushCache()
+        Try(result.FlushCache())
         (result, newOptions)
     }
 

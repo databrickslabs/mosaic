@@ -4,7 +4,7 @@ import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigEx
 import com.databricks.labs.gbx.rasterx.gdal.{GDAL, RasterDriver}
 import com.databricks.labs.gbx.rasterx.operations.MapAlgebra
 import com.databricks.labs.gbx.rasterx.operator.{GDALCalc, GDALTranslate}
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import com.databricks.labs.gbx.util.NodeFilePathUtil
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -36,40 +36,50 @@ case class RST_MapAlgebra(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_MapAlgebra extends WithExpressionInfo {
 
-    def evalPath(array: ArrayData, spec: UTF8String, conf: UTF8String): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val dss = RasterSerializationUtil.arrayToTiles(array, StringType)
-        val (result, mtd) = execute(dss.map(_._2), dss.head._3, spec.toString)
-        dss.foreach(ds => RasterDriver.releaseDataset(ds._2))
-        val res = RasterSerializationUtil.tileToRow((dss.head._1, result, mtd), StringType, exprConf.hConf)
-        RasterDriver.releaseDataset(result)
-        res
-    }
+    def evalPath(array: ArrayData, spec: UTF8String, conf: UTF8String): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val dss = RasterSerializationUtil.arrayToTiles(array, StringType)
+              val (result, mtd) = execute(dss.map(_._2), dss.head._3, spec.toString)
+              dss.foreach(ds => RasterDriver.releaseDataset(ds._2))
+              val res = RasterSerializationUtil.tileToRow((dss.head._1, result, mtd), StringType, exprConf.hConf)
+              RasterDriver.releaseDataset(result)
+              res
+          },
+          array,
+          StringType
+        )
 
-    def evalBinary(array: ArrayData, spec: UTF8String, conf: UTF8String): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val dss = RasterSerializationUtil.arrayToTiles(array, BinaryType)
-        // GDAL calc does not work with /vsimem/ files, so we need to copy them to a local path
-        val dssCpy = dss.map { ds =>
-            val uuid = java.util.UUID.randomUUID().toString.replace("-", "_")
-            val extension = GDAL.getExtension(ds._2.GetDriver.getShortName)
-            val path = s"${NodeFilePathUtil.rootPath}/$uuid.$extension"
-            val (dsCpy, mtd) = GDALTranslate.executeTranslate(path, ds._2, "gdal_translate", ds._3)
-            RasterDriver.releaseDataset(ds._2)
-            (ds._1, dsCpy, mtd, path)
-        }
-        val (result, mtd) = execute(dssCpy.map(_._2), dss.head._3, spec.toString)
-        val res = RasterSerializationUtil.tileToRow((dssCpy.head._1, result, mtd), BinaryType, exprConf.hConf)
-        dssCpy.foreach(ds => RasterDriver.releaseDataset(ds._2))
-        dssCpy.foreach(ds => Files.deleteIfExists(Paths.get(ds._4)))
-        // result is computed via gdalcalc so it is not in /vsimem/, we need to delete it manually
-        val resPath = result.GetDescription()
-        RasterDriver.releaseDataset(result)
-        Try(Files.deleteIfExists(Paths.get(resPath)))
-        res
-    }
+    def evalBinary(array: ArrayData, spec: UTF8String, conf: UTF8String): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val dss = RasterSerializationUtil.arrayToTiles(array, BinaryType)
+              // GDAL calc does not work with /vsimem/ files, so we need to copy them to a local path
+              val dssCpy = dss.map { ds =>
+                  val uuid = java.util.UUID.randomUUID().toString.replace("-", "_")
+                  val extension = GDAL.getExtension(ds._2.GetDriver.getShortName)
+                  val path = s"${NodeFilePathUtil.rootPath}/$uuid.$extension"
+                  val (dsCpy, mtd) = GDALTranslate.executeTranslate(path, ds._2, "gdal_translate", ds._3)
+                  RasterDriver.releaseDataset(ds._2)
+                  (ds._1, dsCpy, mtd, path)
+              }
+              val (result, mtd) = execute(dssCpy.map(_._2), dss.head._3, spec.toString)
+              val res = RasterSerializationUtil.tileToRow((dssCpy.head._1, result, mtd), BinaryType, exprConf.hConf)
+              dssCpy.foreach(ds => RasterDriver.releaseDataset(ds._2))
+              dssCpy.foreach(ds => Files.deleteIfExists(Paths.get(ds._4)))
+              // result is computed via gdalcalc so it is not in /vsimem/, we need to delete it manually
+              val resPath = result.GetDescription()
+              RasterDriver.releaseDataset(result)
+              Try(Files.deleteIfExists(Paths.get(resPath)))
+              res
+          },
+          array,
+          BinaryType
+        )
 
     def execute(dss: Seq[Dataset], options: Map[String, String], spec: String): (Dataset, Map[String, String]) = {
         val uuid = java.util.UUID.randomUUID().toString.replace("-", "_")

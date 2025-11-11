@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions.constructor
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.MergeBands
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -33,14 +33,19 @@ object RST_FromBands extends WithExpressionInfo {
     def evalBinary(row: ArrayData, conf: UTF8String): InternalRow = eval(row, conf, BinaryType)
     def evalPath(row: ArrayData, conf: UTF8String): InternalRow = eval(row, conf, StringType)
 
-    def eval(row: ArrayData, conf: UTF8String, rdt: DataType): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val tiles = RasterSerializationUtil.arrayToTiles(row, rdt)
-        val (ds, mtd) = execute(tiles)
-        tiles.foreach(t => RasterDriver.releaseDataset(t._2))
-        RasterSerializationUtil.tileToRow((tiles.head._1, ds, mtd), rdt, exprConf.hConf)
-    }
+    def eval(row: ArrayData, conf: UTF8String, rdt: DataType): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val tiles = RasterSerializationUtil.arrayToTiles(row, rdt)
+              val (ds, mtd) = execute(tiles)
+              tiles.foreach(t => RasterDriver.releaseDataset(t._2))
+              RasterSerializationUtil.tileToRow((tiles.head._1, ds, mtd), rdt, exprConf.hConf)
+          },
+          row,
+          rdt
+        )
 
     def execute(tiles: Seq[(Long, Dataset, Map[String, String])]): (Dataset, Map[String, String]) = {
         val rasters = tiles.map(_._2)

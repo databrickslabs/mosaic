@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.{GDALRasterize, InterpolateElevation}
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import com.databricks.labs.gbx.vectorx.jts.JTS
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -67,39 +67,44 @@ object RST_DTMFromGeoms extends WithExpressionInfo {
         noData: Double,
         conf: UTF8String,
         dts: (DataType, DataType, DataType)
-    ): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val (pdt, ldt, odt) = dts
-        val (gridWidthX, gridWidthY, gridSizeX, gridSizeY) = gridWindow
-        val geomPoints = JTS.fromArrayData(pointsArray, pdt)
-        val geomLines = JTS.fromArrayData(linesArray, ldt).map(_.asInstanceOf[LineString])
-        val multiPointGeom = JTS.multiPoint(geomPoints)
-        val origin = (odt match {
-            case StringType => JTS.fromWKT(gridOrigin.asInstanceOf[UTF8String].toString)
-            case BinaryType => JTS.fromWKB(gridOrigin.asInstanceOf[Array[Byte]])
-        }).getCentroid
+    ): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val (pdt, ldt, odt) = dts
+              val (gridWidthX, gridWidthY, gridSizeX, gridSizeY) = gridWindow
+              val geomPoints = JTS.fromArrayData(pointsArray, pdt)
+              val geomLines = JTS.fromArrayData(linesArray, ldt).map(_.asInstanceOf[LineString])
+              val multiPointGeom = JTS.multiPoint(geomPoints)
+              val origin = (odt match {
+                  case StringType => JTS.fromWKT(gridOrigin.asInstanceOf[UTF8String].toString)
+                  case BinaryType => JTS.fromWKB(gridOrigin.asInstanceOf[Array[Byte]])
+              }).getCentroid
 
-        val gridPoints = InterpolateElevation.pointGrid(origin, gridWidthX, gridWidthY, gridSizeX, gridSizeY)
-        val interpolatedPoints = InterpolateElevation
-            .interpolate(multiPointGeom, geomLines, gridPoints, mergeTolerance, snapTolerance)
+              val gridPoints = InterpolateElevation.pointGrid(origin, gridWidthX, gridWidthY, gridSizeX, gridSizeY)
+              val interpolatedPoints = InterpolateElevation
+                  .interpolate(multiPointGeom, geomLines, gridPoints, mergeTolerance, snapTolerance)
 
-        val outputRaster = GDALRasterize.executeRasterize(
-          interpolatedPoints,
-          None,
-          origin,
-          gridWidthX,
-          gridWidthY,
-          gridSizeX,
-          gridSizeY,
-          noData,
-          Map.empty
+              val outputRaster = GDALRasterize.executeRasterize(
+                interpolatedPoints,
+                None,
+                origin,
+                gridWidthX,
+                gridWidthY,
+                gridSizeX,
+                gridSizeY,
+                noData,
+                Map.empty
+              )
+
+              val res = RasterSerializationUtil.tileToRow((0L, outputRaster._1, outputRaster._2), BinaryType, exprConf.hConf)
+              RasterDriver.releaseDataset(outputRaster._1)
+              res
+          },
+          pointsArray, // TODO: this will need fixing
+          StringType
         )
-
-        val res = RasterSerializationUtil.tileToRow((0L, outputRaster._1, outputRaster._2), BinaryType, exprConf.hConf)
-        RasterDriver.releaseDataset(outputRaster._1)
-        res
-    }
 
     override def name: String = "gbx_rst_dtmfromgeoms"
 

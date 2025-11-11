@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.CombineAVG
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -33,16 +33,21 @@ object RST_CombineAvg extends WithExpressionInfo {
     def evalPath(row: ArrayData, conf: UTF8String): InternalRow = eval(row, conf, StringType)
     def evalBinary(row: ArrayData, conf: UTF8String): InternalRow = eval(row, conf, BinaryType)
 
-    def eval(array: ArrayData, conf: UTF8String, dt: DataType): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val tiles = RasterSerializationUtil.arrayToTiles(array, dt)
-        val (cellID, combinedRaster, mtd) = execute(tiles)
-        tiles.foreach(t => RasterDriver.releaseDataset(t._2))
-        val res = RasterSerializationUtil.tileToRow((cellID, combinedRaster, mtd), dt, exprConf.hConf)
-        RasterDriver.releaseDataset(combinedRaster)
-        res
-    }
+    def eval(array: ArrayData, conf: UTF8String, dt: DataType): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val tiles = RasterSerializationUtil.arrayToTiles(array, dt)
+              val (cellID, combinedRaster, mtd) = execute(tiles)
+              tiles.foreach(t => RasterDriver.releaseDataset(t._2))
+              val res = RasterSerializationUtil.tileToRow((cellID, combinedRaster, mtd), dt, exprConf.hConf)
+              RasterDriver.releaseDataset(combinedRaster)
+              res
+          },
+          array,
+          dt
+        )
 
     def execute(tiles: Seq[(Long, Dataset, Map[String, String])]): (Long, Dataset, Map[String, String]) = {
         val cellID = if (tiles.map(_._1).groupBy(identity).size == 1) tiles.head._1 else -1L
@@ -53,6 +58,5 @@ object RST_CombineAvg extends WithExpressionInfo {
     override def name: String = "gbx_rst_combineavg"
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_CombineAvg(c(0))
-
 
 }

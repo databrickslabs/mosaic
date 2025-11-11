@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions.generators
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.SeparateBands
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -29,19 +29,24 @@ case class RST_SeparateBands(
     override def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0), nc(1))
     override def children: Seq[Expression] = Seq(tileExpr, exprConfExpr)
 
-    override def eval(input: InternalRow): IterableOnce[InternalRow] = {
-        val exprConf = ExpressionConfig.fromExpr(exprConfExpr)
-        RST_ExpressionUtil.init(exprConf)
-        val rawTile = tileExpr.eval(input).asInstanceOf[InternalRow]
-        val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(rawTile, rasterType)
-        val iter = SeparateBands.separateIter(ds, mtd)
-        RST_ExpressionUtil.addCleanupListener(iter)
-        iter.map { case (bandDs, bandMtd) =>
-            val resRow = RasterSerializationUtil.tileToRow((cell, bandDs, bandMtd), rasterType, exprConf.hConf)
-            RasterDriver.releaseDataset(bandDs)
-            InternalRow.fromSeq(Seq(resRow)) // Row wrapping in generator
-        }
-    }
+    override def eval(input: InternalRow): IterableOnce[InternalRow] =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromExpr(exprConfExpr)
+              RST_ExpressionUtil.init(exprConf)
+              val rawTile = tileExpr.eval(input).asInstanceOf[InternalRow]
+              val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(rawTile, rasterType)
+              val iter = SeparateBands.separateIter(ds, mtd)
+              RST_ExpressionUtil.addCleanupListener(iter)
+              iter.map { case (bandDs, bandMtd) =>
+                  val resRow = RasterSerializationUtil.tileToRow((cell, bandDs, bandMtd), rasterType, exprConf.hConf)
+                  RasterDriver.releaseDataset(bandDs)
+                  InternalRow.fromSeq(Seq(resRow)) // Row wrapping in generator
+              }
+          },
+          input,
+          rasterType
+        )
 
 }
 

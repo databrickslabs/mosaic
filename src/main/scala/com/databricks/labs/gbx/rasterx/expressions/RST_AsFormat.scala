@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.TranslateFormat
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -32,21 +32,26 @@ object RST_AsFormat extends WithExpressionInfo {
     def evalBinary(row: InternalRow, newFormat: UTF8String, conf: UTF8String): InternalRow = eval(row, newFormat, conf, BinaryType)
     def evalPath(row: InternalRow, newFormat: UTF8String, conf: UTF8String): InternalRow = eval(row, newFormat, conf, StringType)
 
-    private def eval(row: InternalRow, newFormat: UTF8String, conf: UTF8String, dt: DataType): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, dt)
-        if (ds.GetDriver().getShortName == newFormat.toString) {
-            RasterDriver.releaseDataset(ds)
-            row // effectively a no-op
-        } else {
-            val (resDS, resMtd) = TranslateFormat.update(ds, mtd, newFormat.toString)
-            val res = RasterSerializationUtil.tileToRow((cell, resDS, resMtd), dt, exprConf.hConf)
-            RasterDriver.releaseDataset(resDS)
-            RasterDriver.releaseDataset(ds)
-            res
-        }
-    }
+    private def eval(row: InternalRow, newFormat: UTF8String, conf: UTF8String, dt: DataType): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, dt)
+              if (ds.GetDriver().getShortName == newFormat.toString) {
+                  RasterDriver.releaseDataset(ds)
+                  row // effectively a no-op
+              } else {
+                  val (resDS, resMtd) = TranslateFormat.update(ds, mtd, newFormat.toString)
+                  val res = RasterSerializationUtil.tileToRow((cell, resDS, resMtd), dt, exprConf.hConf)
+                  RasterDriver.releaseDataset(resDS)
+                  RasterDriver.releaseDataset(ds)
+                  res
+              }
+          },
+          row,
+          dt
+        )
 
     def execute(ds: Dataset, mtd: Map[String, String], newFormat: String): (Dataset, Map[String, String]) = {
         if (ds.GetDriver().getShortName == newFormat) {

@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions.generators
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.ReTile
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -31,21 +31,26 @@ case class RST_ReTile(
     override def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0), nc(1), nc(2), nc(3))
     override def children: Seq[Expression] = Seq(tileExpr, tileWidthExpr, tileHeightExpr, exprConfExpr)
 
-    override def eval(input: InternalRow): IterableOnce[InternalRow] = {
-        val exprConf = ExpressionConfig.fromExpr(exprConfExpr)
-        RST_ExpressionUtil.init(exprConf)
-        val rawTile = tileExpr.eval(input).asInstanceOf[InternalRow]
-        val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(rawTile, rasterType)
-        val tileWidth = tileWidthExpr.eval(input).asInstanceOf[Int]
-        val tileHeight = tileHeightExpr.eval(input).asInstanceOf[Int]
-        val iter = ReTile.reTileIter(ds, mtd, tileWidth, tileHeight)
-        RST_ExpressionUtil.addCleanupListener(iter)
-        iter.map { case (newTile, newMtd) =>
-            val resRow = RasterSerializationUtil.tileToRow((cell, newTile, newMtd), rasterType, exprConf.hConf)
-            RasterDriver.releaseDataset(newTile)
-            InternalRow.fromSeq(Seq(resRow)) // Row wrapping in generator
-        }
-    }
+    override def eval(input: InternalRow): IterableOnce[InternalRow] =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromExpr(exprConfExpr)
+              RST_ExpressionUtil.init(exprConf)
+              val rawTile = tileExpr.eval(input).asInstanceOf[InternalRow]
+              val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(rawTile, rasterType)
+              val tileWidth = tileWidthExpr.eval(input).asInstanceOf[Int]
+              val tileHeight = tileHeightExpr.eval(input).asInstanceOf[Int]
+              val iter = ReTile.reTileIter(ds, mtd, tileWidth, tileHeight)
+              RST_ExpressionUtil.addCleanupListener(iter)
+              iter.map { case (newTile, newMtd) =>
+                  val resRow = RasterSerializationUtil.tileToRow((cell, newTile, newMtd), rasterType, exprConf.hConf)
+                  RasterDriver.releaseDataset(newTile)
+                  InternalRow.fromSeq(Seq(resRow)) // Row wrapping in generator
+              }
+          },
+          input,
+          rasterType
+        )
 
 }
 

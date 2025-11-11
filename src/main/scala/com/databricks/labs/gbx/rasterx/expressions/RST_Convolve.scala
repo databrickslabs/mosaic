@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.Convolve
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import com.databricks.labs.gbx.util.SerializationUtil
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -52,22 +52,27 @@ object RST_Convolve extends WithExpressionInfo {
     def evalPathLong(row: InternalRow, kernelAD: ArrayData, conf: UTF8String): InternalRow = eval(row, kernelAD, conf, StringType, LongType)
     def evalBinaryLong(row: InternalRow, kernelAD: ArrayData, conf: UTF8String): InternalRow = eval(row, kernelAD, conf, BinaryType, LongType)
 
-    def eval(row: InternalRow, kernelAD: ArrayData, conf: UTF8String, rdt: DataType, kdt: DataType): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val tile = RasterSerializationUtil.rowToTile(row, rdt)
-        val kernel = kdt match {
-            case DoubleType  => SerializationUtil.create2DArray[Double](kernelAD, kdt)
-            case IntegerType => SerializationUtil.create2DArray[Int](kernelAD, kdt).map(_.map(_.toDouble))
-            case FloatType   => SerializationUtil.create2DArray[Float](kernelAD, kdt).map(_.map(_.toDouble))
-            case LongType    => SerializationUtil.create2DArray[Long](kernelAD, kdt).map(_.map(_.toDouble))
-        }
-        val (raster, metadata) = Convolve.convolve(tile._2, tile._3, kernel)
-        RasterDriver.releaseDataset(tile._2)
-        val res = RasterSerializationUtil.tileToRow((tile._1, raster, metadata), rdt, exprConf.hConf)
-        RasterDriver.releaseDataset(raster)
-        res
-    }
+    def eval(row: InternalRow, kernelAD: ArrayData, conf: UTF8String, rdt: DataType, kdt: DataType): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val tile = RasterSerializationUtil.rowToTile(row, rdt)
+              val kernel = kdt match {
+                  case DoubleType  => SerializationUtil.create2DArray[Double](kernelAD, kdt)
+                  case IntegerType => SerializationUtil.create2DArray[Int](kernelAD, kdt).map(_.map(_.toDouble))
+                  case FloatType   => SerializationUtil.create2DArray[Float](kernelAD, kdt).map(_.map(_.toDouble))
+                  case LongType    => SerializationUtil.create2DArray[Long](kernelAD, kdt).map(_.map(_.toDouble))
+              }
+              val (raster, metadata) = Convolve.convolve(tile._2, tile._3, kernel)
+              RasterDriver.releaseDataset(tile._2)
+              val res = RasterSerializationUtil.tileToRow((tile._1, raster, metadata), rdt, exprConf.hConf)
+              RasterDriver.releaseDataset(raster)
+              res
+          },
+          row,
+          rdt
+        )
 
     def execute(tile: (Long, Dataset, Map[String, String]), kernel: Array[Array[Double]]): (Dataset, Map[String, String]) = {
         Convolve.convolve(tile._2, tile._3, kernel)
@@ -76,6 +81,5 @@ object RST_Convolve extends WithExpressionInfo {
     override def name: String = "gbx_rst_convolve"
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_Convolve(c(0), c(1))
-
 
 }

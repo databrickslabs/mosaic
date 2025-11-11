@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions.accessors
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.BandAccessors
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import com.databricks.labs.gbx.util.SerializationUtil
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -43,16 +43,24 @@ object RST_BandMetaData extends WithExpressionInfo {
     def evalPath(row: InternalRow, bandIndex: Int, conf: UTF8String): MapData = eval(row, bandIndex, conf, StringType)
     def evalBinary(row: InternalRow, bandIndex: Int, conf: UTF8String): MapData = eval(row, bandIndex, conf, BinaryType)
 
-    def eval(row: InternalRow, bandIndex: Int, conf: UTF8String, dt: DataType): MapData = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val ds = RasterSerializationUtil.rowToDS(row, dt)
-        val band = ds.GetRasterBand(bandIndex)
-        val mtd = execute(band)
-        band.delete()
-        RasterDriver.releaseDataset(ds)
-        SerializationUtil.toMapData[String, String](mtd)
-    }
+    def eval(row: InternalRow, bandIndex: Int, conf: UTF8String, dt: DataType): MapData =
+        Option(
+          RST_ErrorHandler.safeEval(
+            () => {
+                val exprConf = ExpressionConfig.fromB64(conf.toString)
+                RST_ExpressionUtil.init(exprConf)
+                val ds = RasterSerializationUtil.rowToDS(row, dt)
+                val band = ds.GetRasterBand(bandIndex)
+                val mtd = execute(band)
+                band.delete()
+                RasterDriver.releaseDataset(ds)
+                SerializationUtil.toMapData[String, String](mtd)
+            },
+            row,
+            dt,
+            conf
+          )
+        ).map(_.asInstanceOf[MapData]).orNull
 
     def execute(band: Band): Map[String, String] = BandAccessors.getMetadata(band)
 

@@ -2,7 +2,7 @@ package com.databricks.labs.gbx.rasterx.expressions
 
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.{GDAL, RasterDriver}
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -39,20 +39,27 @@ object RST_RasterToWorldCoord extends WithExpressionInfo {
     def evalPath(row: InternalRow, x: Int, y: Int, conf: UTF8String): InternalRow = eval(row, x, y, conf, StringType)
     def evalBinary(row: InternalRow, x: Int, y: Int, conf: UTF8String): InternalRow = eval(row, x, y, conf, BinaryType)
 
-    def eval(row: InternalRow, x: Int, y: Int, conf: UTF8String, rdt: DataType): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val ds = RasterSerializationUtil.rowToDS(row, rdt)
-        val res = execute(ds, x, y)
-        RasterDriver.releaseDataset(ds)
-        InternalRow.fromSeq(Seq(res._1, res._2))
-    }
+    def eval(row: InternalRow, x: Int, y: Int, conf: UTF8String, rdt: DataType): InternalRow =
+        Option(
+          RST_ErrorHandler.safeEval(
+            () => {
+                val exprConf = ExpressionConfig.fromB64(conf.toString)
+                RST_ExpressionUtil.init(exprConf)
+                val ds = RasterSerializationUtil.rowToDS(row, rdt)
+                val res = execute(ds, x, y)
+                RasterDriver.releaseDataset(ds)
+                InternalRow.fromSeq(Seq(res._1, res._2))
+            },
+            row,
+            rdt,
+            conf
+          )
+        ).map(_.asInstanceOf[InternalRow]).orNull
 
     def execute(ds: Dataset, x: Int, y: Int): (Double, Double) = GDAL.toWorldCoord(ds.GetGeoTransform, x, y)
 
     override def name: String = "gbx_rst_rastertoworldcoord"
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_RasterToWorldCoord(c(0), c(1), c(2))
-
 
 }
