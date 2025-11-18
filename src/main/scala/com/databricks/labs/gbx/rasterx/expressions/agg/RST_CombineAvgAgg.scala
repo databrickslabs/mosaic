@@ -102,8 +102,26 @@ case class RST_CombineAvgAgg(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_CombineAvgAgg extends WithExpressionInfo {
 
-    override def name: String = "gbx_rst_combine_avg_agg"
+    override def name: String = "gbx_rst_combineavg_agg"
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => RST_CombineAvgAgg(c(0))
+
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        "Aggregates raster tiles by averaging pixel values."
+
+    override def usageArgs: String = "tile"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(_ARGS_) AS tile
+           |        FROM table
+           |        GROUP BY 1;
+           |      ${_TILE_RESULT_}
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}"
 
 }

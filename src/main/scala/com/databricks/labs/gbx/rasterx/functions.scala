@@ -89,7 +89,7 @@ object functions extends Serializable {
         rd.register(RST_CombineAvg)
         rd.register(RST_Convolve)
         rd.register(RST_DerivedBand)
-        rd.register(RST_DTMFromGeoms)
+//        rd.register(RST_DTMFromGeoms)
         rd.register(RST_Filter)
         rd.register(RST_InitNoData)
         rd.register(RST_IsEmpty)
@@ -181,15 +181,15 @@ object functions extends Serializable {
     def rst_convolve(tileExpr: Column, kernel: Column): Column = ColumnAdapter(RST_Convolve.name, Seq(tileExpr, kernel))
     def rst_derivedband(tileExpr: Column, pyfunc: String, funcName: String): Column =
         ColumnAdapter(RST_DerivedBand.name, Seq(tileExpr, lit(pyfunc), lit(funcName)))
-    def rst_dtmfromgeoms(geometries: Column, pixelSize: Column, extent: Column): Column =
-        ColumnAdapter(RST_DTMFromGeoms.name, Seq(geometries, pixelSize, extent))
+//    def rst_dtmfromgeoms(geometries: Column, pixelSize: Column, extent: Column): Column =
+//        ColumnAdapter(RST_DTMFromGeoms.name, Seq(geometries, pixelSize, extent))
     def rst_filter(tileExpr: Column, kernelSize: Column, operation: Column): Column =
         ColumnAdapter(RST_Filter.name, Seq(tileExpr, kernelSize, operation))
-    def rst_initnodata(tileExpr: Column, noDataValue: Column): Column = ColumnAdapter(RST_InitNoData.name, Seq(tileExpr, noDataValue))
+    def rst_initnodata(tileExpr: Column): Column = ColumnAdapter(RST_InitNoData.name, Seq(tileExpr))
     def rst_isempty(tileExpr: Column): Column = ColumnAdapter(RST_IsEmpty.name, Seq(tileExpr))
     def rst_mapalgebra(tiles: Column, expression: Column): Column = ColumnAdapter(RST_MapAlgebra.name, Seq(tiles, expression))
     def rst_merge(tiles: Column): Column = ColumnAdapter(RST_Merge.name, Seq(tiles))
-    def rst_ndvi(tileExpr: Column, nirBand: Column, redBand: Column): Column = ColumnAdapter(RST_NDVI.name, Seq(tileExpr, nirBand, redBand))
+    def rst_ndvi(tileExpr: Column, redBand: Column, nirBand: Column): Column = ColumnAdapter(RST_NDVI.name, Seq(tileExpr, redBand, nirBand))
     def rst_rastertoworldcoord(tileExpr: Column, pixelX: Column, pixelY: Column): Column =
         ColumnAdapter(RST_RasterToWorldCoord.name, Seq(tileExpr, pixelX, pixelY))
     def rst_rastertoworldcoordx(tileExpr: Column, pixelX: Column, pixelY: Column): Column =
@@ -197,7 +197,7 @@ object functions extends Serializable {
     def rst_rastertoworldcoordy(tileExpr: Column, pixelX: Column, pixelY: Column): Column =
         ColumnAdapter(RST_RasterToWorldCoordY.name, Seq(tileExpr, pixelX, pixelY))
     def rst_transform(tileExpr: Column, targetSrid: Column): Column = ColumnAdapter(RST_Transform.name, Seq(tileExpr, targetSrid))
-    def rst_tryopen(path: Column): Column = ColumnAdapter(RST_TryOpen.name, Seq(path))
+    def rst_tryopen(tileExpr: Column): Column = ColumnAdapter(RST_TryOpen.name, Seq(tileExpr))
     def rst_updatetype(tileExpr: Column, newType: Column): Column = ColumnAdapter(RST_UpdateType.name, Seq(tileExpr, newType))
     def rst_worldtorastercoord(tileExpr: Column, worldX: Column, worldY: Column): Column =
         ColumnAdapter(RST_WorldToRasterCoord.name, Seq(tileExpr, worldX, worldY))

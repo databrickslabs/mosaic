@@ -49,5 +49,20 @@ object RST_TryOpen extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_TryOpen(c(0))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        """Tries to open the raster tile. If the raster cannot be opened the result is false,
+          | and if the raster can be opened the result is true.""".stripMargin
 
+    override def usageArgs: String = "tile"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(_ARGS_) FROM table;
+           |      true
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}"
 }

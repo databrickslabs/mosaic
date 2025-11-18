@@ -48,5 +48,20 @@ object RST_RasterToWorldCoordX extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_RasterToWorldCoordX(c(0), c(1), c(2))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        """Computes the world coordinates of the raster tile at the given x and y pixel coordinates.
+          |The result is the X coordinate of the point after applying the GeoTransform of the raster.""".stripMargin
 
+    override def usageArgs: String = "tile, pixel_x, pixel_y"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(tile, 3, 3) AS tile FROM table;
+           |       -179.85000609927647
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}, pixel_x: Int, pixel_y: Int"
 }

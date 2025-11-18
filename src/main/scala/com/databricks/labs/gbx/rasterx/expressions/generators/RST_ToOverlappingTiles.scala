@@ -58,4 +58,24 @@ object RST_ToOverlappingTiles extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_ToOverlappingTiles(c(0), c(1), c(2), c(3))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        """Splits each tile into a collection of new raster tiles of the given width and height,
+          |with an overlap of overlap percent.
+          |The result set is automatically exploded into a row-per-subtile.
+          |""".stripMargin
+
+    override def usageArgs: String = "tile, tile_width, tile_height, overlap"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(tile, 10, 10, 10) AS tile FROM table;
+           |      {index_id: ..., raster: [00 01 10 ... 00], parentPath: "...", driver: "GTiff" }
+           |      {index_id: ..., raster: [00 03 10 ... 00], parentPath: "...", driver: "GTiff"}
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}, tile_width: Int, tile_height: Int, overlap: Int"
+
 }

@@ -28,7 +28,7 @@ import org.apache.spark.unsafe.types.UTF8String
   *   tiles of size 64MB. If set to a positive value, the file is loaded and
   *   subdivided into tiles of the specified size. If the file is too big to fit
   *   in memory, it is subdivided into tiles of size 64MB.
-  * @param expressionConfig
+  * @param exprConfExpr
   *   Additional arguments for the expression (expressionConfigs).
   */
 case class RST_MakeTiles(
@@ -93,5 +93,21 @@ object RST_MakeTiles extends WithExpressionInfo {
     override def name: String = "gbx_rst_maketiles"
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_MakeTiles(c(0), c(1))
+
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        "Subdivide the raster into tiles of the given size in MB."
+
+    override def usageArgs: String = "tile, size_in_mb"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(tile, 16) AS tile FROM table;
+           |      ${_TILE_RESULT_}
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}, size_in_mb: Int"
 
 }

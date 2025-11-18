@@ -60,5 +60,19 @@ object RST_UpdateType extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_UpdateType(c(0), c(1))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        "Translates the raster to a new data type."
 
+    override def usageArgs: String = "tile, new_type"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(tile, 'Float32') AS tile FROM table;
+           |      ${_TILE_RESULT_}
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}, new_type: String"
 }

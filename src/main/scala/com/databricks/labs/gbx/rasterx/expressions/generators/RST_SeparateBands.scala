@@ -52,4 +52,21 @@ object RST_SeparateBands extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_SeparateBands(c(0))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        """Returns a set of new single-band rasters, one for each band in the input raster.
+          | The result set will contain one row per input band for each tile provided and will add field ‘bandIndex’.""".stripMargin
+
+    override def usageArgs: String = "tile"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(_ARGS_) AS tile FROM table;
+           |      ${_TILE_RESULT_}
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}"
+
 }

@@ -56,4 +56,20 @@ object RST_ReTile extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_ReTile(c(0), c(1), c(2))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        "Retiles the raster tile to the given size. The result is a collection of new raster tiles."
+
+    override def usageArgs: String = "tile, tile_width, tile_height"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(tile, 300, 300) AS tile FROM table;
+           |      {index_id: ..., raster: [00 01 10 ... 00], parentPath: "...", driver: "GTiff" }
+           |      {index_id: ..., raster: [00 03 10 ... 00], parentPath: "...", driver: "GTiff" }""".stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}, tile_width: Int, tile_height: Int"
+
 }

@@ -54,5 +54,20 @@ object RST_PixelHeight extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_PixelHeight(c(0))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        "Returns the height of the pixel in the raster tile derived via GeoTransform."
+
+    override def usageArgs: String = "tile"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(_ARGS_) FROM table;
+           |      1
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}"
 
 }

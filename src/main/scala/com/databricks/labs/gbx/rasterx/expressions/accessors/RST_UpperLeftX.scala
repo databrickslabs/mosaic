@@ -50,5 +50,20 @@ object RST_UpperLeftX extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_UpperLeftX(c(0))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        "Computes the upper left X coordinate of tile based on its GeoTransform."
+
+    override def usageArgs: String = "tile"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(_ARGS_) FROM table;
+           |      -180.00000610436345
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}"
 
 }

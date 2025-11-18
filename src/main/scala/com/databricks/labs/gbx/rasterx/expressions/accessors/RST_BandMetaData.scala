@@ -60,4 +60,28 @@ object RST_BandMetaData extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_BandMetaData(c(0), c(1))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        "Extract the metadata describing the raster band. Metadata is returned as a map of key value pairs."
+
+    override def usageArgs: String = "tile, band"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(tile, 1) AS tile FROM table;
+           |      {"_FillValue": "251", "NETCDF_DIM_time": "1294315200", "long_name": "bleaching alert
+           |      area 7-day maximum composite", "grid_mapping": "crs", "NETCDF_VARNAME":
+           |      "bleaching_alert_area", "coverage_content_type": "thematicClassification",
+           |      "standard_name": "N/A", "comment": "Bleaching Alert Area (BAA) values are coral
+           |      bleaching heat stress levels: 0 - No Stress; 1 - Bleaching Watch; 2 - Bleaching
+           |      Warning; 3 - Bleaching Alert Level 1; 4 - Bleaching Alert Level 2. Product
+           |      description is provided at https://coralreefwatch.noaa.gov/product/5km/index.php.",
+           |      "valid_min": "0", "units": "stress_level", "valid_max": "4", "scale_factor": "1"}
+           |
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}, band: Int"
+
 }

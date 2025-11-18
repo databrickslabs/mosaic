@@ -54,5 +54,20 @@ object RST_Merge extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_Merge(c(0))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        "Combines a collection of raster tiles into a single raster."
+
+    override def usageArgs: String = "tiles"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(array(tile1, tile2, tile3)) AS tile FROM table;
+           |      ${_TILE_RESULT_}
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_ARRAY_TYPE_}"
 
 }

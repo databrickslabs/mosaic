@@ -3,7 +3,6 @@ package com.databricks.labs.gbx.vectorx.ds
 import org.apache.spark.sql.catalyst.plans.PlanTest
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.test.SilentSparkSession
-import org.apache.spark.sql.util.CaseInsensitiveStringMap
 import org.scalatest.matchers.must.Matchers.be
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
@@ -59,20 +58,28 @@ class OGR_DataSourceTest extends PlanTest with SilentSparkSession {
 
         // geojson
 
-        val gjPath = this.getClass.getResource("/NYC_Taxi_Zones.geojson").toString.replace("file:", "")
-
-        val res_gj = spark.read
-            .format("geojson")
-            .option("multi", "false")
-            .load(gjPath)
-
-        res_gj.count() shouldEqual 1L // single geom
+        val gjPath = this.getClass.getResource("/text/NYC_Taxi_Zones.geojson").toString.replace("file:", "")
 
         val res_gj1 = spark.read
             .format("geojson")
             .load(gjPath)
 
         res_gj1.count() should be > 1L // newline geoms
+
+        val res_gj2 = spark.read
+            .format("geojson")
+            .option("multi", "false")
+            .load(gjPath)
+
+        res_gj2.count() shouldEqual 1L // single geom (read)
+
+        val gjAltPath = this.getClass.getResource("/text/sample.geojson").toString.replace("file:", "")
+        val res_gj3 = spark.read
+            .format("geojson")
+            .option("multi", "false")
+            .load(gjAltPath)
+
+        res_gj3.count() should be > 1L // multiple geoms
 
         // gpkg (zip fails)
 

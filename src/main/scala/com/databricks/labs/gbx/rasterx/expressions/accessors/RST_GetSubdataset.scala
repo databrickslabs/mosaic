@@ -56,4 +56,20 @@ object RST_GetSubdataset extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_GetSubdataset(c(0), c(1))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        "Returns the subdataset of the raster tile with a given name."
+
+    override def usageArgs: String = "tile, subset_name"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(tile, 'sst') AS tile FROM table;
+           |      ${_TILE_RESULT_}
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}, subset_name: String"
+
 }

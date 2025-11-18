@@ -40,4 +40,13 @@ object BNG_Centroid extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new BNG_Centroid(c(0))
 
+    //TODO: ADD EXPRESSION INFO
+    override def usageArgs: String = ""
+
+    override def description: String = ""
+
+    override def extendedUsageArgs: String = ""
+
+    override def examples: String = ""
+
 }

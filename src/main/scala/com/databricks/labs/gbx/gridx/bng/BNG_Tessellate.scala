@@ -65,4 +65,13 @@ object BNG_Tessellate extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new BNG_Tessellate(c(0), c(1), c(2))
 
+    //TODO: ADD EXPRESSION INFO
+    override def usageArgs: String = ""
+
+    override def description: String = ""
+
+    override def extendedUsageArgs: String = ""
+
+    override def examples: String = ""
+
 }

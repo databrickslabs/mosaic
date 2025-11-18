@@ -38,4 +38,13 @@ object BNG_EuclideanDistance extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new BNG_EuclideanDistance(c(0), c(1))
 
+    //TODO: ADD EXPRESSION INFO
+    override def usageArgs: String = ""
+
+    override def description: String = ""
+
+    override def extendedUsageArgs: String = ""
+
+    override def examples: String = ""
+
 }

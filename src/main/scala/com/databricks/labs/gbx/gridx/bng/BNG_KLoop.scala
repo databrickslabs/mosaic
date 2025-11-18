@@ -46,4 +46,13 @@ object BNG_KLoop extends WithExpressionInfo {
 
     override def name: String = "gbx_bng_kloop"
 
+    //TODO: ADD EXPRESSION INFO
+    override def usageArgs: String = ""
+
+    override def description: String = ""
+
+    override def extendedUsageArgs: String = ""
+
+    override def examples: String = ""
+
 }

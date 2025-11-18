@@ -48,5 +48,23 @@ object RST_FromFile extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_FromFile(c(0), c(1))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        "Returns a raster tile from a file path."
+
+    override def usageArgs: String = "path, driver"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > CREATE TABLE IF NOT EXISTS TABLE tbl
+           |        USING binaryFile
+           |        OPTIONS (path "/Volumes/...");
+           |      > SELECT _FUNC_(path, 'GTiff') FROM tbl AS tile;
+           |      ${_TILE_RESULT_}
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"path: String, driver: String"
 
 }

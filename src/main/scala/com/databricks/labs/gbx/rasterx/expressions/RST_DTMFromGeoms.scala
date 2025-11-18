@@ -106,4 +106,12 @@ object RST_DTMFromGeoms extends WithExpressionInfo {
     override def builder(): FunctionBuilder =
         (c: Seq[Expression]) => new RST_DTMFromGeoms(c(0), c(1), c(2), c(3), c(4), c(5), c(6), c(7), c(8), c(9), c(10))
 
+    //TODO: ADD EXPRESSION INFO
+    override def usageArgs: String = ""
+
+    override def description: String = ""
+
+    override def extendedUsageArgs: String = ""
+
+    override def examples: String = ""
 }

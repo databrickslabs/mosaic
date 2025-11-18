@@ -63,7 +63,16 @@ final case class BNG_CellIntersectionAgg(
 
 object BNG_CellIntersectionAgg extends WithExpressionInfo {
 
-    override def name: String = "gbx_bng_cell_intersection_agg"
+    override def name: String = "gbx_bng_cellintersection_agg"
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new BNG_CellIntersectionAgg(c.head)
+
+    //TODO: ADD EXPRESSION INFO
+    override def usageArgs: String = ""
+
+    override def description: String = ""
+
+    override def extendedUsageArgs: String = ""
+
+    override def examples: String = ""
 
 }

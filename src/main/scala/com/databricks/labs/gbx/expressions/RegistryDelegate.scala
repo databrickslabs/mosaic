@@ -13,8 +13,8 @@ case class RegistryDelegate(registry: FunctionRegistry, prefix: Option[String] =
         val name = getName(companion)
         registry.registerFunction(
           FunctionIdentifier(name),
-          companion.builder(),
-          source = "built-in"
+          companion.info(),
+          companion.builder()
         )
     }
 

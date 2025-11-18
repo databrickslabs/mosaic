@@ -113,8 +113,37 @@ case class RST_DerivedBandAgg(
 /** Expression info required for the expression registration for spark SQL. */
 object RST_DerivedBandAgg extends WithExpressionInfo {
 
-    override def name: String = "gbx_rst_derived_band_agg"
+    override def name: String = "gbx_rst_derivedband_agg"
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => RST_DerivedBandAgg(c(0), c(1), c(2))
+
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        "Combines a group by statement over aggregated raster tiles by using the provided python function."
+
+    override def usageArgs: String = "tile, pyfunc, func_name"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT
+           |        gbx_rst_derivedband_agg(tile, py_func1, func1_name) AS tile
+           |        FROM SELECT (
+           |          date, tile,
+           |          \"\"\"
+           |          import numpy as np
+           |          def average(in_ar, out_ar, xoff, yoff, xsize, ysize, raster_xsize, raster_ysize,
+           |          buf_radius, gt, **kwargs):
+           |            out_ar[:] = np.sum(in_ar, axis=0) / len(in_ar)
+           |          \"\"\" as py_func1,
+           |          "average" as func1_name
+           |          FROM table
+           |        )
+           |        GROUP BY date, py_func1, func1_name;
+           |      ${_TILE_RESULT_}
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}, pyfunc: String, func_name: String"
 
 }

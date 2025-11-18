@@ -57,7 +57,16 @@ final case class BNG_CellUnionAgg(
 
 object BNG_CellUnionAgg extends WithExpressionInfo {
 
-    override def name: String = "gbx_bng_cell_union_agg"
+    override def name: String = "gbx_bng_cellunion_agg"
     override def builder(): FunctionBuilder = c => new BNG_CellUnionAgg(c.head)
+
+    //TODO: ADD EXPRESSION INFO
+    override def usageArgs: String = ""
+
+    override def description: String = ""
+
+    override def extendedUsageArgs: String = ""
+
+    override def examples: String = ""
 
 }

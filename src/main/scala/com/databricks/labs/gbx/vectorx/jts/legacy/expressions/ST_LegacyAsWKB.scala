@@ -32,4 +32,19 @@ object ST_LegacyAsWKB extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new ST_LegacyAsWKB(c(0))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String = "Returns the legacy vector data format used by DBLabs Mosaic as WKB."
+
+    override def usageArgs: String = "legacy_geom"
+
+    override def examples: String = {
+        s"""
+          |    Examples:
+          |      > SELECT _FUNC_(_ARGS_);
+          |        [01 03 00 00 00 0...]
+          |  """.stripMargin
+    }
+
+    // extended usage args might be useful
+    override def extendedUsageArgs: String = "legacy_geom: <see vectorx.jts.legacy.InternalGeometry>"
 }

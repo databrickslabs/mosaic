@@ -47,4 +47,22 @@ object RST_H3_RasterToGridMin extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_H3_RasterToGridMin(c(0), c(1))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        """Compute the gridwise min of the pixel values in tile.
+          |The result is a 2D array of cells, where each cell is a struct of (cellID, value).
+          |""".stripMargin
+
+    override def usageArgs: String = "tile, resolution"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(tile, 3) FROM table;
+           |      [[{"cellID": "593176490141548543", "measure": 0}, {"cellID": "593386771740360703", "measure":
+           |        1.2037735849056603}, {"cellID": "593308294097928191", "measure": 0}]]""".stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}, resolution: Int"
+
 }

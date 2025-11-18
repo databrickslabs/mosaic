@@ -13,14 +13,14 @@ def bng_aswkb(cell_id):
 def bng_aswkt(cell_id):
     return f.call_function("gbx_bng_aswkt", cell_id)
 
-def bng_cell_area(cell_id):
-    return f.call_function("gbx_bng_cell_area", cell_id)
+def bng_cellarea(cell_id):
+    return f.call_function("gbx_bng_cellarea", cell_id)
 
-def bng_cell_intersection(cell_id1, cell_id2):
-    return f.call_function("gbx_bng_cell_intersection", cell_id1, cell_id2)
+def bng_cellintersection(cell_id1, cell_id2):
+    return f.call_function("gbx_bng_cellintersection", cell_id1, cell_id2)
 
-def bng_cell_union(cell_id1, cell_id2):
-    return f.call_function("gbx_bng_cell_union", cell_id1, cell_id2)
+def bng_cellunion(cell_id1, cell_id2):
+    return f.call_function("gbx_bng_cellunion", cell_id1, cell_id2)
 
 def bng_centroid(cell_id):
     return f.call_function("gbx_bng_centroid", cell_id)
@@ -34,11 +34,11 @@ def bng_eastnortasbng(east, north, resolution):
 def bng_euclideandistance(cell_id1, cell_id2):
     return f.call_function("gbx_bng_euclideandistance", cell_id1, cell_id2)
 
-def bng_geometry_kloop(geom, resolution, k):
-    return f.call_function("gbx_bng_geometry_kloop", geom, resolution, k)
+def bng_geometrykloop(geom, resolution, k):
+    return f.call_function("gbx_bng_geometrykloop", geom, resolution, k)
 
-def bng_geometry_kring(geom, resolution, k):
-    return f.call_function("gbx_bng_geometry_kring", geom, resolution, k)
+def bng_geometrykring(geom, resolution, k):
+    return f.call_function("gbx_bng_geometrykring", geom, resolution, k)
 
 def bng_pointasbng(point, resolution):
     return f.call_function("gbx_bng_pointasbng", point, resolution)
@@ -51,20 +51,20 @@ def bng_tessellate(geom, resolution):
 
 # Aggregators
 
-def bng_cell_intersection_agg(cells):
-    return f.call_function("gbx_bng_cell_intersection_agg", cells)
+def bng_cellintersection_agg(cells):
+    return f.call_function("gbx_bng_cellintersection_agg", cells)
 
-def bng_cell_union_agg(cells):
-    return f.call_function("gbx_bng_cell_union_agg", cells)
+def bng_cellunion_agg(cells):
+    return f.call_function("gbx_bng_cellunion_agg", cells)
 
 
 # Generators
 
-def bng_geometry_kloopexplode(geom, resolution, k):
-    return f.explode(f.call_function("gbx_bng_geometry_kloopexplode", geom, resolution, k))
+def bng_geometrykloopexplode(geom, resolution, k):
+    return f.explode(f.call_function("gbx_bng_geometrykloopexplode", geom, resolution, k))
 
-def bng_geometry_kringexplode(geom, resolution, k):
-    return f.explode(f.call_function("gbx_bng_geometry_kringexplode", geom, resolution, k))
+def bng_geometrykringexplode(geom, resolution, k):
+    return f.explode(f.call_function("gbx_bng_geometrykringexplode", geom, resolution, k))
 
 def bng_kloopexplode(cell_id, k):
     return f.explode(f.call_function("gbx_bng_kloopexplode", cell_id, k))

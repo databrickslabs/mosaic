@@ -71,4 +71,20 @@ object RST_NDVI extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_NDVI(c(0), c(1), c(2))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        "Calculates the Normalized Difference Vegetation Index (NDVI) for a raster."
+
+    override def usageArgs: String = "tile, red_band, nir_band"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(tile, 1, 2) AS tile FROM table;
+           |      ${_TILE_RESULT_}
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}, red_band: Int, nir_band: Int"
+
 }

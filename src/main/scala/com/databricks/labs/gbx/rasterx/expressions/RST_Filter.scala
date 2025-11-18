@@ -55,4 +55,22 @@ object RST_Filter extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_Filter(c(0), c(1), c(2))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def description: String =
+        """
+          |Applies a filter to the raster. Returns a new raster tile with the filter applied.
+          |kernel_size is the number of pixels to compare; it must be odd. operation is the op to apply,
+          |e.g. 'avg', 'median', 'mode', 'max', 'min'.""".stripMargin
+
+    override def usageArgs: String = "tile, kernel_size, operation"
+
+    override def examples: String = {
+        s"""
+           |    Examples:
+           |      > SELECT _FUNC_(tile, 3, "mode") AS tile FROM table;
+           |      ${_TILE_RESULT_}
+           |  """.stripMargin
+    }
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}, kernel_size: Int, operation: String"
 }

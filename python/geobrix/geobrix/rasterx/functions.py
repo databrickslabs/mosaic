@@ -25,8 +25,8 @@ def rst_georeference(tile):
 def rst_getnodata(tile):
     return f.call_function("gbx_rst_getnodata", tile)
 
-def rst_getsubdataset(tile, subdataset):
-    return f.call_function("gbx_rst_getsubdataset", tile, subdataset)
+def rst_getsubdataset(tile, subset_name):
+    return f.call_function("gbx_rst_getsubdataset", tile, subset_name)
 
 def rst_height(tile):
     return f.call_function("gbx_rst_height", tile)
@@ -95,14 +95,14 @@ def rst_width(tile):
     return f.call_function("gbx_rst_width", tile)
 
 # Aggregators
-def rst_combineavgagg(tiles):
-    return f.call_function("gbx_rst_combineavgagg", tiles)
+def rst_combineavg_agg(tile):
+    return f.call_function("gbx_rst_combineavg_agg", tile) # grouped
 
-def rst_derivedbandagg(tiles, pyfunc, func_name):
-    return f.call_function("gbx_rst_derivedbandagg", tiles, f.lit(pyfunc), f.lit(func_name))
+def rst_derivedband_agg(tile, pyfunc, func_name):
+    return f.call_function("gbx_rst_derivedband_agg", tile, f.lit(pyfunc), f.lit(func_name)) # grouped
 
-def rst_mergeagg(tiles):
-    return f.call_function("gbx_rst_mergeagg", tiles)
+def rst_merge_agg(tile):
+    return f.call_function("gbx_rst_merge_agg", tile) #grouped
 
 # Constructors
 def rst_fromcontent(content, driver):
@@ -111,15 +111,15 @@ def rst_fromcontent(content, driver):
 def rst_fromfile(path, driver):
     return f.call_function("gbx_rst_fromfile", path, driver)
 
-def from_bands(bands):
+def rst_frombands(bands):
     return f.call_function("gbx_rst_frombands", bands)
 
 # Generators
 def rst_h3_tessellate(tile, resolution):
     return f.call_function("gbx_rst_h3_tessellate", tile, resolution)
 
-def rst_maketiles(tile, tile_width, tile_height):
-    return f.call_function("gbx_rst_maketiles", tile, tile_width, tile_height)
+def rst_maketiles(tile, size_in_mb):
+    return f.call_function("gbx_rst_maketiles", tile, size_in_mb)
 
 def rst_retile(tile, tile_width, tile_height):
     return f.call_function("gbx_rst_retile", tile, tile_width, tile_height)
@@ -147,8 +147,8 @@ def rst_h3_rastertogridmedian(tile, resolution):
     return f.call_function("gbx_rst_h3_rastertogridmedian", tile, resolution)
 
 # Operations
-def rst_asformat(tile, driver):
-    return f.call_function("gbx_rst_asformat", tile, driver)
+def rst_asformat(tile, new_format):
+    return f.call_function("gbx_rst_asformat", tile, new_format)
 
 def rst_clip(tile, clip, cutline_all_touched):
     return f.call_function("gbx_rst_clip", tile, clip, cutline_all_touched)
@@ -159,17 +159,17 @@ def rst_combineavg(tiles):
 def rst_convolve(tile, kernel):
     return f.call_function("gbx_rst_convolve", tile, kernel)
 
-def rst_derivedband(tile, pyfunc, func_name):
-    return f.call_function("gbx_rst_derivedband", tile, f.lit(pyfunc), f.lit(func_name))
+def rst_derivedband(tile_expr, pyfunc, func_name):
+    return f.call_function("gbx_rst_derivedband", tile_expr, f.lit(pyfunc), f.lit(func_name))
 
-def rst_dtmfromgeoms(geoms, pixel_size, extent):
-    return f.call_function("gbx_rst_dtmfromgeoms", geoms, pixel_size, extent)
+# def rst_dtmfromgeoms(geoms, pixel_size, extent):
+#     return f.call_function("gbx_rst_dtmfromgeoms", geoms, pixel_size, extent)
 
 def rst_filter(tile, kernel_size, operation):
     return f.call_function("gbx_rst_filter", tile, kernel_size, operation)
 
-def rst_initnodata(tile, nodata):
-    return f.call_function("gbx_rst_initnodata", tile, nodata)
+def rst_initnodata(tile):
+    return f.call_function("gbx_rst_initnodata", tile)
 
 def rst_isempty(tile):
     return f.call_function("gbx_rst_isempty", tile)
@@ -180,32 +180,32 @@ def rst_mapalgebra(tiles, expression):
 def rst_merge(tiles):
     return f.call_function("gbx_rst_merge", tiles)
 
-def rst_ndvi(tile, nir_band, red_band):
-    return f.call_function("gbx_rst_ndvi", tile, nir_band, red_band)
+def rst_ndvi(tile, red_band, nir_band):
+    return f.call_function("gbx_rst_ndvi", tile, red_band, nir_band)
 
-def rst_rastertoworldcoord(tile, x, y):
-    return f.call_function("gbx_rst_rastertoworldcoord", tile, x, y)
+def rst_rastertoworldcoord(tile, pixel_x, pixel_y):
+    return f.call_function("gbx_rst_rastertoworldcoord", tile, pixel_x, pixel_y)
 
-def rst_rastertoworldcoordx(tile, x, y):
-    return f.call_function("gbx_rst_rastertoworldcoordx", tile, x, y)
+def rst_rastertoworldcoordx(tile, pixel_x, pixel_y):
+    return f.call_function("gbx_rst_rastertoworldcoordx", tile, pixel_x, pixel_y)
 
-def rst_rastertoworldcoordy(tile, x, y):
-    return f.call_function("gbx_rst_rastertoworldcoordy", tile, x, y)
+def rst_rastertoworldcoordy(tile, pixel_x, pixel_y):
+    return f.call_function("gbx_rst_rastertoworldcoordy", tile, pixel_x, pixel_y)
 
 def rst_transform(tile, target_srid):
     return f.call_function("gbx_rst_transform", tile, target_srid)
 
-def rst_tryopen(path):
-    return f.call_function("gbx_rst_tryopen", path)
+def rst_tryopen(tile):
+    return f.call_function("gbx_rst_tryopen", tile)
 
 def rst_updatetype(tile, new_type):
     return f.call_function("gbx_rst_updatetype", tile, new_type)
 
-def rst_worldcoordtoraster(tile, x, y):
-    return f.call_function("gbx_rst_worldcoordtoraster", tile, x, y)
+def rst_worldcoordtoraster(tile, world_x, world_y):
+    return f.call_function("gbx_rst_worldcoordtoraster", tile, world_x, world_y)
 
-def rst_worldcoordtorasterx(tile, x, y):
-    return f.call_function("gbx_rst_worldcoordtorasterx", tile, x, y)
+def rst_worldcoordtorasterx(tile, world_x, world_y):
+    return f.call_function("gbx_rst_worldcoordtorasterx", tile, world_x, world_y)
 
-def rst_worldcoordtorastery(tile, x, y):
-    return f.call_function("gbx_rst_worldcoordtorastery", tile, x, y)
+def rst_worldcoordtorastery(tile, world_x, world_y):
+    return f.call_function("gbx_rst_worldcoordtorastery", tile, world_x, world_y)

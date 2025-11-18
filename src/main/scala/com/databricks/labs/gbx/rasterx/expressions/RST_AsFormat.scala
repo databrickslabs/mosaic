@@ -60,4 +60,28 @@ object RST_AsFormat extends WithExpressionInfo {
 
     override def builder(): FunctionBuilder = (c: Seq[Expression]) => new RST_AsFormat(c(0), c(1))
 
+    /* FOR `DESCRIBE FUNCTION EXTENDED <_FUNC_>` */
+    override def usageArgs: String = "tile, new_format"
+
+    override def description: String = "Convert a tile to a new format."
+
+    override def extendedUsageArgs: String = s"${_TILE_TYPE_}, new_format: String"
+
+    override def examples: String = {
+        s"""
+           |# showing notional python
+           |(
+           | spark.read.format("gdal")
+           |   .option("driverName", "netCDF")
+           | .load("/Volumes/geospatial_docs/geobrix/data/netcdf/")
+           |   .withColumn("tile", rx.rst_asformat("tile", f.lit("GTiff")))
+           | .write.format("gdal")
+           |   .mode("append")       # include "append" in the write
+           |   .option("ext", "tif") # 'tif' (default)
+           | .save("/Volumes/geospatial_docs/geobrix/data/out/netcdf-gtiff/")
+           |)""".stripMargin
+    }
+
+    override def extendedDescription: String = "You may find that some formats are not configured or just don't work."
+
 }
