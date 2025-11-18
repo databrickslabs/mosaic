@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.{ClipToGeom, SpatialRefOps}
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import com.databricks.labs.gbx.vectorx.jts.JTS
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -41,20 +41,25 @@ object RST_Clip extends WithExpressionInfo {
     def evalPath(row: InternalRow, geom: Any, cutlineAllTouched: Boolean, conf: UTF8String): InternalRow =
         eval(row, geom, cutlineAllTouched, conf, StringType)
 
-    def eval(row: InternalRow, geom: Any, cutlineAllTouched: Boolean, conf: UTF8String, dt: DataType): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val (_, ds, options) = RasterSerializationUtil.rowToTile(row, dt)
-        val geometry = geom match {
-            case g: UTF8String  => JTS.fromWKT(g.toString)
-            case g: Array[Byte] => JTS.fromWKB(g)
-        }
-        val (resultDs, metadata) = execute(ds, options, geometry, cutlineAllTouched)
-        RasterDriver.releaseDataset(ds)
-        val res = RasterSerializationUtil.tileToRow((row.getLong(0), resultDs, metadata), dt, exprConf.hConf)
-        RasterDriver.releaseDataset(resultDs)
-        res
-    }
+    def eval(row: InternalRow, geom: Any, cutlineAllTouched: Boolean, conf: UTF8String, dt: DataType): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val (_, ds, options) = RasterSerializationUtil.rowToTile(row, dt)
+              val geometry = geom match {
+                  case g: UTF8String  => JTS.fromWKT(g.toString)
+                  case g: Array[Byte] => JTS.fromWKB(g)
+              }
+              val (resultDs, metadata) = execute(ds, options, geometry, cutlineAllTouched)
+              RasterDriver.releaseDataset(ds)
+              val res = RasterSerializationUtil.tileToRow((row.getLong(0), resultDs, metadata), dt, exprConf.hConf)
+              RasterDriver.releaseDataset(resultDs)
+              res
+          },
+          row,
+          dt
+        )
 
     def execute(ds: Dataset, options: Map[String, String], geom: Geometry, cutlineAllTouched: Boolean): (Dataset, Map[String, String]) = {
         val geomSR = new SpatialReference()

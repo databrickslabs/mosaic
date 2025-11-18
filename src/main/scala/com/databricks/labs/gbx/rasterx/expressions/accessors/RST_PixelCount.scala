@@ -2,7 +2,7 @@ package com.databricks.labs.gbx.rasterx.expressions.accessors
 
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -32,16 +32,24 @@ object RST_PixelCount extends WithExpressionInfo {
     def evalBinary(row: InternalRow, conf: UTF8String): ArrayData = eval(row, conf, BinaryType)
     def evalPath(row: InternalRow, conf: UTF8String): ArrayData = eval(row, conf, StringType)
 
-    private def eval(row: InternalRow, conf: UTF8String, dt: DataType): ArrayData = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val ds = RasterSerializationUtil.rowToDS(row, dt, shared = true) // ASMDArray requires shared dataset
-        val tag = Integer.toHexString(System.identityHashCode(ds)) // unique tag for the dataset to avoid AsMDArray caching issues
-        ds.SetDescription(s"${Option(ds.GetDescription).getOrElse("")}#mda-$tag")
-        val counts = execute(ds)
-        RasterDriver.releaseDataset(ds)
-        ArrayData.toArrayData(counts)
-    }
+    private def eval(row: InternalRow, conf: UTF8String, dt: DataType): ArrayData =
+        Option(
+          RST_ErrorHandler.safeEval(
+            () => {
+                val exprConf = ExpressionConfig.fromB64(conf.toString)
+                RST_ExpressionUtil.init(exprConf)
+                val ds = RasterSerializationUtil.rowToDS(row, dt, shared = true) // ASMDArray requires shared dataset
+                val tag = Integer.toHexString(System.identityHashCode(ds)) // unique tag for the dataset to avoid AsMDArray caching issues
+                ds.SetDescription(s"${Option(ds.GetDescription).getOrElse("")}#mda-$tag")
+                val counts = execute(ds)
+                RasterDriver.releaseDataset(ds)
+                ArrayData.toArrayData(counts)
+            },
+            row,
+            dt,
+            conf
+          )
+        ).map(_.asInstanceOf[ArrayData]).orNull
 
     def execute(ds: Dataset): Array[Long] = {
         (1 to ds.GetRasterCount())

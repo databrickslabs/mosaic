@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.PixelCombineRasters
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -36,16 +36,21 @@ object RST_DerivedBand extends WithExpressionInfo {
     def evalBinary(row: InternalRow, pyFunc: UTF8String, funcName: UTF8String, conf: UTF8String): InternalRow =
         eval(row, pyFunc, funcName, conf, BinaryType)
 
-    def eval(row: InternalRow, pythonFunc: UTF8String, funcName: UTF8String, conf: UTF8String, rdt: DataType): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, rdt)
-        val (newDs, newMtd) = execute(Seq(ds), mtd, pythonFunc.toString, funcName.toString)
-        RasterDriver.releaseDataset(ds)
-        val res = RasterSerializationUtil.tileToRow((cell, newDs, newMtd), rdt, exprConf.hConf)
-        RasterDriver.releaseDataset(newDs)
-        res
-    }
+    def eval(row: InternalRow, pythonFunc: UTF8String, funcName: UTF8String, conf: UTF8String, rdt: DataType): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, rdt)
+              val (newDs, newMtd) = execute(Seq(ds), mtd, pythonFunc.toString, funcName.toString)
+              RasterDriver.releaseDataset(ds)
+              val res = RasterSerializationUtil.tileToRow((cell, newDs, newMtd), rdt, exprConf.hConf)
+              RasterDriver.releaseDataset(newDs)
+              res
+          },
+          row,
+          rdt
+        )
 
     def execute(dss: Seq[Dataset], mtd: Map[String, String], pythonFunc: String, funcName: String): (Dataset, Map[String, String]) = {
         PixelCombineRasters.combine(dss.toArray, mtd, pythonFunc, funcName)

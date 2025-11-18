@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions.accessors
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.RasterAccessors
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import com.databricks.labs.gbx.util.SerializationUtil
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -34,14 +34,22 @@ object RST_Subdatasets extends WithExpressionInfo {
     def evalPath(row: InternalRow, conf: UTF8String): MapData = eval(row, conf, StringType)
     def evalBinary(row: InternalRow, conf: UTF8String): MapData = eval(row, conf, BinaryType)
 
-    def eval(row: InternalRow, conf: UTF8String, rdt: DataType): MapData = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val ds = RasterSerializationUtil.rowToDS(row, rdt)
-        val res = execute(ds)
-        RasterDriver.releaseDataset(ds)
-        SerializationUtil.toMapData[String, String](res)
-    }
+    def eval(row: InternalRow, conf: UTF8String, rdt: DataType): MapData =
+        Option(
+          RST_ErrorHandler.safeEval(
+            () => {
+                val exprConf = ExpressionConfig.fromB64(conf.toString)
+                RST_ExpressionUtil.init(exprConf)
+                val ds = RasterSerializationUtil.rowToDS(row, rdt)
+                val res = execute(ds)
+                RasterDriver.releaseDataset(ds)
+                SerializationUtil.toMapData[String, String](res)
+            },
+            row,
+            rdt,
+            conf
+          )
+        ).map(_.asInstanceOf[MapData]).orNull
 
     def execute(ds: Dataset): Map[String, String] = RasterAccessors.subdatasetsMap(ds)
 

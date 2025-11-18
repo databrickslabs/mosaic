@@ -2,7 +2,7 @@ package com.databricks.labs.gbx.rasterx.expressions
 
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.{GDAL, RasterDriver}
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -33,14 +33,22 @@ object RST_RasterToWorldCoordX extends WithExpressionInfo {
     def evalPath(row: InternalRow, x: Int, y: Int, conf: UTF8String): Double = eval(row, x, y, conf, StringType)
     def evalBinary(row: InternalRow, x: Int, y: Int, conf: UTF8String): Double = eval(row, x, y, conf, BinaryType)
 
-    def eval(row: InternalRow, x: Int, y: Int, conf: UTF8String, rdt: DataType): Double = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val ds = RasterSerializationUtil.rowToDS(row, rdt)
-        val res = execute(ds, x, y)
-        RasterDriver.releaseDataset(ds)
-        res._1
-    }
+    def eval(row: InternalRow, x: Int, y: Int, conf: UTF8String, rdt: DataType): Double =
+        Option(
+          RST_ErrorHandler.safeEval(
+            () => {
+                val exprConf = ExpressionConfig.fromB64(conf.toString)
+                RST_ExpressionUtil.init(exprConf)
+                val ds = RasterSerializationUtil.rowToDS(row, rdt)
+                val res = execute(ds, x, y)
+                RasterDriver.releaseDataset(ds)
+                res._1
+            },
+            row,
+            rdt,
+            conf
+          )
+        ).map(_.asInstanceOf[Double]).getOrElse(Double.NaN)
 
     def execute(ds: Dataset, x: Int, y: Int): (Double, Double) = GDAL.toWorldCoord(ds.GetGeoTransform, x, y)
 

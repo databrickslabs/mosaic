@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.KernelFilter
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -35,16 +35,21 @@ object RST_Filter extends WithExpressionInfo {
     def evalBinary(row: InternalRow, n: Int, operation: UTF8String, conf: UTF8String): InternalRow =
         eval(row, n, operation, conf, BinaryType)
 
-    def eval(row: InternalRow, n: Int, operation: UTF8String, conf: UTF8String, rdt: DataType): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val (cell, ds, _) = RasterSerializationUtil.rowToTile(row, rdt)
-        val result = execute(ds, n, operation.toString)
-        RasterDriver.releaseDataset(ds)
-        val res = RasterSerializationUtil.tileToRow((cell, result._1, result._2), rdt, exprConf.hConf)
-        RasterDriver.releaseDataset(result._1)
-        res
-    }
+    def eval(row: InternalRow, n: Int, operation: UTF8String, conf: UTF8String, rdt: DataType): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val (cell, ds, _) = RasterSerializationUtil.rowToTile(row, rdt)
+              val result = execute(ds, n, operation.toString)
+              RasterDriver.releaseDataset(ds)
+              val res = RasterSerializationUtil.tileToRow((cell, result._1, result._2), rdt, exprConf.hConf)
+              RasterDriver.releaseDataset(result._1)
+              res
+          },
+          row,
+          rdt
+        )
 
     def execute(ds: Dataset, n: Int, operation: String): (Dataset, Map[String, String]) = {
         val res = KernelFilter.filter(ds, n, operation)

@@ -47,10 +47,16 @@ object RasterSerializationUtil {
         dataType match {
             case BinaryType =>
                 val metadata = SerializationUtil.toMapData[String, String](tuple._3)
+                val bytes =
+                    if (tuple._2 == null) {
+                        Array.emptyByteArray
+                    } else {
+                        RasterDriver.writeToBytes(tuple._2, tuple._3)
+                    }
                 InternalRow.fromSeq(
                   Seq(
                     tuple._1, // cellid
-                    RasterDriver.writeToBytes(tuple._2, tuple._3), // binary
+                    bytes, // binary
                     metadata // metadata
                   )
                 )
@@ -76,7 +82,7 @@ object RasterSerializationUtil {
                   ).mkString(";")
                 )
                 val metadata = SerializationUtil.toMapData[String, String](mtd)
-                RasterDriver.write(tuple._2, outPath, tuple._3, hconf) // path
+                if (tuple._2 != null) RasterDriver.write(tuple._2, outPath, tuple._3, hconf) // path
                 InternalRow.fromSeq(
                   Seq(
                     tuple._1, // cellid

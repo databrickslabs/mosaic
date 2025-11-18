@@ -2,7 +2,7 @@ package com.databricks.labs.gbx.rasterx.expressions.accessors
 
 import com.databricks.labs.gbx.expressions._
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -33,14 +33,22 @@ object RST_Avg extends WithExpressionInfo {
     def evalBinary(row: InternalRow, conf: UTF8String): ArrayData = eval(row, conf, BinaryType)
     def evalPath(row: InternalRow, conf: UTF8String): ArrayData = eval(row, conf, StringType)
 
-    def eval(row: InternalRow, conf: UTF8String, dt: DataType): ArrayData = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val ds = RasterSerializationUtil.rowToDS(row, dt)
-        val res = execute(ds)
-        RasterDriver.releaseDataset(ds)
-        ArrayData.toArrayData(res)
-    }
+    def eval(row: InternalRow, conf: UTF8String, dt: DataType): ArrayData =
+        Option(
+          RST_ErrorHandler.safeEval(
+            () => {
+                val exprConf = ExpressionConfig.fromB64(conf.toString)
+                RST_ExpressionUtil.init(exprConf)
+                val ds = RasterSerializationUtil.rowToDS(row, dt)
+                val res = execute(ds)
+                RasterDriver.releaseDataset(ds)
+                ArrayData.toArrayData(res)
+            },
+            row,
+            dt,
+            conf
+          )
+        ).map(_.asInstanceOf[ArrayData]).orNull
 
     def execute(ds: Dataset): Array[Double] = {
         (1 to ds.GetRasterCount()).map { bandIndex =>

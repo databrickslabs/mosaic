@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions.generators
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.RasterTessellate
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.codegen.CodegenFallback
@@ -31,23 +31,28 @@ case class RST_H3_Tessellate(
     override def children: Seq[Expression] = Seq(tileExpr, resolutionExpr, exprConfExpr)
     override protected def withNewChildrenInternal(nc: IndexedSeq[Expression]): Expression = copy(nc(0), nc(1), nc(2))
 
-    override def eval(input: InternalRow): IterableOnce[InternalRow] = {
-        val conf = exprConfExpr.eval(input).asInstanceOf[UTF8String]
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val rawTile = tileExpr.eval(input).asInstanceOf[InternalRow]
-        val resolution = resolutionExpr.eval(input).asInstanceOf[Int]
-        val (_, ds, mtd) = RasterSerializationUtil.rowToTile(rawTile, rasterType)
-        val iter = RasterTessellate.tessellateH3Iter(ds, mtd, resolution)
-        RST_ExpressionUtil.addCleanupListener(iter)
-        iter
-            .map { case (newCell, resDs, resMtd) =>
-                val tile = RasterSerializationUtil.tileToRow((newCell, resDs, resMtd), rasterType, exprConf.hConf)
-                RasterDriver.releaseDataset(resDs)
-                InternalRow.fromSeq(Seq(tile)) // Row wrapping in generator
-            }
+    override def eval(input: InternalRow): IterableOnce[InternalRow] =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val conf = exprConfExpr.eval(input).asInstanceOf[UTF8String]
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val rawTile = tileExpr.eval(input).asInstanceOf[InternalRow]
+              val resolution = resolutionExpr.eval(input).asInstanceOf[Int]
+              val (_, ds, mtd) = RasterSerializationUtil.rowToTile(rawTile, rasterType)
+              val iter = RasterTessellate.tessellateH3Iter(ds, mtd, resolution)
+              RST_ExpressionUtil.addCleanupListener(iter)
+              iter
+                  .map { case (newCell, resDs, resMtd) =>
+                      val tile = RasterSerializationUtil.tileToRow((newCell, resDs, resMtd), rasterType, exprConf.hConf)
+                      RasterDriver.releaseDataset(resDs)
+                      InternalRow.fromSeq(Seq(tile)) // Row wrapping in generator
+                  }
 
-    }
+          },
+          input,
+          rasterType
+        )
 
 }
 

@@ -5,6 +5,7 @@ import org.gdal.gdal.{Dataset, gdal}
 import org.gdal.gdalconst.gdalconstConstants.GA_ReadOnly
 
 import java.nio.file.{Files, Paths}
+import scala.util.Try
 
 /** GDALCalc is a helper object for executing GDAL Calc commands. */
 object GDALCalc {
@@ -42,9 +43,10 @@ object GDALCalc {
         val commandRes = SysUtils.runCommand(Seq("python3", "-u") ++ toRun.split(" ").filterNot(_.isEmpty).toSeq)
         val errorMsg = gdal.GetLastErrorMsg
         val result = gdal.Open(resultPath, GA_ReadOnly)
-        val size =
+        val size = Try {
             if (resultPath.startsWith("/vsimem/")) gdal.GetMemFileBuffer(resultPath).length
             else Files.size(Paths.get(resultPath))
+        }.getOrElse(-1L)
         // noinspection DuplicatedCode
         // TODO: make errors better, this is quite aggressive
         val newOptions = Map(

@@ -2,7 +2,7 @@ package com.databricks.labs.gbx.rasterx.expressions.accessors
 
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -33,16 +33,21 @@ object RST_GetSubdataset extends WithExpressionInfo {
     def evalPath(row: InternalRow, subsetName: UTF8String, conf: UTF8String): InternalRow = eval(row, subsetName, conf, StringType)
     def evalBinary(row: InternalRow, subsetName: UTF8String, conf: UTF8String): InternalRow = eval(row, subsetName, conf, BinaryType)
 
-    def eval(row: InternalRow, subsetName: UTF8String, conf: UTF8String, rdt: DataType): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, rdt)
-        val subdataset = execute(ds, subsetName.toString)
-        val res = RasterSerializationUtil.tileToRow((cell, subdataset, mtd), rdt, exprConf.hConf)
-        RasterDriver.releaseDataset(ds)
-        RasterDriver.releaseDataset(subdataset)
-        res
-    }
+    def eval(row: InternalRow, subsetName: UTF8String, conf: UTF8String, rdt: DataType): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val (cell, ds, mtd) = RasterSerializationUtil.rowToTile(row, rdt)
+              val subdataset = execute(ds, subsetName.toString)
+              val res = RasterSerializationUtil.tileToRow((cell, subdataset, mtd), rdt, exprConf.hConf)
+              RasterDriver.releaseDataset(ds)
+              RasterDriver.releaseDataset(subdataset)
+              res
+          },
+          row,
+          rdt
+        )
 
     def execute(ds: Dataset, name: String): Dataset = {
         val path = ds.GetDescription

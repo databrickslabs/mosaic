@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions.accessors
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.BoundingBox
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import com.databricks.labs.gbx.vectorx.jts.JTS
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
@@ -34,14 +34,22 @@ object RST_BoundingBox extends WithExpressionInfo {
     def evalPath(row: InternalRow, conf: UTF8String): Array[Byte] = eval(row, conf, StringType)
     def evalBinary(row: InternalRow, conf: UTF8String): Array[Byte] = eval(row, conf, BinaryType)
 
-    def eval(row: InternalRow, conf: UTF8String, dt: DataType): Array[Byte] = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val ds = RasterSerializationUtil.rowToDS(row, dt)
-        val bbox = execute(ds)
-        RasterDriver.releaseDataset(ds)
-        JTS.toWKB(bbox)
-    }
+    def eval(row: InternalRow, conf: UTF8String, dt: DataType): Array[Byte] =
+        Option(
+          RST_ErrorHandler.safeEval(
+            () => {
+                val exprConf = ExpressionConfig.fromB64(conf.toString)
+                RST_ExpressionUtil.init(exprConf)
+                val ds = RasterSerializationUtil.rowToDS(row, dt)
+                val bbox = execute(ds)
+                RasterDriver.releaseDataset(ds)
+                JTS.toWKB(bbox)
+            },
+            row,
+            dt,
+            conf
+          )
+        ).map(_.asInstanceOf[Array[Byte]]).orNull
 
     def execute(ds: Dataset): Geometry = BoundingBox.bbox(ds, ds.GetSpatialRef)
 

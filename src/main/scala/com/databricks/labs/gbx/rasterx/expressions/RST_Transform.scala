@@ -3,7 +3,7 @@ package com.databricks.labs.gbx.rasterx.expressions
 import com.databricks.labs.gbx.expressions.{ExpressionConfig, ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
 import com.databricks.labs.gbx.rasterx.gdal.RasterDriver
 import com.databricks.labs.gbx.rasterx.operations.RasterProject
-import com.databricks.labs.gbx.rasterx.util.{RST_ExpressionUtil, RasterSerializationUtil}
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil, RasterSerializationUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -34,16 +34,21 @@ object RST_Transform extends WithExpressionInfo {
     def evalBinary(row: InternalRow, srid: Int, conf: UTF8String): InternalRow = eval(row, srid, conf, BinaryType)
     def evalPath(row: InternalRow, srid: Int, conf: UTF8String): InternalRow = eval(row, srid, conf, StringType)
 
-    def eval(row: InternalRow, srid: Int, conf: UTF8String, dt: DataType): InternalRow = {
-        val exprConf = ExpressionConfig.fromB64(conf.toString)
-        RST_ExpressionUtil.init(exprConf)
-        val (cell, ds, options) = RasterSerializationUtil.rowToTile(row, dt)
-        val (resultDs, metadata) = execute(ds, options, srid)
-        RasterDriver.releaseDataset(ds)
-        val res = RasterSerializationUtil.tileToRow((cell, resultDs, metadata), dt, exprConf.hConf)
-        RasterDriver.releaseDataset(resultDs)
-        res
-    }
+    def eval(row: InternalRow, srid: Int, conf: UTF8String, dt: DataType): InternalRow =
+        RST_ErrorHandler.safeEval(
+          () => {
+              val exprConf = ExpressionConfig.fromB64(conf.toString)
+              RST_ExpressionUtil.init(exprConf)
+              val (cell, ds, options) = RasterSerializationUtil.rowToTile(row, dt)
+              val (resultDs, metadata) = execute(ds, options, srid)
+              RasterDriver.releaseDataset(ds)
+              val res = RasterSerializationUtil.tileToRow((cell, resultDs, metadata), dt, exprConf.hConf)
+              RasterDriver.releaseDataset(resultDs)
+              res
+          },
+          row,
+          dt
+        )
 
     def execute(ds: Dataset, options: Map[String, String], srid: Int): (Dataset, Map[String, String]) = {
         val dstSR = new SpatialReference()

@@ -1,7 +1,7 @@
 package com.databricks.labs.gbx.rasterx.expressions.grid
 
 import com.databricks.labs.gbx.expressions.{ExpressionConfigExpr, InvokedExpression, WithExpressionInfo}
-import com.databricks.labs.gbx.rasterx.util.RST_ExpressionUtil
+import com.databricks.labs.gbx.rasterx.util.{RST_ErrorHandler, RST_ExpressionUtil}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.analysis.FunctionRegistry.FunctionBuilder
 import org.apache.spark.sql.catalyst.expressions.Expression
@@ -36,7 +36,9 @@ object RST_H3_RasterToGridMax extends WithExpressionInfo {
     def evalBinary(row: InternalRow, resolution: Int, conf: UTF8String): ArrayData = eval(row, resolution, conf, BinaryType)
 
     def eval(row: InternalRow, resolution: Int, conf: UTF8String, rdt: DataType): ArrayData =
-        RST_H3_RasterToGrid.eval[Double](row, resolution, conf, rdt, this.execute)
+        Option(RST_ErrorHandler.safeEval(() => RST_H3_RasterToGrid.eval[Double](row, resolution, conf, rdt, this.execute), row, rdt, conf))
+            .map(_.asInstanceOf[ArrayData])
+            .orNull
 
     def execute(ds: Dataset, resolution: Int): Array[Array[(Long, Double)]] = {
         val meanF = (values: ArrayBuffer[Double]) => values.max
