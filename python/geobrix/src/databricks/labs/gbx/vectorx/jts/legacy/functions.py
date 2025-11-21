@@ -8,4 +8,4 @@ def register(_spark):
 
 
 def st_legacyaswkb(geom):
-    return f.call_function("st_legacyaswkb", geom)
+    return f.call_function("gbx_st_legacyaswkb", geom)

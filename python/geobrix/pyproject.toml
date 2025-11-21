@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/databrickslabs/mosaic" # TODO: rename when new URL is available
+Homepage = "https://github.com/databrickslabs/geobrix"
 
 [project.optional-dependencies]
 dev = [
@@ -30,15 +30,20 @@ test = [
     "pytest>=7.0",
 ]
 
-[tool.setuptools.packages.find]
-# This section is intentionally left empty.
-# setuptools will find packages automatically.
+[tool.pytest.ini_options]
+pythonpath = [ "src" ]
+
+[build-system]
+requires = ["setuptools>=61.2", "wheel"]
+
+[tool.setuptools]
+include-package-data = false
 
 [tool.setuptools.package-data]
 geobrix = ["lib/*.jar", "resources/*.png"]
 
 [tool.setuptools.dynamic]
-version = {attr = "geobrix.__version__"}
+version = {attr = "databricks.labs.gbx.__version__"}
 
 [tool.isort]
 multi_line_output = 3
@@ -46,7 +51,7 @@ include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
 line_length = 88
-known_first_party = ["geobrix"]
+known_first_party = ["gridx", "rasterx", "vectorx"]
 default_section = "THIRDPARTY"
 
 [tool.flake8]
@@ -56,6 +61,6 @@ max-complexity = 20
 select = ["B", "C", "E", "F", "W", "T4"]
 exclude = [".git", "__pycache__", "docs/conf.py", "dist"]
 
-[tool.mypy]
-files = ["geobrix"]
-ignore_missing_imports = true
+#[tool.mypy]
+#files = ["src"]
+#ignore_missing_imports = true

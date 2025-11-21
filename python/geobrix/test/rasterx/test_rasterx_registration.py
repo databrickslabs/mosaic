@@ -25,7 +25,7 @@ def spark():
 
 
 def test_rasterx_functions_registration(spark):
-    from geobrix.rasterx import functions as rx
+    from databricks.labs.gbx.rasterx import functions as rx
     rx.register(spark)
     path = (HERE.parents[4] / "src/test/resources/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B01.TIF").resolve()
     df = spark.range(1).select(

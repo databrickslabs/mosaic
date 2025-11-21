@@ -23,7 +23,7 @@ def spark():
 
 
 def test_legacy_functions_registration(spark):
-    from geobrix.vectorx.jts.legacy import functions as legacy_funcs
+    from databricks.labs.gbx.vectorx.jts.legacy import functions as legacy_funcs
     legacy_funcs.register(spark)
-    df = spark.sql("show functions like 'st_legacyaswkb'")
+    df = spark.sql("show functions like 'gbx_st_legacyaswkb'")
     assert df.count() is not None

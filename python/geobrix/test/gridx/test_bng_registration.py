@@ -23,7 +23,7 @@ def spark():
 
 
 def test_bng_functions_registration(spark):
-    from geobrix.gridx.bng import functions as bng_funcs
+    from databricks.labs.gbx.gridx.bng import functions as bng_funcs
     bng_funcs.register(spark)
     df = spark.range(1).select(bng_funcs.bng_aswkb(f.lit("TQ388791")).alias("wkb"))
     row = df.collect()[0]
