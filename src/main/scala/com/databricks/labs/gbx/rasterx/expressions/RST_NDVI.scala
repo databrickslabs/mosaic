@@ -62,6 +62,14 @@ object RST_NDVI extends WithExpressionInfo {
               val cpyPath = s"${NodeFilePathUtil.rootPath}/ndvi_temp_$uuid.$extension"
               val (dsCpy, dsMtd) = GDALTranslate.executeTranslate(cpyPath, ds, "gdal_translate", mtd)
               val (resultDs, resMtd) = execute(dsCpy, redIndex, nirIndex, dsMtd)
+              if (resultDs == null) {
+                  throw new Error(
+                      s"""
+                         |NDVI computation failed.
+                         |${org.gdal.gdal.gdal.GetLastErrorMsg()}
+                         |$resMtd
+                         |""".stripMargin)
+              }
               val resPath = resultDs.GetDescription()
               RasterDriver.releaseDataset(ds)
               RasterDriver.releaseDataset(dsCpy)
