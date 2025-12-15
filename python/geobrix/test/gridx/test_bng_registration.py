@@ -16,8 +16,9 @@ def spark():
     logging.getLogger("py4j").setLevel(logging.ERROR)
     spark = (SparkSession.builder
              .config("spark.driver.extraJavaOptions", "-Dlog4j.rootLogger=INFO,console")
+             .config("spark.jars", str(JAR))
              .getOrCreate())
-    spark.addArtifacts(JAR_URI)
+    print(JAR_URI)
     spark.sql("LIST JAR").show(truncate=False)
     return spark
 

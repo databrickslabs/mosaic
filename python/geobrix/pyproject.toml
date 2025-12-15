@@ -1,5 +1,5 @@
 [project]
-name = "dblabs-geobrix"
+name = "geobrix"
 authors = [{ name = "Databricks" }]
 dynamic = ["version"]
 description = "GeoBriX: A high-performance spatial processing library for Apache Spark."
@@ -60,7 +60,3 @@ max-line-length = 88
 max-complexity = 20
 select = ["B", "C", "E", "F", "W", "T4"]
 exclude = [".git", "__pycache__", "docs/conf.py", "dist"]
-
-#[tool.mypy]
-#files = ["src"]
-#ignore_missing_imports = true
