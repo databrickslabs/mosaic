@@ -16,7 +16,9 @@ JAR_URI = JAR.as_uri()
 def spark():
     logging.getLogger("py4j").setLevel(logging.ERROR)
     spark = (SparkSession.builder
-             .config("spark.driver.extraJavaOptions", "-Dlog4j.rootLogger=ERROR,console")
+             .config("spark.driver.extraJavaOptions", 
+                     "-Dlog4j.rootLogger=ERROR,console "
+                     "-Djava.library.path=/usr/local/lib:/usr/java/packages/lib:/usr/lib64:/lib64:/lib:/usr/lib:/usr/local/hadoop/lib/native")
              .config("spark.jars", str(JAR))
              .getOrCreate())
     print(JAR_URI)
