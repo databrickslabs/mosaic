@@ -47,8 +47,8 @@ runs:
             # Use installed version if available, otherwise use matrix version
             GDAL_VERSION_TO_INSTALL="${INSTALLED_GDAL_VERSION:-${{ matrix.gdal }}}"
             pip install --no-build-isolation gdal[numpy]==${GDAL_VERSION_TO_INSTALL}
-            # - add the so files 
-            cp  -n scripts/gdal311/libgdalalljni.so /usr/lib
+            # - add the so files
+            sudo cp scripts/gdal311/libgdalalljni.so /usr/lib/libgdalalljni.so
         - name: Test and build the scala JAR - skip tests is false
           if: inputs.skip_tests == 'false'
           shell: bash
