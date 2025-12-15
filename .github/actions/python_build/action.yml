@@ -30,7 +30,6 @@ runs:
       run: |
         # - install pip libs
         #   note: gdal requires the extra args
-        cd python
         pip install --upgrade pip setuptools wheel cython
         pip install build numpy==${{ matrix.numpy }}
         pip install pyspark==${{ matrix.spark }}
@@ -44,7 +43,7 @@ runs:
         GDAL_VERSION_TO_INSTALL="${INSTALLED_GDAL_VERSION:-${{ matrix.gdal }}}"
         pip install --no-build-isolation gdal[numpy]==${GDAL_VERSION_TO_INSTALL}
         pip install pytest==${{ matrix.pytest }}
-        pip install .
+        pip install python/geobrix
     - name: Give Python interpreter write access to checkpointing / raster write location
       shell: bash
       run: |
