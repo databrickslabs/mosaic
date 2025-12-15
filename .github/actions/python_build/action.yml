@@ -25,11 +25,6 @@ runs:
         # - install natives
         sudo apt-get -o DPkg::Lock::Timeout=-1 install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
         sudo apt-get -o DPkg::Lock::Timeout=-1 install -y libgdal-dev gdal-bin python3-gdal
-    - name: Copy JAR artifacts to lib
-      shell: bash
-      run: |
-        mkdir -p python/geobrix/lib
-        cp staging/build-artifacts/geobrix*.jar python/geobrix/lib
     - name: Install python dependencies
       shell: bash
       run: |
