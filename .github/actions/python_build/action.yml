@@ -31,9 +31,18 @@ runs:
         # - install pip libs
         #   note: gdal requires the extra args
         cd python
-        pip install --upgrade pip
-        pip install build wheel pyspark==${{ matrix.spark }} numpy==${{ matrix.numpy }}
-        pip install --no-build-isolation --no-cache-dir --force-reinstall gdal[numpy]==${{ matrix.gdal }}
+        pip install --upgrade pip setuptools wheel cython
+        pip install build numpy==${{ matrix.numpy }}
+        pip install pyspark==${{ matrix.spark }}
+        # - install GDAL Python bindings (numpy must be installed first)
+        #   detect installed GDAL version and use it if different from matrix version
+        export GDAL_CONFIG=/usr/bin/gdal-config
+        INSTALLED_GDAL_VERSION=$(gdal-config --version)
+        echo "System GDAL version: ${INSTALLED_GDAL_VERSION}"
+        echo "Matrix GDAL version: ${{ matrix.gdal }}"
+        # Use installed version if available, otherwise use matrix version
+        GDAL_VERSION_TO_INSTALL="${INSTALLED_GDAL_VERSION:-${{ matrix.gdal }}}"
+        pip install --no-build-isolation gdal[numpy]==${GDAL_VERSION_TO_INSTALL}
         pip install pytest==${{ matrix.pytest }}
         pip install .
     - name: Give Python interpreter write access to checkpointing / raster write location
