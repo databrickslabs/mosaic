@@ -6,7 +6,7 @@ on:
 jobs:
   build-n-publish:
     name: Build project and publish to PyPI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: release
     permissions:
       # Used to authenticate to PyPI via OIDC and sign the release's artifacts with sigstore-python.
@@ -15,19 +15,21 @@ jobs:
       contents: write
     strategy:
       matrix:
-        python: [ 3.10.12 ]
-        numpy: [ 1.22.4 ]
-        gdal: [ 3.4.1 ]
-        spark: [ 3.4.1 ]
-        R: [ 4.2.2 ]
+        python: [ 3.12.3 ]
+        pytest: [8.4.2]
+        numpy: [ 2.1.3 ]
+        gdal: [ 3.11.4 ]
+        spark: [ 4.0.0 ]
     steps:
       - name: checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
       - name: build scala
         uses: ./.github/actions/scala_build
       - name: build python
         uses: ./.github/actions/python_build
+
+      # As of DEC, 2025 v1 is the latest
       - name: Publish a Python distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          packages_dir: python/dist/
+          packages_dir: python/geobrix/dist/

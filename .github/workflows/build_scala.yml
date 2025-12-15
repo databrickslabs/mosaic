@@ -3,27 +3,29 @@ on:
   push:
     branches:
       - "scala/**"
-
+permissions:
+  contents: read
+  id-token: write
 jobs:
   build:
-    runs-on: larger
+    runs-on: ubuntu-24.04
     env:
-      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
-        python: [ 3.10.12 ]
-        numpy: [ 1.22.4 ]
-        gdal: [ 3.4.1 ]
-        spark: [ 3.4.1 ]
-        R: [ 4.2.2 ]
+        python: [ 3.12.3 ]
+        pytest: [8.4.2]
+        numpy: [ 2.1.3 ]
+        gdal: [ 3.11.4 ]
+        spark: [ 4.0.0 ]
     steps:
       - name: checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
       - name: build scala with tests
         uses: ./.github/actions/scala_build
-      - name: upload artefacts
-        uses: ./.github/actions/upload_artefacts
+      - name: upload artifacts
+        uses: ./.github/actions/upload_artifacts
       - name: Publish test coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

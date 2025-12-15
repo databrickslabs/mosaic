@@ -1,11 +1,13 @@
-name: build mosaic python
-description: build mosaic python
+name: build geobrix python
+description: build geobrix python
 runs:
   using: "composite"
   steps:
     - name: Configure python interpreter
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
+        cache: 'pip' # caches dependencies for faster subsequent runs
+        cache-dependency-path: '**/pyproject.toml'
         python-version: ${{ matrix.python }}
     - name: Install python dependencies
       shell: bash
@@ -14,19 +16,27 @@ runs:
         #   note: gdal requires the extra args
         cd python
         pip install build wheel pyspark==${{ matrix.spark }} numpy==${{ matrix.numpy }}
-        pip install --no-build-isolation --no-cache-dir --force-reinstall gdal==${{ matrix.gdal }}
+        pip install --no-build-isolation --no-cache-dir --force-reinstall gdal[numpy]==${{ matrix.gdal }}
+        pip install pytest==${{ matrix.pytest }}
         pip install .
     - name: Give Python interpreter write access to checkpointing / raster write location
       shell: bash
       run: |
-        sudo mkdir -p /mnt/mosaic_tmp
-        sudo chmod -R 777 /mnt/mosaic_tmp
+        # does this need to be '/mnt/tmp/raster-checkpoint'?
+        sudo mkdir -p /tmp/raster-checkpoint
+        sudo chmod -R 777 /tmp/raster-checkpoint
+    - name: Copy JAR artifacts to lib
+      shell: bash
+      run: |
+        mkdir -p python/geobrix/lib
+        cp staging/build-artifacts/geobrix*.jar python/geobrix/lib
     - name: Test and build python package
       shell: bash
       run: |
-        cd python
-        python -m unittest
+        # 'pytest' or 'python3 -m unittest'?
+        cd python/geobrix
         python -m build
+        pytest
     - name: Copy python artifacts to GH Actions run
       shell: bash
-      run: cp python/dist/*.whl staging
+      run: cp python/geobrix/dist/*.whl staging/build-artifacts
