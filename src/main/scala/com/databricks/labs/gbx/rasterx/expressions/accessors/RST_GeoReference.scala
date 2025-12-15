@@ -85,11 +85,11 @@ object RST_GeoReference extends WithExpressionInfo {
 
     override def extendedDescription: String =
     """The output takes the form of a MapType with the following keys:
-    | "upperLeftX" 	-> geoTransform(0)
-    | "upperLeftY" 	-> geoTransform(3)
-    | "scaleX" 	-> geoTransform(1)
-    | "scaleY" 	-> geoTransform(5)
-    | "skewX" 	-> geoTransform(2)
-    | "skewY" 	-> geoTransform(4)""".stripMargin
+      | "upperLeftX" -> geoTransform(0)
+      | "upperLeftY" -> geoTransform(3)
+      | "scaleX" -> geoTransform(1)
+      | "scaleY" -> geoTransform(5)
+      | "skewX" -> geoTransform(2)
+      | "skewY" -> geoTransform(4)""".stripMargin
 
 }

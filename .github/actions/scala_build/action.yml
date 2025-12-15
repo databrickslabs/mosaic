@@ -4,6 +4,9 @@ inputs:
   skip_tests:
     description: 'Skip Scala Tests? true or false'
     default: 'false'
+  enable_coverage:
+    description: 'Enable code coverage with scoverage? true or false'
+    default: 'false'
 runs:
   using: "composite"
   steps:
@@ -49,10 +52,14 @@ runs:
             pip install --no-build-isolation gdal[numpy]==${GDAL_VERSION_TO_INSTALL}
             # - add the so files
             sudo cp scripts/gdal311/libgdalalljni.so /usr/lib/libgdalalljni.so
-        - name: Test and build the scala JAR - skip tests is false
-          if: inputs.skip_tests == 'false'
+        - name: Test and build the scala JAR - skip tests is false, coverage enabled
+          if: inputs.skip_tests == 'false' && inputs.enable_coverage == 'true'
           shell: bash
           run: sudo mvn -q clean install
+        - name: Test and build the scala JAR - skip tests is false, coverage disabled
+          if: inputs.skip_tests == 'false' && inputs.enable_coverage == 'false'
+          shell: bash
+          run: sudo mvn -q clean install -Dscoverage.skip
         - name: Build the scala JAR - skip tests is true
           if: inputs.skip_tests == 'true'
           shell: bash
@@ -68,6 +75,7 @@ runs:
           shell: bash
           run: |
             # add user-guide and zipped examples (for now)
+            # MLJ: adjust path(s) for GeoBrix repo
             mkdir -p staging/user-artifacts
-            cp beta-dist/user-guide/*.pdf staging/user-artifacts
+            cp beta-dist/*.pdf staging/user-artifacts
             cp beta-dist/examples.zip staging/user-artifacts

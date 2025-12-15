@@ -22,7 +22,7 @@ object ReTile {
         } yield {
             val xMin = x * tileWidth
             val yMin = y * tileHeight
-            val xOff = math.min(tileWidth,  xR - xMin)
+            val xOff = math.min(tileWidth, xR - xMin)
             val yOff = math.min(tileHeight, yR - yMin)
             (xMin, yMin, xOff, yOff)
         }

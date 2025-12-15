@@ -27,6 +27,8 @@ jobs:
         uses: actions/checkout@v5
       - name: build scala
         uses: ./.github/actions/scala_build
+        with:
+          enable_coverage: "false"
       - name: build python
         uses: ./.github/actions/python_build
       - name: upload artifacts

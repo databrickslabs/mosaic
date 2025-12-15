@@ -23,6 +23,8 @@ jobs:
         uses: actions/checkout@v5
       - name: build scala with tests
         uses: ./.github/actions/scala_build
+        with:
+          enable_coverage: "true"
       - name: upload artifacts
         uses: ./.github/actions/upload_artifacts
       - name: Publish test coverage
