@@ -69,7 +69,7 @@ class RST_AccessorsEvalTest extends PlanTest with SilentSparkSession {
 
         noException should be thrownBy runQuery(df2)
 
-        val netCDFPath = this.getClass.getResource("/binary/netCDF-CMIP5/").toString
+        val netCDFPath = this.getClass.getResource("/binary/netcdf-CMIP5/").toString
 
         val df3: DataFrame = Seq(
           (1, s"$netCDFPath/prAdjust_day_HadGEM2-CC_SMHI-DBSrev930-GFD-1981-2010-postproc_rcp45_r1i1p1_20201201-20201231.nc")
