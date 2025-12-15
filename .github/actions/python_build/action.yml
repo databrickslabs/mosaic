@@ -9,12 +9,29 @@ runs:
         cache: 'pip' # caches dependencies for faster subsequent runs
         cache-dependency-path: '**/pyproject.toml'
         python-version: ${{ matrix.python }}
+    - name: Install GDAL system dependencies
+      shell: bash
+      run: |
+        # - update apt
+        sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-backports main universe multiverse restricted"
+        sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-updates main universe multiverse restricted"
+        sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc)-security main multiverse restricted universe"
+        sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) main multiverse restricted universe"
+        # - add ubuntugis PPA with GPG key
+        sudo apt-get install -y software-properties-common
+        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B827C12C2D425E227EDCA75089EBE08314DF160 || true
+        sudo add-apt-repository -y ppa:ubuntugis/ubuntugis-unstable
+        sudo apt-get update -y
+        # - install natives
+        sudo apt-get -o DPkg::Lock::Timeout=-1 install -y unixodbc libcurl3-gnutls libsnappy-dev libopenjp2-7
+        sudo apt-get -o DPkg::Lock::Timeout=-1 install -y libgdal-dev gdal-bin python3-gdal
     - name: Install python dependencies
       shell: bash
       run: |
         # - install pip libs
         #   note: gdal requires the extra args
         cd python
+        pip install --upgrade pip
         pip install build wheel pyspark==${{ matrix.spark }} numpy==${{ matrix.numpy }}
         pip install --no-build-isolation --no-cache-dir --force-reinstall gdal[numpy]==${{ matrix.gdal }}
         pip install pytest==${{ matrix.pytest }}

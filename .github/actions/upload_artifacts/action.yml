@@ -1,0 +1,15 @@
+name: upload geobrix artifacts
+description: upload geobrix artifacts
+runs:
+  using: "composite"
+  steps:
+    - name: upload build artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: build-artifacts
+        path: staging/build-artifacts/*
+    - name: upload user artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: user-artifacts
+        path: staging/user-artifacts/*
