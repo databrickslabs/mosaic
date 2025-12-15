@@ -77,5 +77,5 @@ runs:
             # add user-guide and zipped examples (for now)
             # MLJ: adjust path(s) for GeoBrix repo
             mkdir -p staging/user-artifacts
-            cp beta-dist/*.pdf staging/user-artifacts
-            cp beta-dist/examples.zip staging/user-artifacts
+            cp beta-dist/*.pdf staging/user-artifacts 2>/dev/null || true
+            cp beta-dist/examples.zip staging/user-artifacts 2>/dev/null || true
