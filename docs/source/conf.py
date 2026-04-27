@@ -47,6 +47,20 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', ".env"]
 source_suffix = [".rst", ".md"]
 
+rst_prolog = """
+.. important::
+
+   **Mosaic end of support** — DBLabs Mosaic reaches **end of support (EoS) with
+   Databricks Runtime 13.3 in August 2026**. We encourage existing and new users to
+   adopt the successor project
+   `Databricks Labs GeoBrix <https://github.com/databrickslabs/geobrix>`_ — a
+   high-performance spatial processing library for Databricks that continues and
+   modernizes Mosaic's capabilities (Raster, Grid, Vector), works with DBR 17.1+ and
+   product spatial features, and is built exclusively for the Databricks Runtime.
+   **Docs:** `databrickslabs.github.io/geobrix <https://databrickslabs.github.io/geobrix/>`_
+   · **Releases:** `github.com/databrickslabs/geobrix/releases <https://github.com/databrickslabs/geobrix/releases>`_
+"""
+
 pygments_style = 'sphinx'
 nbsphinx_execute = 'never'
 napoleon_use_admonition_for_notes = True
