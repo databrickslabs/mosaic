@@ -1093,7 +1093,7 @@ class MosaicContext(indexSystem: IndexSystem, geometryAPI: GeometryAPI) extends 
 object MosaicContext extends Logging {
 
     var _tmpDir: String = ""
-    val mosaicVersion: String = "0.4.3"
+    val mosaicVersion: String = "0.4.4"
 
     private var instance: Option[MosaicContext] = None
 

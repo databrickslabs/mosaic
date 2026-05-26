@@ -3,11 +3,9 @@ package com.databricks.labs.mosaic.models.knn
 import com.databricks.labs.mosaic.core.geometry.api.JTS
 import com.databricks.labs.mosaic.core.index.{BNGIndexSystem, H3IndexSystem}
 import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.test.SparkSuite
 import com.databricks.labs.mosaic.{MOSAIC_GEOMETRY_API, MOSAIC_INDEX_SYSTEM, MOSAIC_RASTER_API}
-import com.databricks.labs.mosaic.sql.extensions.SQLExtensionsBehaviors
-import com.databricks.labs.mosaic.test.{MosaicSpatialQueryTest, SparkSuite}
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.test.SharedSparkSession
 import org.scalatest.flatspec.AnyFlatSpec
 
 class SpatialKNNTest extends AnyFlatSpec with SpatialKNNBehaviors with SparkSuite {

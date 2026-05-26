@@ -225,9 +225,7 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
             .repartition(self.spark.sparkContext.defaultParallelism)
             .withColumn(
                 "timestep",
-                element_at(
-                    api.rst_metadata("tile"), "NC_GLOBAL#GDAL_MOSAIC_BAND_INDEX"
-                ),
+                element_at(col("tile.metadata"), "bandIndex"),
             )
             .withColumn("tile", api.rst_setsrid("tile", lit(4326)))
             .where(col("timestep") == 21)
@@ -323,3 +321,16 @@ class TestRasterFunctions(MosaicTestCaseWithGDAL):
         )
 
         result.write.mode("overwrite").format("noop").save()
+
+
+    def test_geoparquet_reader(self):
+        geoparquet_df = (
+            readers.read()
+            .format("multi_read_ogr")
+            .option("driverName", "parquet")
+            .option("chunkSize", "2")
+            .load("test/data/example.parquet")
+        )
+
+        self.assertEqual(geoparquet_df.count(), 5)
+

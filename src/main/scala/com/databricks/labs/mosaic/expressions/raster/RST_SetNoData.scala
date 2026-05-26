@@ -23,6 +23,7 @@ case class RST_SetNoData(
       tileExpr,
       noDataExpr,
       returnsRaster = true,
+      unsafe = false,
       expressionConfig = expressionConfig
     )
       with NullIntolerant
@@ -52,7 +53,7 @@ case class RST_SetNoData(
             case _ => throw new IllegalArgumentException("No data values must be an array of numerical or a numerical value.")
         }).mkString(" ")
         val resultPath = PathUtils.createTmpFilePath(GDAL.getExtension(tile.getDriver))
-        val cmd = s"""gdalwarp -of ${tile.getDriver} -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
+        val cmd = s"""gdalwarp -dstnodata "$dstNoDataValues" -srcnodata "$noDataValues""""
         tile.copy(
           raster = GDALWarp.executeWarp(
             resultPath,

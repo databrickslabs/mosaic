@@ -35,7 +35,7 @@ class MosaicLibraryHandler:
         if self._auto_attached_enabled is None:
             try:
                 result = (
-                    self.spark.conf.get("spark.databricks.labs.mosaic.jar.autoattach")
+                    self.spark.conf.get("spark.databricks.labs.mosaic.jar.autoattach", "true")
                     == "true"
                 )
             except Py4JJavaError as e:
@@ -92,6 +92,7 @@ class MosaicLibraryHandler:
                 JarURI,
                 ManagedLibraryId.defaultOrganization(),
                 NoVersionModule.simpleString(),
+                optionModule.apply(None),
                 optionModule.apply(None),
                 optionModule.apply(None),
             )

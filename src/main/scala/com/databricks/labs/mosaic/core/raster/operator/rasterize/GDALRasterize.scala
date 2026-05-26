@@ -52,6 +52,7 @@ object GDALRasterize {
         createOptionsVec.addAll(Seq("COMPRESS=LZW", "TILED=YES").asJavaCollection)
 
         val newRaster = driver.Create(outputPath, xWidth, yWidth, 1, gdalconstConstants.GDT_Float64, createOptionsVec)
+
         val rasterCRS = if (geoms.isEmpty) origin.getSpatialReferenceOSR else geoms.head.getSpatialReferenceOSR
         newRaster.SetSpatialRef(rasterCRS)
         newRaster.SetGeoTransform(Array(origin.getX, xSize, 0.0, origin.getY, 0.0, ySize))

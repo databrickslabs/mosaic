@@ -5,8 +5,8 @@
 
 ## Steps
 
-1. Cmd `GDAL_VERSION=3.4.1 LIBPROJ_VERSION=7.1.0 SPARK_VERSION=3.4.1 CORES=4 ./build` 
-   builds the docker image for DBR 13.3 LTS. Name will be 'mosaic-dev:ubuntu22-gdal3.4.1-spark3.4.1'.
+1. Cmd `GDAL_VERSION=3.4.1 LIBPROJ_VERSION=7.1.0 SPARK_VERSION=3.5.0 CORES=4 ./build` 
+   builds the docker image for DBR 13.3 LTS. Name will be 'mosaic-dev:ubuntu22-gdal3.4.1-spark3.5.0'.
 2. Cmd `sh scripts/docker/mosaic-docker.sh` to run. That script launches a container and further (optionally) configures.
 
 ## Additional Notes

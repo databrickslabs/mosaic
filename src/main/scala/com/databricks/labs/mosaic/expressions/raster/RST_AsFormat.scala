@@ -21,6 +21,7 @@ case class RST_AsFormat (
     tileExpr,
     newFormat,
     returnsRaster = true,
+    unsafe = false,
     expressionConfig
 )
     with NullIntolerant

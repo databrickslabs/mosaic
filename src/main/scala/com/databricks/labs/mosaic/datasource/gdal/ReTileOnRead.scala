@@ -94,7 +94,7 @@ object ReTileOnRead extends ReadStrategy {
         val inPath = status.getPath.toString
         val tmpPath = options.getOrElse("readSubdataset", "false").toBoolean match {
             case true =>
-                val readRaster = GDAL.raster(status.getPath.toString, status.getPath.toString)
+                val readRaster = GDAL.raster(status.getPath.toString, status.getPath.toString, None)
                 val subDatasets = readRaster.subdatasets
                 if (subDatasets.isEmpty) {
                     throw new RuntimeException(s"Option 'readSubdataset' was set to 'true' but no subdatasets were found in ${status.getPath.toString}")

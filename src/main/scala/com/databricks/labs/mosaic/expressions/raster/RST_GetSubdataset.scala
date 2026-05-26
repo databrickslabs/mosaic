@@ -21,6 +21,7 @@ case class RST_GetSubdataset(
       tileExpr,
       subsetName,
       returnsRaster = true,
+      unsafe = false,
       expressionConfig
     )
       with NullIntolerant

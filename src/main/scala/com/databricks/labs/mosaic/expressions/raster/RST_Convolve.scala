@@ -22,6 +22,7 @@ case class RST_Convolve(
       rastersExpr,
       kernelExpr,
       returnsRaster = true,
+      unsafe = false,
       expressionConfig = expressionConfig
     )
       with NullIntolerant

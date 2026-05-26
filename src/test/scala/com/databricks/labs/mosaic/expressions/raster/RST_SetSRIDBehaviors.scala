@@ -4,6 +4,7 @@ import com.databricks.labs.mosaic.{MOSAIC_RASTER_READ_IN_MEMORY, MOSAIC_RASTER_R
 import com.databricks.labs.mosaic.core.geometry.api.GeometryAPI
 import com.databricks.labs.mosaic.core.index.IndexSystem
 import com.databricks.labs.mosaic.functions.MosaicContext
+import com.databricks.labs.mosaic.test.mocks.filePath
 import org.apache.spark.sql.QueryTest
 import org.apache.spark.sql.functions.lit
 import org.scalatest.matchers.should.Matchers._
@@ -17,13 +18,11 @@ trait RST_SetSRIDBehaviors extends QueryTest {
         import mc.functions._
         import sc.implicits._
 
-        val modisPath = this.getClass.getResource("/modis/").getPath
-
         val rastersInMemory = spark.read
             .format("gdal")
             .option(MOSAIC_RASTER_READ_STRATEGY, MOSAIC_RASTER_READ_IN_MEMORY)
             .option("pathGlobFilter", "*.TIF")
-            .load(modisPath)
+            .load(filePath("/modis"))
 
         val df = rastersInMemory
             .withColumn("result", rst_setsrid($"tile", lit(4326)))
@@ -45,7 +44,7 @@ trait RST_SetSRIDBehaviors extends QueryTest {
             .collect
             .length
 
-        result > 0 shouldBe true
+        result should be > 0
 
         an[Exception] should be thrownBy spark.sql("""
                                                      |select rst_setsrid() from source

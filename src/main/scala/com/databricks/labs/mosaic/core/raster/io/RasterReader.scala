@@ -40,7 +40,10 @@ trait RasterReader extends Logging {
      * @return
      *   A [[MosaicRasterGDAL]] object.
      */
-    def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String]): MosaicRasterGDAL
+    def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String], unsafe: Option[Boolean]): MosaicRasterGDAL
+
+    def readRaster(contentBytes: Array[Byte], createInfo: Map[String, String]): MosaicRasterGDAL =
+        readRaster(contentBytes, createInfo, None)
 
     /**
       * Reads a raster from a file system path. Reads a subdataset if the path
@@ -51,9 +54,14 @@ trait RasterReader extends Logging {
       *   "FORMAT:/path/to/file.tif:subdataset"
       * @param createInfo
       *   Map of create info for the raster.
+      * @param unsafe
+      *   Open this raster in an non-thread safe mode.
       * @return
       *   A [[MosaicRasterGDAL]] object.
       */
-    def readRaster(createInfo: Map[String, String]): MosaicRasterGDAL
+    def readRaster(createInfo: Map[String, String], unsafe: Option[Boolean]): MosaicRasterGDAL
+
+    def readRaster(createInfo: Map[String, String]): MosaicRasterGDAL =
+        readRaster(createInfo, None)
 
 }

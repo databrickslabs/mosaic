@@ -36,6 +36,7 @@ case class RST_Write(
       inputExpr,
       dirExpr,
       returnsRaster = true,
+      unsafe = false,
       expressionConfig = expressionConfig
     )
       with NullIntolerant

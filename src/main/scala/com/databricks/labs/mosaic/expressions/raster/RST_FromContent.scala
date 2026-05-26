@@ -71,7 +71,7 @@ case class RST_FromContent(
         if (targetSize <= 0 || rasterArr.length <= targetSize) {
             // - no split required
             val createInfo = Map("parentPath" -> PathUtils.NO_PATH_STRING, "driver" -> driver)
-            var raster = MosaicRasterGDAL.readRaster(rasterArr, createInfo)
+            var raster = MosaicRasterGDAL.readRaster(rasterArr, createInfo, None)
             var tile = MosaicRasterTile(null, raster)
             val row = tile.formatCellId(indexSystem).serialize(rasterType)
             RasterCleaner.dispose(raster)

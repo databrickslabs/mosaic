@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # [1] Build the image under 'docker-build':
-# `GDAL_VERSION=3.4.1  LIBPROJ_VERSION=7.1.0 SPARK_VERSION=3.4.1 CORES=4 ./build`
-# - produces image 'ubuntu22-gdal3.4.1-spark3.4.1' [default is JDK 8]
+# `GDAL_VERSION=3.4.1  LIBPROJ_VERSION=7.1.0 SPARK_VERSION=3.5.0 CORES=4 ./build`
+# - produces image 'ubuntu22-gdal3.4.1-spark3.5.0' [default is JDK 8]
 # [2] run this in root of (mosaic repo), e.g. `sh scripts/docker/mosaic-docker.sh`
 # - for IDE driven or Jupyter notebook testing
 # [3] if you want to run tests within the container shell
@@ -18,6 +18,6 @@
 # NOTE: Ignore 'ERRO[0000] error waiting for container: context canceled'
 docker run -q --privileged --platform linux/amd64 --name mosaic-dev -p 5005:5005 -p 8888:8888 \
 -v $PWD:/root/mosaic -e JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,address=5005,server=y,suspend=n" \
--itd --rm mosaic-dev:ubuntu22-gdal3.4.1-spark3.4.1 /bin/bash
+-itd --rm mosaic-dev:ubuntu22-gdal3.4.1-spark3.5.0 /bin/bash
 docker exec -it mosaic-dev /bin/bash -c "sh /root/mosaic/scripts/docker/docker_init.sh"
 docker exec -it mosaic-dev /bin/bash -c "unset JAVA_TOOL_OPTIONS && cd /root/mosaic && /bin/bash"

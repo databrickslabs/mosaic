@@ -45,7 +45,7 @@ class TestRasterGDAL extends SharedSparkSessionGDAL {
         val np_content = spark.read.format("binaryFile")
             .load("src/test/resources/modis/MCD43A4.A2018185.h10v07.006.2018194033728_B04.TIF")
             .select("content").first.getAs[Array[Byte]](0)
-        val np_raster = MosaicRasterGDAL.readRaster(np_content, createInfo)
+        val np_raster = MosaicRasterGDAL.readRaster(np_content, createInfo, None)
 //        val np_raster = RasterIO.readRasterHydratedFromContent(np_content, createInfo, getExprConfigOpt)
         np_raster.getMemSize > 0 should be(true)
         info(s"np_content length? ${np_content.length}")
